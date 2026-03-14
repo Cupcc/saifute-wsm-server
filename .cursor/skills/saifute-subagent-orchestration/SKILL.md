@@ -32,20 +32,24 @@ Do not start downstream implementation until upstream prerequisites are satisfie
 
 Choose the smallest useful set:
 
-- `auth-foundation`: authentication, sessions, online users, RBAC, route trees, permission and data-scope foundations
-- `shared-core`: master data, inventory center, workflow, and shared business contracts needed by downstream modules
-- `document-flows`: transactional document modules that change stock or depend on workflow
-- `platform-services`: audit logging, reporting, file storage, scheduler, and AI assistant orchestration
+- `execution-agent`: batch-aware implementation and refactor worker for explicitly assigned modules in one batch at a time
 - `architecture-guardian`: boundary review, transaction review, dependency drift detection, and shared-contract checks
-- `integration-test-reviewer`: test strategy, missing coverage, and command selection for the touched batches
+- `code-reviewer`: code review, integration-test coverage review, and final validation-gate execution for the touched batch
+- `doc-checklist-cleaner`: post-fix markdown cleanup worker for `docs/fix-checklists/`; marks completed `- [ ]` items as `- [x]`, refreshes summaries and residual risks, and removes stale review artifacts only when deletion is clearly safe
 
 ## Launch rules
 
 1. Default to at most 4 concurrent worker subagents.
-2. For cross-module work, include `architecture-guardian` early.
-3. Before finalizing substantive work, involve `integration-test-reviewer`.
-4. If a task touches shared contracts, update docs first or stop and ask for direction.
-5. Never let a subagent bypass these frozen rules:
+2. Use `execution-agent` for delivery work and keep each worker scoped to one explicit batch assignment.
+3. For cross-module work, include `architecture-guardian` early.
+4. Before finalizing substantive work, involve `code-reviewer` and require the batch-appropriate integration or e2e gate.
+5. When a task is driven by a file under `docs/fix-checklists/`, keep responsibilities separated:
+   - `execution-agent` fixes code and tests based on the unchecked checklist items
+   - `code-reviewer` validates correctness and the required batch gate when needed
+   - `doc-checklist-cleaner` updates the checklist markdown after the fix evidence exists
+6. Do not ask `execution-agent` to close checklist items directly unless the task is explicitly documentation-only; prefer a final handoff to `doc-checklist-cleaner` to avoid context rot between implementation and review artifacts.
+7. If a task touches shared contracts, update docs first or stop and ask for direction.
+8. Never let a subagent bypass these frozen rules:
    - `inventory-core` is the only stock write entry point.
    - `workflow` owns audit-document workflow behavior.
    - `session` uses JWT as a session ticket, with Redis as the session source of truth.
@@ -54,13 +58,13 @@ Choose the smallest useful set:
 
 ## File ownership guidance
 
-Each delivery subagent may edit:
+The `execution-agent` may edit:
 
 - Its owned module directories under `src/modules/<module>/`
 - Tests for those modules
 - Narrow shared files that are directly required by the task
 
-Each delivery subagent must avoid:
+The `execution-agent` must avoid:
 
 - Unapproved edits to another module's internal repository or table access
 - New cross-module dependencies that are not documented
@@ -76,6 +80,12 @@ Ask each subagent to return:
 - Tests run or still needed
 - Risks, blockers, and follow-up work
 
+For checklist-driven execution tasks, also require:
+
+- Which unchecked checklist items were addressed in code
+- What evidence exists for closing each item
+- Which checklist items remain open and why
+
 ## Validation gates
 
 - Batch A work: `pnpm lint && pnpm test:e2e`
@@ -84,6 +94,34 @@ Ask each subagent to return:
 - Batch D work: `pnpm lint && pnpm test`
 
 Use narrower test commands when appropriate during iteration, but do not skip the documented gate for the affected batch before declaring the work complete.
+
+## Batch completion and commit protocol
+
+Treat commit creation as a parent-orchestrator decision, not as a side effect of file edits or checklist cleanup.
+
+A batch is eligible for the final commit skill step only when all of the following are true:
+
+1. The affected batch's required validation gate passed.
+2. `code-reviewer` reports no remaining open `[blocking]` or `[important]` findings for the scoped work.
+3. `doc-checklist-cleaner` updated any relevant `docs/fix-checklists/` file and there is no remaining actionable unchecked item that still belongs to the completed scope.
+4. There is no unresolved shared-contract, architecture-boundary, or transaction-ownership blocker.
+5. The parent task explicitly allows commit creation after validation and cleanup.
+
+Follow this ownership rule:
+
+- Only the parent orchestrator may trigger the final commit skill step.
+- When commit creation is allowed, the parent orchestrator must delegate the work to a dedicated commit subagent that uses the commit skill, because that skill defines the repository's commit conventions and safety rules.
+- Do not let `execution-agent`, `architecture-guardian`, `code-reviewer`, or `doc-checklist-cleaner` create the commit directly or bypass the commit skill.
+- Do not replace the commit skill with ad hoc parent-agent git commands when the task is in the finalization phase.
+- Do not use IDE hooks to decide whether a batch is complete; hooks may format files or guard risky commands, but they do not own batch lifecycle decisions.
+
+When you need commit readiness from subagents, ask them to report:
+
+- Whether the required gate passed for their scoped work
+- Whether any `[blocking]` or `[important]` item remains open
+- Whether checklist cleanup is complete for the scoped batch
+- Whether any blocker still prevents safe finalization
+- Whether the parent orchestrator may hand off to the commit subagent that runs the commit skill
 
 ## Additional reference
 

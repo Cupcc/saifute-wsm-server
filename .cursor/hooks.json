@@ -5,11 +5,18 @@
       {
         "command": "node .cursor/hooks/biome-after-edit.js",
         "matcher": "Write"
+      },
+      {
+        "command": "node .cursor/hooks/markdown-after-edit.js",
+        "matcher": "Write"
       }
     ],
     "afterTabFileEdit": [
       {
         "command": "node .cursor/hooks/biome-after-edit.js"
+      },
+      {
+        "command": "node .cursor/hooks/markdown-after-edit.js"
       }
     ],
     "beforeShellExecution": [
