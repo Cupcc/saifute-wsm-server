@@ -260,7 +260,7 @@ model InventoryLog {
   afterQty               Decimal                @db.Decimal(18, 6)
   operatorId             String?                @db.VarChar(64)
   occurredAt             DateTime               @default(now())
-  reversalOfLogId        Int?
+  reversalOfLogId        Int?                   @unique
   idempotencyKey         String                 @unique @db.VarChar(128)
   note                   String?                @db.VarChar(500)
   balance                InventoryBalance       @relation(fields: [balanceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -274,7 +274,6 @@ model InventoryLog {
   @@index([businessDocumentType, businessDocumentId])
   @@index([businessDocumentType, businessDocumentId, businessDocumentLineId])
   @@index([occurredAt])
-  @@index([reversalOfLogId])
   @@map("inventory_log")
 }
 

@@ -4,6 +4,8 @@ import * as request from "supertest";
 import { AppModule } from "../src/app.module";
 import { HttpExceptionFilter } from "../src/shared/common/filters/http-exception.filter";
 import { ResponseEnvelopeInterceptor } from "../src/shared/common/interceptors/response-envelope.interceptor";
+import { PrismaService } from "../src/shared/prisma/prisma.service";
+import { PrismaE2eStub } from "./prisma-e2e-stub";
 
 interface TestAppContext {
   app: INestApplication;
@@ -41,7 +43,10 @@ describe("Batch A acceptance (e2e)", () => {
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useClass(PrismaE2eStub)
+      .compile();
 
     const app = moduleRef.createNestApplication();
     app.setGlobalPrefix("api");

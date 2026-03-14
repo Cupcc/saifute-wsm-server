@@ -20,7 +20,9 @@ if (!databaseUrl) {
 const parsedUrl = new URL(databaseUrl);
 
 if (parsedUrl.protocol !== "mysql:") {
-  throw new Error(`Expected a mysql DATABASE_URL, received ${parsedUrl.protocol}`);
+  throw new Error(
+    `Expected a mysql DATABASE_URL, received ${parsedUrl.protocol}`,
+  );
 }
 
 const database = parsedUrl.pathname.replace(/^\//, "");
@@ -37,7 +39,10 @@ if (!requestedCollation.startsWith(`${DEFAULT_CHARACTER_SET}_`)) {
   );
 }
 
-const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const rootDir = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+);
 
 function buildSchemaSql() {
   const diffArgs = [
@@ -53,19 +58,19 @@ function buildSchemaSql() {
   const diffOutput =
     process.platform === "win32"
       ? execFileSync(
-        "cmd.exe",
-        ["/d", "/s", "/c", `pnpm ${diffArgs.join(" ")}`],
-        {
+          "cmd.exe",
+          ["/d", "/s", "/c", `pnpm ${diffArgs.join(" ")}`],
+          {
+            cwd: rootDir,
+            encoding: "utf8",
+            maxBuffer: 20 * 1024 * 1024,
+          },
+        )
+      : execFileSync("pnpm", diffArgs, {
           cwd: rootDir,
           encoding: "utf8",
           maxBuffer: 20 * 1024 * 1024,
-        },
-      )
-      : execFileSync("pnpm", diffArgs, {
-        cwd: rootDir,
-        encoding: "utf8",
-        maxBuffer: 20 * 1024 * 1024,
-      });
+        });
 
   const sqlStart = diffOutput.indexOf("-- CreateTable");
 
