@@ -56,6 +56,8 @@
 - 库存变更必须同时产生库存日志
 - 涉及来源追踪的业务必须同时维护 `InventorySourceUsage`
 - 单据作废走逆操作，不允许直接重写库存结果
+- 来源分配/释放建议以“同一消费行 + 同一来源流水”的累计目标数量编排，避免重试时重复分配或重复释放
+- 当上游业务模块需要把单据主表、库存副作用、来源追踪放进同一事务时，应由上游应用层显式开启事务，并把事务上下文传给 `inventory-core` 的写服务组合调用
 
 ## Domain 规则与约束
 
@@ -64,6 +66,7 @@
 - 是否允许负库存由策略配置决定，但默认先兼容现状
 - 所有数量字段迁移时优先改用精度明确的十进制类型
 - 来源追踪与逆操作补偿是不可省略的关键语义
+- `reverseStock()` 必须保证同一条来源流水最多只生成一条逆向流水，且调用方应为同一来源流水使用稳定的 `idempotencyKey`
 
 ## Infrastructure 设计
 
@@ -83,6 +86,7 @@
 - 库存主表、库存日志、来源追踪必须在同一数据库事务内提交
 - 业务单据与库存副作用原则上同事务完成
 - 不允许只写主表不写日志，或只回滚主表不释放来源占用
+- `increaseStock()`、`decreaseStock()`、`reverseStock()`、`allocateInventorySource()`、`releaseInventorySource()` 默认可独立开启事务执行；若调用方已持有事务，应复用同一个事务上下文完成组合编排
 
 ## 权限点、数据权限、审计要求
 
@@ -96,6 +100,7 @@
 - 第一阶段库存唯一维度固定为 `materialId + workshopId`
 - `inventory_warning` 收敛为只读视图 `vw_inventory_warning`，不单独落交易表
 - 单据模块必须通过 `businessDocumentType`、`businessDocumentId`、`businessDocumentLineId` 向库存中心传递来源语义
+- `inventory_log.reversalOfLogId` 应保持唯一，确保同一条原始流水只能被逆操作一次
 - 详细业务流程与字段建议见 `docs/20-wms-business-flow-and-optimized-schema.md`
 
 ## 待补测试清单
