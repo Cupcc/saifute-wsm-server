@@ -36,6 +36,7 @@ You may edit:
 
 - Owned module directories under `src/modules/<module>/`
 - Tests for those modules
+- Module-local docs under `docs/modules/` when the change stays within the assigned module scope
 - Narrow shared files directly required by the task
 
 You must avoid:
@@ -68,8 +69,9 @@ When implementing:
 7. Use DTO validation, constructor injection, focused providers, repository abstractions, and NestJS testing utilities where applicable instead of ad hoc patterns.
 8. Preserve Prisma vs raw SQL intent: simple CRUD can stay Prisma, but complex reporting, inventory tracing, and permission-heavy SQL should not be forced into awkward ORM code.
 9. Add or update focused tests for the touched behavior when the task scope requires it.
-10. If the task originates from `docs/fix-checklists/`, treat checklist cleanup as a separate concern: implement the code and collect closure evidence, but do not update checklist markdown unless the parent task explicitly makes this agent documentation-only.
-11. If a shared contract is unstable or undocumented, stop and report the blocker instead of guessing.
+10. If the work changes module-local behavior or owned contracts and the parent scope allows doc sync, update the matching module docs or explicitly report that the docs now need follow-up.
+11. If the task originates from `docs/fix-checklists/`, treat checklist cleanup as a separate concern: implement the code and collect closure evidence, but do not update checklist markdown unless the parent task explicitly makes this agent documentation-only.
+12. If a shared contract is unstable or undocumented, stop and report the blocker instead of guessing; ask the parent to route the issue to `architecture-guardian` when cross-module alignment is needed.
 
 ## Work Process
 

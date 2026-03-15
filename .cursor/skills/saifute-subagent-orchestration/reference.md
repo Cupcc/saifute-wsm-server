@@ -17,7 +17,9 @@
 ### `architecture-guardian`
 
 - Best for: large refactors, shared-contract changes, or parallel tasks that risk boundary drift
-- Default mode: review-first; readonly unless explicitly asked to patch
+- Default mode: review-first; it may switch into planning or doc-patch support when the parent task explicitly needs contract alignment
+- Typical docs it may patch when authorized: `docs/00-architecture-overview.md`, `docs/10-subagent-build-batches.md`, and cross-module contract sections under `docs/modules/`
+- It should not become the default editor of `docs/fix-checklists/` or module-internal implementation notes
 - Checks:
   - module boundaries align with docs
   - transaction ownership stays in application layer
@@ -29,6 +31,7 @@
 
 - Best for: reviewing correctness, deciding missing tests, running the correct integration or e2e gate, and optionally adding validation coverage when the parent task allows edits
 - Typical files: `test/**`, module `*.spec.ts`, e2e specs, fixtures, and changed implementation files under review
+- Owns: review findings, severities, validation judgment, and the review markdown/checklist content that records and updates those conclusions
 - Checks:
   - auth/session lifecycle
   - inventory side effects and reverse operations
@@ -37,33 +40,38 @@
   - AI SSE protocol and tool-call boundaries
   - required batch-level validation command was actually executed
 
-### `doc-checklist-cleaner`
+## Doc ownership
 
-- Best for: cleaning `docs/fix-checklists/**` after follow-up work, marking resolved checklist items complete, refreshing summaries and residual risks, and conservatively removing obsolete review artifacts
-- Typical files: `docs/fix-checklists/*.md`, especially an original review file plus any later re-check or follow-up file used as closure evidence
-- Checks:
-  - only evidence-backed fixes are marked `- [x]`
-  - unresolved or uncertain items stay open
-  - residual risks and summaries still match the latest code and test state
-  - duplicate or stale checklist files are deleted only when clearly safe
+- `execution-agent`: module-local fact docs and owned-module behavior notes, when the change is within its assigned scope
+- `architecture-guardian`: cross-module contracts, dependency direction, transaction ownership, batch planning, and architecture-facing docs
+- `code-reviewer`: `docs/fix-checklists/**` review and closure artifacts
+- Parent orchestrator: decides when docs must be updated first and routes the edit to the right owner
+
+## Rules vs runtime context
+
+- Use `.cursor/rules/*.mdc` for durable facts and repository-wide constraints that future tasks should inherit
+- Keep live execution state in the parent handoff or a temporary shared context artifact, not in rules
+- Good rule candidates: verified dev environment facts, frozen workflow rules, repo-wide orchestration conventions
+- Bad rule candidates: current task status, temporary blockers, one-off test failures, or branch-local workaround notes
 
 ## Suggested combinations
 
 - Batch A implementation: `execution-agent` + `code-reviewer`
-- Checklist-driven fix flow: `execution-agent` -> `code-reviewer` when validation is needed -> `doc-checklist-cleaner`
-- Batch finalization flow: `execution-agent` -> `architecture-guardian` when contracts drift -> `code-reviewer` -> `doc-checklist-cleaner` -> parent orchestrator -> commit subagent using the commit skill
+- Checklist-driven fix flow: `execution-agent` -> `code-reviewer` -> if any `[blocking]` or `[important]` finding remains, loop back to `execution-agent` -> once clear, `code-reviewer` updates the checklist and signs off
+- Batch finalization flow: `execution-agent` -> `architecture-guardian` when contracts drift -> `code-reviewer` -> if findings remain, route them back to `execution-agent` and repeat review -> `code-reviewer` updates the checklist and signs off -> parent orchestrator -> commit subagent using the commit skill
 - Shared contracts or transactions: `execution-agent` + `architecture-guardian` + `code-reviewer`
 - Batch C implementation: `execution-agent` + `architecture-guardian` + `code-reviewer`
 - Batch D implementation: `execution-agent` + `architecture-guardian` + `code-reviewer`
-- Large end-to-end feature: one delivery `execution-agent`, plus both cross-cutting agents, then `doc-checklist-cleaner` if a persisted fix checklist must be updated
+- Large end-to-end feature: one delivery `execution-agent`, plus both cross-cutting agents, with `code-reviewer` maintaining any persisted fix checklist that belongs to the reviewed scope
 
 ## Finalization ownership
 
 - Commit creation belongs to the parent orchestrator only after the scoped batch passes its validation gate and cleanup checks
+- For batch delivery/completion requests, review output and checklist generation are not valid stopping points; the parent orchestrator should keep the repair loop running until commit or a real blocker
 - When commit creation is allowed, the parent orchestrator must hand off the final commit work to a dedicated commit subagent that uses the commit skill
-- `doc-checklist-cleaner` may report that checklist cleanup is complete, but it does not own the commit decision
+- `code-reviewer` may report that checklist cleanup is complete, but it does not own the commit decision
 - IDE hooks may format markdown or guard shell usage, but they must not decide that a batch is complete or trigger the final commit step automatically
-- If the parent task does not explicitly allow commit creation, stop after review and cleanup handoff instead of invoking the commit subagent
+- Only stop after review and cleanup handoff when the user explicitly asked for `review-only`, `docs-only`, or `no-commit`
 
 ## Handoff format
 

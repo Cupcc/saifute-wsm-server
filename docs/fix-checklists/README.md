@@ -4,8 +4,10 @@ This directory stores review outputs written by the `code-reviewer` agent.
 
 Purpose:
 
-- Persist actionable review findings so a later execution agent can fix them without depending on chat history.
+- Persist actionable review findings so execution work can continue without depending on chat history.
 - Keep one markdown file per review run.
+
+In batch-delivery orchestration, generating a checklist is not a terminal state. The orchestrator should route actionable items back to `execution-agent`, rerun review as needed, then update the checklist with evidence before final sign-off and commit.
 
 Recommended filename pattern:
 

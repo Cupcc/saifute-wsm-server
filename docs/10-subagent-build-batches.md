@@ -138,6 +138,9 @@ flowchart TD
 - 每个 subagent 只能改动自己负责模块与共享契约文件
 - 跨模块依赖必须通过文档中声明的接口调用
 - 如需修改共享契约，先更新文档再重新分配批次
+- 模块内事实文档由对应 `execution-agent` 维护；跨模块边界、事务归属、批次依赖文档由 `architecture-guardian` 把关或维护
+- `docs/fix-checklists/` 由 `code-reviewer` 维护，不作为架构真相源
+- `code-reviewer` 负责 review 结论、严重级别、gate 验收，以及相关 checklist/review 文档更新
 
 ## 8. 推荐 subagent 编组
 
@@ -150,21 +153,21 @@ flowchart TD
 ### 批次 B 推荐编组
 
 - 主执行：`execution-agent`
-- 并行审查：`architecture-guardian`
+- 并行审查 / 契约规划：`architecture-guardian`
 - 收尾校验：`code-reviewer`
 - 若 `inventory-core` 或 `workflow` 暴露的新契约会被批次 C 复用，必须先冻结文档再继续实现
 
 ### 批次 C 推荐编组
 
 - 主执行：`execution-agent`
-- 只读支援：`architecture-guardian`
+- 只读支援 / 文档校准：`architecture-guardian`
 - 收尾校验：`code-reviewer`
 - 如需把 `inbound`、`outbound`、`workshop-material`、`project` 拆成多个 worker 并行，允许复制 `execution-agent` 角色，但所有 worker 必须共享同一份冻结契约
 
 ### 批次 D 推荐编组
 
 - 主执行：`execution-agent`
-- 边界审查：`architecture-guardian`
+- 边界审查 / 架构文档维护：`architecture-guardian`
 - 收尾校验：`code-reviewer`
 - `reporting`、`audit-log`、`scheduler` 如需并行推进，先确认只读模型、异步事件和执行日志格式不被改写
 
@@ -224,7 +227,15 @@ flowchart TD
 - 为了通过测试而临时修改共享契约，但文档尚未同步
 - `pnpm lint` 或关键集成测试暴露的是边界问题，而不是单点实现错误
 
-## 12. 当前建议执行顺序
+## 12. Rules 与运行时上下文边界
+
+- `.cursor/rules/*.mdc` 只记录长期稳定、可复用、应被未来任务继承的事实或约束
+- 适合进入 rules 的内容：已验证的本地开发环境、冻结的编排规则、仓库级长期约束
+- 不适合进入 rules 的内容：当前任务状态、临时 blocker、一次性测试失败、分支局部决策
+- 父级 orchestrator 需要把运行时上下文放进 subagent handoff，或放入明确标注为临时的共享上下文载体，而不是直接提升为 rules
+- 只有当某个观察被确认会跨任务长期成立，且不包含 secrets，才应从运行时上下文晋升为 rule
+
+## 13. 当前建议执行顺序
 
 基于当前 Todo 状态，下一步建议按以下顺序推进：
 
@@ -234,7 +245,7 @@ flowchart TD
 4. 由 `code-reviewer` 执行批次 B 所需 integration-test 与最终验收
 5. 待批次 B 的应用服务与测试稳定后，再拆分批次 C 的单据流 worker
 
-## 13. 交付完成定义
+## 14. 交付完成定义
 
 一个批次被视为“完成”，至少同时满足：
 
@@ -243,7 +254,7 @@ flowchart TD
 - 该批次要求的测试已补齐并通过
 - 下游批次可以在不修改上游内部实现的前提下继续推进
 
-## 14. 批次收口与提交规则
+## 15. 批次收口与提交规则
 
 当一个批次达到“完成”定义后，是否进入最终提交步骤，由父级 orchestration 显式判断，不由 hook 或文档清理 agent 自动触发。
 
@@ -253,23 +264,22 @@ flowchart TD
 
 1. 对应批次要求的 gate 已执行并通过
 2. `code-reviewer` 没有遗留未关闭的 `[blocking]` 或 `[important]` 项
-3. 相关 `docs/fix-checklists/` 已由 `doc-checklist-cleaner` 按证据更新，且当前作用域内没有仍应保留的未完成 actionable item
+3. 相关 `docs/fix-checklists/` 已由 `code-reviewer` 按证据更新，且当前作用域内没有仍应保留的未完成 actionable item
 4. 不存在未解决的共享契约、模块边界或事务归属 blocker
 5. 父任务本身就是该批次的交付 / 完成请求，或已明确允许在收口后创建 commit
 
 职责划分：
 
 - `execution-agent` 负责实现、补测、回传 closure evidence
-- `architecture-guardian` 在共享契约或跨模块边界风险存在时负责把关
-- `code-reviewer` 负责最终 review 与批次 gate 验收
-- `doc-checklist-cleaner` 负责清理 checklist 与 review 文档，不拥有 commit 决策权
+- `execution-agent` 在其授权范围内维护模块事实文档
+- `architecture-guardian` 在共享契约或跨模块边界风险存在时负责把关，并可在授权时规划或修订架构类文档
+- `code-reviewer` 负责最终 review、严重级别判断、批次 gate 验收，以及 checklist 与 review 文档更新
 - 只有父级 orchestrator 可以在全部条件满足后触发最终提交步骤
 - 最终提交必须交给专门的 commit subagent 执行，并且该 subagent 必须使用 commit skill，因为提交规范、消息风格和安全约束由该 skill 统一定义
 
 不建议的做法：
 
 - 不要用 IDE hook 判断批次是否“完成”
-- 不要把 commit 触发逻辑塞进 `doc-checklist-cleaner`
 - 不要让普通 worker subagent 在未经过收口判断时直接创建 commit
 - 不要在父级 orchestrator 的最终收口阶段绕过 commit skill，直接手写 git 提交流程
 
@@ -279,6 +289,5 @@ flowchart TD
 2. `architecture-guardian`（如需要）
 3. `code-reviewer`
 4. 如仍有 `[blocking]` / `[important]` 项，回到 `execution-agent` 修复后重复 2-3
-5. `doc-checklist-cleaner`
-6. 父级 orchestrator 判断是否满足提交条件
-7. 调用使用 commit skill 的 commit subagent 执行最终提交
+5. 父级 orchestrator 判断是否满足提交条件
+6. 调用使用 commit skill 的 commit subagent 执行最终提交
