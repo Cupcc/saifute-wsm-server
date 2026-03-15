@@ -7,6 +7,7 @@ export interface SessionUserSnapshot {
   userId: number;
   username: string;
   displayName: string;
+  avatarUrl?: string | null;
   roles: string[];
   permissions: string[];
   department: SessionDepartmentSnapshot | null;

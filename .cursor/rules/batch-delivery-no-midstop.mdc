@@ -1,0 +1,16 @@
+---
+description: Keep delivery-style batch requests running until batch completion or a real blocker
+alwaysApply: true
+---
+
+# Batch Delivery No Mid-Stop
+
+- If the user asks to continue, finish, deliver, complete, or keep building a batch, treat that as a batch-delivery/completion request by default unless the user explicitly narrows the scope.
+- For a batch-delivery/completion request, intermediate milestones are not valid stopping points. This includes: stabilizing one slice, finishing one module inside the batch, producing a review, generating a checklist, passing a narrow test command, or reporting partial progress.
+- After any intermediate validation or review step, continue the repair/build/review loop instead of stopping, unless one of these is true:
+- the full batch satisfies its documented completion conditions and required gate
+- the user explicitly asked for `review-only`, `docs-only`, `stop after this slice`, or `no-commit`
+- a real blocker requires user direction
+- A “real blocker” means something the agent cannot safely resolve alone, such as conflicting user edits, ambiguous ownership across frozen shared boundaries, missing/contradictory architecture truth, unavailable required credentials/resources, or repeated failed attempts where multiple valid product decisions remain.
+- Do not reinterpret a batch-delivery/completion request as a smaller incremental-slice task without explicit user approval.
+- If the agent does pause due to a real blocker, it must say what completion condition remains unmet and why that blocker prevents safe continuation.

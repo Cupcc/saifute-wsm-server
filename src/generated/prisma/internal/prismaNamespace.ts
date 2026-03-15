@@ -435,6 +435,10 @@ export const ModelName = {
   ProjectMaterialLine: "ProjectMaterialLine",
   DocumentRelation: "DocumentRelation",
   DocumentLineRelation: "DocumentLineRelation",
+  LoginLog: "LoginLog",
+  OperLog: "OperLog",
+  SchedulerJob: "SchedulerJob",
+  SchedulerJobLog: "SchedulerJobLog",
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -477,7 +481,11 @@ export type TypeMap<
       | "project"
       | "projectMaterialLine"
       | "documentRelation"
-      | "documentLineRelation";
+      | "documentLineRelation"
+      | "loginLog"
+      | "operLog"
+      | "schedulerJob"
+      | "schedulerJobLog";
     txIsolationLevel: TransactionIsolationLevel;
   };
   model: {
@@ -1909,6 +1917,278 @@ export type TypeMap<
         };
       };
     };
+    LoginLog: {
+      payload: Prisma.$LoginLogPayload<ExtArgs>;
+      fields: Prisma.LoginLogFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.LoginLogFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.LoginLogFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload>;
+        };
+        findFirst: {
+          args: Prisma.LoginLogFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.LoginLogFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload>;
+        };
+        findMany: {
+          args: Prisma.LoginLogFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload>[];
+        };
+        create: {
+          args: Prisma.LoginLogCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload>;
+        };
+        createMany: {
+          args: Prisma.LoginLogCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.LoginLogDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload>;
+        };
+        update: {
+          args: Prisma.LoginLogUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload>;
+        };
+        deleteMany: {
+          args: Prisma.LoginLogDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.LoginLogUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.LoginLogUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LoginLogPayload>;
+        };
+        aggregate: {
+          args: Prisma.LoginLogAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLoginLog>;
+        };
+        groupBy: {
+          args: Prisma.LoginLogGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.LoginLogGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.LoginLogCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.LoginLogCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    OperLog: {
+      payload: Prisma.$OperLogPayload<ExtArgs>;
+      fields: Prisma.OperLogFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.OperLogFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.OperLogFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload>;
+        };
+        findFirst: {
+          args: Prisma.OperLogFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.OperLogFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload>;
+        };
+        findMany: {
+          args: Prisma.OperLogFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload>[];
+        };
+        create: {
+          args: Prisma.OperLogCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload>;
+        };
+        createMany: {
+          args: Prisma.OperLogCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.OperLogDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload>;
+        };
+        update: {
+          args: Prisma.OperLogUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload>;
+        };
+        deleteMany: {
+          args: Prisma.OperLogDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.OperLogUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.OperLogUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OperLogPayload>;
+        };
+        aggregate: {
+          args: Prisma.OperLogAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOperLog>;
+        };
+        groupBy: {
+          args: Prisma.OperLogGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.OperLogGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.OperLogCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.OperLogCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SchedulerJob: {
+      payload: Prisma.$SchedulerJobPayload<ExtArgs>;
+      fields: Prisma.SchedulerJobFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SchedulerJobFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SchedulerJobFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload>;
+        };
+        findFirst: {
+          args: Prisma.SchedulerJobFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SchedulerJobFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload>;
+        };
+        findMany: {
+          args: Prisma.SchedulerJobFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload>[];
+        };
+        create: {
+          args: Prisma.SchedulerJobCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload>;
+        };
+        createMany: {
+          args: Prisma.SchedulerJobCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SchedulerJobDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload>;
+        };
+        update: {
+          args: Prisma.SchedulerJobUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SchedulerJobDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SchedulerJobUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SchedulerJobUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobPayload>;
+        };
+        aggregate: {
+          args: Prisma.SchedulerJobAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSchedulerJob>;
+        };
+        groupBy: {
+          args: Prisma.SchedulerJobGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SchedulerJobGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SchedulerJobCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SchedulerJobCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SchedulerJobLog: {
+      payload: Prisma.$SchedulerJobLogPayload<ExtArgs>;
+      fields: Prisma.SchedulerJobLogFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SchedulerJobLogFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SchedulerJobLogFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload>;
+        };
+        findFirst: {
+          args: Prisma.SchedulerJobLogFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SchedulerJobLogFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload>;
+        };
+        findMany: {
+          args: Prisma.SchedulerJobLogFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload>[];
+        };
+        create: {
+          args: Prisma.SchedulerJobLogCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload>;
+        };
+        createMany: {
+          args: Prisma.SchedulerJobLogCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SchedulerJobLogDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload>;
+        };
+        update: {
+          args: Prisma.SchedulerJobLogUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SchedulerJobLogDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SchedulerJobLogUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SchedulerJobLogUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SchedulerJobLogPayload>;
+        };
+        aggregate: {
+          args: Prisma.SchedulerJobLogAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSchedulerJobLog>;
+        };
+        groupBy: {
+          args: Prisma.SchedulerJobLogGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SchedulerJobLogGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SchedulerJobLogCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SchedulerJobLogCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
   };
 } & {
   other: {
@@ -2415,6 +2695,79 @@ export const DocumentLineRelationScalarFieldEnum = {
 export type DocumentLineRelationScalarFieldEnum =
   (typeof DocumentLineRelationScalarFieldEnum)[keyof typeof DocumentLineRelationScalarFieldEnum];
 
+export const LoginLogScalarFieldEnum = {
+  id: "id",
+  action: "action",
+  username: "username",
+  userId: "userId",
+  sessionId: "sessionId",
+  ip: "ip",
+  userAgent: "userAgent",
+  result: "result",
+  reason: "reason",
+  occurredAt: "occurredAt",
+} as const;
+
+export type LoginLogScalarFieldEnum =
+  (typeof LoginLogScalarFieldEnum)[keyof typeof LoginLogScalarFieldEnum];
+
+export const OperLogScalarFieldEnum = {
+  id: "id",
+  title: "title",
+  action: "action",
+  method: "method",
+  path: "path",
+  operatorId: "operatorId",
+  operatorName: "operatorName",
+  ip: "ip",
+  userAgent: "userAgent",
+  requestData: "requestData",
+  responseData: "responseData",
+  errorMessage: "errorMessage",
+  durationMs: "durationMs",
+  status: "status",
+  occurredAt: "occurredAt",
+} as const;
+
+export type OperLogScalarFieldEnum =
+  (typeof OperLogScalarFieldEnum)[keyof typeof OperLogScalarFieldEnum];
+
+export const SchedulerJobScalarFieldEnum = {
+  id: "id",
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  cronExpression: "cronExpression",
+  status: "status",
+  concurrencyPolicy: "concurrencyPolicy",
+  misfirePolicy: "misfirePolicy",
+  remark: "remark",
+  lastRunAt: "lastRunAt",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SchedulerJobScalarFieldEnum =
+  (typeof SchedulerJobScalarFieldEnum)[keyof typeof SchedulerJobScalarFieldEnum];
+
+export const SchedulerJobLogScalarFieldEnum = {
+  id: "id",
+  jobId: "jobId",
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  status: "status",
+  message: "message",
+  errorMessage: "errorMessage",
+  durationMs: "durationMs",
+  startedAt: "startedAt",
+  finishedAt: "finishedAt",
+  createdAt: "createdAt",
+} as const;
+
+export type SchedulerJobLogScalarFieldEnum =
+  (typeof SchedulerJobLogScalarFieldEnum)[keyof typeof SchedulerJobLogScalarFieldEnum];
+
 export const SortOrder = {
   asc: "asc",
   desc: "desc",
@@ -2689,6 +3042,55 @@ export const DocumentLineRelationOrderByRelevanceFieldEnum = {
 export type DocumentLineRelationOrderByRelevanceFieldEnum =
   (typeof DocumentLineRelationOrderByRelevanceFieldEnum)[keyof typeof DocumentLineRelationOrderByRelevanceFieldEnum];
 
+export const LoginLogOrderByRelevanceFieldEnum = {
+  username: "username",
+  sessionId: "sessionId",
+  ip: "ip",
+  userAgent: "userAgent",
+  reason: "reason",
+} as const;
+
+export type LoginLogOrderByRelevanceFieldEnum =
+  (typeof LoginLogOrderByRelevanceFieldEnum)[keyof typeof LoginLogOrderByRelevanceFieldEnum];
+
+export const OperLogOrderByRelevanceFieldEnum = {
+  title: "title",
+  action: "action",
+  method: "method",
+  path: "path",
+  operatorName: "operatorName",
+  ip: "ip",
+  userAgent: "userAgent",
+  requestData: "requestData",
+  responseData: "responseData",
+  errorMessage: "errorMessage",
+} as const;
+
+export type OperLogOrderByRelevanceFieldEnum =
+  (typeof OperLogOrderByRelevanceFieldEnum)[keyof typeof OperLogOrderByRelevanceFieldEnum];
+
+export const SchedulerJobOrderByRelevanceFieldEnum = {
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  cronExpression: "cronExpression",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type SchedulerJobOrderByRelevanceFieldEnum =
+  (typeof SchedulerJobOrderByRelevanceFieldEnum)[keyof typeof SchedulerJobOrderByRelevanceFieldEnum];
+
+export const SchedulerJobLogOrderByRelevanceFieldEnum = {
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  message: "message",
+  errorMessage: "errorMessage",
+} as const;
+
+export type SchedulerJobLogOrderByRelevanceFieldEnum =
+  (typeof SchedulerJobLogOrderByRelevanceFieldEnum)[keyof typeof SchedulerJobLogOrderByRelevanceFieldEnum];
+
 /**
  * Field references
  */
@@ -2828,6 +3230,54 @@ export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<
 >;
 
 /**
+ * Reference to a field of type 'LoginLogAction'
+ */
+export type EnumLoginLogActionFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  "LoginLogAction"
+>;
+
+/**
+ * Reference to a field of type 'LoginLogResult'
+ */
+export type EnumLoginLogResultFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  "LoginLogResult"
+>;
+
+/**
+ * Reference to a field of type 'OperLogStatus'
+ */
+export type EnumOperLogStatusFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  "OperLogStatus"
+>;
+
+/**
+ * Reference to a field of type 'SchedulerJobStatus'
+ */
+export type EnumSchedulerJobStatusFieldRefInput<$PrismaModel> =
+  FieldRefInputType<$PrismaModel, "SchedulerJobStatus">;
+
+/**
+ * Reference to a field of type 'SchedulerConcurrencyPolicy'
+ */
+export type EnumSchedulerConcurrencyPolicyFieldRefInput<$PrismaModel> =
+  FieldRefInputType<$PrismaModel, "SchedulerConcurrencyPolicy">;
+
+/**
+ * Reference to a field of type 'SchedulerMisfirePolicy'
+ */
+export type EnumSchedulerMisfirePolicyFieldRefInput<$PrismaModel> =
+  FieldRefInputType<$PrismaModel, "SchedulerMisfirePolicy">;
+
+/**
+ * Reference to a field of type 'SchedulerJobLogStatus'
+ */
+export type EnumSchedulerJobLogStatusFieldRefInput<$PrismaModel> =
+  FieldRefInputType<$PrismaModel, "SchedulerJobLogStatus">;
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<
@@ -2959,6 +3409,10 @@ export type GlobalOmitConfig = {
   projectMaterialLine?: Prisma.ProjectMaterialLineOmit;
   documentRelation?: Prisma.DocumentRelationOmit;
   documentLineRelation?: Prisma.DocumentLineRelationOmit;
+  loginLog?: Prisma.LoginLogOmit;
+  operLog?: Prisma.OperLogOmit;
+  schedulerJob?: Prisma.SchedulerJobOmit;
+  schedulerJobLog?: Prisma.SchedulerJobLogOmit;
 };
 
 /* Types for Logging */

@@ -149,3 +149,23 @@ export type DocumentRelation = Prisma.DocumentRelationModel;
  *
  */
 export type DocumentLineRelation = Prisma.DocumentLineRelationModel;
+/**
+ * Model LoginLog
+ *
+ */
+export type LoginLog = Prisma.LoginLogModel;
+/**
+ * Model OperLog
+ *
+ */
+export type OperLog = Prisma.OperLogModel;
+/**
+ * Model SchedulerJob
+ *
+ */
+export type SchedulerJob = Prisma.SchedulerJobModel;
+/**
+ * Model SchedulerJobLog
+ *
+ */
+export type SchedulerJobLog = Prisma.SchedulerJobLogModel;

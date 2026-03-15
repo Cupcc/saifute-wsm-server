@@ -766,6 +766,187 @@ export type BoolWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedBoolFilter<$PrismaModel>;
 };
 
+export type EnumLoginLogActionFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.LoginLogAction
+    | Prisma.EnumLoginLogActionFieldRefInput<$PrismaModel>;
+  in?: $Enums.LoginLogAction[];
+  notIn?: $Enums.LoginLogAction[];
+  not?:
+    | Prisma.NestedEnumLoginLogActionFilter<$PrismaModel>
+    | $Enums.LoginLogAction;
+};
+
+export type EnumLoginLogResultFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.LoginLogResult
+    | Prisma.EnumLoginLogResultFieldRefInput<$PrismaModel>;
+  in?: $Enums.LoginLogResult[];
+  notIn?: $Enums.LoginLogResult[];
+  not?:
+    | Prisma.NestedEnumLoginLogResultFilter<$PrismaModel>
+    | $Enums.LoginLogResult;
+};
+
+export type EnumLoginLogActionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.LoginLogAction
+    | Prisma.EnumLoginLogActionFieldRefInput<$PrismaModel>;
+  in?: $Enums.LoginLogAction[];
+  notIn?: $Enums.LoginLogAction[];
+  not?:
+    | Prisma.NestedEnumLoginLogActionWithAggregatesFilter<$PrismaModel>
+    | $Enums.LoginLogAction;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumLoginLogActionFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumLoginLogActionFilter<$PrismaModel>;
+};
+
+export type EnumLoginLogResultWithAggregatesFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.LoginLogResult
+    | Prisma.EnumLoginLogResultFieldRefInput<$PrismaModel>;
+  in?: $Enums.LoginLogResult[];
+  notIn?: $Enums.LoginLogResult[];
+  not?:
+    | Prisma.NestedEnumLoginLogResultWithAggregatesFilter<$PrismaModel>
+    | $Enums.LoginLogResult;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumLoginLogResultFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumLoginLogResultFilter<$PrismaModel>;
+};
+
+export type EnumOperLogStatusFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.OperLogStatus
+    | Prisma.EnumOperLogStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.OperLogStatus[];
+  notIn?: $Enums.OperLogStatus[];
+  not?:
+    | Prisma.NestedEnumOperLogStatusFilter<$PrismaModel>
+    | $Enums.OperLogStatus;
+};
+
+export type EnumOperLogStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.OperLogStatus
+    | Prisma.EnumOperLogStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.OperLogStatus[];
+  notIn?: $Enums.OperLogStatus[];
+  not?:
+    | Prisma.NestedEnumOperLogStatusWithAggregatesFilter<$PrismaModel>
+    | $Enums.OperLogStatus;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumOperLogStatusFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumOperLogStatusFilter<$PrismaModel>;
+};
+
+export type EnumSchedulerJobStatusFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerJobStatus
+    | Prisma.EnumSchedulerJobStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobStatus[];
+  notIn?: $Enums.SchedulerJobStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobStatusFilter<$PrismaModel>
+    | $Enums.SchedulerJobStatus;
+};
+
+export type EnumSchedulerConcurrencyPolicyFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerConcurrencyPolicy
+    | Prisma.EnumSchedulerConcurrencyPolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerConcurrencyPolicy[];
+  notIn?: $Enums.SchedulerConcurrencyPolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerConcurrencyPolicyFilter<$PrismaModel>
+    | $Enums.SchedulerConcurrencyPolicy;
+};
+
+export type EnumSchedulerMisfirePolicyFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerMisfirePolicy
+    | Prisma.EnumSchedulerMisfirePolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerMisfirePolicy[];
+  notIn?: $Enums.SchedulerMisfirePolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerMisfirePolicyFilter<$PrismaModel>
+    | $Enums.SchedulerMisfirePolicy;
+};
+
+export type EnumSchedulerJobStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerJobStatus
+    | Prisma.EnumSchedulerJobStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobStatus[];
+  notIn?: $Enums.SchedulerJobStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobStatusWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerJobStatus;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerJobStatusFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerJobStatusFilter<$PrismaModel>;
+};
+
+export type EnumSchedulerConcurrencyPolicyWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.SchedulerConcurrencyPolicy
+    | Prisma.EnumSchedulerConcurrencyPolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerConcurrencyPolicy[];
+  notIn?: $Enums.SchedulerConcurrencyPolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerConcurrencyPolicyWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerConcurrencyPolicy;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerConcurrencyPolicyFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerConcurrencyPolicyFilter<$PrismaModel>;
+};
+
+export type EnumSchedulerMisfirePolicyWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.SchedulerMisfirePolicy
+    | Prisma.EnumSchedulerMisfirePolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerMisfirePolicy[];
+  notIn?: $Enums.SchedulerMisfirePolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerMisfirePolicyWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerMisfirePolicy;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerMisfirePolicyFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerMisfirePolicyFilter<$PrismaModel>;
+};
+
+export type EnumSchedulerJobLogStatusFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerJobLogStatus
+    | Prisma.EnumSchedulerJobLogStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobLogStatus[];
+  notIn?: $Enums.SchedulerJobLogStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobLogStatusFilter<$PrismaModel>
+    | $Enums.SchedulerJobLogStatus;
+};
+
+export type EnumSchedulerJobLogStatusWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.SchedulerJobLogStatus
+    | Prisma.EnumSchedulerJobLogStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobLogStatus[];
+  notIn?: $Enums.SchedulerJobLogStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobLogStatusWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerJobLogStatus;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerJobLogStatusFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerJobLogStatusFilter<$PrismaModel>;
+};
+
 export type NestedIntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>;
   in?: number[];
@@ -1549,4 +1730,190 @@ export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>;
   _min?: Prisma.NestedBoolFilter<$PrismaModel>;
   _max?: Prisma.NestedBoolFilter<$PrismaModel>;
+};
+
+export type NestedEnumLoginLogActionFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.LoginLogAction
+    | Prisma.EnumLoginLogActionFieldRefInput<$PrismaModel>;
+  in?: $Enums.LoginLogAction[];
+  notIn?: $Enums.LoginLogAction[];
+  not?:
+    | Prisma.NestedEnumLoginLogActionFilter<$PrismaModel>
+    | $Enums.LoginLogAction;
+};
+
+export type NestedEnumLoginLogResultFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.LoginLogResult
+    | Prisma.EnumLoginLogResultFieldRefInput<$PrismaModel>;
+  in?: $Enums.LoginLogResult[];
+  notIn?: $Enums.LoginLogResult[];
+  not?:
+    | Prisma.NestedEnumLoginLogResultFilter<$PrismaModel>
+    | $Enums.LoginLogResult;
+};
+
+export type NestedEnumLoginLogActionWithAggregatesFilter<$PrismaModel = never> =
+  {
+    equals?:
+      | $Enums.LoginLogAction
+      | Prisma.EnumLoginLogActionFieldRefInput<$PrismaModel>;
+    in?: $Enums.LoginLogAction[];
+    notIn?: $Enums.LoginLogAction[];
+    not?:
+      | Prisma.NestedEnumLoginLogActionWithAggregatesFilter<$PrismaModel>
+      | $Enums.LoginLogAction;
+    _count?: Prisma.NestedIntFilter<$PrismaModel>;
+    _min?: Prisma.NestedEnumLoginLogActionFilter<$PrismaModel>;
+    _max?: Prisma.NestedEnumLoginLogActionFilter<$PrismaModel>;
+  };
+
+export type NestedEnumLoginLogResultWithAggregatesFilter<$PrismaModel = never> =
+  {
+    equals?:
+      | $Enums.LoginLogResult
+      | Prisma.EnumLoginLogResultFieldRefInput<$PrismaModel>;
+    in?: $Enums.LoginLogResult[];
+    notIn?: $Enums.LoginLogResult[];
+    not?:
+      | Prisma.NestedEnumLoginLogResultWithAggregatesFilter<$PrismaModel>
+      | $Enums.LoginLogResult;
+    _count?: Prisma.NestedIntFilter<$PrismaModel>;
+    _min?: Prisma.NestedEnumLoginLogResultFilter<$PrismaModel>;
+    _max?: Prisma.NestedEnumLoginLogResultFilter<$PrismaModel>;
+  };
+
+export type NestedEnumOperLogStatusFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.OperLogStatus
+    | Prisma.EnumOperLogStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.OperLogStatus[];
+  notIn?: $Enums.OperLogStatus[];
+  not?:
+    | Prisma.NestedEnumOperLogStatusFilter<$PrismaModel>
+    | $Enums.OperLogStatus;
+};
+
+export type NestedEnumOperLogStatusWithAggregatesFilter<$PrismaModel = never> =
+  {
+    equals?:
+      | $Enums.OperLogStatus
+      | Prisma.EnumOperLogStatusFieldRefInput<$PrismaModel>;
+    in?: $Enums.OperLogStatus[];
+    notIn?: $Enums.OperLogStatus[];
+    not?:
+      | Prisma.NestedEnumOperLogStatusWithAggregatesFilter<$PrismaModel>
+      | $Enums.OperLogStatus;
+    _count?: Prisma.NestedIntFilter<$PrismaModel>;
+    _min?: Prisma.NestedEnumOperLogStatusFilter<$PrismaModel>;
+    _max?: Prisma.NestedEnumOperLogStatusFilter<$PrismaModel>;
+  };
+
+export type NestedEnumSchedulerJobStatusFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerJobStatus
+    | Prisma.EnumSchedulerJobStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobStatus[];
+  notIn?: $Enums.SchedulerJobStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobStatusFilter<$PrismaModel>
+    | $Enums.SchedulerJobStatus;
+};
+
+export type NestedEnumSchedulerConcurrencyPolicyFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerConcurrencyPolicy
+    | Prisma.EnumSchedulerConcurrencyPolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerConcurrencyPolicy[];
+  notIn?: $Enums.SchedulerConcurrencyPolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerConcurrencyPolicyFilter<$PrismaModel>
+    | $Enums.SchedulerConcurrencyPolicy;
+};
+
+export type NestedEnumSchedulerMisfirePolicyFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerMisfirePolicy
+    | Prisma.EnumSchedulerMisfirePolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerMisfirePolicy[];
+  notIn?: $Enums.SchedulerMisfirePolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerMisfirePolicyFilter<$PrismaModel>
+    | $Enums.SchedulerMisfirePolicy;
+};
+
+export type NestedEnumSchedulerJobStatusWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.SchedulerJobStatus
+    | Prisma.EnumSchedulerJobStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobStatus[];
+  notIn?: $Enums.SchedulerJobStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobStatusWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerJobStatus;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerJobStatusFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerJobStatusFilter<$PrismaModel>;
+};
+
+export type NestedEnumSchedulerConcurrencyPolicyWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.SchedulerConcurrencyPolicy
+    | Prisma.EnumSchedulerConcurrencyPolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerConcurrencyPolicy[];
+  notIn?: $Enums.SchedulerConcurrencyPolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerConcurrencyPolicyWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerConcurrencyPolicy;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerConcurrencyPolicyFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerConcurrencyPolicyFilter<$PrismaModel>;
+};
+
+export type NestedEnumSchedulerMisfirePolicyWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.SchedulerMisfirePolicy
+    | Prisma.EnumSchedulerMisfirePolicyFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerMisfirePolicy[];
+  notIn?: $Enums.SchedulerMisfirePolicy[];
+  not?:
+    | Prisma.NestedEnumSchedulerMisfirePolicyWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerMisfirePolicy;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerMisfirePolicyFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerMisfirePolicyFilter<$PrismaModel>;
+};
+
+export type NestedEnumSchedulerJobLogStatusFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.SchedulerJobLogStatus
+    | Prisma.EnumSchedulerJobLogStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobLogStatus[];
+  notIn?: $Enums.SchedulerJobLogStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobLogStatusFilter<$PrismaModel>
+    | $Enums.SchedulerJobLogStatus;
+};
+
+export type NestedEnumSchedulerJobLogStatusWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.SchedulerJobLogStatus
+    | Prisma.EnumSchedulerJobLogStatusFieldRefInput<$PrismaModel>;
+  in?: $Enums.SchedulerJobLogStatus[];
+  notIn?: $Enums.SchedulerJobLogStatus[];
+  not?:
+    | Prisma.NestedEnumSchedulerJobLogStatusWithAggregatesFilter<$PrismaModel>
+    | $Enums.SchedulerJobLogStatus;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumSchedulerJobLogStatusFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumSchedulerJobLogStatusFilter<$PrismaModel>;
 };

@@ -24,8 +24,11 @@ export class AuthController {
 
   @Public()
   @Post("logout")
-  async logout(@Headers("authorization") authorization?: string) {
-    return this.authService.logout(authorization);
+  async logout(
+    @Headers("authorization") authorization: string | undefined,
+    @Req() request: Request,
+  ) {
+    return this.authService.logout(authorization, request);
   }
 
   @Get("me")

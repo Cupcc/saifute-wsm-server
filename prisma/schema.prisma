@@ -94,6 +94,41 @@ enum DocumentRelationType {
   TRACEABILITY_REFERENCE
 }
 
+enum LoginLogAction {
+  LOGIN
+  LOGOUT
+}
+
+enum LoginLogResult {
+  SUCCESS
+  FAILURE
+}
+
+enum OperLogStatus {
+  SUCCESS
+  FAILURE
+}
+
+enum SchedulerJobStatus {
+  ACTIVE
+  PAUSED
+}
+
+enum SchedulerConcurrencyPolicy {
+  ALLOW
+  FORBID
+}
+
+enum SchedulerMisfirePolicy {
+  FIRE_AND_PROCEED
+  SKIP
+}
+
+enum SchedulerJobLogStatus {
+  SUCCESS
+  FAILURE
+}
+
 model MaterialCategory {
   id           Int                @id @default(autoincrement())
   categoryCode String             @unique @db.VarChar(64)
@@ -650,4 +685,86 @@ model DocumentLineRelation {
   @@index([upstreamFamily, upstreamDocumentId, upstreamLineId])
   @@index([downstreamFamily, downstreamDocumentId, downstreamLineId])
   @@map("document_line_relation")
+}
+
+model LoginLog {
+  id         Int            @id @default(autoincrement())
+  action     LoginLogAction
+  username   String         @db.VarChar(64)
+  userId     Int?
+  sessionId  String?        @db.VarChar(64)
+  ip         String?        @db.VarChar(64)
+  userAgent  String?        @db.VarChar(500)
+  result     LoginLogResult
+  reason     String?        @db.VarChar(128)
+  occurredAt DateTime       @default(now())
+
+  @@index([action, result, occurredAt])
+  @@index([username])
+  @@index([occurredAt])
+  @@map("sys_logininfor")
+}
+
+model OperLog {
+  id           Int           @id @default(autoincrement())
+  title        String        @db.VarChar(128)
+  action       String        @db.VarChar(64)
+  method       String        @db.VarChar(16)
+  path         String        @db.VarChar(255)
+  operatorId   Int?
+  operatorName String?       @db.VarChar(64)
+  ip           String?       @db.VarChar(64)
+  userAgent    String?       @db.VarChar(500)
+  requestData  String?       @db.LongText
+  responseData String?       @db.LongText
+  errorMessage String?       @db.LongText
+  durationMs   Int
+  status       OperLogStatus
+  occurredAt   DateTime      @default(now())
+
+  @@index([status, occurredAt])
+  @@index([title, occurredAt])
+  @@index([operatorName])
+  @@map("sys_oper_log")
+}
+
+model SchedulerJob {
+  id                Int                        @id @default(autoincrement())
+  jobName           String                     @unique @db.VarChar(128)
+  invokeTarget      String                     @db.VarChar(128)
+  cronExpression    String                     @db.VarChar(64)
+  status            SchedulerJobStatus         @default(ACTIVE)
+  concurrencyPolicy SchedulerConcurrencyPolicy @default(FORBID)
+  misfirePolicy     SchedulerMisfirePolicy     @default(FIRE_AND_PROCEED)
+  remark            String?                    @db.VarChar(500)
+  lastRunAt         DateTime?
+  createdBy         String?                    @db.VarChar(64)
+  createdAt         DateTime                   @default(now())
+  updatedBy         String?                    @db.VarChar(64)
+  updatedAt         DateTime                   @updatedAt
+  logs              SchedulerJobLog[]
+
+  @@index([status, updatedAt])
+  @@index([invokeTarget])
+  @@map("sys_job")
+}
+
+model SchedulerJobLog {
+  id           Int                   @id @default(autoincrement())
+  jobId        Int?
+  jobName      String                @db.VarChar(128)
+  invokeTarget String                @db.VarChar(128)
+  status       SchedulerJobLogStatus
+  message      String?               @db.LongText
+  errorMessage String?               @db.LongText
+  durationMs   Int
+  startedAt    DateTime
+  finishedAt   DateTime
+  createdAt    DateTime              @default(now())
+  schedulerJob SchedulerJob?         @relation(fields: [jobId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([jobId, startedAt])
+  @@index([status, startedAt])
+  @@index([jobName, startedAt])
+  @@map("sys_job_log")
 }

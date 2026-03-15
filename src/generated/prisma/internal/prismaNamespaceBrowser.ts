@@ -75,6 +75,10 @@ export const ModelName = {
   ProjectMaterialLine: "ProjectMaterialLine",
   DocumentRelation: "DocumentRelation",
   DocumentLineRelation: "DocumentLineRelation",
+  LoginLog: "LoginLog",
+  OperLog: "OperLog",
+  SchedulerJob: "SchedulerJob",
+  SchedulerJobLog: "SchedulerJobLog",
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -560,6 +564,79 @@ export const DocumentLineRelationScalarFieldEnum = {
 export type DocumentLineRelationScalarFieldEnum =
   (typeof DocumentLineRelationScalarFieldEnum)[keyof typeof DocumentLineRelationScalarFieldEnum];
 
+export const LoginLogScalarFieldEnum = {
+  id: "id",
+  action: "action",
+  username: "username",
+  userId: "userId",
+  sessionId: "sessionId",
+  ip: "ip",
+  userAgent: "userAgent",
+  result: "result",
+  reason: "reason",
+  occurredAt: "occurredAt",
+} as const;
+
+export type LoginLogScalarFieldEnum =
+  (typeof LoginLogScalarFieldEnum)[keyof typeof LoginLogScalarFieldEnum];
+
+export const OperLogScalarFieldEnum = {
+  id: "id",
+  title: "title",
+  action: "action",
+  method: "method",
+  path: "path",
+  operatorId: "operatorId",
+  operatorName: "operatorName",
+  ip: "ip",
+  userAgent: "userAgent",
+  requestData: "requestData",
+  responseData: "responseData",
+  errorMessage: "errorMessage",
+  durationMs: "durationMs",
+  status: "status",
+  occurredAt: "occurredAt",
+} as const;
+
+export type OperLogScalarFieldEnum =
+  (typeof OperLogScalarFieldEnum)[keyof typeof OperLogScalarFieldEnum];
+
+export const SchedulerJobScalarFieldEnum = {
+  id: "id",
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  cronExpression: "cronExpression",
+  status: "status",
+  concurrencyPolicy: "concurrencyPolicy",
+  misfirePolicy: "misfirePolicy",
+  remark: "remark",
+  lastRunAt: "lastRunAt",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SchedulerJobScalarFieldEnum =
+  (typeof SchedulerJobScalarFieldEnum)[keyof typeof SchedulerJobScalarFieldEnum];
+
+export const SchedulerJobLogScalarFieldEnum = {
+  id: "id",
+  jobId: "jobId",
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  status: "status",
+  message: "message",
+  errorMessage: "errorMessage",
+  durationMs: "durationMs",
+  startedAt: "startedAt",
+  finishedAt: "finishedAt",
+  createdAt: "createdAt",
+} as const;
+
+export type SchedulerJobLogScalarFieldEnum =
+  (typeof SchedulerJobLogScalarFieldEnum)[keyof typeof SchedulerJobLogScalarFieldEnum];
+
 export const SortOrder = {
   asc: "asc",
   desc: "desc",
@@ -833,3 +910,52 @@ export const DocumentLineRelationOrderByRelevanceFieldEnum = {
 
 export type DocumentLineRelationOrderByRelevanceFieldEnum =
   (typeof DocumentLineRelationOrderByRelevanceFieldEnum)[keyof typeof DocumentLineRelationOrderByRelevanceFieldEnum];
+
+export const LoginLogOrderByRelevanceFieldEnum = {
+  username: "username",
+  sessionId: "sessionId",
+  ip: "ip",
+  userAgent: "userAgent",
+  reason: "reason",
+} as const;
+
+export type LoginLogOrderByRelevanceFieldEnum =
+  (typeof LoginLogOrderByRelevanceFieldEnum)[keyof typeof LoginLogOrderByRelevanceFieldEnum];
+
+export const OperLogOrderByRelevanceFieldEnum = {
+  title: "title",
+  action: "action",
+  method: "method",
+  path: "path",
+  operatorName: "operatorName",
+  ip: "ip",
+  userAgent: "userAgent",
+  requestData: "requestData",
+  responseData: "responseData",
+  errorMessage: "errorMessage",
+} as const;
+
+export type OperLogOrderByRelevanceFieldEnum =
+  (typeof OperLogOrderByRelevanceFieldEnum)[keyof typeof OperLogOrderByRelevanceFieldEnum];
+
+export const SchedulerJobOrderByRelevanceFieldEnum = {
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  cronExpression: "cronExpression",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type SchedulerJobOrderByRelevanceFieldEnum =
+  (typeof SchedulerJobOrderByRelevanceFieldEnum)[keyof typeof SchedulerJobOrderByRelevanceFieldEnum];
+
+export const SchedulerJobLogOrderByRelevanceFieldEnum = {
+  jobName: "jobName",
+  invokeTarget: "invokeTarget",
+  message: "message",
+  errorMessage: "errorMessage",
+} as const;
+
+export type SchedulerJobLogOrderByRelevanceFieldEnum =
+  (typeof SchedulerJobLogOrderByRelevanceFieldEnum)[keyof typeof SchedulerJobLogOrderByRelevanceFieldEnum];

@@ -30,6 +30,7 @@ export class RbacService {
       userId: user.userId,
       username: user.username,
       displayName: user.displayName,
+      avatarUrl: user.avatarUrl ?? null,
       roles: [...user.roles],
       permissions: [...user.permissions],
       department: user.department ? { ...user.department } : null,
@@ -57,6 +58,24 @@ export class RbacService {
     }
 
     return this.filterRoutesByPermissions(allRoutes, user.permissions);
+  }
+
+  async updateAvatar(
+    userId: number,
+    avatarUrl: string | null,
+  ): Promise<{
+    currentUser: SessionUserSnapshot;
+    previousAvatarUrl: string | null;
+  }> {
+    const result = await this.inMemoryRbacRepository.updateUserAvatar(
+      userId,
+      avatarUrl,
+    );
+
+    return {
+      currentUser: this.toSessionUser(result.user),
+      previousAvatarUrl: result.previousAvatarUrl,
+    };
   }
 
   private filterRoutesByPermissions(

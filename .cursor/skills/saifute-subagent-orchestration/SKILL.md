@@ -28,6 +28,18 @@ Respect the documented dependency order:
 
 Do not start downstream implementation until upstream prerequisites are satisfied, unless the task is explicitly docs-only.
 
+## Intent mapping
+
+Interpret these user requests strictly unless the user explicitly narrows scope:
+
+- `continue building batch x`
+- `finish batch x`
+- `complete batch x`
+- `deliver batch x`
+- `don't stop until this batch is done`
+
+All of the above are batch-delivery/completion requests, not permission to stop after one repaired slice, one module, one review pass, or one targeted test run.
+
 ## Subagent selection
 
 Choose the smallest useful set:
@@ -40,19 +52,25 @@ Choose the smallest useful set:
 
 1. Default to at most 4 concurrent worker subagents.
 2. Use `execution-agent` for delivery work and keep each worker scoped to one explicit batch assignment.
-3. For cross-module work, include `architecture-guardian` early.
-4. Before finalizing substantive work, involve `code-reviewer` and require the batch-appropriate integration or e2e gate.
-5. For batch-delivery tasks, treat review as a repair loop rather than a terminal step:
+3. Multiple writer subagents are allowed only when their writable scopes are explicitly disjoint before launch.
+4. Do not run write-capable subagents in background mode. If parallel writers are needed, launch them together and wait for them to finish.
+5. Shared files default to parent ownership unless one worker is explicitly named as the sole owner for that file.
+6. Every writer handoff must list owned paths, forbidden shared files, and the validation command expected for that scope.
+7. For cross-module work, include `architecture-guardian` early.
+8. Before finalizing substantive work, involve `code-reviewer` and require the batch-appropriate integration or e2e gate.
+9. For batch-delivery tasks, treat review as a repair loop rather than a terminal step:
    - if `code-reviewer` reports any open `[blocking]` or `[important]` item, hand the findings back to `execution-agent` for fixes
    - rerun `code-reviewer` after the fixes until the scoped work is clear or a real blocker requires user direction
    - do not stop merely because a review markdown file or fix checklist was generated
-6. When a task is driven by a file under `docs/fix-checklists/`, keep responsibilities separated:
-   - `execution-agent` fixes code and tests based on the unchecked checklist items
-   - `code-reviewer` owns correctness review, findings, severity, the required batch gate, and any updates to the related checklist markdown
-7. Do not ask `execution-agent` to close checklist items directly unless the task is explicitly documentation-only; after reviewing the fix evidence, let `code-reviewer` update the relevant `docs/fix-checklists/` file.
-8. If a task touches shared contracts, route the doc decision explicitly. Module-local fact docs may be updated by `execution-agent` within its owned scope. Cross-module, architecture, dependency, or transaction docs should be reviewed or patched by `architecture-guardian`. `docs/fix-checklists/` remains owned by `code-reviewer`.
-9. If a downstream task is blocked by unstable docs or competing contract proposals, involve `architecture-guardian` before more implementation spreads.
-10. Never let a subagent bypass these frozen rules:
+10. When a task is driven by a file under `docs/fix-checklists/`, keep responsibilities separated:
+
+- `execution-agent` fixes code and tests based on the unchecked checklist items
+- `code-reviewer` owns correctness review, findings, severity, the required batch gate, and any updates to the related checklist markdown
+
+11. Do not ask `execution-agent` to close checklist items directly unless the task is explicitly documentation-only; after reviewing the fix evidence, let `code-reviewer` update the relevant `docs/fix-checklists/` file.
+2. If a task touches shared contracts, route the doc decision explicitly. Module-local fact docs may be updated by `execution-agent` within its owned scope. Cross-module, architecture, dependency, or transaction docs should be reviewed or patched by `architecture-guardian`. `docs/fix-checklists/` remains owned by `code-reviewer`.
+3. If a downstream task is blocked by unstable docs or competing contract proposals, involve `architecture-guardian` before more implementation spreads.
+4. Never let a subagent bypass these frozen rules:
 
 - `inventory-core` is the only stock write entry point.
 - `workflow` owns audit-document workflow behavior.
@@ -77,12 +95,22 @@ The `execution-agent` may edit:
 - Tests for those modules
 - Module-local docs that describe its owned contracts or behavior
 - Narrow shared files that are directly required by the task
+- Parallel-owned scopes only when the parent explicitly assigned a disjoint writable boundary
 
 The `execution-agent` must avoid:
 
 - Unapproved edits to another module's internal repository or table access
 - New cross-module dependencies that are not documented
 - Silent changes to shared contracts without updating docs
+- Touching parent-owned shared files unless the handoff explicitly made that worker the sole owner
+
+## Parent merge behavior
+
+When parallel writers were active:
+
+- Re-read the latest file content before any parent merge or shared-file edit
+- Auto-reconcile overlapping child changes only when the source is attributable to active child agents and the frozen boundaries are still respected
+- Stop and ask the user only if the source may be a real user edit, ownership is ambiguous, or the overlap crosses an unapproved shared boundary
 
 The `architecture-guardian` may edit when the parent task allows it:
 
@@ -131,6 +159,11 @@ For tasks whose goal is to implement, finish, deliver, or fully repair a scoped 
 1. The batch satisfies the completion conditions below and the final commit is created.
 2. The user explicitly asked for `review-only`, `docs-only`, or `no-commit`.
 3. A real blocker remains that requires user direction.
+
+When deciding whether a blocker is real, use this bar:
+
+- real blocker: user-edit conflict, frozen-boundary ownership ambiguity, contradictory architecture truth, missing required credentials/resources, or unresolved product choice that the agent cannot safely decide alone
+- not a real blocker: one module inside the batch is now stable, one slice passed tests, review produced findings, checklist exists, or the parent simply prefers to pause and summarize
 
 A batch is eligible for the final commit skill step only when all of the following are true:
 

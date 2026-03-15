@@ -12,6 +12,14 @@
 - Shared files allowed when needed: guards, decorators, events, Prisma transaction wrappers, typed constants, narrow DTO contracts, fixtures, and config directly required by the task
 - Must preserve: batch order, documented module boundaries, `inventory-core` as the only stock write entry, lightweight `workflow`, JWT ticket plus Redis session model, and AI as query-orchestration only
 
+## Parallel writer policy
+
+- Multiple writer `execution-agent` workers are allowed only when their writable scopes are explicitly disjoint before launch
+- Write-capable subagents should not run in background mode
+- Shared files such as `src/app.module.ts`, `src/main.ts`, `src/shared/**`, `prisma/schema.prisma`, route or permission registries, shared docs/contracts, and cross-module tests stay parent-owned unless one worker is explicitly named as the sole owner
+- Each writer handoff should list owned paths and forbidden shared files so the parent can verify scope separation before launch
+- If overlapping child changes appear and the source is clearly an active child worker, the parent should re-read the latest content and merge on top of it instead of stopping immediately
+
 ## Cross-cutting agents
 
 ### `architecture-guardian`
@@ -67,6 +75,7 @@
 ## Finalization ownership
 
 - Commit creation belongs to the parent orchestrator only after the scoped batch passes its validation gate and cleanup checks
+- Requests such as `continue building batch x`, `finish batch x`, or `don't stop until this batch is done` are delivery/completion requests by default, so the parent should not stop after a repaired slice or review handoff unless the user explicitly narrows scope
 - For batch delivery/completion requests, review output and checklist generation are not valid stopping points; the parent orchestrator should keep the repair loop running until commit or a real blocker
 - When commit creation is allowed, the parent orchestrator must hand off the final commit work to a dedicated commit subagent that uses the commit skill
 - `code-reviewer` may report that checklist cleanup is complete, but it does not own the commit decision

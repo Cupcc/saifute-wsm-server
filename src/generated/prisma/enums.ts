@@ -136,3 +136,58 @@ export const DocumentRelationType = {
 
 export type DocumentRelationType =
   (typeof DocumentRelationType)[keyof typeof DocumentRelationType];
+
+export const LoginLogAction = {
+  LOGIN: "LOGIN",
+  LOGOUT: "LOGOUT",
+} as const;
+
+export type LoginLogAction =
+  (typeof LoginLogAction)[keyof typeof LoginLogAction];
+
+export const LoginLogResult = {
+  SUCCESS: "SUCCESS",
+  FAILURE: "FAILURE",
+} as const;
+
+export type LoginLogResult =
+  (typeof LoginLogResult)[keyof typeof LoginLogResult];
+
+export const OperLogStatus = {
+  SUCCESS: "SUCCESS",
+  FAILURE: "FAILURE",
+} as const;
+
+export type OperLogStatus = (typeof OperLogStatus)[keyof typeof OperLogStatus];
+
+export const SchedulerJobStatus = {
+  ACTIVE: "ACTIVE",
+  PAUSED: "PAUSED",
+} as const;
+
+export type SchedulerJobStatus =
+  (typeof SchedulerJobStatus)[keyof typeof SchedulerJobStatus];
+
+export const SchedulerConcurrencyPolicy = {
+  ALLOW: "ALLOW",
+  FORBID: "FORBID",
+} as const;
+
+export type SchedulerConcurrencyPolicy =
+  (typeof SchedulerConcurrencyPolicy)[keyof typeof SchedulerConcurrencyPolicy];
+
+export const SchedulerMisfirePolicy = {
+  FIRE_AND_PROCEED: "FIRE_AND_PROCEED",
+  SKIP: "SKIP",
+} as const;
+
+export type SchedulerMisfirePolicy =
+  (typeof SchedulerMisfirePolicy)[keyof typeof SchedulerMisfirePolicy];
+
+export const SchedulerJobLogStatus = {
+  SUCCESS: "SUCCESS",
+  FAILURE: "FAILURE",
+} as const;
+
+export type SchedulerJobLogStatus =
+  (typeof SchedulerJobLogStatus)[keyof typeof SchedulerJobLogStatus];

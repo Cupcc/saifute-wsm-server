@@ -7,7 +7,15 @@ import {
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import type { Request } from "express";
 import { AppConfigService } from "../../../shared/config/app-config.service";
+import {
+  AUTH_AUDIT_ACTION,
+  AUTH_AUDIT_EVENT,
+  AUTH_AUDIT_RESULT,
+  type AuthAuditEvent,
+  createAuthAuditEvent,
+} from "../../../shared/events/auth-audit.event";
 import { RbacService } from "../../rbac/application/rbac.service";
+import type { RbacUserRecord } from "../../rbac/domain/rbac.types";
 import { SessionService } from "../../session/application/session.service";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { LoginDto } from "../dto/login.dto";
@@ -36,25 +44,37 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto, request: Request) {
+    const clientIp = this.resolveClientIp(request);
+    const userAgent = this.resolveUserAgent(request);
     const captchaValid = await this.authStateRepository.consumeCaptcha(
       loginDto.captchaId,
       loginDto.captchaCode,
     );
     if (!captchaValid) {
-      this.eventEmitter.emit("auth.login.failed", {
-        username: loginDto.username,
-        reason: "captcha_invalid",
-      });
+      this.emitAuthAuditEvent(
+        createAuthAuditEvent({
+          action: AUTH_AUDIT_ACTION.LOGIN,
+          result: AUTH_AUDIT_RESULT.FAILURE,
+          username: loginDto.username,
+          ip: clientIp,
+          userAgent,
+          reason: "captcha_invalid",
+        }),
+      );
       throw new BadRequestException("验证码错误或已失效");
     }
 
-    const clientIp = this.resolveClientIp(request);
     if (this.isBlockedIp(clientIp)) {
-      this.eventEmitter.emit("auth.login.failed", {
-        username: loginDto.username,
-        reason: "ip_blocked",
-        ip: clientIp,
-      });
+      this.emitAuthAuditEvent(
+        createAuthAuditEvent({
+          action: AUTH_AUDIT_ACTION.LOGIN,
+          result: AUTH_AUDIT_RESULT.FAILURE,
+          username: loginDto.username,
+          ip: clientIp,
+          userAgent,
+          reason: "ip_blocked",
+        }),
+      );
       throw new UnauthorizedException("登录请求已被拒绝");
     }
 
@@ -65,23 +85,53 @@ export class AuthService {
       passwordAttempt.lockedUntil &&
       new Date(passwordAttempt.lockedUntil).getTime() > Date.now()
     ) {
+      this.emitAuthAuditEvent(
+        createAuthAuditEvent({
+          action: AUTH_AUDIT_ACTION.LOGIN,
+          result: AUTH_AUDIT_RESULT.FAILURE,
+          username: loginDto.username,
+          ip: clientIp,
+          userAgent,
+          reason: "account_locked",
+        }),
+      );
       throw new UnauthorizedException("账号已被临时锁定，请稍后再试");
     }
 
-    const user = await this.rbacService.findUserForLogin(loginDto.username);
+    let user: RbacUserRecord;
+    try {
+      user = await this.rbacService.findUserForLogin(loginDto.username);
+    } catch (error) {
+      this.emitAuthAuditEvent(
+        createAuthAuditEvent({
+          action: AUTH_AUDIT_ACTION.LOGIN,
+          result: AUTH_AUDIT_RESULT.FAILURE,
+          username: loginDto.username,
+          ip: clientIp,
+          userAgent,
+          reason: "user_invalid",
+        }),
+      );
+      throw error;
+    }
+
     const passwordValid = this.rbacService.verifyPassword(
       loginDto.password,
       user.passwordHash,
     );
     if (!passwordValid) {
-      const nextAttempt = await this.authStateRepository.recordPasswordFailure(
-        loginDto.username,
+      await this.authStateRepository.recordPasswordFailure(loginDto.username);
+      this.emitAuthAuditEvent(
+        createAuthAuditEvent({
+          action: AUTH_AUDIT_ACTION.LOGIN,
+          result: AUTH_AUDIT_RESULT.FAILURE,
+          username: loginDto.username,
+          userId: user.userId,
+          ip: clientIp,
+          userAgent,
+          reason: "password_invalid",
+        }),
       );
-      this.eventEmitter.emit("auth.login.failed", {
-        username: loginDto.username,
-        reason: "password_invalid",
-        count: nextAttempt.count,
-      });
       throw new UnauthorizedException("用户名或密码错误");
     }
 
@@ -91,13 +141,20 @@ export class AuthService {
     const { accessToken, session } = await this.sessionService.createSession({
       user: sessionUser,
       ip: clientIp,
-      device: request.headers["user-agent"] ?? "unknown",
+      device: userAgent,
     });
 
-    this.eventEmitter.emit("auth.login.succeeded", {
-      username: loginDto.username,
-      sessionId: session.sessionId,
-    });
+    this.emitAuthAuditEvent(
+      createAuthAuditEvent({
+        action: AUTH_AUDIT_ACTION.LOGIN,
+        result: AUTH_AUDIT_RESULT.SUCCESS,
+        username: loginDto.username,
+        userId: sessionUser.userId,
+        sessionId: session.sessionId,
+        ip: clientIp,
+        userAgent,
+      }),
+    );
 
     return {
       accessToken,
@@ -107,7 +164,10 @@ export class AuthService {
     };
   }
 
-  async logout(bearerToken?: string): Promise<{ loggedOut: boolean }> {
+  async logout(
+    bearerToken: string | undefined,
+    request: Request,
+  ): Promise<{ loggedOut: boolean }> {
     if (!bearerToken) {
       return { loggedOut: true };
     }
@@ -115,14 +175,27 @@ export class AuthService {
     const token = bearerToken.startsWith("Bearer ")
       ? bearerToken.slice("Bearer ".length)
       : bearerToken;
+    const clientIp = this.resolveClientIp(request);
+    const userAgent = this.resolveUserAgent(request);
 
     try {
+      const session = await this.sessionService.resolveSessionFromToken(token);
       await this.sessionService.invalidateToken(token);
+      this.emitAuthAuditEvent(
+        createAuthAuditEvent({
+          action: AUTH_AUDIT_ACTION.LOGOUT,
+          result: AUTH_AUDIT_RESULT.SUCCESS,
+          username: session.user.username,
+          userId: session.user.userId,
+          sessionId: session.sessionId,
+          ip: clientIp,
+          userAgent,
+        }),
+      );
     } catch {
       return { loggedOut: true };
     }
 
-    this.eventEmitter.emit("auth.logout", {});
     return { loggedOut: true };
   }
 
@@ -154,11 +227,24 @@ export class AuthService {
     return this.normalizeIp(candidate);
   }
 
+  private resolveUserAgent(request: Request): string {
+    const userAgent = request.headers["user-agent"];
+    if (Array.isArray(userAgent)) {
+      return userAgent[0] ?? "unknown";
+    }
+
+    return userAgent ?? "unknown";
+  }
+
   private normalizeIp(ip: string): string {
     if (ip === "::1") {
       return "127.0.0.1";
     }
 
     return ip.replace(/^::ffff:/, "");
+  }
+
+  private emitAuthAuditEvent(event: AuthAuditEvent): void {
+    this.eventEmitter.emit(AUTH_AUDIT_EVENT, event);
   }
 }

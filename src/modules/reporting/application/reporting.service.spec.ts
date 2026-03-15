@@ -1,0 +1,189 @@
+import { Test } from "@nestjs/testing";
+import { Prisma } from "../../../generated/prisma/client";
+import { AppConfigService } from "../../../shared/config/app-config.service";
+import {
+  ReportingExportType,
+  ReportingTrendType,
+} from "../dto/query-reporting.dto";
+import { ReportingRepository } from "../infrastructure/reporting.repository";
+import { ReportingService } from "./reporting.service";
+
+describe("ReportingService", () => {
+  let service: ReportingService;
+  let repository: jest.Mocked<ReportingRepository>;
+
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        ReportingService,
+        {
+          provide: ReportingRepository,
+          useValue: {
+            getHomeMetrics: jest.fn(),
+            findInventoryBalanceSnapshots: jest.fn(),
+            findTrendDocuments: jest.fn(),
+          },
+        },
+        {
+          provide: AppConfigService,
+          useValue: {
+            businessTimezone: "Asia/Shanghai",
+          },
+        },
+      ],
+    }).compile();
+
+    service = moduleRef.get(ReportingService);
+    repository = moduleRef.get(ReportingRepository);
+  });
+
+  it("should build the home dashboard metrics", async () => {
+    repository.getHomeMetrics.mockResolvedValue({
+      activeMaterialCount: 12,
+      activeWorkshopCount: 3,
+      totalInventoryQty: new Prisma.Decimal("88.5"),
+      lowStockCount: 2,
+      inboundTodayCount: 4,
+      outboundTodayCount: 1,
+      workshopMaterialTodayCount: 2,
+      inboundTotalQty: new Prisma.Decimal("200"),
+      inboundTotalAmount: new Prisma.Decimal("1200.50"),
+      outboundTotalQty: new Prisma.Decimal("50"),
+      outboundTotalAmount: new Prisma.Decimal("500.00"),
+      workshopMaterialTotalQty: new Prisma.Decimal("30"),
+      workshopMaterialTotalAmount: new Prisma.Decimal("90.00"),
+    });
+
+    const result = await service.getHomeDashboard();
+
+    expect(result.inventory.activeMaterialCount).toBe(12);
+    expect(result.inventory.totalQuantityOnHand).toBe("88.500000");
+    expect(result.todayDocuments.inboundCount).toBe(4);
+    expect(result.cumulativeDocuments.inbound.totalAmount).toBe("1200.50");
+  });
+
+  it("should summarize inventory by material category", async () => {
+    repository.findInventoryBalanceSnapshots.mockResolvedValue([
+      {
+        id: 1,
+        quantityOnHand: new Prisma.Decimal("10"),
+        updatedAt: new Date("2026-03-15T00:00:00Z"),
+        material: {
+          id: 11,
+          materialCode: "MAT-01",
+          materialName: "A",
+          specModel: null,
+          unitCode: "PCS",
+          warningMinQty: new Prisma.Decimal("20"),
+          warningMaxQty: null,
+          category: {
+            id: 100,
+            categoryCode: "CAT-A",
+            categoryName: "类别A",
+          },
+        },
+        workshop: {
+          id: 1,
+          workshopCode: "WS-01",
+          workshopName: "一车间",
+        },
+      },
+      {
+        id: 2,
+        quantityOnHand: new Prisma.Decimal("5"),
+        updatedAt: new Date("2026-03-15T00:00:00Z"),
+        material: {
+          id: 12,
+          materialCode: "MAT-02",
+          materialName: "B",
+          specModel: null,
+          unitCode: "PCS",
+          warningMinQty: null,
+          warningMaxQty: null,
+          category: {
+            id: 100,
+            categoryCode: "CAT-A",
+            categoryName: "类别A",
+          },
+        },
+        workshop: {
+          id: 1,
+          workshopCode: "WS-01",
+          workshopName: "一车间",
+        },
+      },
+    ]);
+
+    const result = await service.getMaterialCategorySummary({});
+
+    expect(result.total).toBe(1);
+    expect(result.items[0]?.categoryName).toBe("类别A");
+    expect(result.items[0]?.materialCount).toBe(2);
+    expect(result.items[0]?.totalQuantityOnHand).toBe("15.000000");
+  });
+
+  it("should honor trend time boundaries and filters", async () => {
+    repository.findTrendDocuments.mockResolvedValue([
+      {
+        sourceType: "INBOUND",
+        bizDate: new Date("2026-03-01T00:00:00Z"),
+        totalQty: new Prisma.Decimal("10"),
+        totalAmount: new Prisma.Decimal("100"),
+      },
+      {
+        sourceType: "OUTBOUND",
+        bizDate: new Date("2026-03-02T00:00:00Z"),
+        totalQty: new Prisma.Decimal("8"),
+        totalAmount: new Prisma.Decimal("80"),
+      },
+    ]);
+
+    const result = await service.getTrendSeries({
+      trendType: ReportingTrendType.OUTBOUND,
+      dateFrom: "2026-03-01",
+      dateTo: "2026-03-02",
+    });
+
+    expect(repository.findTrendDocuments).toHaveBeenCalledWith({
+      dateFrom: new Date("2026-02-28T16:00:00.000Z"),
+      dateTo: new Date("2026-03-02T15:59:59.999Z"),
+    });
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.trendType).toBe("OUTBOUND");
+    expect(result.items[0]?.date).toBe("2026-03-02");
+  });
+
+  it("should build export payload structure", async () => {
+    repository.findInventoryBalanceSnapshots.mockResolvedValue([
+      {
+        id: 1,
+        quantityOnHand: new Prisma.Decimal("12"),
+        updatedAt: new Date("2026-03-15T00:00:00Z"),
+        material: {
+          id: 11,
+          materialCode: "MAT-01",
+          materialName: "A",
+          specModel: null,
+          unitCode: "PCS",
+          warningMinQty: null,
+          warningMaxQty: null,
+          category: null,
+        },
+        workshop: {
+          id: 1,
+          workshopCode: "WS-01",
+          workshopName: "一车间",
+        },
+      },
+    ]);
+
+    const result = await service.exportReport({
+      reportType: ReportingExportType.INVENTORY_SUMMARY,
+    });
+
+    expect(result.fileName).toContain("inventory_summary");
+    expect(result.contentType).toContain("text/csv");
+    expect(result.content).toContain("materialCode");
+    expect(result.content).toContain("MAT-01");
+  });
+});

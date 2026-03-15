@@ -1,9 +1,13 @@
+import { mkdirSync } from "node:fs";
 import { type INestApplication, ValidationPipe } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
+import { static as expressStatic } from "express";
 import * as request from "supertest";
 import { AppModule } from "../src/app.module";
 import { HttpExceptionFilter } from "../src/shared/common/filters/http-exception.filter";
 import { ResponseEnvelopeInterceptor } from "../src/shared/common/interceptors/response-envelope.interceptor";
+import { AppConfigService } from "../src/shared/config/app-config.service";
 import { PrismaService } from "../src/shared/prisma/prisma.service";
 import { PrismaE2eStub } from "./prisma-e2e-stub";
 
@@ -49,6 +53,8 @@ describe("Batch A acceptance (e2e)", () => {
       .compile();
 
     const app = moduleRef.createNestApplication();
+    const reflector = app.get(Reflector);
+    const appConfigService = app.get(AppConfigService);
     app.setGlobalPrefix("api");
     app.useGlobalPipes(
       new ValidationPipe({
@@ -58,7 +64,12 @@ describe("Batch A acceptance (e2e)", () => {
       }),
     );
     app.useGlobalFilters(new HttpExceptionFilter());
-    app.useGlobalInterceptors(new ResponseEnvelopeInterceptor());
+    app.useGlobalInterceptors(new ResponseEnvelopeInterceptor(reflector));
+    mkdirSync(appConfigService.uploadRootPath, { recursive: true });
+    app
+      .getHttpAdapter()
+      .getInstance()
+      .use("/profile", expressStatic(appConfigService.uploadRootPath));
     await app.init();
 
     return {

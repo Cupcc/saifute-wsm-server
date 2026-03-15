@@ -1,9 +1,16 @@
+import * as path from "node:path";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class AppConfigService {
   constructor(private readonly configService: ConfigService) {}
+
+  get apiGlobalPrefix(): string {
+    return this.normalizeRoutePrefix(
+      this.readString("API_GLOBAL_PREFIX", "api"),
+    );
+  }
 
   get jwtSecret(): string {
     return this.readString("JWT_SECRET", "dev-secret");
@@ -45,13 +52,111 @@ export class AppConfigService {
       .filter(Boolean);
   }
 
+  get fileStorageRootPath(): string {
+    const configuredRoot =
+      this.configService.get<string>("FILE_STORAGE_ROOT_PATH") ??
+      this.configService.get<string>("UPLOAD_ROOT_PATH") ??
+      "storage";
+    return path.isAbsolute(configuredRoot)
+      ? configuredRoot
+      : path.resolve(process.cwd(), configuredRoot);
+  }
+
+  get uploadRootPath(): string {
+    return this.fileStorageRootPath;
+  }
+
+  get profilePublicPrefix(): string {
+    const value = this.readString("FILE_STORAGE_PUBLIC_PREFIX", "/profile");
+    return this.normalizePublicPrefix(value);
+  }
+
+  get fileUploadMaxSizeBytes(): number {
+    return this.readNumber("FILE_STORAGE_MAX_SIZE_BYTES", 5 * 1024 * 1024);
+  }
+
+  get fileAllowedExtensions(): string[] {
+    const configured = this.readString(
+      "FILE_STORAGE_ALLOWED_EXTENSIONS",
+      ".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar",
+    );
+
+    return configured
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean)
+      .map((item) => (item.startsWith(".") ? item : `.${item}`));
+  }
+
+  get businessTimezone(): string {
+    return this.readString("BUSINESS_TIMEZONE", "Asia/Shanghai");
+  }
+
+  get schedulerEnabled(): boolean {
+    return this.readBoolean("SCHEDULER_ENABLED", true);
+  }
+
+  get schedulerTimezone(): string {
+    return this.readString("SCHEDULER_TIMEZONE", this.businessTimezone);
+  }
+
+  get aiAssistantEnabled(): boolean {
+    return this.readBoolean("AI_ASSISTANT_ENABLED", true);
+  }
+
+  get aiAssistantBaseUrl(): string {
+    return this.readString(
+      "AI_ASSISTANT_BASE_URL",
+      "https://api.openai.com/v1",
+    );
+  }
+
+  get aiAssistantModel(): string {
+    return this.readString("AI_ASSISTANT_MODEL", "gpt-4.1-mini");
+  }
+
+  get aiAssistantApiKey(): string | null {
+    const value = this.readString("AI_ASSISTANT_API_KEY", "").trim();
+    return value ? value : null;
+  }
+
+  get aiAssistantTimeoutMs(): number {
+    return this.readNumber("AI_ASSISTANT_TIMEOUT_MS", 15000);
+  }
+
   private readNumber(key: string, fallback: number): number {
     const value = this.configService.get<string>(key);
     const parsed = value ? Number(value) : Number.NaN;
     return Number.isFinite(parsed) ? parsed : fallback;
   }
 
+  private readBoolean(key: string, fallback: boolean): boolean {
+    const value = this.configService.get<string>(key);
+    if (typeof value !== "string") {
+      return fallback;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(normalized)) {
+      return true;
+    }
+    if (["0", "false", "no", "off"].includes(normalized)) {
+      return false;
+    }
+
+    return fallback;
+  }
+
   private readString(key: string, fallback: string): string {
     return this.configService.get<string>(key) ?? fallback;
+  }
+
+  private normalizeRoutePrefix(value: string): string {
+    return value.replace(/^\/+|\/+$/g, "");
+  }
+
+  private normalizePublicPrefix(value: string): string {
+    const normalized = value.trim().replace(/\/+$/g, "");
+    return normalized.startsWith("/") ? normalized : `/${normalized}`;
   }
 }
