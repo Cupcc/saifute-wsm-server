@@ -14,7 +14,7 @@ import {
   ReportingRepository,
 } from "../infrastructure/reporting.repository";
 
-interface InventorySummaryItem {
+export interface InventorySummaryItem {
   materialId: number;
   materialCode: string;
   materialName: string;
