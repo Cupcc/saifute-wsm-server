@@ -1,0 +1,102 @@
+{
+  "archivedPayloadCount": 454,
+  "context": {
+    "activeMissingMaterialUnitCount": 17,
+    "missingMaterialUnitCount": 21
+  },
+  "counts": {
+    "customer": {
+      "archivedPayloads": 52,
+      "blocked": 0,
+      "planned": 184,
+      "source": 184
+    },
+    "material": {
+      "archivedPayloads": 320,
+      "blocked": 21,
+      "planned": 458,
+      "source": 458
+    },
+    "materialCategory": {
+      "archivedPayloads": 8,
+      "blocked": 0,
+      "planned": 8,
+      "source": 8
+    },
+    "personnel": {
+      "archivedPayloads": 51,
+      "blocked": 0,
+      "planned": 51,
+      "source": 51
+    },
+    "supplier": {
+      "archivedPayloads": 11,
+      "blocked": 0,
+      "planned": 93,
+      "source": 93
+    },
+    "workshop": {
+      "archivedPayloads": 12,
+      "blocked": 0,
+      "planned": 13,
+      "source": 13
+    }
+  },
+  "expectedArchivedPayloadCount": 454,
+  "migrationBatch": "batch1-master-data",
+  "mode": "validate",
+  "sourceRowCounts": {
+    "customers": 184,
+    "materialCategories": 8,
+    "materials": 458,
+    "personnel": 51,
+    "suppliers": 93,
+    "workshops": 12
+  },
+  "targetDatabaseName": "saifute-wsm",
+  "targetSummary": {
+    "customer": {
+      "duplicateCodes": [],
+      "expectedMigratedRows": 184,
+      "mapRows": 184,
+      "missingMappedTargets": 0,
+      "targetRows": 184
+    },
+    "material": {
+      "duplicateCodes": [],
+      "expectedMigratedRows": 437,
+      "mapRows": 437,
+      "missingMappedTargets": 0,
+      "targetRows": 437
+    },
+    "materialCategory": {
+      "duplicateCodes": [],
+      "expectedMigratedRows": 8,
+      "mapRows": 8,
+      "missingMappedTargets": 0,
+      "targetRows": 8
+    },
+    "personnel": {
+      "duplicateCodes": [],
+      "expectedMigratedRows": 51,
+      "mapRows": 51,
+      "missingMappedTargets": 0,
+      "targetRows": 51
+    },
+    "supplier": {
+      "duplicateCodes": [],
+      "expectedMigratedRows": 93,
+      "mapRows": 93,
+      "missingMappedTargets": 0,
+      "targetRows": 93
+    },
+    "workshop": {
+      "duplicateCodes": [],
+      "expectedMigratedRows": 13,
+      "mapRows": 13,
+      "missingMappedTargets": 0,
+      "targetRows": 13
+    }
+  },
+  "validationIssues": []
+}

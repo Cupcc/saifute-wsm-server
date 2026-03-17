@@ -6,9 +6,55 @@ import { ConfigService } from "@nestjs/config";
 export class AppConfigService {
   constructor(private readonly configService: ConfigService) {}
 
+  get appName(): string {
+    return this.readString("APP_NAME", "saifute-wms-server");
+  }
+
+  get environment(): string {
+    return this.readString("NODE_ENV", "development");
+  }
+
   get apiGlobalPrefix(): string {
     return this.normalizeRoutePrefix(
       this.readString("API_GLOBAL_PREFIX", "api"),
+    );
+  }
+
+  get swaggerEnabled(): boolean {
+    const configured = this.parseBooleanValue(
+      this.configService.get<string>("SWAGGER_ENABLED"),
+    );
+    if (configured !== null) {
+      return configured;
+    }
+
+    return ["development", "dev", "local"].includes(
+      this.environment.trim().toLowerCase(),
+    );
+  }
+
+  get swaggerTitle(): string {
+    return this.readString("SWAGGER_TITLE", `${this.appName} API`);
+  }
+
+  get swaggerDescription(): string {
+    return this.readString(
+      "SWAGGER_DESCRIPTION",
+      `${this.appName} API documentation`,
+    );
+  }
+
+  get swaggerVersion(): string {
+    return this.readString("SWAGGER_VERSION", "0.1.0");
+  }
+
+  get swaggerPath(): string {
+    return this.normalizeRoutePrefix(this.readString("SWAGGER_PATH", "docs"));
+  }
+
+  get swaggerJsonPath(): string {
+    return this.normalizeRoutePrefix(
+      this.readString("SWAGGER_JSON_PATH", "docs-json"),
     );
   }
 
@@ -100,6 +146,23 @@ export class AppConfigService {
     return this.readString("SCHEDULER_TIMEZONE", this.businessTimezone);
   }
 
+  get logLevel(): string {
+    return this.readString(
+      "LOG_LEVEL",
+      this.environment === "development" ? "debug" : "info",
+    );
+  }
+
+  get logDirPath(): string {
+    const configuredRoot = this.readString(
+      "LOG_DIR",
+      this.environment === "development" ? "logs-dev" : "logs",
+    );
+    return path.isAbsolute(configuredRoot)
+      ? configuredRoot
+      : path.resolve(process.cwd(), configuredRoot);
+  }
+
   get aiAssistantEnabled(): boolean {
     return this.readBoolean("AI_ASSISTANT_ENABLED", true);
   }
@@ -131,9 +194,20 @@ export class AppConfigService {
   }
 
   private readBoolean(key: string, fallback: boolean): boolean {
-    const value = this.configService.get<string>(key);
-    if (typeof value !== "string") {
+    const parsed = this.parseBooleanValue(this.configService.get<string>(key));
+    if (parsed === null) {
       return fallback;
+    }
+    return parsed;
+  }
+
+  private readString(key: string, fallback: string): string {
+    return this.configService.get<string>(key) ?? fallback;
+  }
+
+  private parseBooleanValue(value: string | undefined): boolean | null {
+    if (typeof value !== "string") {
+      return null;
     }
 
     const normalized = value.trim().toLowerCase();
@@ -144,11 +218,7 @@ export class AppConfigService {
       return false;
     }
 
-    return fallback;
-  }
-
-  private readString(key: string, fallback: string): string {
-    return this.configService.get<string>(key) ?? fallback;
+    return null;
   }
 
   private normalizeRoutePrefix(value: string): string {

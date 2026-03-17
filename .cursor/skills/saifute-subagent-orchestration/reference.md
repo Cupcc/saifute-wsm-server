@@ -2,17 +2,18 @@
 
 ## Planner agent
 
-### readonly `planner`
+### `planner`
 
-- Best for: turning a user request into an implementation plan before any write step with the repo's dedicated planning worker
+- Best for: turning a user request into an implementation plan and task doc before any code write step with the repo's dedicated planning worker
 - Owns:
   - task decomposition
   - impacted file, module, schema, script, doc, and operational-surface discovery
   - validation planning
   - parallelization safety judgment
   - blocker and sign-off visibility
+  - writing or updating `docs/tasks/*.md`
 - Must not:
-  - edit files
+  - edit files outside `docs/tasks/**`
   - invent unsupported contracts
   - recommend parallel writers without naming disjoint writable scopes
 
@@ -27,10 +28,10 @@ Typical output:
 
 ## Delivery agent
 
-### `execution-agent`
+### `coder`
 
 - Best for: scoped implementation, refactor, bug-fix, migration, backfill, reconciliation, cutover-prep, and related docs or tooling work
-- Owns: one explicitly assigned writable scope at a time
+- Owns: one explicitly assigned writable scope at a time, using an assigned `docs/tasks/*.md` as the execution brief
 - Typical files:
   - `src/modules/**`
   - related tests
@@ -48,6 +49,7 @@ Typical output:
   - JWT ticket plus Redis session model
   - RBAC ownership of permission and scope policy
   - AI as query-orchestration only
+  - `docs/tasks/**` as read-only unless documentation ownership was explicitly reassigned
 
 ## Review agent
 
@@ -76,30 +78,30 @@ Checks include:
 
 ## Parallel writer policy
 
-- Multiple writer `execution-agent` workers are allowed only when their writable scopes are explicitly disjoint before launch
+- Multiple writer `coder` workers are allowed only when their writable scopes are explicitly disjoint before launch
 - Write-capable subagents should not run in background mode
-- Shared files such as `src/app.module.ts`, `src/main.ts`, `src/shared/**`, `prisma/schema.prisma`, route or permission registries, shared docs or contracts, shared staging schemas, reconciliation outputs, cutover evidence, and cross-module tests stay parent-owned unless one worker is explicitly named as the sole owner
+- Shared files such as `src/app.module.ts`, `src/main.ts`, `src/shared/**`, `prisma/schema.prisma`, route or permission registries, shared docs or contracts, active `docs/tasks/*.md`, shared staging schemas, reconciliation outputs, cutover evidence, and cross-module tests stay parent-owned unless one worker is explicitly named as the sole owner
 - Each writer handoff should list owned paths, forbidden shared files, and the validation command for that scope
 - If overlapping child changes appear and the source is clearly an active child worker, the parent should re-read the latest content and merge on top of it instead of stopping immediately
 
 ## Rules vs runtime context
 
 - Use `.cursor/rules/*.mdc` for durable facts and repository-wide constraints that future tasks should inherit
-- Keep live execution state in the parent handoff or a temporary shared context artifact, not in rules
+- Keep live execution state in `docs/tasks/*.md`, the parent handoff, or a temporary shared context artifact, not in rules
 - Good rule candidates: verified dev environment facts, frozen workflow rules, repo-wide orchestration conventions
 - Bad rule candidates: current task status, temporary blockers, one-off test failures, or branch-local workaround notes
 
 ## Suggested combinations
 
-- Default task flow: readonly `planner` subagent -> `execution-agent` -> `code-reviewer` -> if any `[blocking]` or `[important]` finding remains, route back to `execution-agent` -> rerun `code-reviewer` -> parent commit step only if the user explicitly asked for a commit
-- Multi-module task with safe disjoint scopes: readonly `planner` subagent -> parallel `execution-agent` workers with explicit boundaries -> `code-reviewer` -> fix loop as needed
-- Review-heavy task: readonly `planner` subagent -> `code-reviewer`
-- Small but non-trivial bugfix: readonly `planner` subagent -> `execution-agent` -> `code-reviewer` -> fix loop -> parent commit step only if the user explicitly asked for a commit
+- Default task flow: `planner` writes `docs/tasks/*.md` -> `coder` executes from that task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent commit step only if the user explicitly asked for a commit
+- Multi-module task with safe disjoint scopes: `planner` writes task docs or explicit scoped sections -> parallel `coder` workers with explicit boundaries -> `code-reviewer` -> fix loop as needed
+- Review-heavy task: `planner` writes `docs/tasks/*.md` -> `code-reviewer`
+- Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> parent commit step only if the user explicitly asked for a commit
 
 ## Finalization ownership
 
 - Commit creation belongs to the parent orchestrator only
-- Do not let `execution-agent` or `code-reviewer` create the commit directly
+- Do not let `coder` or `code-reviewer` create the commit directly
 - Only proceed to commit after required validation passes, review is clear of open `[blocking]` and `[important]` findings, and the user explicitly asked for a commit
 - For delivery requests, review is not a stopping point; the parent should keep the repair loop moving until commit readiness or a real blocker
 - Only stop early when the user explicitly asked for `plan-only`, `review-only`, or `docs-only`
@@ -110,6 +112,9 @@ Checks include:
 Ask every subagent to report back in this shape:
 
 ```markdown
+Task doc path:
+- ...
+
 Summary:
 - ...
 
@@ -129,6 +134,9 @@ Risks, blockers, sign-off needs, or follow-up work:
 Planner append:
 
 ```markdown
+Task doc status:
+- created or updated, and whether it is ready for `coder`
+
 Implementation steps:
 - ...
 
@@ -149,14 +157,24 @@ Migration-style append when relevant:
 Reviewer append:
 
 ```markdown
+Task doc updates:
+- review status, validation notes, follow-up state
+
 Findings:
 - [blocking] ...
 - [important] ...
-- [minor] ...
+- [suggestion] ...
+- [praise] ...
 
-Required fixes before commit:
+Validation Results:
+- commands run, what passed or failed, and whether the required gate was satisfied
+
+Open Questions:
 - ...
 
-Validation judgment:
-- sufficient or insufficient, with the missing command if needed
+Residual Risks Or Testing Gaps:
+- ...
+
+Short Summary:
+- ...
 ```

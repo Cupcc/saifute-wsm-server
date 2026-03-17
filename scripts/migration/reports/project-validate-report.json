@@ -1,0 +1,61 @@
+{
+  "counts": {
+    "lines": {
+      "excluded": 138,
+      "migrated": 0,
+      "source": 138
+    },
+    "projects": {
+      "excluded": 5,
+      "migrated": 0,
+      "source": 5
+    },
+    "sourceLineTables": {
+      "saifute_product_material": 138
+    },
+    "sourceProjectTables": {
+      "saifute_composite_product": 5
+    }
+  },
+  "dependencyBaseline": {
+    "actualBlockedMaterialCount": 21,
+    "actualMapCounts": {
+      "customer": 184,
+      "material": 437,
+      "materialCategory": 8,
+      "personnel": 51,
+      "supplier": 93,
+      "workshop": 13
+    },
+    "expectedBlockedMaterialCount": 21,
+    "expectedMapCounts": {
+      "customer": 184,
+      "material": 437,
+      "materialCategory": 8,
+      "personnel": 51,
+      "supplier": 93,
+      "workshop": 13
+    },
+    "issues": []
+  },
+  "expectedArchivedPayloadCount": 0,
+  "expectedExcludedDocumentCount": 5,
+  "migrationBatch": "batch2b-project",
+  "mode": "validate",
+  "sourceCounts": {
+    "lines": 138,
+    "projects": 5
+  },
+  "targetDatabaseName": "saifute-wsm",
+  "targetSummary": {
+    "archivedPayloadCount": 0,
+    "excludedDocumentCount": 5,
+    "lineBatchMapRows": 0,
+    "lineTargetRows": 0,
+    "missingMappedLines": 0,
+    "missingMappedProjects": 0,
+    "projectBatchMapRows": 0,
+    "projectTargetRows": 0
+  },
+  "validationIssues": []
+}

@@ -57,9 +57,9 @@ For delivery requests, do not stop after only planning, one implementation pass,
 
 Choose the smallest useful set:
 
-- `planner`: use the repo's dedicated readonly `planner` subagent to scope the task, identify impacted files, surface risks, propose validation, and decide whether parallel writers are safe
-- `execution-agent`: implementation and refactor worker for explicitly assigned files, modules, scripts, schema surfaces, or docs
-- `code-reviewer`: review worker for correctness, regressions, missing tests, contract drift, and validation sufficiency
+- `planner`: use the repo's dedicated `planner` subagent to scope the task, identify impacted files, surface risks, propose validation, decide whether parallel writers are safe, and write or update the task doc under `docs/tasks/**`
+- `coder`: implementation and refactor worker for explicitly assigned files, modules, scripts, schema surfaces, or docs, using the assigned task doc as the execution brief
+- `code-reviewer`: review worker for correctness, regressions, missing tests, contract drift, validation sufficiency, and review-phase task-doc or checklist updates
 
 Use `explore` only as a supporting readonly discovery worker when the planner needs fast codebase search.
 
@@ -79,11 +79,12 @@ Use these durable rules for migration-style orchestration:
 
 ### 1. Plan
 
-Start with the readonly `planner` subagent unless the task is trivially scoped or the user explicitly says to skip planning.
+Start with the `planner` subagent unless the task is trivially scoped or the user explicitly says to skip planning.
 
 Ask the planner to return:
 
 - goal and acceptance criteria
+- exact `docs/tasks/*.md` path created or updated
 - impacted files, modules, or operational surfaces
 - proposed implementation steps
 - likely risks and contract-sensitive areas
@@ -97,14 +98,15 @@ For migration-style tasks, also require:
 - deterministic generation rules for identifiers, ordering, renumbering, or derived dates
 - blocker list, sign-off needs, and cutover-readiness gates
 
-The `planner` subagent is readonly and must not edit files.
+The `planner` subagent may edit only `docs/tasks/**`. It must not edit application code or shared rules as part of planning.
 
 ### 2. Code
 
-Use `execution-agent` for implementation after the plan is clear.
+Use `coder` for implementation after the plan and task doc are clear.
 
 Each writer handoff must include:
 
+- assigned `docs/tasks/*.md` path
 - owned paths
 - forbidden shared files
 - task goal
@@ -131,11 +133,14 @@ The reviewer should focus on:
 - contract drift
 - auth, workflow, inventory, and transaction safety where relevant
 - whether the selected validation is sufficient for the affected scope
+- whether the assigned task doc still matches the delivered code and recorded validation
 - for migration-style work, silent runtime widening, missing staging or exclusion handling, non-deterministic generation, replay-vs-copy mismatch, and hidden blockers
+
+The reviewer should read the assigned task doc before review and update the task doc and `docs/fix-checklists/**` when the scope warrants a durable review artifact.
 
 ### 4. Fix
 
-If `code-reviewer` reports any open `[blocking]` or `[important]` finding, route the findings back to `execution-agent` for fixes, then rerun `code-reviewer`.
+If `code-reviewer` reports any open `[blocking]` or `[important]` finding, route the findings back to `coder` for fixes, then rerun `code-reviewer`.
 
 Treat review as a repair loop, not a stopping point.
 
@@ -156,12 +161,12 @@ Do not let subagents create the commit directly.
 ## Launch rules
 
 1. Default to at most 4 concurrent subagents.
-2. The `planner` subagent must run in readonly mode.
+2. The `planner` subagent may write only `docs/tasks/**`.
 3. Multiple writer subagents are allowed only when their writable scopes are explicitly disjoint before launch; shared staging schemas, mapping tables, reconciliation reports, and cutover evidence stay single-owner.
 4. Do not run write-capable subagents in background mode.
 5. Shared files default to parent ownership unless one worker is explicitly named as the sole owner.
 6. Before finalizing substantive work, involve `code-reviewer`.
-7. If the task is ambiguous or has meaningful trade-offs, either switch to Plan Mode first or use the readonly `planner` subagent before any write step.
+7. If the task is ambiguous or has meaningful trade-offs, either switch to Plan Mode first or use the `planner` subagent before any code write step.
 
 ## Frozen repo constraints
 
@@ -180,22 +185,24 @@ The parent orchestrator owns the distinction between durable rules and runtime c
 
 - put stable, reusable facts in `.cursor/rules/*.mdc`
 - do not write temporary runtime observations into rules
-- put task-scoped runtime context in the parent handoff, or in a clearly temporary shared context artifact when multiple subagents need the same live status
+- put task-scoped runtime context in `docs/tasks/**`, the parent handoff, or another clearly temporary shared context artifact when multiple subagents need the same live status
 - before promoting a new observation into rules, confirm that it is likely to remain valid across future tasks and does not contain secrets
 
 ## File ownership guidance
 
-The `execution-agent` may edit:
+The `coder` may edit:
 
 - its owned module directories under `src/modules/<module>/`
 - tests for those modules
 - module-local docs that describe its owned contracts or behavior
 - explicitly assigned `prisma/**`, `scripts/**`, `docs/**`, `src/shared/**`, `src/app*.ts`, or other shared surfaces directly required by the task
+- the assigned task doc under `docs/tasks/**` only when the parent explicitly grants documentation ownership
 - narrow shared files that are directly required by the task
 - parallel-owned scopes only when the parent explicitly assigned a disjoint writable boundary
 
-The `execution-agent` must avoid:
+The `coder` must avoid:
 
+- editing `docs/tasks/**` by default when the task doc is only an execution brief
 - unapproved edits to another module's internal repository or table access
 - new cross-module dependencies that are not documented
 - silent changes to shared contracts without updating docs when needed
@@ -203,7 +210,7 @@ The `execution-agent` must avoid:
 
 The `planner` subagent must avoid:
 
-- file edits
+- file edits outside `docs/tasks/**`
 - speculative contract rewrites
 - calling for parallel writers without naming disjoint scopes
 - calling migration work cutover-ready without naming remaining blockers and sign-off needs
@@ -227,6 +234,7 @@ When parallel writers were active:
 
 Ask each subagent to return:
 
+- the task doc path used or created
 - a concise summary of what it changed or proposes
 - files, modules, or operational surfaces touched
 - shared contracts assumed or changed
@@ -235,7 +243,7 @@ Ask each subagent to return:
 
 Additionally require:
 
-- planner: implementation steps, validation plan, and parallelization safety
+- planner: implementation steps, validation plan, parallelization safety, and the exact execution scope assigned to `coder`
 - planner for migration-style work: staging-or-exclusion plan, replay-vs-copy judgment, deterministic generation rules, cutover blockers, and current-runtime alignment checks for target constants or status semantics
 - code-reviewer: findings ordered by severity, plus clear fix actions for any `[blocking]` or `[important]` item
 

@@ -9,6 +9,7 @@ alwaysApply: false
 - 目标：确保 AI 在代码中使用当前项目实际可用、未弃用、未过时、与版本匹配的正确 API。
 - 第一步先看本地版本：从 `package.json`、锁文件和相关配置确认依赖的声明版本范围与实际安装版本。
 - 如果声明版本和锁文件不一致，优先按锁文件理解已解析版本，同时保留 `package.json` 的版本范围语义。
+- 本仓库维护本地依赖文档目录 `docs/dependencies/`，用于缓存高频依赖的版本快照、Context7 解析结果、推荐 API 和弃用说明。
 - 查文档前，先明确“库名 + 版本”，优先按主版本或精确版本检索，例如 `NestJS v11`、`Prisma v7.5`。
 
 # API 使用原则
@@ -18,20 +19,44 @@ alwaysApply: false
 - 如果文档标记了 `deprecated`、migration、breaking changes、replacement，优先采用推荐替代方案。
 - 如果多个来源说法不一致，以“当前项目版本对应的官方文档”作为主依据。
 - 如果版本或 API 状态未确认，不要直接下结论，先继续查本地版本和官方文档。
+- 不要把一次性查询结果直接写进 rules；可刷新的依赖事实写入 `docs/dependencies/*.md`，rules 只保留稳定工作流。
+
+# 本地依赖文档优先级
+
+1. 先确认本地版本：`package.json`、`pnpm-lock.yaml` 和相关配置。
+2. 再查 `docs/dependencies/<slug>.md` 是否已覆盖该依赖、该版本、该 API 主题。
+3. 只有当本地依赖文档的 `Refresh status` 明确表示已完成 Context7 校验时，才优先使用其中的 `Recommended APIs`、`Deprecated Or Avoid` 和 `Repo Usage Notes`。
+4. 如果本地依赖文档不存在、版本已过期、未记录当前 API 主题，或仍处于 `pending` / `seed-only` 状态，使用 `user-context7` 刷新，并把结果回填到 `docs/dependencies/*.md`。
+5. 只有在 Context7 未覆盖、版本信息不足，或需要查官方迁移说明/博客/issue 时，才使用 `WebSearch` 或官方页面补充。
+
+# 本地依赖文档格式
+
+- 依赖文档统一存放在 `docs/dependencies/`。
+- 新文档优先基于 `docs/dependencies/_template.md` 创建。
+- 文档结构应保留 Context7 的两步信息：
+- `Context7 Resolve Result`：对应 `resolve-library-id` 的可复用元数据，例如 `libraryId`、名称、描述、snippet 数量、可用版本、选择理由。
+- `Context7 Query Record`：对应 `query-docs` 的查询记录，例如 `libraryId`、查询语句、版本范围、获取日期，以及可选的补充参考链接。
+- `Recommended APIs`、`Deprecated Or Avoid`、`Repo Usage Notes` 用于沉淀适合本仓库复用的结论。
+- 文档必须记录 `Last refreshed` 和 `Refresh status`，便于判断是否需要重新拉取。
+- 若 `Refresh status` 仍是 `pending` 或 `seed-only`，其中内容只能视为本仓库现状快照，不能替代 Context7 校验。
 
 # 文档查询顺序
 
-1. 先用 `user-context7` 这类文档型 MCP 获取该库对应版本的官方/结构化文档与示例。
-2. 如果 MCP 没覆盖该库、缺少版本细节，或需要最新变更信息，再用 `WebSearch` 或直接抓取官方页面补充。
-3. 需要确认 breaking changes、迁移说明、issue 讨论或官方博客时，优先看官方来源，再参考社区内容。
+1. 先看本地版本信息是否清晰。
+2. 再看 `docs/dependencies/*.md` 是否已经覆盖当前问题。
+3. 如果本地文档缺失或过期，先用 `user-context7` 获取该库对应版本的官方/结构化文档与示例，并更新本地依赖文档。
+4. 如果 MCP 没覆盖该库、缺少版本细节，或需要最新变更信息，再用 `WebSearch` 或直接抓取官方页面补充。
+5. 需要确认 breaking changes、迁移说明、issue 讨论或官方博客时，优先看官方来源，再参考社区内容。
 
 # 输出要求
 
 - 回答或生成代码时，优先给出当前版本下推荐的 API 用法。
 - 如果某个 API 已弃用或存在替代方案，要明确指出并避免继续生成旧写法。
-- 涉及关键 API 选择时，简要说明依据的是哪个本地版本或哪类官方文档。
+- 涉及关键 API 选择时，简要说明依据的是哪个本地版本、本地依赖文档，或哪类官方文档。
+- 如果刷新了本地依赖文档，更新其中的 `Context7 Resolve Result`、`Context7 Query Record` 和 `Last refreshed` 字段。
+- 如果引用了本地依赖文档，要同时说明其 `Refresh status`；对 `pending` / `seed-only` 文档，继续执行 Context7 查询后再给最终 API 结论。
 
 # 示例
 
-- `@nestjs/common: ^11.1.16` -> 先按 `NestJS 11` 查文档，再确认是否有 `11.1.x` 相关差异。
-- `prisma: ^7.5.0` / `@prisma/client: ^7.5.0` -> 先按 `Prisma 7` 查 API，再补看 `7.5` 的更新说明。
+- `@nestjs/common: ^11.1.16` -> 先确认本地版本，再查看相关依赖文档；如果缺失，再按 `NestJS 11` 用 Context7 刷新。
+- `prisma: ^7.5.0` / `@prisma/client: ^7.5.0` -> 先确认本地版本和 `docs/dependencies/prisma-client.md`，再按 `Prisma 7.5` 查 API。

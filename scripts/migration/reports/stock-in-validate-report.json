@@ -1,0 +1,64 @@
+{
+  "counts": {
+    "lines": {
+      "excluded": 82,
+      "migrated": 307,
+      "source": 389
+    },
+    "orders": {
+      "excluded": 20,
+      "migrated": 190,
+      "source": 210
+    },
+    "sourceLineTables": {
+      "saifute_inbound_detail": 258,
+      "saifute_into_detail": 131
+    },
+    "sourceOrderTables": {
+      "saifute_inbound_order": 138,
+      "saifute_into_order": 72
+    }
+  },
+  "dependencyBaseline": {
+    "actualBlockedMaterialCount": 21,
+    "actualMapCounts": {
+      "customer": 184,
+      "material": 437,
+      "materialCategory": 8,
+      "personnel": 51,
+      "supplier": 93,
+      "workshop": 13
+    },
+    "expectedBlockedMaterialCount": 21,
+    "expectedMapCounts": {
+      "customer": 184,
+      "material": 437,
+      "materialCategory": 8,
+      "personnel": 51,
+      "supplier": 93,
+      "workshop": 13
+    },
+    "issues": []
+  },
+  "expectedArchivedPayloadCount": 286,
+  "expectedExcludedDocumentCount": 20,
+  "migrationBatch": "batch2a-stock-in",
+  "mode": "validate",
+  "sourceCounts": {
+    "audits": 0,
+    "lines": 389,
+    "orders": 210
+  },
+  "targetDatabaseName": "saifute-wsm",
+  "targetSummary": {
+    "archivedPayloadCount": 286,
+    "excludedDocumentCount": 20,
+    "lineBatchMapRows": 307,
+    "lineTargetRows": 307,
+    "missingMappedLines": 0,
+    "missingMappedOrders": 0,
+    "orderBatchMapRows": 190,
+    "orderTargetRows": 190
+  },
+  "validationIssues": []
+}

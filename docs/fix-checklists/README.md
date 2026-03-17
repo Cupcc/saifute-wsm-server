@@ -5,20 +5,21 @@ This directory stores review outputs written by the `code-reviewer` agent.
 Purpose:
 
 - Persist actionable review findings so execution work can continue without depending on chat history.
-- Keep one markdown file per review run.
+- Supplement the primary task doc under `docs/tasks/**` with durable review findings when a standalone checklist artifact is useful.
+- Keep one markdown file per review scope or repair loop, then reuse and update that file until the loop is closed.
 
-In batch-delivery orchestration, generating a checklist is not a terminal state. The orchestrator should route actionable items back to `execution-agent`, rerun review as needed, then update the checklist with evidence before final sign-off and commit.
+In requested-scope delivery orchestration, generating a checklist is not a terminal state. The orchestrator should route actionable items back to `coder`, rerun review as needed, then update the task doc and checklist with evidence before final sign-off and commit.
 
 Recommended filename pattern:
 
-- `review-YYYYMMDD-HHMM-<batch-or-module>.md`
+- `review-YYYYMMDD-HHMM-<scope>.md`
 - If the scope is unclear, use `review-YYYYMMDD-HHMM-general.md`
 
 Recommended file structure:
 
 - `### Review Scope`
 - `### Fix Checklist`
-- `### Integration Test Results`
+- `### Validation Results`
 - `### Open Questions`
 - `### Residual Risks Or Testing Gaps`
 - `### Short Summary`

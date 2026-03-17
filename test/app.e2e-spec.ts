@@ -1,22 +1,17 @@
-import { mkdirSync } from "node:fs";
-import { type INestApplication, ValidationPipe } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
-import { static as expressStatic } from "express";
 import * as request from "supertest";
 import { AppModule } from "../src/app.module";
-import { HttpExceptionFilter } from "../src/shared/common/filters/http-exception.filter";
-import { ResponseEnvelopeInterceptor } from "../src/shared/common/interceptors/response-envelope.interceptor";
-import { AppConfigService } from "../src/shared/config/app-config.service";
+import { setupApp } from "../src/app.setup";
 import { PrismaService } from "../src/shared/prisma/prisma.service";
 import { PrismaE2eStub } from "./prisma-e2e-stub";
 
 interface TestAppContext {
-  app: INestApplication;
+  app: NestExpressApplication;
   close: () => Promise<void>;
 }
 
-type TestHttpServer = ReturnType<INestApplication["getHttpServer"]>;
+type TestHttpServer = ReturnType<NestExpressApplication["getHttpServer"]>;
 
 interface LoginOptions {
   username: string;
@@ -52,24 +47,8 @@ describe("Batch A acceptance (e2e)", () => {
       .useClass(PrismaE2eStub)
       .compile();
 
-    const app = moduleRef.createNestApplication();
-    const reflector = app.get(Reflector);
-    const appConfigService = app.get(AppConfigService);
-    app.setGlobalPrefix("api");
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    app.useGlobalFilters(new HttpExceptionFilter());
-    app.useGlobalInterceptors(new ResponseEnvelopeInterceptor(reflector));
-    mkdirSync(appConfigService.uploadRootPath, { recursive: true });
-    app
-      .getHttpAdapter()
-      .getInstance()
-      .use("/profile", expressStatic(appConfigService.uploadRootPath));
+    const app = moduleRef.createNestApplication<NestExpressApplication>();
+    await setupApp(app);
     await app.init();
 
     return {
@@ -273,5 +252,110 @@ describe("Batch A acceptance (e2e)", () => {
       },
       401,
     );
+  });
+
+  it("should expose swagger docs and keep public routes unauthenticated", async () => {
+    appContext = await bootstrapApp({
+      SWAGGER_ENABLED: "true",
+    });
+    const server = appContext.app.getHttpServer();
+
+    await request(server).get("/api/docs").expect(200);
+
+    const swaggerResponse = await request(server)
+      .get("/api/docs-json")
+      .expect(200);
+
+    expect(swaggerResponse.body.info.title).toBe("saifute-wms-server API");
+    expect(swaggerResponse.body.security).toEqual([{ bearer: [] }]);
+    expect(swaggerResponse.body.paths["/api/auth/login"].post.security).toEqual(
+      [],
+    );
+    expect(
+      swaggerResponse.body.paths["/api/auth/login"].post.requestBody.content[
+        "application/json"
+      ].schema,
+    ).toEqual({
+      $ref: "#/components/schemas/LoginDto",
+    });
+    expect(
+      swaggerResponse.body.components.schemas.LoginDto.properties,
+    ).toMatchObject({
+      username: expect.objectContaining({
+        type: "string",
+        description: "登录用户名",
+      }),
+      password: expect.objectContaining({
+        type: "string",
+        description: "登录密码，至少 6 位",
+      }),
+      captchaId: expect.objectContaining({
+        type: "string",
+        description: "图形验证码 ID",
+      }),
+      captchaCode: expect.objectContaining({
+        type: "string",
+        description: "4 位图形验证码",
+      }),
+    });
+    expect(
+      swaggerResponse.body.paths["/api/auth/login"].post.responses["201"]
+        .content["application/json"].schema.properties,
+    ).toMatchObject({
+      success: expect.objectContaining({ type: "boolean" }),
+      code: expect.objectContaining({ type: "integer" }),
+      data: expect.any(Object),
+    });
+    expect(
+      swaggerResponse.body.paths["/api/inbound/orders"].get.parameters,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "documentNo",
+          in: "query",
+          description: "入库单号关键字",
+          schema: expect.objectContaining({ type: "string" }),
+        }),
+        expect.objectContaining({
+          name: "limit",
+          in: "query",
+          description: "每页条数，默认 50，最大由服务端限制",
+          schema: expect.objectContaining({ type: "number" }),
+        }),
+      ]),
+    );
+    expect(
+      swaggerResponse.body.paths["/api/reporting/inventory-summary"].get
+        .parameters,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "keyword",
+          in: "query",
+          description: "物料编码或名称关键字",
+          schema: expect.objectContaining({ type: "string" }),
+        }),
+        expect.objectContaining({
+          name: "limit",
+          in: "query",
+          description: "每页条数，默认 50",
+          schema: expect.objectContaining({ type: "number" }),
+        }),
+      ]),
+    );
+    expect(swaggerResponse.body.paths["/api/health"].get.security).toEqual([]);
+    expect(
+      swaggerResponse.body.paths["/api/sessions/online"].get.security,
+    ).toBeUndefined();
+  });
+
+  it("should hide swagger docs when disabled", async () => {
+    appContext = await bootstrapApp({
+      SWAGGER_ENABLED: "false",
+    });
+    const server = appContext.app.getHttpServer();
+
+    await request(server).get("/api/docs").expect(404);
+    await request(server).get("/api/docs-json").expect(404);
   });
 });

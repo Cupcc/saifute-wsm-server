@@ -22,12 +22,14 @@ import { ResponseEnvelopeInterceptor } from "./shared/common/interceptors/respon
 import { SharedConfigModule } from "./shared/config/shared-config.module";
 import { JwtAuthGuard } from "./shared/guards/jwt-auth.guard";
 import { PermissionsGuard } from "./shared/guards/permissions.guard";
+import { SharedLoggerModule } from "./shared/logger/shared-logger.module";
 import { PrismaModule } from "./shared/prisma/prisma.module";
 import { RedisModule } from "./shared/redis/redis.module";
 
 @Module({
   imports: [
     SharedConfigModule,
+    SharedLoggerModule,
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     PrismaModule,
