@@ -209,20 +209,20 @@
 
 - Validation results:
   - `pnpm migration:typecheck` passed.
-  - `pnpm test -- --runInBand test/migration/outbound.spec.ts test/migration/outbound-execute-guard.spec.ts` passed.
-  - `pnpm migration:outbound:dry-run` failed locally because `LEGACY_DATABASE_URL` was not configured in `.env.dev`, so no DB-backed dry-run, execute, or validate evidence was captured during review.
+  - `pnpm exec biome check "scripts/migration/outbound" "test/migration/outbound.spec.ts" "test/migration/outbound-execute-guard.spec.ts"` passed.
+  - `pnpm test -- --runTestsByPath test/migration/outbound.spec.ts test/migration/outbound-execute-guard.spec.ts` passed.
+  - `pnpm migration:outbound:dry-run` still failed locally because `LEGACY_DATABASE_URL` is not configured in `.env.dev`, so no fresh DB-backed dry-run, execute, or validate evidence was captured during rereview.
 - Findings:
-  - `[important]` Execute and validate currently prove only outbound map row counts and missing-target existence, not that each `map_customer_stock_order*` row still points at the correct deterministic target. A stale or manually corrupted map row that still references an existing target can survive preflight and make rerun cleanup delete unrelated `customer_stock_order*` rows.
-  - `[important]` `scripts/migration/outbound/validate.ts` does not prove the forbidden downstream tables stayed unchanged and currently scopes several assertions to full `customer_stock_order*` table totals instead of batch-owned rows, so the gate is broader than this slice and becomes brittle once later `CustomerStockOrder` slices land.
+  - No remaining `[blocking]` or `[important]` code findings in the scoped latest-fix rereview.
 - Follow-up action:
-  - Route back to `coder` to harden map integrity checks and expand validation to batch-owned rows plus forbidden-table delta checks, then rerun review.
+  - If operational sign-off is required, provide `LEGACY_DATABASE_URL` and rerun the DB-backed outbound migration gate on the intended databases.
 
 ## Final Status
 
 - Outcome:
-  - Review completed with open important findings. The slice is not ready for final sign-off yet.
+  - Rereview completed with no remaining `[blocking]` or `[important]` code findings in the scoped outbound slice.
 - Residual risks or testing gaps:
-  - DB-backed `migration:outbound:dry-run -> execute -> validate` could not be completed locally because `LEGACY_DATABASE_URL` was unset.
-  - Existing tests cover the transformer and execute-guard helpers, but not writer or validator behavior against real staging maps, pre-existing target rows, or forbidden-table drift.
+  - The DB-backed `migration:outbound:dry-run -> execute -> validate` gate was not rerun locally because `LEGACY_DATABASE_URL` is still unset.
+  - Focused unit tests cover the transformer and execute-guard helpers; validator queries still rely on live staging data for end-to-end confirmation.
 - Next action:
-  - Fix the two review items, rerun `pnpm migration:typecheck`, the focused outbound tests, and the DB-backed outbound migration gate, then request re-review.
+  - No further coder changes are required from this rereview; rerun the DB-backed outbound gate once migration environment access is available.

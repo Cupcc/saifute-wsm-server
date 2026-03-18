@@ -2,13 +2,16 @@
   "resetApplied": false,
   "scope": "batch0-bootstrap-staging",
   "sqlPath": "E:\\Projects\\saifute-wms-server-nestjs\\scripts\\migration\\sql\\000-create-migration-staging.sql",
-  "statementsExecuted": 17,
+  "statementsExecuted": 22,
   "tables": [
     "archived_field_payload",
     "archived_intervals",
     "archived_relations",
     "excluded_documents",
     "map_customer",
+    "map_customer_stock_order",
+    "map_customer_stock_order_line",
+    "map_factory_number_reservation",
     "map_material",
     "map_material_category",
     "map_personnel",
@@ -18,6 +21,8 @@
     "map_stock_in_order_line",
     "map_supplier",
     "map_workshop",
+    "map_workshop_material_order",
+    "map_workshop_material_order_line",
     "pending_relations"
   ],
   "targetDatabaseName": "saifute-wsm"

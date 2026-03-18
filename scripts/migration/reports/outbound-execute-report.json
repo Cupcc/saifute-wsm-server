@@ -1,0 +1,1586 @@
+{
+  "context": {
+    "batch1Baseline": {
+      "actualBlockedMaterialCount": 21,
+      "actualMapCounts": {
+        "customer": 184,
+        "material": 437,
+        "materialCategory": 8,
+        "personnel": 51,
+        "supplier": 93,
+        "workshop": 13
+      },
+      "expectedBlockedMaterialCount": 21,
+      "expectedMapCounts": {
+        "customer": 184,
+        "material": 437,
+        "materialCategory": 8,
+        "personnel": 51,
+        "supplier": 93,
+        "workshop": 13
+      },
+      "issues": []
+    },
+    "blockedMaterialLegacyIds": [
+      28, 30, 31, 32, 35, 106, 136, 145, 156, 159, 198, 199, 201, 205, 206, 234,
+      235, 246, 247, 248, 273
+    ],
+    "defaultWorkshopCode": "WS-LEGACY-DEFAULT",
+    "defaultWorkshopName": "历史默认车间"
+  },
+  "counts": {
+    "lines": {
+      "excluded": 4,
+      "migrated": 137,
+      "source": 141
+    },
+    "orders": {
+      "excluded": 4,
+      "migrated": 108,
+      "source": 112
+    },
+    "sourceLineTables": {
+      "saifute_outbound_detail": 141
+    },
+    "sourceOrderTables": {
+      "saifute_outbound_order": 112
+    }
+  },
+  "dependencyBaseline": {
+    "actualBlockedMaterialCount": 21,
+    "actualMapCounts": {
+      "customer": 184,
+      "material": 437,
+      "materialCategory": 8,
+      "personnel": 51,
+      "supplier": 93,
+      "workshop": 13
+    },
+    "expectedBlockedMaterialCount": 21,
+    "expectedMapCounts": {
+      "customer": 184,
+      "material": 437,
+      "materialCategory": 8,
+      "personnel": 51,
+      "supplier": 93,
+      "workshop": 13
+    },
+    "issues": []
+  },
+  "documentNoRewrites": [],
+  "excludedDocuments": [
+    {
+      "excludedLineCount": 1,
+      "exclusionReason": "Line saifute_outbound_detail#273 references blocked batch1 material 247.",
+      "legacyId": 224,
+      "legacyTable": "saifute_outbound_order",
+      "sourceDocumentNo": "CK20260121010",
+      "targetDocumentNoCandidate": "CK20260121010"
+    },
+    {
+      "excludedLineCount": 1,
+      "exclusionReason": "Line saifute_outbound_detail#274 references blocked batch1 material 247.",
+      "legacyId": 225,
+      "legacyTable": "saifute_outbound_order",
+      "sourceDocumentNo": "CK20260120011",
+      "targetDocumentNoCandidate": "CK20260120011"
+    },
+    {
+      "excludedLineCount": 1,
+      "exclusionReason": "Line saifute_outbound_detail#296 references blocked batch1 material 247.",
+      "legacyId": 243,
+      "legacyTable": "saifute_outbound_order",
+      "sourceDocumentNo": "CK20260122010",
+      "targetDocumentNoCandidate": "CK20260122010"
+    },
+    {
+      "excludedLineCount": 1,
+      "exclusionReason": "Line saifute_outbound_detail#300 references blocked batch1 material 247.",
+      "legacyId": 247,
+      "legacyTable": "saifute_outbound_order",
+      "sourceDocumentNo": "CK20260128001",
+      "targetDocumentNoCandidate": "CK20260128001"
+    }
+  ],
+  "executionRequested": true,
+  "executionResult": {
+    "archivedPayloadCount": 177,
+    "excludedDocumentCount": 4,
+    "insertedOrUpdatedLines": 137,
+    "insertedOrUpdatedOrders": 108
+  },
+  "globalBlockers": [],
+  "migratedDocuments": [
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 113,
+      "documentNo": "CK20260103001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 146,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260103001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 13,
+      "documentNo": "CK20260105001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 147,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 114,
+      "documentNo": "CK20260105002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 148,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 115,
+      "documentNo": "CK20260105003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 149,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 116,
+      "documentNo": "CK20260105004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 150,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 117,
+      "documentNo": "CK20260105005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 151,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 118,
+      "documentNo": "CK20260106006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 152,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260106006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 118,
+      "documentNo": "CK20260106007",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 153,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260106007"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 62,
+      "documentNo": "CK20260107008",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 154,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260107008"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 119,
+      "documentNo": "CK20260107009",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 155,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260107009"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 37,
+      "documentNo": "CK20260105010",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 156,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105010"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 120,
+      "documentNo": "CK20260103011",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 157,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260103011"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 121,
+      "documentNo": "CK20260102012",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 158,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260102012"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 110,
+      "documentNo": "CK20260103013",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 159,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260103013"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 122,
+      "documentNo": "CK20260105014",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 160,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105014"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 123,
+      "documentNo": "CK20260106015",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 161,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260106015"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 124,
+      "documentNo": "CK20260107016",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 162,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260107016"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 125,
+      "documentNo": "CK20260107017",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 163,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260107017"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 40,
+      "documentNo": "CK20260101018",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 164,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260101018"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 126,
+      "documentNo": "CK20260105019",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 165,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260105019"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "customerId": 127,
+      "documentNo": "CK20260104001",
+      "inventoryEffectStatus": "REVERSED",
+      "legacyId": 166,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "VOIDED",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260104001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 128,
+      "documentNo": "CK20260104002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 167,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260104002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 118,
+      "documentNo": "CK20260106003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 168,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260106003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 129,
+      "documentNo": "CK20260109004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 169,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 130,
+      "documentNo": "CK20260108005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 170,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260108005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 131,
+      "documentNo": "CK20260108006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 171,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260108006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 132,
+      "documentNo": "CK20260108007",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 172,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260108007"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 133,
+      "documentNo": "CK20260109008",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 173,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109008"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 134,
+      "documentNo": "CK20260109009",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 174,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109009"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 135,
+      "documentNo": "CK20260109010",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 175,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109010"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 137,
+      "documentNo": "CK20260111011",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 176,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260111011"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 138,
+      "documentNo": "CK20260109012",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 177,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109012"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 13,
+      "documentNo": "CK20260109013",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 178,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109013"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 41,
+      "documentNo": "CK20260111014",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 179,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260111014"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 14,
+      "documentNo": "CK20260110015",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 180,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260110015"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 86,
+      "documentNo": "CK20260110016",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 181,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260110016"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 41,
+      "documentNo": "CK20260111017",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 182,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260111017"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 13,
+      "documentNo": "CK20260109018",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 183,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 3,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109018"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 13,
+      "documentNo": "CK20260109019",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 184,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260109019"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 41,
+      "documentNo": "CK20260111001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 185,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260111001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 139,
+      "documentNo": "CK20260113002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 186,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260113002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 140,
+      "documentNo": "CK20260111003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 187,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260111003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 126,
+      "documentNo": "CK20260113004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 188,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260113004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 19,
+      "documentNo": "CK20260112005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 189,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260112005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 40,
+      "documentNo": "CK20260114006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 190,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260114006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 141,
+      "documentNo": "CK20260113007",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 191,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260113007"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 54,
+      "documentNo": "CK20260112008",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 192,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260112008"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 142,
+      "documentNo": "CK20260113009",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 193,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260113009"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 143,
+      "documentNo": "CK20260113010",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 194,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 5,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260113010"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 144,
+      "documentNo": "CK20260114011",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 195,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 4,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260114011"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 57,
+      "documentNo": "CK20260114012",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 196,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260114012"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 126,
+      "documentNo": "CK20260113001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 197,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260113001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 145,
+      "documentNo": "CK20260117001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 198,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260117001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 123,
+      "documentNo": "CK20260115002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 199,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260115002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 146,
+      "documentNo": "CK20260116003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 200,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260116003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 79,
+      "documentNo": "CK20260117004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 201,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260117004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 55,
+      "documentNo": "CK20260115005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 202,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260115005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 54,
+      "documentNo": "CK20260116006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 203,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260116006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 147,
+      "documentNo": "CK20260116007",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 204,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260116007"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 148,
+      "documentNo": "CK20260116008",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 205,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260116008"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 15,
+      "documentNo": "CK20260114009",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 206,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260114009"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "customerId": 151,
+      "documentNo": "CK20260115010",
+      "inventoryEffectStatus": "REVERSED",
+      "legacyId": 207,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "VOIDED",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260115010"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 152,
+      "documentNo": "CK20260115011",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 208,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260115011"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 151,
+      "documentNo": "CK20260115012",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 209,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260115012"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 153,
+      "documentNo": "CK20260117013",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 210,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260117013"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 8,
+      "documentNo": "CK20260115014",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 211,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260115014"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 154,
+      "documentNo": "CK20260116015",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 212,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260116015"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 155,
+      "documentNo": "CK20260114016",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 213,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 3,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260114016"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 110,
+      "documentNo": "CK20260115017",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 214,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260115017"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 158,
+      "documentNo": "CK20260121001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 215,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260121001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 159,
+      "documentNo": "CK20260121002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 216,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260121002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 39,
+      "documentNo": "CK20260122003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 217,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260122003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 160,
+      "documentNo": "CK20260122004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 218,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260122004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 158,
+      "documentNo": "CK20260122005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 219,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260122005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 57,
+      "documentNo": "CK20260122006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 220,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260122006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 43,
+      "documentNo": "CK20260122007",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 221,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260122007"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 161,
+      "documentNo": "CK20260122008",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 222,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260122008"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 162,
+      "documentNo": "CK20260122009",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 223,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260122009"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "customerId": 163,
+      "documentNo": "CK20260118012",
+      "inventoryEffectStatus": "REVERSED",
+      "legacyId": 226,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "VOIDED",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260118012"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 164,
+      "documentNo": "CK20260121013",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 227,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260121013"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 163,
+      "documentNo": "CK20260118014",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 228,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260118014"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 85,
+      "documentNo": "CK20260121014",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 229,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260121014"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 166,
+      "documentNo": "CK20260123001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 230,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260123001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 82,
+      "documentNo": "CK20260123002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 231,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260123002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 167,
+      "documentNo": "CK20260124001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 232,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260124001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 168,
+      "documentNo": "CK20260124002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 233,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260124002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 169,
+      "documentNo": "CK20260124003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 234,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260124003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 170,
+      "documentNo": "CK20260124004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 235,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 4,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260124004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260126001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 236,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260126001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260126002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 237,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260126002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 110,
+      "documentNo": "CK20260126003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 238,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260126003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260126004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 239,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260126004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 54,
+      "documentNo": "CK20260127001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 240,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260127001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 86,
+      "documentNo": "CK20260126005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 241,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260126005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 67,
+      "documentNo": "CK20260126006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 242,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260126006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 51,
+      "documentNo": "CK20260124005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 244,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260124005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260126007",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 245,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260126007"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 72,
+      "documentNo": "CK20260127002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 246,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260127002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260129001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 248,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260129001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260127003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 249,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260127003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260128002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 250,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260128002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 148,
+      "documentNo": "CK20260127004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 251,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260127004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260129002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 252,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 3,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260129002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260128003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 253,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260128003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260129003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 254,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260129003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260129004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 255,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260129004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": null,
+      "documentNo": "CK20260129005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 256,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260129005"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "customerId": 184,
+      "documentNo": "CK20260310001",
+      "inventoryEffectStatus": "REVERSED",
+      "legacyId": 257,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "VOIDED",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260310001"
+    }
+  ],
+  "migrationBatch": "batch2c-outbound-base",
+  "mode": "execute",
+  "sourceCounts": {
+    "audits": 2,
+    "lines": 141,
+    "orders": 112
+  },
+  "stagingReady": true,
+  "targetDatabaseName": "saifute-wsm",
+  "targetSummary": {
+    "downstreamConsumerCounts": {
+      "document_line_relation": 0,
+      "document_relation": 0,
+      "factory_number_reservation": 0,
+      "inventory_log": 0,
+      "inventory_source_usage": 0,
+      "workflow_audit_document": 0
+    },
+    "lineBatchMapRows": 0,
+    "lineMapConsistency": {
+      "mismatchedActualTargetCodes": 0,
+      "mismatchedTargetCodes": 0,
+      "missingExpectedMapRows": 0,
+      "unexpectedMapRows": 0
+    },
+    "lineTargetRows": 0,
+    "missingMappedLines": 0,
+    "missingMappedOrders": 0,
+    "orderBatchMapRows": 0,
+    "orderMapConsistency": {
+      "mismatchedActualTargetCodes": 0,
+      "mismatchedTargetCodes": 0,
+      "missingExpectedMapRows": 0,
+      "unexpectedMapRows": 0
+    },
+    "orderTargetRows": 0
+  },
+  "warnings": [
+    {
+      "details": {
+        "personnelName": "3"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "付影"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "侯金芳"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "刘欢"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "吕刚"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "吴庆纷"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "姜涛"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "张哲"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "张帅"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "朱芳"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "李建忠"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "盛兆仪"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "贾露露"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "陈苗苗"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "颜强"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "personnelName": "骆兵"
+      },
+      "legacyId": null,
+      "legacyTable": "personnel",
+      "reason": "Target personnel snapshot contains ambiguous names; handler matches will preserve handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "chargeBy": "a"
+      },
+      "legacyId": 257,
+      "legacyTable": "saifute_outbound_order",
+      "reason": "Handler personnel name is missing from the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId."
+    }
+  ]
+}

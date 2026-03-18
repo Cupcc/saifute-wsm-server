@@ -15,15 +15,15 @@ import {
   buildSliceDirtyTargetBlockers,
 } from "./execute-guard";
 import {
-  readLegacyOutboundSnapshot,
-  readOutboundDependencySnapshot,
+  readLegacyWorkshopPickSnapshot,
+  readWorkshopPickDependencySnapshot,
 } from "./legacy-reader";
 import {
   buildDryRunSummary,
-  buildOutboundMigrationPlan,
+  buildWorkshopPickMigrationPlan,
   hasExecutionBlockers,
 } from "./transformer";
-import { executeOutboundPlan, MAP_TABLES, TARGET_TABLES } from "./writer";
+import { executeWorkshopPickPlan, MAP_TABLES, TARGET_TABLES } from "./writer";
 
 interface StoredMapRow {
   legacyTable: string;
@@ -87,6 +87,28 @@ async function getMissingMapTargets(
         ON target_row.id = map_row.target_id
       WHERE map_row.migration_batch = ?
         AND target_row.id IS NULL
+    `,
+    [migrationBatch],
+  );
+
+  return Number(rows[0]?.total ?? 0);
+}
+
+async function getBatchOwnedTargetRowCount(
+  connection: {
+    query<T = unknown>(sql: string, values?: readonly unknown[]): Promise<T>;
+  },
+  mapTableName: string,
+  targetTableName: string,
+  migrationBatch: string,
+): Promise<number> {
+  const rows = await connection.query<Array<{ total: number }>>(
+    `
+      SELECT COUNT(*) AS total
+      FROM ${targetTableName} target_row
+      INNER JOIN migration_staging.${mapTableName} map_row
+        ON map_row.target_id = target_row.id
+      WHERE map_row.migration_batch = ?
     `,
     [migrationBatch],
   );
@@ -223,7 +245,7 @@ async function stagingSchemaExists(connection: {
   return rows.length > 0;
 }
 
-async function getOutboundDownstreamConsumerCounts(connection: {
+async function getWorkshopPickDownstreamConsumerCounts(connection: {
   query<T = unknown>(sql: string, values?: readonly unknown[]): Promise<T>;
 }): Promise<Record<string, number>> {
   const rows = await connection.query<
@@ -232,33 +254,36 @@ async function getOutboundDownstreamConsumerCounts(connection: {
     `
       SELECT 'workflow_audit_document' AS consumer, COUNT(*) AS total
       FROM workflow_audit_document
-      WHERE documentFamily = 'CUSTOMER_STOCK' OR documentType = 'CustomerStockOrder'
+      WHERE documentFamily = 'WORKSHOP_MATERIAL' OR documentType = 'WorkshopMaterialOrder'
       UNION ALL
       SELECT 'document_relation' AS consumer, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'CUSTOMER_STOCK'
-         OR downstreamFamily = 'CUSTOMER_STOCK'
-         OR upstreamDocumentType = 'CustomerStockOrder'
-         OR downstreamDocumentType = 'CustomerStockOrder'
+      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
+         OR downstreamFamily = 'WORKSHOP_MATERIAL'
+         OR upstreamDocumentType = 'WorkshopMaterialOrder'
+         OR downstreamDocumentType = 'WorkshopMaterialOrder'
       UNION ALL
       SELECT 'document_line_relation' AS consumer, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'CUSTOMER_STOCK'
-         OR downstreamFamily = 'CUSTOMER_STOCK'
-         OR upstreamDocumentType = 'CustomerStockOrder'
-         OR downstreamDocumentType = 'CustomerStockOrder'
-      UNION ALL
-      SELECT 'inventory_log' AS consumer, COUNT(*) AS total
-      FROM inventory_log
-      WHERE businessDocumentType = 'CustomerStockOrder'
-      UNION ALL
-      SELECT 'inventory_source_usage' AS consumer, COUNT(*) AS total
-      FROM inventory_source_usage
-      WHERE consumerDocumentType = 'CustomerStockOrder'
+      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
+         OR downstreamFamily = 'WORKSHOP_MATERIAL'
+         OR upstreamDocumentType = 'WorkshopMaterialOrder'
+         OR downstreamDocumentType = 'WorkshopMaterialOrder'
       UNION ALL
       SELECT 'factory_number_reservation' AS consumer, COUNT(*) AS total
       FROM factory_number_reservation
-      WHERE businessDocumentType = 'CustomerStockOrder'
+      WHERE businessDocumentType = 'WorkshopMaterialOrder'
+      UNION ALL
+      SELECT 'inventory_balance' AS consumer, COUNT(*) AS total
+      FROM inventory_balance
+      UNION ALL
+      SELECT 'inventory_log' AS consumer, COUNT(*) AS total
+      FROM inventory_log
+      WHERE businessDocumentType = 'WorkshopMaterialOrder'
+      UNION ALL
+      SELECT 'inventory_source_usage' AS consumer, COUNT(*) AS total
+      FROM inventory_source_usage
+      WHERE consumerDocumentType = 'WorkshopMaterialOrder'
     `,
   );
 
@@ -272,8 +297,8 @@ async function main(): Promise<void> {
   const reportPath = resolveReportPath(
     cliOptions,
     cliOptions.execute
-      ? "outbound-execute-report.json"
-      : "outbound-dry-run-report.json",
+      ? "workshop-pick-execute-report.json"
+      : "workshop-pick-dry-run-report.json",
   );
   const env = loadMigrationEnvironment({ requireLegacyDatabaseUrl: true });
   const targetDatabaseName = assertExpectedDatabaseName(
@@ -293,17 +318,17 @@ async function main(): Promise<void> {
     const { snapshot, dependencies, plan } = await withPoolConnection(
       legacyPool,
       async (legacyConnection) => {
-        const snapshot = await readLegacyOutboundSnapshot(legacyConnection);
+        const snapshot = await readLegacyWorkshopPickSnapshot(legacyConnection);
         const dependencies = await withPoolConnection(
           targetPool,
           async (targetConnection) =>
-            readOutboundDependencySnapshot(targetConnection),
+            readWorkshopPickDependencySnapshot(targetConnection),
         );
 
         return {
           snapshot,
           dependencies,
-          plan: buildOutboundMigrationPlan(snapshot, dependencies),
+          plan: buildWorkshopPickMigrationPlan(snapshot, dependencies),
         };
       },
     );
@@ -322,7 +347,7 @@ async function main(): Promise<void> {
 
     if (!cliOptions.execute) {
       writeStableReport(reportPath, dryRunReport);
-      console.log(`Outbound dry-run completed. report=${reportPath}`);
+      console.log(`Workshop-pick dry-run completed. report=${reportPath}`);
 
       if (hasExecutionBlockers(plan)) {
         process.exitCode = 1;
@@ -332,6 +357,8 @@ async function main(): Promise<void> {
 
     let orderTargetRows = 0;
     let lineTargetRows = 0;
+    let batchOwnedOrderRows = 0;
+    let batchOwnedLineRows = 0;
     let orderBatchMapRows = 0;
     let lineBatchMapRows = 0;
     let missingMappedOrders = 0;
@@ -376,9 +403,21 @@ async function main(): Promise<void> {
             MAP_TABLES.order,
             plan.migrationBatch,
           );
+          batchOwnedOrderRows = await getBatchOwnedTargetRowCount(
+            targetConnection,
+            MAP_TABLES.order,
+            TARGET_TABLES.order,
+            plan.migrationBatch,
+          );
           lineBatchMapRows = await getBatchMapCount(
             targetConnection,
             MAP_TABLES.line,
+            plan.migrationBatch,
+          );
+          batchOwnedLineRows = await getBatchOwnedTargetRowCount(
+            targetConnection,
+            MAP_TABLES.line,
+            TARGET_TABLES.line,
             plan.migrationBatch,
           );
           missingMappedOrders = await getMissingMapTargets(
@@ -394,7 +433,7 @@ async function main(): Promise<void> {
             plan.migrationBatch,
           );
           downstreamConsumerCounts =
-            await getOutboundDownstreamConsumerCounts(targetConnection);
+            await getWorkshopPickDownstreamConsumerCounts(targetConnection);
 
           if (orderBatchMapRows > 0) {
             const storedOrderMapRows = await getOrderMapRows(
@@ -433,12 +472,12 @@ async function main(): Promise<void> {
           executeBlockers.push(
             ...buildSliceDirtyTargetBlockers({
               targetTable: TARGET_TABLES.order,
-              targetRows: orderTargetRows,
+              batchOwnedTargetRows: batchOwnedOrderRows,
               batchMapRows: orderBatchMapRows,
             }),
             ...buildSliceDirtyTargetBlockers({
               targetTable: TARGET_TABLES.line,
-              targetRows: lineTargetRows,
+              batchOwnedTargetRows: batchOwnedLineRows,
               batchMapRows: lineBatchMapRows,
             }),
             ...buildMissingMapTargetBlockers({
@@ -458,9 +497,9 @@ async function main(): Promise<void> {
               ...lineMapConsistency,
             }),
             ...buildDownstreamConsumerBlockers({
-              isRerun:
-                orderTargetRows > 0 ||
-                lineTargetRows > 0 ||
+              hasBatchOwnership:
+                batchOwnedOrderRows > 0 ||
+                batchOwnedLineRows > 0 ||
                 orderBatchMapRows > 0 ||
                 lineBatchMapRows > 0,
               consumerCounts: downstreamConsumerCounts,
@@ -485,6 +524,8 @@ async function main(): Promise<void> {
             targetSummary: {
               orderTargetRows,
               lineTargetRows,
+              batchOwnedOrderRows,
+              batchOwnedLineRows,
               orderBatchMapRows,
               lineBatchMapRows,
               missingMappedOrders,
@@ -500,7 +541,7 @@ async function main(): Promise<void> {
           return blockedReport;
         }
 
-        const executionResult = await executeOutboundPlan(
+        const executionResult = await executeWorkshopPickPlan(
           targetConnection,
           plan,
         );
@@ -511,6 +552,8 @@ async function main(): Promise<void> {
           targetSummary: {
             orderTargetRows,
             lineTargetRows,
+            batchOwnedOrderRows,
+            batchOwnedLineRows,
             orderBatchMapRows,
             lineBatchMapRows,
             missingMappedOrders,
@@ -526,7 +569,7 @@ async function main(): Promise<void> {
       },
     );
 
-    console.log(`Outbound execute completed. report=${reportPath}`);
+    console.log(`Workshop-pick execute completed. report=${reportPath}`);
 
     if (
       Array.isArray(

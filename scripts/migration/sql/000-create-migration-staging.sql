@@ -168,6 +168,48 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_customer_stock_order_line (
   UNIQUE KEY uq_map_customer_stock_order_line_target (target_table, target_id)
 );
 
+CREATE TABLE IF NOT EXISTS migration_staging.map_workshop_material_order (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  legacy_table VARCHAR(128) NOT NULL,
+  legacy_id BIGINT NOT NULL,
+  target_table VARCHAR(128) NOT NULL,
+  target_id BIGINT NOT NULL,
+  target_code VARCHAR(128) NULL,
+  migration_batch VARCHAR(64) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_map_workshop_material_order_legacy (legacy_table, legacy_id),
+  UNIQUE KEY uq_map_workshop_material_order_target (target_table, target_id)
+);
+
+CREATE TABLE IF NOT EXISTS migration_staging.map_workshop_material_order_line (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  legacy_table VARCHAR(128) NOT NULL,
+  legacy_id BIGINT NOT NULL,
+  target_table VARCHAR(128) NOT NULL,
+  target_id BIGINT NOT NULL,
+  target_code VARCHAR(128) NULL,
+  migration_batch VARCHAR(64) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_map_workshop_material_order_line_legacy (legacy_table, legacy_id),
+  UNIQUE KEY uq_map_workshop_material_order_line_target (target_table, target_id)
+);
+
+CREATE TABLE IF NOT EXISTS migration_staging.map_factory_number_reservation (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  legacy_table VARCHAR(128) NOT NULL,
+  legacy_id BIGINT NOT NULL,
+  target_table VARCHAR(128) NOT NULL,
+  target_id BIGINT NOT NULL,
+  target_code VARCHAR(128) NULL,
+  migration_batch VARCHAR(64) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_map_factory_number_reservation_legacy (legacy_table, legacy_id),
+  UNIQUE KEY uq_map_factory_number_reservation_target (target_table, target_id)
+);
+
 CREATE TABLE IF NOT EXISTS migration_staging.archived_field_payload (
   id BIGINT NOT NULL AUTO_INCREMENT,
   legacy_table VARCHAR(128) NOT NULL,

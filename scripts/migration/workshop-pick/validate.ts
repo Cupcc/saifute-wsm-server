@@ -10,13 +10,13 @@ import { closePools, createMariaDbPool, withPoolConnection } from "../db";
 import { stableJsonStringify } from "../shared/deterministic";
 import { writeStableReport } from "../shared/report-writer";
 import {
-  readLegacyOutboundSnapshot,
-  readOutboundDependencySnapshot,
+  readLegacyWorkshopPickSnapshot,
+  readWorkshopPickDependencySnapshot,
 } from "./legacy-reader";
-import { buildOutboundMigrationPlan } from "./transformer";
+import { buildWorkshopPickMigrationPlan } from "./transformer";
 import type {
   ArchivedFieldPayloadRecord,
-  OutboundMigrationPlan,
+  WorkshopPickMigrationPlan,
 } from "./types";
 import { MAP_TABLES, TARGET_TABLES } from "./writer";
 
@@ -121,7 +121,7 @@ function buildExcludedDocumentIdentity(input: {
 }
 
 function collectExpectedArchivedPayloads(
-  plan: OutboundMigrationPlan,
+  plan: WorkshopPickMigrationPlan,
 ): ArchivedPayloadExpectation[] {
   const expectations: ArchivedPayloadExpectation[] = [];
 
@@ -137,10 +137,6 @@ function collectExpectedArchivedPayloads(
     });
 
     for (const line of order.lines) {
-      if (!line.archivedPayload) {
-        continue;
-      }
-
       expectations.push({
         legacyTable: line.archivedPayload.legacyTable,
         legacyId: line.archivedPayload.legacyId,
@@ -162,7 +158,9 @@ function collectExpectedArchivedPayloads(
   );
 }
 
-function collectExpectedExcludedDocuments(plan: OutboundMigrationPlan): Array<{
+function collectExpectedExcludedDocuments(
+  plan: WorkshopPickMigrationPlan,
+): Array<{
   legacyTable: string;
   legacyId: number;
   exclusionReason: string;
@@ -268,7 +266,7 @@ async function getArchivedPayloadCount(
       SELECT COUNT(*) AS total
       FROM migration_staging.archived_field_payload
       WHERE migration_batch = ?
-        AND target_table IN ('customer_stock_order', 'customer_stock_order_line')
+        AND target_table IN ('workshop_material_order', 'workshop_material_order_line')
     `,
     [migrationBatch],
   );
@@ -294,7 +292,7 @@ async function getArchivedPayloadRows(
         payload_json AS payloadJson
       FROM migration_staging.archived_field_payload
       WHERE migration_batch = ?
-        AND target_table IN ('customer_stock_order', 'customer_stock_order_line')
+        AND target_table IN ('workshop_material_order', 'workshop_material_order_line')
       ORDER BY legacy_table ASC, legacy_id ASC, target_table ASC, payload_kind ASC
     `,
     [migrationBatch],
@@ -316,7 +314,7 @@ async function getExcludedDocumentRows(
         payload_json AS payloadJson
       FROM migration_staging.excluded_documents
       WHERE migration_batch = ?
-        AND legacy_table IN ('saifute_outbound_order')
+        AND legacy_table IN ('saifute_pick_order')
       ORDER BY legacy_table ASC, legacy_id ASC
     `,
     [migrationBatch],
@@ -346,33 +344,36 @@ async function getForbiddenTableCounts(connection: {
     `
       SELECT 'workflow_audit_document' AS tableName, COUNT(*) AS total
       FROM workflow_audit_document
-      WHERE documentFamily = 'CUSTOMER_STOCK' OR documentType = 'CustomerStockOrder'
+      WHERE documentFamily = 'WORKSHOP_MATERIAL' OR documentType = 'WorkshopMaterialOrder'
       UNION ALL
       SELECT 'document_relation' AS tableName, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'CUSTOMER_STOCK'
-         OR downstreamFamily = 'CUSTOMER_STOCK'
-         OR upstreamDocumentType = 'CustomerStockOrder'
-         OR downstreamDocumentType = 'CustomerStockOrder'
+      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
+         OR downstreamFamily = 'WORKSHOP_MATERIAL'
+         OR upstreamDocumentType = 'WorkshopMaterialOrder'
+         OR downstreamDocumentType = 'WorkshopMaterialOrder'
       UNION ALL
       SELECT 'document_line_relation' AS tableName, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'CUSTOMER_STOCK'
-         OR downstreamFamily = 'CUSTOMER_STOCK'
-         OR upstreamDocumentType = 'CustomerStockOrder'
-         OR downstreamDocumentType = 'CustomerStockOrder'
+      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
+         OR downstreamFamily = 'WORKSHOP_MATERIAL'
+         OR upstreamDocumentType = 'WorkshopMaterialOrder'
+         OR downstreamDocumentType = 'WorkshopMaterialOrder'
       UNION ALL
       SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS total
       FROM factory_number_reservation
-      WHERE businessDocumentType = 'CustomerStockOrder'
+      WHERE businessDocumentType = 'WorkshopMaterialOrder'
+      UNION ALL
+      SELECT 'inventory_balance' AS tableName, COUNT(*) AS total
+      FROM inventory_balance
       UNION ALL
       SELECT 'inventory_log' AS tableName, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = 'CustomerStockOrder'
+      WHERE businessDocumentType = 'WorkshopMaterialOrder'
       UNION ALL
       SELECT 'inventory_source_usage' AS tableName, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = 'CustomerStockOrder'
+      WHERE consumerDocumentType = 'WorkshopMaterialOrder'
     `,
   );
 
@@ -391,15 +392,12 @@ async function getOrderRowsByDocumentNo(connection: {
       documentNo: string;
       orderType: string;
       bizDate: string;
-      customerId: number | null;
       handlerPersonnelId: number | null;
       workshopId: number;
       lifecycleStatus: string;
       auditStatusSnapshot: string;
       inventoryEffectStatus: string;
       revisionNo: number;
-      customerCodeSnapshot: string | null;
-      customerNameSnapshot: string | null;
       handlerNameSnapshot: string | null;
       workshopNameSnapshot: string;
       totalQty: string;
@@ -421,15 +419,12 @@ async function getOrderRowsByDocumentNo(connection: {
       documentNo: string;
       orderType: string;
       bizDate: string;
-      customerId: number | null;
       handlerPersonnelId: number | null;
       workshopId: number;
       lifecycleStatus: string;
       auditStatusSnapshot: string;
       inventoryEffectStatus: string;
       revisionNo: number;
-      customerCodeSnapshot: string | null;
-      customerNameSnapshot: string | null;
       handlerNameSnapshot: string | null;
       workshopNameSnapshot: string;
       totalQty: string;
@@ -450,15 +445,12 @@ async function getOrderRowsByDocumentNo(connection: {
         documentNo,
         orderType,
         bizDate,
-        customerId,
         handlerPersonnelId,
         workshopId,
         lifecycleStatus,
         auditStatusSnapshot,
         inventoryEffectStatus,
         revisionNo,
-        customerCodeSnapshot,
-        customerNameSnapshot,
         handlerNameSnapshot,
         workshopNameSnapshot,
         totalQty,
@@ -471,7 +463,7 @@ async function getOrderRowsByDocumentNo(connection: {
         createdAt,
         updatedBy,
         updatedAt
-      FROM customer_stock_order
+      FROM workshop_material_order
       ORDER BY documentNo ASC
     `,
   );
@@ -499,8 +491,6 @@ async function getLineRowsByIdentity(connection: {
       quantity: string;
       unitPrice: string;
       amount: string;
-      startNumber: string | null;
-      endNumber: string | null;
       sourceDocumentType: string | null;
       sourceDocumentId: number | null;
       sourceDocumentLineId: number | null;
@@ -524,8 +514,6 @@ async function getLineRowsByIdentity(connection: {
       quantity: string;
       unitPrice: string;
       amount: string;
-      startNumber: string | null;
-      endNumber: string | null;
       sourceDocumentType: string | null;
       sourceDocumentId: number | null;
       sourceDocumentLineId: number | null;
@@ -548,8 +536,6 @@ async function getLineRowsByIdentity(connection: {
         line_row.quantity AS quantity,
         line_row.unitPrice AS unitPrice,
         line_row.amount AS amount,
-        line_row.startNumber AS startNumber,
-        line_row.endNumber AS endNumber,
         line_row.sourceDocumentType AS sourceDocumentType,
         line_row.sourceDocumentId AS sourceDocumentId,
         line_row.sourceDocumentLineId AS sourceDocumentLineId,
@@ -558,8 +544,8 @@ async function getLineRowsByIdentity(connection: {
         line_row.createdAt AS createdAt,
         line_row.updatedBy AS updatedBy,
         line_row.updatedAt AS updatedAt
-      FROM customer_stock_order_line line_row
-      INNER JOIN customer_stock_order order_row
+      FROM workshop_material_order_line line_row
+      INNER JOIN workshop_material_order order_row
         ON order_row.id = line_row.orderId
       ORDER BY order_row.documentNo ASC, line_row.lineNo ASC
     `,
@@ -576,7 +562,7 @@ async function main(): Promise<void> {
   const cliOptions = parseMigrationCliOptions();
   const reportPath = resolveReportPath(
     cliOptions,
-    "outbound-validate-report.json",
+    "workshop-pick-validate-report.json",
   );
   const env = loadMigrationEnvironment({ requireLegacyDatabaseUrl: true });
   const targetDatabaseName = assertExpectedDatabaseName(
@@ -596,17 +582,17 @@ async function main(): Promise<void> {
     const { snapshot, dependencies, plan } = await withPoolConnection(
       legacyPool,
       async (legacyConnection) => {
-        const snapshot = await readLegacyOutboundSnapshot(legacyConnection);
+        const snapshot = await readLegacyWorkshopPickSnapshot(legacyConnection);
         const dependencies = await withPoolConnection(
           targetPool,
           async (targetConnection) =>
-            readOutboundDependencySnapshot(targetConnection),
+            readWorkshopPickDependencySnapshot(targetConnection),
         );
 
         return {
           snapshot,
           dependencies,
-          plan: buildOutboundMigrationPlan(snapshot, dependencies),
+          plan: buildWorkshopPickMigrationPlan(snapshot, dependencies),
         };
       },
     );
@@ -703,7 +689,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "outbound order map row count does not match the deterministic migration plan.",
+              "workshop_material_order map row count does not match the deterministic migration plan.",
             expectedMigratedOrders,
             actualOrderMapRows: orderBatchMapRows,
           });
@@ -713,7 +699,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "outbound line map row count does not match the deterministic migration plan.",
+              "workshop_material_order_line map row count does not match the deterministic migration plan.",
             expectedMigratedLines,
             actualLineMapRows: lineBatchMapRows,
           });
@@ -723,7 +709,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "Batch-owned customer_stock_order row count does not match the migration plan.",
+              "Batch-owned workshop_material_order row count does not match the migration plan.",
             expectedMigratedOrders,
             actualBatchOwnedOrderRows: batchOwnedOrderRows,
           });
@@ -733,7 +719,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "Batch-owned customer_stock_order_line row count does not match the migration plan.",
+              "Batch-owned workshop_material_order_line row count does not match the migration plan.",
             expectedMigratedLines,
             actualBatchOwnedLineRows: batchOwnedLineRows,
           });
@@ -743,7 +729,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "Some outbound order staging map rows point at missing target rows.",
+              "Some workshop_material_order staging map rows point at missing target rows.",
             missingMappedOrders,
           });
         }
@@ -752,7 +738,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "Some outbound line staging map rows point at missing target rows.",
+              "Some workshop_material_order_line staging map rows point at missing target rows.",
             missingMappedLines,
           });
         }
@@ -762,7 +748,7 @@ async function main(): Promise<void> {
             validationIssues.push({
               severity: "blocker",
               reason:
-                "A table that must remain untouched by the outbound base slice already contains CustomerStockOrder-linked rows.",
+                "A table that must remain untouched by the workshop-pick base slice already contains WorkshopMaterialOrder-linked rows.",
               tableName,
               total,
             });
@@ -786,7 +772,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "archived_field_payload row count does not match the deterministic outbound plan.",
+              "archived_field_payload row count does not match the deterministic workshop-pick plan.",
             expectedArchivedPayloadCount: expectedArchivedPayloads.length,
             actualArchivedPayloadCount: archivedPayloadCount,
           });
@@ -799,7 +785,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "excluded_documents row count does not match the deterministic outbound plan.",
+              "excluded_documents row count does not match the deterministic workshop-pick plan.",
             expectedExcludedDocumentCount: expectedExcludedDocuments.length,
             actualExcludedDocumentCount: excludedDocumentRows.length,
           });
@@ -876,7 +862,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "archived_field_payload contains rows outside the outbound deterministic plan.",
+              "archived_field_payload contains rows outside the workshop-pick deterministic plan.",
             unexpectedArchivedPayloadRows: unexpectedArchivedPayloadRows.map(
               (row) => ({
                 legacyTable: row.legacyTable,
@@ -946,7 +932,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "excluded_documents contains rows outside the outbound deterministic plan.",
+              "excluded_documents contains rows outside the workshop-pick deterministic plan.",
             unexpectedExcludedRows: unexpectedExcludedRows.map((row) => ({
               legacyTable: row.legacyTable,
               legacyId: row.legacyId,
@@ -965,7 +951,7 @@ async function main(): Promise<void> {
           if (!targetRow) {
             validationIssues.push({
               severity: "blocker",
-              reason: "Expected customer_stock_order row is missing.",
+              reason: "Expected workshop_material_order row is missing.",
               legacyTable: order.legacyTable,
               legacyId: order.legacyId,
               documentNo: order.target.documentNo,
@@ -982,161 +968,140 @@ async function main(): Promise<void> {
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.orderType",
+            "workshop_material_order.orderType",
             order.target.orderType,
             targetRow.orderType,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.bizDate",
+            "workshop_material_order.bizDate",
             order.target.bizDate,
             targetRow.bizDate,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.customerId",
-            order.target.customerId,
-            targetRow.customerId,
-          );
-          pushValueMismatch(
-            validationIssues,
-            context,
-            "customer_stock_order.handlerPersonnelId",
+            "workshop_material_order.handlerPersonnelId",
             order.target.handlerPersonnelId,
             targetRow.handlerPersonnelId,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.workshopId",
+            "workshop_material_order.workshopId",
             order.target.workshopId,
             targetRow.workshopId,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.lifecycleStatus",
+            "workshop_material_order.lifecycleStatus",
             order.target.lifecycleStatus,
             targetRow.lifecycleStatus,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.auditStatusSnapshot",
+            "workshop_material_order.auditStatusSnapshot",
             order.target.auditStatusSnapshot,
             targetRow.auditStatusSnapshot,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.inventoryEffectStatus",
+            "workshop_material_order.inventoryEffectStatus",
             order.target.inventoryEffectStatus,
             targetRow.inventoryEffectStatus,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.revisionNo",
+            "workshop_material_order.revisionNo",
             order.target.revisionNo,
             targetRow.revisionNo,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.customerCodeSnapshot",
-            order.target.customerCodeSnapshot,
-            targetRow.customerCodeSnapshot,
-          );
-          pushValueMismatch(
-            validationIssues,
-            context,
-            "customer_stock_order.customerNameSnapshot",
-            order.target.customerNameSnapshot,
-            targetRow.customerNameSnapshot,
-          );
-          pushValueMismatch(
-            validationIssues,
-            context,
-            "customer_stock_order.handlerNameSnapshot",
+            "workshop_material_order.handlerNameSnapshot",
             order.target.handlerNameSnapshot,
             targetRow.handlerNameSnapshot,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.workshopNameSnapshot",
+            "workshop_material_order.workshopNameSnapshot",
             order.target.workshopNameSnapshot,
             targetRow.workshopNameSnapshot,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.totalQty",
+            "workshop_material_order.totalQty",
             order.target.totalQty,
             targetRow.totalQty,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.totalAmount",
+            "workshop_material_order.totalAmount",
             order.target.totalAmount,
             targetRow.totalAmount,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.remark",
+            "workshop_material_order.remark",
             order.target.remark,
             targetRow.remark,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.voidReason",
+            "workshop_material_order.voidReason",
             order.target.voidReason,
             targetRow.voidReason,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.voidedBy",
+            "workshop_material_order.voidedBy",
             order.target.voidedBy,
             targetRow.voidedBy,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.voidedAt",
+            "workshop_material_order.voidedAt",
             order.target.voidedAt,
             targetRow.voidedAt,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.createdBy",
+            "workshop_material_order.createdBy",
             order.target.createdBy,
             targetRow.createdBy,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.createdAt",
+            "workshop_material_order.createdAt",
             order.target.createdAt,
             targetRow.createdAt,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.updatedBy",
+            "workshop_material_order.updatedBy",
             order.target.updatedBy,
             targetRow.updatedBy,
           );
           pushValueMismatch(
             validationIssues,
             context,
-            "customer_stock_order.updatedAt",
+            "workshop_material_order.updatedAt",
             order.target.updatedAt,
             targetRow.updatedAt,
           );
@@ -1149,7 +1114,7 @@ async function main(): Promise<void> {
             if (!targetLine) {
               validationIssues.push({
                 severity: "blocker",
-                reason: "Expected customer_stock_order_line row is missing.",
+                reason: "Expected workshop_material_order_line row is missing.",
                 legacyTable: line.legacyTable,
                 legacyId: line.legacyId,
                 documentNo: order.target.documentNo,
@@ -1168,126 +1133,112 @@ async function main(): Promise<void> {
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.materialId",
+              "workshop_material_order_line.materialId",
               line.target.materialId,
               targetLine.materialId,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.materialCodeSnapshot",
+              "workshop_material_order_line.materialCodeSnapshot",
               line.target.materialCodeSnapshot,
               targetLine.materialCodeSnapshot,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.materialNameSnapshot",
+              "workshop_material_order_line.materialNameSnapshot",
               line.target.materialNameSnapshot,
               targetLine.materialNameSnapshot,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.materialSpecSnapshot",
+              "workshop_material_order_line.materialSpecSnapshot",
               line.target.materialSpecSnapshot,
               targetLine.materialSpecSnapshot,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.unitCodeSnapshot",
+              "workshop_material_order_line.unitCodeSnapshot",
               line.target.unitCodeSnapshot,
               targetLine.unitCodeSnapshot,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.quantity",
+              "workshop_material_order_line.quantity",
               line.target.quantity,
               targetLine.quantity,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.unitPrice",
+              "workshop_material_order_line.unitPrice",
               line.target.unitPrice,
               targetLine.unitPrice,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.amount",
+              "workshop_material_order_line.amount",
               line.target.amount,
               targetLine.amount,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.startNumber",
-              line.target.startNumber,
-              targetLine.startNumber,
-            );
-            pushValueMismatch(
-              validationIssues,
-              lineContext,
-              "customer_stock_order_line.endNumber",
-              line.target.endNumber,
-              targetLine.endNumber,
-            );
-            pushValueMismatch(
-              validationIssues,
-              lineContext,
-              "customer_stock_order_line.sourceDocumentType",
+              "workshop_material_order_line.sourceDocumentType",
               line.target.sourceDocumentType,
               targetLine.sourceDocumentType,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.sourceDocumentId",
+              "workshop_material_order_line.sourceDocumentId",
               line.target.sourceDocumentId,
               targetLine.sourceDocumentId,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.sourceDocumentLineId",
+              "workshop_material_order_line.sourceDocumentLineId",
               line.target.sourceDocumentLineId,
               targetLine.sourceDocumentLineId,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.remark",
+              "workshop_material_order_line.remark",
               line.target.remark,
               targetLine.remark,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.createdBy",
+              "workshop_material_order_line.createdBy",
               line.target.createdBy,
               targetLine.createdBy,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.createdAt",
+              "workshop_material_order_line.createdAt",
               line.target.createdAt,
               targetLine.createdAt,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.updatedBy",
+              "workshop_material_order_line.updatedBy",
               line.target.updatedBy,
               targetLine.updatedBy,
             );
             pushValueMismatch(
               validationIssues,
               lineContext,
-              "customer_stock_order_line.updatedAt",
+              "workshop_material_order_line.updatedAt",
               line.target.updatedAt,
               targetLine.updatedAt,
             );
@@ -1326,7 +1277,7 @@ async function main(): Promise<void> {
     );
 
     writeStableReport(reportPath, report);
-    console.log(`Outbound validation completed. report=${reportPath}`);
+    console.log(`Workshop-pick validation completed. report=${reportPath}`);
 
     if (report.validationIssues.some((issue) => issue.severity === "blocker")) {
       process.exitCode = 1;

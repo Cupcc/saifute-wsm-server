@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "path": "../../.."
+    },
+    {
+      "path": "../../../../saifute-wms-vue3"
+    },
+    {
+      "path": "../../../../saifute-wms-server"
+    }
+  ],
+  "settings": {}
+}

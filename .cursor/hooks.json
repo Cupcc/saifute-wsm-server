@@ -1,6 +1,16 @@
 {
   "version": 1,
   "hooks": {
+    "sessionStart": [
+      {
+        "command": "node .cursor/hooks/session-start-runtime.js"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "node .cursor/hooks/task-start-notify.js"
+      }
+    ],
     "afterFileEdit": [
       {
         "command": "node .cursor/hooks/biome-after-edit.js",

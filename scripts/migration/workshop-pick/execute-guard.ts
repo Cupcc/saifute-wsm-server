@@ -1,6 +1,6 @@
 export interface SliceTargetState {
   targetTable: string;
-  targetRows: number;
+  batchOwnedTargetRows: number;
   batchMapRows: number;
 }
 
@@ -18,27 +18,27 @@ export interface SliceMapConsistencyState {
 }
 
 export interface DownstreamConsumerState {
-  isRerun: boolean;
+  hasBatchOwnership: boolean;
   consumerCounts: Record<string, number>;
 }
 
 export function buildSliceDirtyTargetBlockers(
   state: SliceTargetState,
 ): Array<Record<string, unknown>> {
-  if (state.targetRows === 0 && state.batchMapRows === 0) {
+  if (state.batchOwnedTargetRows === 0 && state.batchMapRows === 0) {
     return [];
   }
 
-  if (state.targetRows === state.batchMapRows) {
+  if (state.batchOwnedTargetRows === state.batchMapRows) {
     return [];
   }
 
   return [
     {
       reason:
-        "Target table rows and this batch's staging map rows differ, so execute would run against a dirty slice target.",
+        "Batch-owned workshop-pick target rows and this batch's staging map rows differ, so execute would run against a dirty slice baseline.",
       targetTable: state.targetTable,
-      targetRows: state.targetRows,
+      batchOwnedTargetRows: state.batchOwnedTargetRows,
       batchMapRows: state.batchMapRows,
     },
   ];
@@ -54,7 +54,7 @@ export function buildMissingMapTargetBlockers(
   return [
     {
       reason:
-        "This batch's staging map rows point at missing target rows, so execute would run against an inconsistent slice baseline.",
+        "This batch's workshop-pick staging map rows point at missing target rows, so execute would run against an inconsistent slice baseline.",
       targetTable: state.targetTable,
       missingMappedTargets: state.missingMappedTargets,
     },
@@ -76,7 +76,7 @@ export function buildMapConsistencyBlockers(
   return [
     {
       reason:
-        "This batch's staging map rows do not match the deterministic outbound plan, so rerun cleanup would be unsafe.",
+        "This batch's workshop-pick staging map rows do not match the deterministic plan, so rerun cleanup would be unsafe.",
       targetTable: state.targetTable,
       missingExpectedMapRows: state.missingExpectedMapRows,
       unexpectedMapRows: state.unexpectedMapRows,
@@ -89,10 +89,6 @@ export function buildMapConsistencyBlockers(
 export function buildDownstreamConsumerBlockers(
   state: DownstreamConsumerState,
 ): Array<Record<string, unknown>> {
-  if (!state.isRerun) {
-    return [];
-  }
-
   const activeConsumers = Object.entries(state.consumerCounts).filter(
     ([, count]) => count > 0,
   );
@@ -103,8 +99,9 @@ export function buildDownstreamConsumerBlockers(
 
   return [
     {
-      reason:
-        "Outbound rerun is blocked because downstream tables already reference CustomerStockOrder rows or line ids.",
+      reason: state.hasBatchOwnership
+        ? "Workshop-pick rerun is blocked because downstream tables already reference WorkshopMaterialOrder rows or line ids."
+        : "Workshop-pick execute is blocked because downstream WorkshopMaterialOrder consumers already exist before this slice owns the target rows.",
       downstreamConsumers: Object.fromEntries(activeConsumers),
     },
   ];

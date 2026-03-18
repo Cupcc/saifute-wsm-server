@@ -1,5 +1,6 @@
 import {
   buildDownstreamConsumerBlockers,
+  buildMapConsistencyBlockers,
   buildMissingMapTargetBlockers,
   buildSliceDirtyTargetBlockers,
 } from "../../scripts/migration/outbound/execute-guard";
@@ -76,6 +77,36 @@ describe("outbound execute guard", () => {
       buildMissingMapTargetBlockers({
         targetTable: "customer_stock_order_line",
         missingMappedTargets: 0,
+      }),
+    ).toEqual([]);
+  });
+
+  it("should block execute when batch map rows drift from the deterministic plan", () => {
+    expect(
+      buildMapConsistencyBlockers({
+        targetTable: "customer_stock_order",
+        missingExpectedMapRows: 1,
+        unexpectedMapRows: 0,
+        mismatchedTargetCodes: 1,
+        mismatchedActualTargetCodes: 0,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        targetTable: "customer_stock_order",
+        missingExpectedMapRows: 1,
+        mismatchedTargetCodes: 1,
+      }),
+    ]);
+  });
+
+  it("should allow execute when batch map rows exactly match the deterministic plan", () => {
+    expect(
+      buildMapConsistencyBlockers({
+        targetTable: "customer_stock_order_line",
+        missingExpectedMapRows: 0,
+        unexpectedMapRows: 0,
+        mismatchedTargetCodes: 0,
+        mismatchedActualTargetCodes: 0,
       }),
     ).toEqual([]);
   });

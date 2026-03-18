@@ -44,6 +44,10 @@ Interpret these requests as delivery requests unless the user explicitly narrows
 - `complete this`
 - `fix this issue`
 - `continue`
+- `resume this task`
+- `continue in a new chat`
+- `pick up from the task doc`
+- `接着上次继续`
 - `deliver this`
 - `prepare this migration`
 - `write the backfill`
@@ -52,6 +56,32 @@ Interpret these requests as delivery requests unless the user explicitly narrows
 - `finish the migration script`
 
 For delivery requests, do not stop after only planning, one implementation pass, one review pass, or one targeted validation run. Keep the `review -> fix` loop moving until the scoped work is ready for handoff or a real blocker requires user direction.
+
+## Resume and new-chat continuation
+
+When the user says `continue`, `resume`, `pick this up`, or asks to continue in a new chat:
+
+1. Look for an existing `docs/tasks/*.md` execution brief for the active scope before starting fresh exploration.
+2. If a task doc exists, treat it as the primary runtime handoff source and also read:
+   - the related `docs/fix-checklists/*.md`
+   - any report files, validation artifacts, or generated outputs referenced by the task doc
+3. Reconstruct and state, at least to yourself before delegating:
+   - current scope
+   - last completed step
+   - validations already passed
+   - remaining blockers, pending gates, or sign-off needs
+   - the next smallest safe action
+4. Do not restart planning from scratch unless:
+   - no task doc exists
+   - the task doc is stale, contradictory, or no longer matches the repo state
+   - the user explicitly asks to replan
+
+For migration-style work, also recover:
+
+- whether `dry-run`, `execute`, and `validate` were actually run or only planned
+- the latest relevant report paths and which one should be read first
+- whether rerun is safe from the current target baseline
+- any required environment, credentials, or operational prerequisites that are still missing
 
 ## Subagent roles
 
@@ -188,6 +218,24 @@ The parent orchestrator owns the distinction between durable rules and runtime c
 - put task-scoped runtime context in `docs/tasks/**`, the parent handoff, or another clearly temporary shared context artifact when multiple subagents need the same live status
 - before promoting a new observation into rules, confirm that it is likely to remain valid across future tasks and does not contain secrets
 
+## End-of-turn handoff requirements
+
+Before stopping and returning control to the user on any non-trivial task, make sure the continuation-critical runtime state is written to a durable task artifact instead of relying on chat memory alone.
+
+Prefer the active `docs/tasks/*.md` as the handoff source. If task-doc ownership belongs to `planner` or `code-reviewer`, route the update through the appropriate owner before stopping instead of leaving the latest state only in the conversation.
+
+The durable handoff should capture:
+
+- current status
+- what changed this turn
+- validation run and result
+- remaining blockers, risks, sign-off needs, or pending gates
+- the next recommended step
+- exact commands, report paths, or artifacts the next chat should read or run first
+- any required environment or credential prerequisites still missing
+
+If a future chat must be able to resume safely, the task doc and related checklist should be sufficient for the parent orchestrator to continue without hidden assumptions.
+
 ## File ownership guidance
 
 The `coder` may edit:
@@ -239,6 +287,8 @@ Ask each subagent to return:
 - files, modules, or operational surfaces touched
 - shared contracts assumed or changed
 - tests or validation run, plus what still needs to run
+- the resume point for the next chat
+- which reports, artifacts, or commands should be read or run first on continuation
 - risks, blockers, sign-off needs, and follow-up work
 
 Additionally require:

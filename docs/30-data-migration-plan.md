@@ -799,11 +799,11 @@
 - [x] 固定默认车间：`WS-LEGACY-DEFAULT / 历史默认车间`
 - [x] 输出主数据编码清洗结果，处理 `material_code`、`customer_code` 冲突（已通过 `batch1-master-data` 的 dry-run / execute / validate 报告固化）
 - [x] 输出历史冲突单号重编号表，并冻结重编号规则（已完成 `stock_in_order` 家族；其余事务家族待续）
-- [x] 先导入 `material_category` 与 5 类主数据，再导入事务单据（已完成 `stock_in_order` / `stock_in_order_line`）
+- [x] 先导入 `material_category` 与 5 类主数据，再导入事务单据（已完成 `stock_in_order` / `stock_in_order_line` 与 `customer_stock_order` / `customer_stock_order_line` 的基础迁移）
 - [ ] 销售退货单、退料单先做“上游关系可恢复 + 行内 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 可补齐”筛选，不可恢复整单转入 `excluded_documents`
 - [ ] 只恢复可确定的 `document_relation` / `document_line_relation`
-- [ ] 只把 `order_type=4` 区间写入 `factory_number_reservation`
-- [ ] 只在“单明细单区间”时回填 `customer_stock_order_line.startNumber/endNumber`
+- [x] 只把 `order_type=4` 区间写入 `factory_number_reservation`
+- [x] 只在“单明细单区间”时回填 `customer_stock_order_line.startNumber/endNumber`
 - [ ] 基于正式业务表重放库存，不直接拷贝 `saifute_inventory` / `saifute_inventory_log`
 - [ ] `inventory_source_usage` 写入前按 `(consumerDocumentType, consumerLineId, sourceLogId)` 聚合
 - [ ] 只给最终有效且需要审核的历史单据补 `workflow_audit_document`

@@ -1,0 +1,40 @@
+---
+description: 当 agent 停止时发送飞书 webhook 通知用户
+alwaysApply: true
+---
+
+# Agent 停止时飞书通知
+
+当你在**即将结束本轮对话、把控制权交回用户**时（例如：任务完成、需要用户确认、遇到阻塞需用户决策、或完成 plan/review/code 某一阶段并暂停），请执行飞书 webhook 通知，以便用户收到提示。
+
+**执行方式**（在结束前运行一次）：
+
+```bash
+pnpm notify:feishu "事件名" "消息内容" "消息类型"
+pnpm notify:feishu "task_complete" "核心结果；下一步计划：..." "success"
+pnpm notify:feishu "task_complete" "核心结果；下一步计划：..." "success" --duration-ms <精确毫秒数>
+```
+
+**参数说明**：
+
+- **事件名 (event)**：简短标识，如 `task_complete`、`agent_stop`、`need_user_input`、`phase_complete`。
+- **消息内容 (msg)**：给用户看的说明，默认需要写清**核心结果**和**下一步计划**。
+  - 对 `task_complete`（或你明确使用的最终完成事件 `complete`），`msg` 中**不要手写运行时间，更不能写“约 12 分钟”这类估计值**。优先依赖 `beforeSubmitPrompt` hook 自动记录本次任务开始时间，由脚本自动追加类似 `本次任务运行：1小时23分钟` 的自然语言时长；若 hook 状态不可用，再显式传 `--duration-ms` 或 `--started-at-ms`。
+  - 对其他事件，`msg` 中**不要包含运行时间**，只保留核心结果和下一步计划。
+  - 完成事件推荐格式：`<核心结果>；下一步计划：<后续动作>`，由脚本自动补充时长
+  - 其他事件推荐格式：`<核心结果>；下一步计划：<后续动作>`
+- **消息类型 (type)**：如 `info`、`success`、`warning`。
+
+**示例**：
+
+- 任务完成：`pnpm notify:feishu "task_complete" "当前任务已完成，请查看变更与总结；下一步计划：请确认结果，若无问题我将进入下一批迁移。" "success"`
+- 需要用户：`pnpm notify:feishu "need_user_input" "遇到需您确认的选项；下一步计划：请回复确认项，我收到后继续执行。" "info"`
+- 仅阶段结束：`pnpm notify:feishu "phase_complete" "Review 阶段结束，无 blocking 问题；下一步计划：我将继续整理修复项并推进下一阶段。" "info"`
+
+**计时要求**：
+
+- 项目已通过 `beforeSubmitPrompt` hook 自动记录本次任务开始时间；完成通知默认直接调用 `pnpm notify:feishu ...` 即可。
+- 如果 hook 状态不可用，再使用 `--started-at-ms <开始时间戳>`，或传入精确的 `--duration-ms <毫秒数>`。
+- 通知里展示给用户的是自然语言时长，例如 `本次任务运行：1小时23分钟`；不要展示时间戳，也不要使用“约”“大约”“预计”等估计措辞。
+
+无需在每次子步骤或中间回复时发送，仅在**即将停止并交回用户**时发送一次即可。
