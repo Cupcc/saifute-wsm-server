@@ -93,7 +93,7 @@
 - 通过 `orderType` 区分验收单和生产入库单，不再拆两套高度重复主从表
 - 库存增加与逆操作继续下沉到 `inventory-core`
 - 审核状态继续下沉到 `workflow`，主表只保留快照
-- 详细业务流程与字段建议见 `docs/20-wms-business-flow-and-optimized-schema.md`
+- 详细业务流程与字段建议见 `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
 
 ## 待补测试清单
 

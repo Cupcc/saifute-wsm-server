@@ -29,3 +29,7 @@ Checklist rules:
 - Every actionable finding should be written as `- [ ]`.
 - Keep severity labels such as `[blocking]` and `[important]` in the checklist item text.
 - If a review has no actionable findings, record `- [x] No actionable findings from this review.`
+
+Lifecycle:
+
+- When every checklist item is closed and the repair loop is done, the standalone `review-*.md` file may be deleted to reduce noise. Findings that matter long term should already live in the linked `docs/tasks/**` brief (and commit history still holds the removed checklist).

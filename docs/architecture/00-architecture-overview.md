@@ -207,11 +207,11 @@ flowchart TD
 - 每个模块只根据对应文档实现，不擅自新增领域边界
 - 若发现源系统语义与文档冲突，应先补文档再编码
 - 单据模块的库存、副作用、审核重置必须写进集成测试
-- 涉及业务流程、状态机和优化表设计时，以 `docs/20-wms-business-flow-and-optimized-schema.md` 为冻结基线
+- 涉及业务流程、状态机和优化表设计时，以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为冻结基线
 
 ## 10. 推荐阅读顺序
 
-0. `docs/20-wms-business-flow-and-optimized-schema.md`
+0. `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
 1. `auth`
 2. `session`
 3. `rbac`

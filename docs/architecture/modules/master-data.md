@@ -91,7 +91,7 @@
 - 第一阶段不把客户、供应商、人员合并成统一主体表
 - 自动补建先保留在各主表，通过 `creationMode`、`sourceDocumentType`、`sourceDocumentId` 追溯来源
 - 单据侧只拿快照，不允许直接联查主数据内部结构
-- 详细业务流程与字段建议见 `docs/20-wms-business-flow-and-optimized-schema.md`
+- 详细业务流程与字段建议见 `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
 
 ## 待补测试清单
 

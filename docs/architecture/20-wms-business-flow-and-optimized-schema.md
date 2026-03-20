@@ -2,7 +2,7 @@
 
 ## 1. 文档目标
 
-本文件用于在 `docs/00-architecture-overview.md` 的模块边界之上，进一步冻结：
+本文件用于在 `docs/architecture/00-architecture-overview.md` 的模块边界之上，进一步冻结：
 
 - 共享核心与事务单据的业务流程
 - 优化后的逻辑数据模型
@@ -151,6 +151,12 @@ flowchart TD
 6. 通过 `document_relation`、`document_line_relation` 表达退货与出库上下游关系
 7. 作废时逆操作库存并释放编号区间
 
+历史迁移补充：
+
+- 在线运行时仍可保持“销售退货创建时优先校验来源出库关系”的策略。
+- 但历史迁移首批允许销售退货在无法证明上游关系时先进入正式业务表，行内 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 可为空。
+- 后续再通过共享关系增强阶段补 `document_relation`、`document_line_relation` 与可证明的行内来源字段。
+
 ### 5.3 车间物料家族
 
 范围：
@@ -165,6 +171,12 @@ flowchart TD
 3. 对消耗类动作维护 `inventory_source_usage`
 4. 通过单据关系表表达退料对领料的回冲关系
 5. 作废时执行逆操作并释放来源占用
+
+历史迁移补充：
+
+- 在线运行时仍可保持“退料优先校验来源领料关系”的策略。
+- 但历史迁移首批允许退料在无法证明上游领料关系时先进入正式业务表，行内 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 可为空。
+- 后续再通过共享关系增强与来源追踪补录阶段恢复可证明的关系和 `inventory_source_usage` 释放链。
 
 审核策略补充：
 
@@ -251,6 +263,7 @@ flowchart TD
 - 销售退货与出库、退料与领料优先通过关系表表达，不在主表上堆砌大量特化字段
 - 单据行保留物料编码、名称、规格、单位等快照，避免历史口径被主数据修改污染
 - 项目域虽然是事务型领域，但第一阶段不接 `workflow`
+- 对历史迁移数据，`customer_stock_order_line` 与 `workshop_material_order_line` 的 `sourceDocument*` 可作为可空增强字段处理；formal-row admission 先完成，关系与来源追踪后补
 
 ## 6.5 只读视图
 
