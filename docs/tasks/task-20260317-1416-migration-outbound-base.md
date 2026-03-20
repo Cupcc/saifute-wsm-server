@@ -3,18 +3,18 @@
 ## Metadata
 
 - Scope: `batch2c-outbound-base` to migrate only `saifute_outbound_order` and `saifute_outbound_detail` into `customer_stock_order` and `customer_stock_order_line`
+- Related requirement: `docs/requirements/req-20260320-1830-migration-active-slices.md`
 - Status: `planned`
 - Planner: `planner`
 - Coder:
 - Reviewer: `code-reviewer`
 - Last updated: `2026-03-17`
-- Related checklist: `docs/fix-checklists/review-20260317-1452-batch2c-outbound-base.md`
 - Related files:
-  - `docs/30-data-migration-plan.md`
-  - `docs/20-wms-business-flow-and-optimized-schema.md`
-  - `docs/00-architecture-overview.md`
-  - `docs/modules/outbound.md`
-  - `docs/modules/workshop-material.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
+  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/00-architecture-overview.md`
+  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/workshop-material.md`
   - `prisma/schema.prisma`
   - `scripts/migration/sql/000-create-migration-staging.sql`
   - `package.json`
@@ -59,8 +59,8 @@
 - Frozen or shared paths:
   - `prisma/schema.prisma`
   - `src/**`
-  - `docs/30-data-migration-plan.md`
-  - `docs/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
+  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `document_relation`
   - `document_line_relation`
   - `factory_number_reservation`
@@ -139,10 +139,10 @@
 
 - Execution brief: implement `batch2c-outbound-base` as an outbound-only business-table migration that intentionally excludes sales returns, relations, number reservations, workflow projections, and inventory replay.
 - Required source docs or files:
-  - `docs/30-data-migration-plan.md`
-  - `docs/20-wms-business-flow-and-optimized-schema.md`
-  - `docs/00-architecture-overview.md`
-  - `docs/modules/outbound.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
+  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/00-architecture-overview.md`
+  - `docs/architecture/modules/outbound.md`
   - `prisma/schema.prisma`
   - `scripts/migration/stock-in/**`
   - `scripts/migration/project/**`
