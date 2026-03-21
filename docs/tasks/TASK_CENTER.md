@@ -36,16 +36,17 @@
 
 ## 活跃任务
 
-| Task 文档 | 当前状态 | 仍然活跃的原因 |
-| --- | --- | --- |
-| `task-20260317-1416-migration-outbound-base.md` | `planned` | 该迁移 slice 仍未关闭，并且仍为后续 outbound 工作提供上游锚点；绑定 `req-20260320-1830-migration-active-slices`。 |
-| `task-20260319-1035-migration-outbound-sales-return-formal-admission.md` | `planned` | 这是 sales return formal admission 的当前窄 scope 活跃 brief；绑定 `req-20260320-1830-migration-active-slices`。 |
-| `task-20260319-1045-migration-workshop-return-formal-admission.md` | `planned` | 这是 workshop return formal admission 的当前窄 scope 活跃 brief；绑定 `req-20260320-1830-migration-active-slices`。 |
+当前无活跃任务。
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
+以下条目按生命周期已归为 `retained-completed`，并保留为稳定真源、执行 provenance 或后续切片依赖基线。
+
 | Task 文档 | 保留原因 |
 | --- | --- |
+| `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md` | 已完成并在最新 DB-backed dry-run + batch-owned rows/maps 证据下确认收口；当前 `execute` / `validate` 非零来自后续已复审切片扩展 baseline，不再构成该 slice blocker。 |
+| `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md` | 已 `reviewed-no-findings`，formal admission 结论稳定，保留为后续 customer-stock 家族迁移的 admitted baseline 与 provenance 真源。 |
+| `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md` | 已 `reviewed-no-findings`，formal admission 结论稳定，保留为后续 workshop-material 家族迁移的 admitted baseline 与 provenance 真源。 |
 | `docs/tasks/archive/retained-completed/task-20260320-1244-task-doc-center-and-cleanup.md` | 已完成本轮 `docs/tasks/**` 治理机制落地，并作为新任务中心模型的溯源记录继续保留。 |
 | `docs/tasks/archive/retained-completed/task-20260320-1343-task-doc-archival-cleanup.md` | 已完成首次 task 文档归档清理，并保留为 `archive/` 布局落地的治理记录。 |
 | `docs/tasks/archive/retained-completed/task-20260320-1740-task-doc-obsolete-brief-removal.md` | 已完成机制简化：删除专门的“已替代归档”模块与对应旧 brief，并把变更说明收口到当前真源文档。 |
@@ -64,6 +65,7 @@
 ## 下一步
 
 - 已完成机制简化：不再为“已被替代但当前没有保留价值”的旧 brief 设单独归档模块；此类变更说明统一写入当前真源文档。
-- 退货族 formal admission 仍以根目录 `task-20260319-1035` / `1045` 为活跃 brief，人机交互锚点为 `req-20260320-1830-migration-active-slices`；准入后共享阶段 `task-20260319-1100` 已收口归档至 `archive/retained-completed/`（见上表）。
+- `task-20260317-1416`、`task-20260319-1035`、`task-20260319-1045` 已全部迁入 `archive/retained-completed/`；当前只需在后续新需求出现时按新 requirement / task 锚点继续推进。
+- 退货族迁移的人机交互锚点 `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md` 已完成闭环，并继续作为这些 retained-completed task 的 `Related requirement` 真源。
 - 将需求迁入 `docs/requirements/archive/**` 或从仓库移除需求文件时，同步更新 `Related requirement` / `Related tasks` 全文路径，检查并迁出根目录上已无**活跃**需求绑定的 task；优先归档需求文件以保留可追溯链接（见 `docs/requirements/README.md`）。
 - 今后若新增 `cleanup-candidate`，删除前须再次对全文做引用检索，并取得用户明确确认。

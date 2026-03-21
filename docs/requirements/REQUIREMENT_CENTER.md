@@ -28,14 +28,17 @@
 
 ## 活跃需求
 
-| 需求文档 | Status（交互） | 关联 task（便于跳转，可节选） |
+| 需求文档 | 状态 | 说明 |
 | --- | --- | --- |
-| `req-20260320-1830-migration-active-slices.md` | 见文件 Metadata | `task-20260317-1416-migration-outbound-base.md`、`task-20260319-1035-migration-outbound-sales-return-formal-admission.md`、`task-20260319-1045-migration-workshop-return-formal-admission.md` |
-| `req-20260319-1300-return-post-admission.md` | 见文件 Metadata | `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md` |
+| `req-20260321-1109-architecture-review-clarity.md` | `needs-confirmation` | 架构 review 与澄清需求；待确认交付物、当前态/目标态口径、review 范围，以及是否允许调整冻结基线。 |
+| `req-20260321-1100-java-to-nestjs-data-migration.md` | `needs-confirmation` | Java 源库到 NestJS 目标库的全量业务域数据迁移需求；当前待确认 `project`、`scrap`、平台表与 cutover 四项口径。 |
 
 ## 已归档（`archive/retained-completed/`）
 
-当前无条目。迁入后在此逐行登记文件名与保留原因（一行）。
+| 需求文档 | 保留原因 |
+| --- | --- |
+| `archive/retained-completed/req-20260319-1300-return-post-admission.md` | 需求 ID 溯源；正文已合并至 `archive/retained-completed/req-20260320-1830-migration-active-slices.md` |
+| `archive/retained-completed/req-20260320-1830-migration-active-slices.md` | 覆盖 `outbound-base`、销售退货 formal admission、车间退料 formal admission 与退货族 shared post-admission 的统一交互锚点；当前切片均已收口，保留为本轮迁移 requirement 真源。 |
 
 ## 清理候选（`archive/cleanup-candidate/`）
 

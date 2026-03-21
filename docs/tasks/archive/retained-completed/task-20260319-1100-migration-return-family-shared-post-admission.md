@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: shared downstream implementation after reviewed-no-findings formal admission of `SALES_RETURN` and `RETURN` rows under the nullable-source rule, covering deterministic relation reconstruction and optional source backfill, relation-table projection, inventory replay, `inventory_source_usage`, and `workflow_audit_document` projection without reopening admitted-row eligibility
-- Related requirement: `docs/requirements/req-20260319-1300-return-post-admission.md`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`
 - Status: `completed`
 - Review status: `reviewed-no-findings`
 - Lifecycle disposition: `retained-completed`
@@ -12,7 +12,7 @@
 - Reviewer: `code-reviewer`
 - Last updated: `2026-03-20`
 - Related files:
-  - `docs/requirements/req-20260319-1300-return-post-admission.md`
+  - `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
@@ -29,7 +29,7 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260319-1300-return-post-admission.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`
 - Requirement status: `confirmed`; scope is clear enough for planning and resume.
 - User intent summary:
   - Complete only the remaining shared post-admission migration phase after the return-family formal-admission subtasks.
@@ -121,7 +121,7 @@
 
 - Delivered: `scripts/migration/return-post-admission/**`, package scripts, dry-run / execute / validate flows, and the three focused migration tests are implemented; readiness policy allows only `accepted-historical-negative-balance` as non-blocking.
 - Required source docs or files:
-  - `docs/requirements/req-20260319-1300-return-post-admission.md`
+  - `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
@@ -183,7 +183,7 @@
   - confirm workflow projection follows runtime eligibility rules rather than relation-completeness shortcuts
   - confirm family-local finalize assumptions are no longer the active downstream model
 - Requirement alignment check:
-  - confirm delivered behavior matches `docs/requirements/req-20260319-1300-return-post-admission.md`
+  - confirm delivered behavior matches `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`
   - confirm the reviewed-no-findings formal-admission slices remain frozen input baselines and that shared post-admission work is the only active implementation scope
 - Final validation gate:
   - `pnpm migration:typecheck`
@@ -278,7 +278,7 @@
 - Outcome:
   - rereview completed with no remaining `[blocking]` or `[important]` findings; this readiness-policy follow-up is safe to sign off. Task scope is **completed** and this document is archived under `retained-completed` as the durable execution record.
 - Requirement alignment:
-  - fully aligned to `docs/requirements/req-20260319-1300-return-post-admission.md`; the code now keeps only the accepted historical negative-balance warning non-blocking and still treats all other warning-class validation drift as manual-review-required and not cutover-ready.
+  - fully aligned to `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`; the code now keeps only the accepted historical negative-balance warning non-blocking and still treats all other warning-class validation drift as manual-review-required and not cutover-ready.
 - Residual risks or testing gaps:
   - the current validate report still intentionally surfaces `negativeBalanceCount = 102` and `17` unresolved source-usage gaps / nullable-source return lines; those remain explicit historical/reconciliation outputs for the shared post-admission model rather than defects in the rereviewed readiness policy.
   - this follow-up rereview targeted only the changed policy surface, so the independent reviewer rerun covered `migration:typecheck` and the focused execute-guard regression test while relying on the parent's refreshed `pnpm migration:return-post-admission:validate` report for the unchanged wider migration output.
