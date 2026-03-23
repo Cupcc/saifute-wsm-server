@@ -295,7 +295,7 @@ describe("return-post-admission inventory replay", () => {
       expect(uniqueKeys.size).toBe(keys.length);
     });
 
-    it("should emit runtime businessModule strings (inbound / outbound / workshop-material)", () => {
+    it("should emit runtime businessModule strings (inbound / customer / workshop-material)", () => {
       const baseline = buildValidBaseline({
         stockInLines: [buildStockInLine({ id: 101, materialId: 901 })],
         outboundLines: [buildOutboundLine({ id: 3001, materialId: 902 })],
@@ -326,7 +326,7 @@ describe("return-post-admission inventory replay", () => {
       );
 
       expect(outboundLogs.length).toBeGreaterThan(0);
-      expect(outboundLogs.every((l) => l.businessModule === "outbound")).toBe(
+      expect(outboundLogs.every((l) => l.businessModule === "customer")).toBe(
         true,
       );
 
@@ -337,7 +337,7 @@ describe("return-post-admission inventory replay", () => {
 
       expect(salesReturnLogs.length).toBeGreaterThan(0);
       expect(
-        salesReturnLogs.every((l) => l.businessModule === "outbound"),
+        salesReturnLogs.every((l) => l.businessModule === "customer"),
       ).toBe(true);
 
       expect(workshopReturnLogs.length).toBeGreaterThan(0);
