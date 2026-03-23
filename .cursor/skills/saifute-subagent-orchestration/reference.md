@@ -1,5 +1,17 @@
 # Subagent Matrix
 
+## Lightweight direct lane
+
+- Best for: small, clear, low-risk requests that can be completed safely by the parent without durable task-state management
+- Typical work:
+  - wording or comment fixes
+  - rule or prompt phrasing adjustments
+  - single-file config tweaks
+  - clearly localized bug or lint fixes
+  - simple command execution or read-only investigation
+- Default path: parent reads the smallest relevant files -> edits directly -> runs focused validation -> stops
+- Escalate when: hidden complexity appears, scope expands beyond a tiny path set, a frozen/shared contract is touched, or safe continuation would require a durable `docs/tasks/*.md` handoff
+
 ## Planner agent
 
 ### `planner`
@@ -97,8 +109,9 @@ Checks include:
 
 ## Suggested combinations
 
-- Default task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines -> parent syncs concise progress to the requirement doc -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs concise progress to the requirement doc again -> parent commit step only if the user explicitly asked for a commit
-- Requirement-first flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` against it -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent keeps the requirement doc updated with concise current progress
+- Lightweight direct task: parent reads the smallest relevant files -> edits directly -> runs focused validation -> optional parent self-review -> stop
+- Non-trivial task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines -> parent syncs concise progress to the requirement doc -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs concise progress to the requirement doc again -> parent commit step only if the user explicitly asked for a commit
+- Requirement-first flow for durable work: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` against it -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent keeps the requirement doc updated with concise current progress
 - Multi-module task with safe disjoint scopes: `planner` writes task docs or explicit scoped sections -> parallel `coder` workers with explicit boundaries -> `code-reviewer` -> fix loop as needed
 - Review-heavy task: `planner` writes `docs/tasks/*.md` -> `code-reviewer`
 - Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> parent commit step only if the user explicitly asked for a commit

@@ -10,7 +10,7 @@ import { FileStorageModule } from "./modules/file-storage/file-storage.module";
 import { InboundModule } from "./modules/inbound/inbound.module";
 import { InventoryCoreModule } from "./modules/inventory-core/inventory-core.module";
 import { MasterDataModule } from "./modules/master-data/master-data.module";
-import { OutboundModule } from "./modules/outbound/outbound.module";
+import { CustomerModule } from "./modules/customer/customer.module";
 import { ProjectModule } from "./modules/project/project.module";
 import { RbacModule } from "./modules/rbac/rbac.module";
 import { ReportingModule } from "./modules/reporting/reporting.module";
@@ -43,7 +43,7 @@ import { RedisModule } from "./shared/redis/redis.module";
     InventoryCoreModule,
     WorkflowModule,
     InboundModule,
-    OutboundModule,
+    CustomerModule,
     WorkshopMaterialModule,
     ProjectModule,
     ReportingModule,

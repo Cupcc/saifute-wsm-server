@@ -217,7 +217,7 @@ describe("InventoryService", () => {
         workshopId: 20,
         quantity: 50,
         operationType: InventoryOperationType.OUTBOUND_OUT,
-        businessModule: "outbound",
+        businessModule: "customer",
         businessDocumentType: "CustomerStockOrder",
         businessDocumentId: 200,
         businessDocumentNumber: "CS-001",

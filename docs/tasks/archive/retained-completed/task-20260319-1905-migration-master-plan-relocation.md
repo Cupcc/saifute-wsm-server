@@ -393,7 +393,7 @@
   - `Project`
 - `inventory_log.businessModule` 统一使用：
   - `inbound`
-  - `outbound`
+  - `customer`
   - `workshop-material`
   - `project`
 - family 常量统一使用：

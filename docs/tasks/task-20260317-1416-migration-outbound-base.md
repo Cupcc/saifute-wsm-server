@@ -15,7 +15,7 @@
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
   - `prisma/schema.prisma`
   - `scripts/migration/sql/000-create-migration-staging.sql`
@@ -26,22 +26,22 @@
   - `scripts/migration/project/migrate.ts`
   - `scripts/migration/project/legacy-reader.ts`
   - `scripts/migration/project/transformer.ts`
-  - `scripts/migration/outbound/migrate.ts` (new)
-  - `scripts/migration/outbound/legacy-reader.ts` (new)
-  - `scripts/migration/outbound/transformer.ts` (new)
-  - `scripts/migration/outbound/writer.ts` (new)
-  - `scripts/migration/outbound/validate.ts` (new)
-  - `scripts/migration/outbound/execute-guard.ts` (new)
-  - `scripts/migration/outbound/types.ts` (new)
-  - `scripts/migration/reports/outbound-dry-run-report.json` (generated)
-  - `scripts/migration/reports/outbound-execute-report.json` (generated)
-  - `scripts/migration/reports/outbound-validate-report.json` (generated)
+  - `scripts/migration/customer/migrate.ts` (new)
+  - `scripts/migration/customer/legacy-reader.ts` (new)
+  - `scripts/migration/customer/transformer.ts` (new)
+  - `scripts/migration/customer/writer.ts` (new)
+  - `scripts/migration/customer/validate.ts` (new)
+  - `scripts/migration/customer/execute-guard.ts` (new)
+  - `scripts/migration/customer/types.ts` (new)
+  - `scripts/migration/reports/customer-dry-run-report.json` (generated)
+  - `scripts/migration/reports/customer-execute-report.json` (generated)
+  - `scripts/migration/reports/customer-validate-report.json` (generated)
 
 ## Goal And Acceptance Criteria
 
 - Goal: implement the smallest credible next execution slice after `batch0`, `batch1`, `batch2a-stock-in`, and `batch2b-project`, by migrating only legacy outbound documents into the current customer-stock business tables without widening unresolved sales-return, relation, interval, workflow, or inventory semantics.
 - Acceptance criteria:
-  - New migration commands exist for `outbound` dry-run, execute, and validate.
+  - New migration commands exist for `customer` dry-run, execute, and validate.
   - The slice reads only `saifute_outbound_order`, `saifute_outbound_detail`, and legacy audit rows for outbound `document_type = 4`; it does not ingest `saifute_sales_return_*`.
   - Target writes are limited to `customer_stock_order`, `customer_stock_order_line`, `migration_staging.map_customer_stock_order`, `migration_staging.map_customer_stock_order_line`, `migration_staging.archived_field_payload`, and `migration_staging.excluded_documents`.
   - Every migrated target header has `orderType = OUTBOUND`, deterministic `documentNo`, deterministic `lineNo`, a resolved `workshopId` using the frozen default workshop, and status fields aligned to the frozen migration plan.
@@ -54,7 +54,7 @@
 ## Scope And Ownership
 
 - Allowed code paths:
-  - `scripts/migration/outbound/**`
+  - `scripts/migration/customer/**`
   - `scripts/migration/sql/000-create-migration-staging.sql`
   - `package.json`
   - this task doc only if the parent explicitly keeps planner ownership
@@ -82,7 +82,7 @@
 ## Implementation Plan
 
 - [ ] Step 1: extend `migration_staging` bootstrap SQL with `map_customer_stock_order` and `map_customer_stock_order_line`, matching the existing map table shape and uniqueness rules used by `map_stock_in_order` and `map_stock_in_order_line`.
-- [ ] Step 2: scaffold `scripts/migration/outbound/` by mirroring the `stock-in` and `project` folder structure, naming the batch `batch2c-outbound-base`.
+- [ ] Step 2: scaffold `scripts/migration/customer/` by mirroring the `stock-in` and `project` folder structure, naming the batch `batch2c-outbound-base`.
 - [ ] Step 3: implement `legacy-reader.ts` for only:
   - `saifute_outbound_order`
   - `saifute_outbound_detail`
@@ -132,9 +132,9 @@
   - archive line-only fields such as raw `interval`
   - exclude whole documents for missing `documentNo`, missing `bizDate`, blocked or unmapped materials, or any other condition that would require semantic widening
 - [ ] Step 8: add package scripts:
-  - `migration:outbound:dry-run`
-  - `migration:outbound:execute`
-  - `migration:outbound:validate`
+  - `migration:customer:dry-run`
+  - `migration:customer:execute`
+  - `migration:customer:validate`
 - [ ] Step 9: run iteration validation first, then execute and validate from the current DB state.
 
 ## Coder Handoff
@@ -144,7 +144,7 @@
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `prisma/schema.prisma`
   - `scripts/migration/stock-in/**`
   - `scripts/migration/project/**`
@@ -163,7 +163,7 @@
   - do not reset staging or target data
 - Iteration validation:
   - `pnpm migration:typecheck`
-  - `pnpm migration:outbound:dry-run`
+  - `pnpm migration:customer:dry-run`
   - inspect the dry-run report for:
     - `counts.orders.migrated + counts.orders.excluded = sourceCounts.orders`
     - `counts.lines.migrated + counts.lines.excluded = sourceCounts.lines`
@@ -183,9 +183,9 @@
   - confirm no writes happen to inventory, workflow projection, relation, or reservation tables
 - Final validation gate:
   - `pnpm migration:typecheck`
-  - `pnpm migration:outbound:dry-run`
-  - `pnpm migration:outbound:execute`
-  - `pnpm migration:outbound:validate`
+  - `pnpm migration:customer:dry-run`
+  - `pnpm migration:customer:execute`
+  - `pnpm migration:customer:validate`
   - DB and report gates:
     - `customer_stock_order` rows added by this slice all have `orderType = OUTBOUND`
     - `customer_stock_order_line` rows added by this slice all have `sourceDocumentType IS NULL`, `sourceDocumentId IS NULL`, `sourceDocumentLineId IS NULL`, `startNumber IS NULL`, and `endNumber IS NULL`
@@ -211,21 +211,21 @@
 
 - Validation results:
   - Parent reran `pnpm migration:typecheck`; it passed.
-  - Parent reran `pnpm migration:outbound:dry-run`; it passed and refreshed `scripts/migration/reports/outbound-dry-run-report.json` with the historical `batch2c-outbound-base` partition still intact at `108` migrated orders + `4` excluded orders = `112` source orders and `137` migrated lines + `4` excluded lines = `141` source lines, with no new global blockers.
-  - Parent reran `pnpm migration:outbound:execute`; it wrote `scripts/migration/reports/outbound-execute-report.json` and exited non-zero because rerun guards now see an evolved baseline: `customer_stock_order` totals `117` rows vs this batch's `108` owned rows and `customer_stock_order_line` totals `150` rows vs this batch's `137` owned rows, which matches the already-reviewed sales-return formal-admission delta of `+9` orders / `+13` lines. The same execute report also shows downstream `CustomerStockOrder` consumers now populated at `factory_number_reservation = 80`, `workflow_audit_document = 113`, and `inventory_log = 154`, so rerunning `batch2c` is correctly refused from the current non-reset baseline.
-  - Parent reran `pnpm migration:outbound:validate`; it wrote `scripts/migration/reports/outbound-validate-report.json` and exited non-zero. Reviewer inspected the refreshed report together with `scripts/migration/outbound/validate.ts` and confirmed the validator still enforces the original immediate-post-`batch2c` contract that all `CustomerStockOrder`-linked downstream tables remain empty and all outbound-base-owned lines keep `startNumber/endNumber = NULL`. Those checks are now stale on the evolved baseline because the reviewed `batch3a-outbound-order-type4-reservation` slice intentionally created `80` live reservations and backfilled qualifying line ranges, and the reviewed shared post-admission phase intentionally projected `workflow_audit_document` and replayed `inventory_log` for the customer-stock family.
+  - Parent reran `pnpm migration:customer:dry-run`; it passed and refreshed `scripts/migration/reports/customer-dry-run-report.json` with the historical `batch2c-outbound-base` partition still intact at `108` migrated orders + `4` excluded orders = `112` source orders and `137` migrated lines + `4` excluded lines = `141` source lines, with no new global blockers.
+  - Parent reran `pnpm migration:customer:execute`; it wrote `scripts/migration/reports/customer-execute-report.json` and exited non-zero because rerun guards now see an evolved baseline: `customer_stock_order` totals `117` rows vs this batch's `108` owned rows and `customer_stock_order_line` totals `150` rows vs this batch's `137` owned rows, which matches the already-reviewed sales-return formal-admission delta of `+9` orders / `+13` lines. The same execute report also shows downstream `CustomerStockOrder` consumers now populated at `factory_number_reservation = 80`, `workflow_audit_document = 113`, and `inventory_log = 154`, so rerunning `batch2c` is correctly refused from the current non-reset baseline.
+  - Parent reran `pnpm migration:customer:validate`; it wrote `scripts/migration/reports/customer-validate-report.json` and exited non-zero. Reviewer inspected the refreshed report together with `scripts/migration/customer/validate.ts` and confirmed the validator still enforces the original immediate-post-`batch2c` contract that all `CustomerStockOrder`-linked downstream tables remain empty and all outbound-base-owned lines keep `startNumber/endNumber = NULL`. Those checks are now stale on the evolved baseline because the reviewed `batch3a-outbound-order-type4-reservation` slice intentionally created `80` live reservations and backfilled qualifying line ranges, and the reviewed shared post-admission phase intentionally projected `workflow_audit_document` and replayed `inventory_log` for the customer-stock family.
   - Reviewer confirmed the outbound-base-owned evidence itself still reconciles on the current baseline: `orderBatchMapRows = 108`, `batchOwnedOrderRows = 108`, `lineBatchMapRows = 137`, `batchOwnedLineRows = 137`, `missingMappedOrders = 0`, `missingMappedLines = 0`, `excludedDocumentCount = 4`, and `archivedPayloadCount = 177`.
 - Findings:
   - No remaining `[blocking]` or `[important]` findings for `batch2c-outbound-base` closure. The current non-zero `execute` result is expected rerun-guard behavior on a later evolved baseline, and the current non-zero `validate` result reflects stale immediate-post-slice assumptions rather than an unresolved defect in the batch-owned outbound-base output.
 - Follow-up action:
-  - No further coder work is required inside `scripts/migration/outbound/**` for the outbound-base slice. Parent should treat the refreshed dry-run plus intact batch-owned map/row evidence as the closure baseline, and should not use the current evolved-baseline `migration:outbound:validate` exit code as a blocker for closing this slice.
+  - No further coder work is required inside `scripts/migration/customer/**` for the outbound-base slice. Parent should treat the refreshed dry-run plus intact batch-owned map/row evidence as the closure baseline, and should not use the current evolved-baseline `migration:customer:validate` exit code as a blocker for closing this slice.
 
 ## Final Status
 
 - Outcome:
   - Closure is confirmed for `batch2c-outbound-base` on the current repository baseline. The owned outbound-base rows, staging maps, exclusions, and archived payloads still match the deterministic plan, while the current non-zero `execute` / `validate` results come from later reviewed slices legally extending the baseline rather than from a remaining outbound-base defect.
 - Residual risks or testing gaps:
-  - `scripts/migration/outbound/validate.ts` is no longer a reusable whole-baseline validator once `batch3a-outbound-order-type4-reservation` and the shared post-admission phase have already populated `factory_number_reservation`, `workflow_audit_document`, `inventory_log`, and qualifying outbound line `startNumber/endNumber`. That operational drift should be understood during archive/closure handling, but it is not a remaining blocker for `batch2c` itself.
+  - `scripts/migration/customer/validate.ts` is no longer a reusable whole-baseline validator once `batch3a-outbound-order-type4-reservation` and the shared post-admission phase have already populated `factory_number_reservation`, `workflow_audit_document`, `inventory_log`, and qualifying outbound line `startNumber/endNumber`. That operational drift should be understood during archive/closure handling, but it is not a remaining blocker for `batch2c` itself.
   - This rereview relied on the refreshed DB-backed reports and current task-history authority map rather than introducing a new evolved-baseline validator for the historical slice.
 - Next action:
   - No further coder changes are required for `batch2c`. Parent should update requirement/index bookkeeping, archive this task with a completed/retained-completed disposition alongside the already-completed sales-return and workshop-return task docs, and archive the active requirement as well if no migration slices remain open.

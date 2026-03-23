@@ -18,7 +18,7 @@
   - `scripts/migration/sql/000-create-migration-staging.sql`
   - `package.json`
   - `scripts/migration/stock-in/**`
-  - `scripts/migration/outbound/**`
+  - `scripts/migration/customer/**`
   - `scripts/migration/project/**`
   - `scripts/migration/workshop-pick/migrate.ts` (new)
   - `scripts/migration/workshop-pick/legacy-reader.ts` (new)
@@ -89,8 +89,8 @@
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `scripts/migration/stock-in/**`
-  - `scripts/migration/outbound/**`
-  - `scripts/migration/outbound-reservation/**`
+  - `scripts/migration/customer/**`
+  - `scripts/migration/customer-reservation/**`
   - `scripts/migration/project/**`
   - `scripts/migration/shared/deterministic.ts`
   - `document_relation`
@@ -114,7 +114,7 @@
   - `map_workshop_material_order`
   - `map_workshop_material_order_line`
   matching the existing map-table shape and uniqueness rules used by the already executed slices.
-- [ ] Step 2: scaffold `scripts/migration/workshop-pick/` by mirroring the `stock-in` and `outbound` folder structure, naming the batch `batch3b-workshop-pick-base`.
+- [ ] Step 2: scaffold `scripts/migration/workshop-pick/` by mirroring the `stock-in` and `customer` folder structure, naming the batch `batch3b-workshop-pick-base`.
 - [ ] Step 3: implement `legacy-reader.ts` for only:
   - `saifute_pick_order`
   - `saifute_pick_detail`
@@ -182,7 +182,7 @@
   - `docs/architecture/modules/workshop-material.md`
   - `prisma/schema.prisma`
   - `scripts/migration/stock-in/**`
-  - `scripts/migration/outbound/**`
+  - `scripts/migration/customer/**`
   - `scripts/migration/project/**`
   - `scripts/migration/sql/000-create-migration-staging.sql`
   - `E:/Projects/saifute-wms-server/ruoyi-admin/src/main/resources/saifute_202600201_1629001.sql`
@@ -202,8 +202,8 @@
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `scripts/migration/shared/deterministic.ts`
   - `scripts/migration/stock-in/**`
-  - `scripts/migration/outbound/**`
-  - `scripts/migration/outbound-reservation/**`
+  - `scripts/migration/customer/**`
+  - `scripts/migration/customer-reservation/**`
   - `scripts/migration/project/**`
 - Constraints and non-goals:
   - do not read or migrate `saifute_return_order` or `saifute_return_detail` into live business tables
@@ -328,7 +328,7 @@
 ## Review Log
 
 - Validation results:
-  - `pnpm migration:typecheck`, `pnpm exec biome check "scripts/migration/outbound-reservation" "scripts/migration/workshop-pick" "test/migration/outbound-reservation-execute-guard.spec.ts" "test/migration/workshop-pick.spec.ts" "test/migration/workshop-pick-execute-guard.spec.ts"`, and `pnpm test -- --runTestsByPath test/migration/outbound-reservation-execute-guard.spec.ts test/migration/workshop-pick.spec.ts test/migration/workshop-pick-execute-guard.spec.ts` were already passing from the prior rereview and were intentionally not rerun in this continuation.
+  - `pnpm migration:typecheck`, `pnpm exec biome check "scripts/migration/customer-reservation" "scripts/migration/workshop-pick" "test/migration/customer-reservation-execute-guard.spec.ts" "test/migration/workshop-pick.spec.ts" "test/migration/workshop-pick-execute-guard.spec.ts"`, and `pnpm test -- --runTestsByPath test/migration/customer-reservation-execute-guard.spec.ts test/migration/workshop-pick.spec.ts test/migration/workshop-pick-execute-guard.spec.ts` were already passing from the prior rereview and were intentionally not rerun in this continuation.
   - `pnpm migration:workshop-pick:execute` initially failed on the current target because `migration_staging.map_workshop_material_order` and `migration_staging.map_workshop_material_order_line` were missing from the live staging schema.
   - `pnpm migration:bootstrap-staging` was rerun to align the target staging schema with the checked-in SQL. Report: `scripts/migration/reports/bootstrap-staging-report.json`. The refreshed bootstrap completed with `resetApplied = false`, `statementsExecuted = 22`, and now includes both workshop-material map tables.
   - `pnpm migration:workshop-pick:dry-run` then passed. Report: `scripts/migration/reports/workshop-pick-dry-run-report.json`. Dry-run reconfirmed `75` source headers split into `61` migrated + `14` excluded orders and `197` source lines split into `145` migrated + `52` excluded lines, with `10` `NULL`-workshop fallbacks, three deterministic duplicate-document rewrites, and one deterministic whole-document price-derivation exclusion.

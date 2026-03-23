@@ -1,11 +1,13 @@
 ---
 name: saifute-subagent-orchestration
-description: Orchestrates planner, execution, review, and commit phases for scoped work in the Saifute NestJS WMS repository, including implementation, refactors, bug fixes, migrations, backfills, reconciliations, and cutover-prep. Use when work needs a `plan -> code -> review -> fix -> commit` flow with blocker-aware handoffs.
+description: Orchestrates planner, execution, review, and commit phases for non-trivial scoped work in the Saifute NestJS WMS repository. Use when work clearly benefits from a `plan -> code -> review -> fix -> commit` flow with durable handoffs; skip this heavy lane for small, clear, low-risk requests.
 ---
 
 # Saifute Subagent Orchestration
 
 Use this skill when repository work is large enough to benefit from delegated subagents, or when the user wants a structured delivery flow instead of ad hoc edits. This includes migration, backfill, reconciliation, and cutover-prep work, not only feature delivery.
+
+Do not use this skill as the default for every request. If the request is small, clear, low-risk, and can be completed safely by the parent with direct edits plus focused validation, stay on the lightweight direct lane instead of opening the full orchestration chain.
 
 Default orchestration order:
 
@@ -16,6 +18,31 @@ Default orchestration order:
 5. `commit`
 
 Do not skip forward unless the user explicitly narrows the scope, or the step is not applicable. Migration-style work keeps the same order, but it requires stricter context, staging or exclusion handling, deterministic generation, replay-vs-copy judgment, and blocker-aware validation.
+
+This is the heavy lane. It is correct for non-trivial work, but it is intentionally too expensive for tiny asks.
+
+## Lightweight direct lane
+
+Use the lightweight direct lane when the request is clearly scoped and does not need durable orchestration state.
+
+Typical signals:
+
+- one file or a very small path set
+- no cross-module design choice
+- no migration, backfill, reconciliation, or cutover semantics
+- no shared-contract rewrite or frozen-boundary risk
+- no need for a task doc to resume safely in a later chat
+- validation can stay focused and local
+
+On the lightweight direct lane:
+
+- do not create `docs/requirements/*.md` or `docs/tasks/*.md` by default
+- do not start `planner` just to satisfy process symmetry
+- do not require `code-reviewer` for low-risk docs, rules, wording, or similarly small edits
+- read only the smallest relevant files
+- edit directly in the parent agent
+- run the narrowest useful validation
+- escalate to the heavy lane immediately if hidden complexity appears
 
 ## Required context
 
@@ -133,7 +160,9 @@ Use these durable rules for migration-style orchestration:
 
 ### 1. Plan
 
-Start with the `planner` subagent unless the task is trivially scoped or the user explicitly says to skip planning.
+Start with the `planner` subagent only when the task is non-trivial, ambiguous, cross-cutting, high-risk, or needs a durable task doc for continuation.
+
+Do not start `planner` for lightweight direct-lane requests just because the repository has a planning system.
 
 Ask the planner to return:
 
@@ -179,7 +208,9 @@ One writer is the default. Use multiple writer agents only when their writable s
 
 ### 3. Review
 
-Run `code-reviewer` after substantive edits.
+Run `code-reviewer` after substantive edits or when the changed risk surface benefits from an independent review pass.
+
+For lightweight direct-lane requests such as low-risk docs, rules, wording, or tiny configuration changes, parent self-check plus focused validation is usually enough unless hidden risk appears.
 
 The reviewer should focus on:
 
@@ -216,13 +247,14 @@ Do not let subagents create the commit directly.
 
 ## Launch rules
 
-1. Default to at most 4 concurrent subagents.
-2. The `planner` subagent may write only `docs/tasks/**`.
-3. Multiple writer subagents are allowed only when their writable scopes are explicitly disjoint before launch; shared staging schemas, mapping tables, reconciliation reports, and cutover evidence stay single-owner.
-4. Do not run write-capable subagents in background mode.
-5. Shared files default to parent ownership unless one worker is explicitly named as the sole owner.
-6. Before finalizing substantive work, involve `code-reviewer`.
-7. If the task is ambiguous or has meaningful trade-offs, either switch to Plan Mode first or use the `planner` subagent before any code write step.
+1. It is valid to use no subagent at all when the request fits the lightweight direct lane.
+2. Default to at most 4 concurrent subagents.
+3. The `planner` subagent may write only `docs/tasks/**`.
+4. Multiple writer subagents are allowed only when their writable scopes are explicitly disjoint before launch; shared staging schemas, mapping tables, reconciliation reports, and cutover evidence stay single-owner.
+5. Do not run write-capable subagents in background mode.
+6. Shared files default to parent ownership unless one worker is explicitly named as the sole owner.
+7. Before finalizing substantive work, involve `code-reviewer`.
+8. If the task is ambiguous or has meaningful trade-offs, either switch to Plan Mode first or use the `planner` subagent before any code write step.
 
 ## Frozen repo constraints
 

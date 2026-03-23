@@ -1,44 +1,44 @@
 # 需求中心
 
-`docs/requirements/**` 与 `docs/tasks/**` 对称分层：
+本文件只做索引看板，不重复需求正文、流程说明或归档规则。
 
-- `REQUIREMENT_CENTER.md`：当前需求文档清单、生命周期与 task 绑定的索引看板。
-- `README.md`：目录机制与归档规则。
-- `req-*.md`（根目录）：仍参与编排或尚未归档的活跃需求。
-- `archive/**`：已闭环的需求，保留文件以便 task 与 provenance 继续引用真实路径。
+看板口径：
 
-看板保持简短，不复制各需求正文中的长篇说明。
+- `PROJECT_REQUIREMENTS.md`：固定项目级需求真源。
+- 根目录 `req-*.md`：当前活跃需求。
+- `archive/retained-completed/`：已闭环但保留溯源的需求。
+- `archive/cleanup-candidate/`：待用户确认后可删除的需求。
 
-## 生命周期（与 task 文档对齐）
+详细规则见 `docs/requirements/README.md`。
 
-- `active`：仍用于用户侧交互、规划、执行或同步 `当前进展`。
-- `retained-completed`：需求已闭环，但保留为稳定真源或溯源；文件应位于 `archive/retained-completed/`。
-- `cleanup-candidate`：后续在用户明确确认后可删除；文件应位于 `archive/cleanup-candidate/`。
+## 固定项目需求
 
-## 目录约定
 
-- 根目录仅保留 `README.md`、`REQUIREMENT_CENTER.md`、`_template.md` 与 **`Lifecycle disposition` 为 `active`** 的 `req-*.md`。
-- 需求归档时**移动文件**到对应 `archive/` 子目录，文件名不变；**禁止**在仍被引用的前提下直接删除需求文件（应优先归档以保留路径可解析性）。
+| 需求文档                      | 状态          | 说明                                                                                                                                                                                               |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PROJECT_REQUIREMENTS.md` | `confirmed` | 固定项目需求真源；当前核心需求已收敛为“清晰易维护的 NestJS WMS、贴合小型仓库场景、按业务域迁移、保证库存与追溯语义正确”，并已补充真实环境、流程与统计口径：约 `3` 人、单仓、无码物料、`Excel + 手工记账`、职责未分化、审核不阻塞落库、实时库存 + 月盘；同时已按模块分组整理平台、业务、分析与辅助模块的项目级默认需求，明确第一阶段 `项目/研发` 模块范围，并新增“系统自动生成月度报表、覆盖整体/车间/销售域/研发项目”的项目级报表诉求。 |
 
-## 与 task 的绑定规则
-
-- 每个根目录 `task-*.md` 的 `Related requirement` 必须指向**仍存在**的 `docs/requirements/**/*.md`，且目标需求的 `Lifecycle disposition` 应为 **`active`**（即文件仍在 `docs/requirements/` 根目录）。需求归档后，对应执行工作应已收口：关联 task 应已迁入 `docs/tasks/archive/**`，或已改绑到新的活跃需求。
-- 已归档 task 文档中的 `Related requirement` 应更新为归档后的完整路径（例如 `docs/requirements/archive/retained-completed/req-….md`），便于全文检索与双向追溯。
-- 需求文档 Metadata 中的 `Related tasks` 建议维护关联的 `docs/tasks/**/*.md` 路径；需求归档时核对并更新 task 侧路径。
 
 ## 活跃需求
 
-| 需求文档 | 状态 | 说明 |
-| --- | --- | --- |
-| `req-20260321-1109-architecture-review-clarity.md` | `needs-confirmation` | 架构 review 与澄清需求；待确认交付物、当前态/目标态口径、review 范围，以及是否允许调整冻结基线。 |
-| `req-20260321-1100-java-to-nestjs-data-migration.md` | `needs-confirmation` | Java 源库到 NestJS 目标库的全量业务域数据迁移需求；当前待确认 `project`、`scrap`、平台表与 cutover 四项口径。 |
+
+| 需求文档                                                 | 状态                   | 说明                                                                                          |
+| ---------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `req-20260323-0910-monthly-reporting.md`            | `needs-confirmation` | 系统自动生成月度报表需求；当前待确认月报指标口径、销售域统计范围、自动生成方式，以及页面/导出/推送等交付形式。 |
+| `req-20260322-1354-outbound-customer-rename.md`      | `confirmed`          | 将 NestJS 中命名错误的 `outbound` 域统一更正为 `customer`，同步覆盖代码、测试、迁移脚本、Swagger 元数据与架构文档，但不扩大为新的业务语义改造。 |
+| `req-20260321-1109-architecture-review-clarity.md`   | `confirmed`          | 已按确认口径完成基于 `PROJECT_REQUIREMENTS.md` 的业务域与 shared core 架构 review；详细 findings 与 follow-up 收口见 `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md` 及同批归档 task。 |
+| `req-20260321-1100-java-to-nestjs-data-migration.md` | `needs-confirmation` | Java 源库到 NestJS 目标库的全量业务域数据迁移需求；当前待确认 `project`、`scrap`、平台表与 cutover 四项口径。                  |
+
 
 ## 已归档（`archive/retained-completed/`）
 
-| 需求文档 | 保留原因 |
-| --- | --- |
-| `archive/retained-completed/req-20260319-1300-return-post-admission.md` | 需求 ID 溯源；正文已合并至 `archive/retained-completed/req-20260320-1830-migration-active-slices.md` |
+
+| 需求文档                                                                      | 保留原因                                                                                                                               |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `archive/retained-completed/req-20260319-1300-return-post-admission.md`   | 需求 ID 溯源；正文已合并至 `archive/retained-completed/req-20260320-1830-migration-active-slices.md`                                          |
 | `archive/retained-completed/req-20260320-1830-migration-active-slices.md` | 覆盖 `outbound-base`、销售退货 formal admission、车间退料 formal admission 与退货族 shared post-admission 的统一交互锚点；当前切片均已收口，保留为本轮迁移 requirement 真源。 |
+| `archive/retained-completed/req-20260322-1452-frontend-web-path.md`       | 前端工程统一为仓库内 `web/`；工作区与文档路径引用已同步；保留为路径口径溯源。                                                                                         |
+
 
 ## 清理候选（`archive/cleanup-candidate/`）
 
@@ -46,5 +46,7 @@
 
 ## 维护
 
-- 新增或迁入/迁出归档时，同步更新本看板与 `docs/tasks/TASK_CENTER.md` 中涉及该需求的行。
-- 详细流程见 `docs/requirements/README.md`。
+- 新增或调整 `PROJECT_REQUIREMENTS.md` 的项目级主题时，同步更新“固定项目需求”说明。
+- 新增、归档、迁移或删除需求时，同步更新对应看板行。
+- task 绑定、归档与命名等规则统一以 `docs/requirements/README.md` 为准。
+

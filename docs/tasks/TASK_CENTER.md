@@ -36,7 +36,7 @@
 
 ## 活跃任务
 
-当前无活跃任务。
+当前无绑定 **`docs/requirements/req-*.md`（根目录、Lifecycle `active`）** 的 `active` task 文档。
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
@@ -44,6 +44,9 @@
 
 | Task 文档 | 保留原因 |
 | --- | --- |
+| `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md` | 已完成 scoped architecture review，并产出 gap 与澄清结论；follow-up 已收口。 |
+| `docs/tasks/archive/retained-completed/task-20260323-1310-customer-workshop-return-invariants.md` | 已完成 `customer` / `workshop-material` return invariant 修复与 Jest 证据；`reviewed-no-findings`。 |
+| `docs/tasks/archive/retained-completed/task-20260323-1320-architecture-doc-clarity-followups.md` | 已完成 `README` / `project` / `reporting` / `master-data` 文档澄清；`reviewed-clean`。 |
 | `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md` | 已完成并在最新 DB-backed dry-run + batch-owned rows/maps 证据下确认收口；当前 `execute` / `validate` 非零来自后续已复审切片扩展 baseline，不再构成该 slice blocker。 |
 | `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md` | 已 `reviewed-no-findings`，formal admission 结论稳定，保留为后续 customer-stock 家族迁移的 admitted baseline 与 provenance 真源。 |
 | `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md` | 已 `reviewed-no-findings`，formal admission 结论稳定，保留为后续 workshop-material 家族迁移的 admitted baseline 与 provenance 真源。 |
@@ -64,6 +67,8 @@
 
 ## 下一步
 
+- `task-20260323-1100` 的两条 follow-up 已由 `task-20260323-1310` 与 `task-20260323-1320` 收口并完成 reviewer sign-off；上述三条 task 已迁入 `docs/tasks/archive/retained-completed/`。
+- `docs/tasks/TASK_CENTER.md` 与 requirement 进展同步仍由 parent 统一维护；若后续继续架构澄清，应另开新的 requirement / task，而不是复用已收口的切片。
 - 已完成机制简化：不再为“已被替代但当前没有保留价值”的旧 brief 设单独归档模块；此类变更说明统一写入当前真源文档。
 - `task-20260317-1416`、`task-20260319-1035`、`task-20260319-1045` 已全部迁入 `archive/retained-completed/`；当前只需在后续新需求出现时按新 requirement / task 锚点继续推进。
 - 退货族迁移的人机交互锚点 `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md` 已完成闭环，并继续作为这些 retained-completed task 的 `Related requirement` 真源。

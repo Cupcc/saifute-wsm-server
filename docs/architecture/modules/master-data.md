@@ -4,6 +4,10 @@
 
 负责基础资料主档，包括物料、客户、供应商、人员、车间，以及被多个业务域共享的基础查询能力。第一阶段不把项目/BOM 继续混入本模块。
 
+## 当前实现成熟度
+
+当前代码已实现物料（`material`）的新增、修改、作废和查询路径。客户、供应商、人员、车间目前以列表和只读查询为主，完整写路径（新增、修改、作废）属于目标范围，尚未全部落地。此差距不影响模块边界归属：这些实体的写路径仍由 `master-data` 拥有，不应移交给其他模块。
+
 ## 原 Java 来源与映射范围
 
 - `business/src/main/java/com/saifute/base`
@@ -70,7 +74,7 @@
 
 ## 与其他模块的依赖关系
 
-- 被 `inventory-core`、`inbound`、`outbound`、`workshop-material`、`project` 依赖
+- 被 `inventory-core`、`inbound`、`customer`、`workshop-material`、`project` 依赖
 - 依赖 `rbac` 提供权限与数据权限
 - 变更审计接入 `audit-log`
 

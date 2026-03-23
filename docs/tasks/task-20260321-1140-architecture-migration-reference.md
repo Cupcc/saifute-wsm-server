@@ -24,18 +24,18 @@
   - `scripts/migration/reports/preflight-report.json`
   - `scripts/migration/reports/master-data-validate-report.json`
   - `scripts/migration/reports/stock-in-validate-report.json`
-  - `scripts/migration/reports/outbound-validate-report.json`
+  - `scripts/migration/reports/customer-validate-report.json`
   - `scripts/migration/reports/workshop-pick-validate-report.json`
-  - `scripts/migration/reports/outbound-sales-return-validate-report.json`
+  - `scripts/migration/reports/customer-sales-return-validate-report.json`
   - `scripts/migration/reports/workshop-return-validate-report.json`
   - `scripts/migration/reports/return-post-admission-validate-report.json`
-  - `scripts/migration/reports/outbound-reservation-validate-report.json`
+  - `scripts/migration/reports/customer-reservation-validate-report.json`
   - `scripts/migration/reports/project-validate-report.json`
   - `docs/architecture/modules/master-data.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/workflow.md`
   - `docs/architecture/modules/inbound.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
   - `docs/architecture/modules/project.md`
   - `docs/architecture/modules/rbac.md`
@@ -149,26 +149,26 @@
   - `scripts/migration/stock-in/legacy-reader.ts`
   - `scripts/migration/stock-in/migrate.ts`
   - `scripts/migration/stock-in/validate.ts`
-  - `scripts/migration/outbound/legacy-reader.ts`
-  - `scripts/migration/outbound/migrate.ts`
-  - `scripts/migration/outbound/validate.ts`
+  - `scripts/migration/customer/legacy-reader.ts`
+  - `scripts/migration/customer/migrate.ts`
+  - `scripts/migration/customer/validate.ts`
   - `scripts/migration/workshop-pick/legacy-reader.ts`
   - `scripts/migration/workshop-pick/migrate.ts`
   - `scripts/migration/workshop-pick/validate.ts`
-  - `scripts/migration/outbound-sales-return/legacy-reader.ts`
-  - `scripts/migration/outbound-sales-return/migrate.ts`
-  - `scripts/migration/outbound-sales-return/validate.ts`
+  - `scripts/migration/customer-sales-return/legacy-reader.ts`
+  - `scripts/migration/customer-sales-return/migrate.ts`
+  - `scripts/migration/customer-sales-return/validate.ts`
   - `scripts/migration/workshop-return/legacy-reader.ts`
   - `scripts/migration/workshop-return/migrate.ts`
   - `scripts/migration/workshop-return/validate.ts`
-  - `scripts/migration/outbound-reservation/legacy-reader.ts`
-  - `scripts/migration/outbound-reservation/migrate.ts`
-  - `scripts/migration/outbound-reservation/validate.ts`
+  - `scripts/migration/customer-reservation/legacy-reader.ts`
+  - `scripts/migration/customer-reservation/migrate.ts`
+  - `scripts/migration/customer-reservation/validate.ts`
   - `scripts/migration/return-post-admission/planner.ts`
   - `scripts/migration/return-post-admission/writer.ts`
   - `scripts/migration/return-post-admission/validate.ts`
-  - `scripts/migration/outbound-sales-return-finalize/planner.ts`
-  - `scripts/migration/outbound-sales-return-finalize/validate.ts`
+  - `scripts/migration/customer-sales-return-finalize/planner.ts`
+  - `scripts/migration/customer-sales-return-finalize/validate.ts`
   - `scripts/migration/workshop-return-finalize/planner.ts`
   - `scripts/migration/workshop-return-finalize/validate.ts`
   - `scripts/migration/project/legacy-reader.ts`
@@ -177,18 +177,18 @@
   - `scripts/migration/reports/preflight-report.json`
   - `scripts/migration/reports/master-data-validate-report.json`
   - `scripts/migration/reports/stock-in-validate-report.json`
-  - `scripts/migration/reports/outbound-validate-report.json`
+  - `scripts/migration/reports/customer-validate-report.json`
   - `scripts/migration/reports/workshop-pick-validate-report.json`
-  - `scripts/migration/reports/outbound-sales-return-validate-report.json`
+  - `scripts/migration/reports/customer-sales-return-validate-report.json`
   - `scripts/migration/reports/workshop-return-validate-report.json`
   - `scripts/migration/reports/return-post-admission-validate-report.json`
-  - `scripts/migration/reports/outbound-reservation-validate-report.json`
+  - `scripts/migration/reports/customer-reservation-validate-report.json`
   - `scripts/migration/reports/project-validate-report.json`
   - `docs/architecture/modules/master-data.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/workflow.md`
   - `docs/architecture/modules/inbound.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
   - `docs/architecture/modules/project.md`
   - `docs/architecture/modules/rbac.md`
@@ -246,7 +246,7 @@
 - Validation results:
   - Resumed review from the existing task doc findings and re-read the current contents of `docs/architecture/30-java-to-nestjs-data-migration-reference.md` and `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`.
   - Because the reviewed files are currently workspace-local rather than represented by a useful git diff, rereview was performed against the current file contents directly.
-  - Cross-checked the updated wording against `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`, `prisma/schema.prisma`, `scripts/migration/sql/000-create-migration-staging.sql`, `scripts/migration/reports/workshop-return-validate-report.json`, `scripts/migration/reports/outbound-sales-return-validate-report.json`, and `scripts/migration/reports/return-post-admission-validate-report.json`.
+  - Cross-checked the updated wording against `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`, `prisma/schema.prisma`, `scripts/migration/sql/000-create-migration-staging.sql`, `scripts/migration/reports/workshop-return-validate-report.json`, `scripts/migration/reports/customer-sales-return-validate-report.json`, and `scripts/migration/reports/return-post-admission-validate-report.json`.
   - Confirmed the target tables and nullable source-field contracts still match `prisma/schema.prisma`, and the staging/archive terminology still matches the live `migration_staging` SQL.
   - This was a docs-only semantic rereview; no runtime, schema, or linter gate was required for sign-off.
 - Findings:

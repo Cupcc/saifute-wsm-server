@@ -1,76 +1,75 @@
-# 用户需求文档
+# 需求文档说明
 
-`docs/requirements/**` 用于保存面向用户的需求与进展交互真源。
+`docs/requirements/**` 用于保存面向用户的需求真源与简洁进展说明。
+
+## 文档职责
+
+- `PROJECT_REQUIREMENTS.md`：只记录项目级、长期稳定、跨任务持续生效的用户需求，以及理解这些需求所必需的项目背景。
+- `req-*.md`：只记录单次任务、切片或会话级需求，以及面向用户的简洁 `当前进展`。
+- `REQUIREMENT_CENTER.md`：只做索引看板，列出当前有哪些活跃需求、已归档需求和它们的状态。
+- `_template.md`：新建 `req-*.md` 时使用的模板。
+- `archive/**`：保存已闭环但仍需保留的需求文件，便于 task、review 与历史溯源继续引用。
+
+默认不要混用：
+
+- 项目长期需求，不写进 `req-*.md`。
+- 单次任务进展，不写进 `PROJECT_REQUIREMENTS.md`。
+- 详细执行计划、验证记录、review 结论，不写进 `docs/requirements/**`，继续放在 `docs/tasks/*.md`。
+- 文档机制、归档规则、命名约定，统一写在本 `README.md`，不要分散写进需求正文。
 
 ## 目录布局
 
 ```text
 docs/requirements/
-├── REQUIREMENT_CENTER.md              # 活跃/归档需求索引与 task 绑定看板
-├── README.md                          # 本文件：机制与归档规则
-├── _template.md                       # 新建需求模板
-├── req-*.md                           # 仍参与编排的活跃需求（Lifecycle：active）
+├── PROJECT_REQUIREMENTS.md
+├── REQUIREMENT_CENTER.md
+├── README.md
+├── _template.md
+├── req-*.md
 └── archive/
-    ├── retained-completed/            # 已闭环但仍需保留真源与溯源
-    └── cleanup-candidate/             # 待用户明确确认后可删除
+    ├── retained-completed/
+    └── cleanup-candidate/
 ```
 
-活跃需求留在根目录；**需求闭环后优先迁入 `archive/` 保留文件**，而不是删除，以便 `docs/tasks/**` 中的 `Related requirement` 可继续指向真实路径，便于双向追踪。跨需求总览与绑定关系维护在 `REQUIREMENT_CENTER.md`，与 `docs/tasks/TASK_CENTER.md` 配合使用。
+## 编写要求
 
-## 基本要求
+- 全文用中文撰写；路径、文件名、metadata 可保留英文。
+- 内容保持简洁，优先把用户需求讲清楚。
+- 直接描述用户需求与用户可读的当前进展，不擅自展开实现方案。
+- `当前进展` 只写关键阶段状态，不写成长执行日志。
 
-- 全文用中文撰写；路径、文件名、metadata可保留英文。
-- 内容保持简洁，优先帮助用户把需求说清楚。
-- 直接描述用户需求，不擅自补充实现方案。
-- 允许记录面向用户的简洁 orchestration 进展，但不要写成长执行日志。
+## 命名与结构
 
-## 命名
+- 固定项目需求文档使用 `PROJECT_REQUIREMENTS.md`。
+- 任务需求文档使用 `req-YYYYMMDD-HHMM-short-topic.md`。
+- `req-*.md` 建议固定使用 `用户需求`、`当前进展`、`待确认` 三段。
+- `当前进展` 建议固定为 `阶段进度`、`当前状态`、`阻塞项`、`下一步` 四行。
 
-- 使用 `req-YYYYMMDD-HHMM-short-topic.md`
+## 状态与生命周期
 
-## 建议结构
+`Status` 用于表达交互状态：
 
-- `用户需求`
-- `当前进展`
-- `待确认`
-
-`待确认` 用于记录 AI 的疑问、需要用户确认的问题，以及需要用户做决定的事项。
-
-`当前进展` 建议固定为四行简洁信息：
-
-- `阶段进度`
-- `当前状态`
-- `阻塞项`
-- `下一步`
-
-## 状态（面向交互）
-
-- `needs-confirmation`：新建或刚修改，必须先给用户确认。
-- `confirmed`：用户已明确确认，可作为计划与执行依据。
+- `needs-confirmation`：刚创建或刚实质改写，必须先给用户确认。
+- `confirmed`：用户已明确确认，可作为后续规划与执行依据。
 - `draft`：仅用于尚未整理成可发给用户确认的草稿。
 
-## 生命周期（与 task 文档一致）
+`Lifecycle disposition` 用于表达文件所处阶段，并与文件目录保持一致：
 
-在 Metadata 中使用 `Lifecycle disposition`（与 `docs/tasks/_template.md` 同名），与文件所在目录一致：
+- `active`：文件位于 `docs/requirements/` 根目录，仍参与当前交互或执行。
+- `retained-completed`：文件位于 `archive/retained-completed/`，需求已闭环但需保留溯源。
+- `cleanup-candidate`：文件位于 `archive/cleanup-candidate/`，后续经用户确认后可删除。
 
-- `active`：文件位于 `docs/requirements/` 根目录；仍可作为根目录活跃 task 的关联需求。
-- `retained-completed`：需求已闭环；文件应位于 `archive/retained-completed/`，保留以便已归档 task 与 provenance 引用。
-- `cleanup-candidate`：文件应位于 `archive/cleanup-candidate/`；删除前必须经用户明确确认并全文检索引用。
+## 使用规则
 
-需求闭环并归档时，将 `Lifecycle disposition` 改为 `retained-completed`（或 `cleanup-candidate`），移动文件到对应目录，并在需求内 `Related tasks` 与各 task 的 `Related requirement` 中**写全归档后的路径**，同步更新 `REQUIREMENT_CENTER.md` 与 `docs/tasks/TASK_CENTER.md` 的相关行。
+1. 先判断是否属于轻量直做。若需求清晰、范围很小、低风险、无需 durable handoff，可直接处理，不必强制创建需求或 task 文档。
+2. 若不属于轻量直做，先创建或定位一个需求文档，再继续规划或执行。
+3. 项目级长期需求写入 `PROJECT_REQUIREMENTS.md`；任务级需求写入 `req-*.md`。
+4. 任务需求若尚未获用户确认，`Status` 设为 `needs-confirmation`；确认后改为 `confirmed`。
+5. 在关键阶段推进、进入阻塞或准备结束当前回合前，同步简洁 `当前进展`。
+6. 需求闭环后优先归档而不是删除；归档时同步更新 `REQUIREMENT_CENTER.md`、相关 task 的 `Related requirement`，以及需求内的 `Related tasks`。
 
-## 流程
+## 与任务文档的关系
 
-1. 在实质性规划前先创建或定位一个需求文档。
-2. 用简洁中文整理出用户需求。
-3. 如果文档已可直接发给用户确认，状态设为 `needs-confirmation`。
-4. 等用户明确确认或做出决定后，将待确定内容并入用户需求，再改为 `confirmed` 并进入规划或编码。
-5. 在关键阶段推进、进入阻塞或即将结束本轮对话前，把简洁的 `当前进展` 同步回该文档。
-6. `planner`、`coder`、`code-reviewer` 都要以该文档为准，检查是否偏离用户意图，并保持其面向用户的状态描述同步。
-7. **优先归档而非删除**：需求闭环后迁入 `archive/`，并更新所有引用路径。若必须删除，须先检查 `docs/tasks/**/*.md` 与仓库内全文引用；根目录 `task-*.md` 不得绑定已删除或仅存在于 cleanup 候选且未确认清理的需求路径。
-8. 维护 `REQUIREMENT_CENTER.md`：新增需求、归档或变更 task 绑定时更新看板，便于与 `TASK_CENTER.md` 对照。
-
-## 确认要求
-
-- 状态不是 `confirmed` 时，先向用户确认，不直接进入规划或编码。
-- 如果只是同步 `当前进展`，且用户需求理解没有被改写，文档可保持 `confirmed`。
+- `docs/tasks/*.md` 承接详细执行计划、验证过程、review 结论与运行时上下文。
+- 根目录活跃 `task-*.md` 应绑定仍存在且 `Lifecycle disposition = active` 的 `req-*.md`。
+- 归档 task 若继续引用 requirement，应改为归档后的完整路径。

@@ -4,6 +4,12 @@
 
 负责首页统计、库存报表和跨单据聚合查询。该模块是只读查询模块，不拥有事务型写模型。
 
+## 当前实现与目标范围
+
+**当前实现**：代码目前覆盖首页看板统计、库存汇总与分类统计、单据趋势查询，以及跨 `inbound`/`customer`/`workshop-material` 的导出路径。`project` 尚未纳入查询依赖与统计口径。
+
+**目标范围**（见 `docs/requirements/PROJECT_REQUIREMENTS.md` 4.2.1 节及第 5 节）：报表目标还包括月度自动汇总（公司整体、按生产车间、按销售域、按研发项目），以及按项目/研发领用查看汇总明细和项目维度的成本相关报表。该部分均属 `reporting` 的只读聚合职责，目前尚未实现。
+
 ## 原 Java 来源与映射范围
 
 - `business/src/main/java/com/saifute/base` 中 `HomeStatistics*`、`Report*`
@@ -57,8 +63,9 @@
 
 - 依赖 `inventory-core`
 - 依赖 `inbound`
-- 依赖 `outbound`
+- 依赖 `customer`
 - 依赖 `workshop-material`
+- 目标范围依赖 `project`（月度/项目报表，尚未实现）
 - 可复用 `master-data` 的物料分类查询
 
 ## 事务边界与一致性要求
@@ -81,5 +88,7 @@
 
 ## 暂不实现范围
 
+- 月度自动汇总报表（公司整体、按生产车间、按销售域、按研发项目）
+- 按项目/研发领用查看汇总明细及项目成本相关报表
 - 实时数仓
 - OLAP 多维分析

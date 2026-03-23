@@ -4,12 +4,41 @@
 
 本目录用于承接 `E:/Projects/saifute-wms-server` 到 NestJS 的模块化迁移设计。所有后续实现必须以这里的模块边界、依赖关系、事务约束和测试范围为准，避免 subagents 在实现阶段再次拆分领域。
 
+便于清晰明确的了解项目架构
+
 ## 2. 源系统映射
 
 - 平台层：`ruoyi-framework`、`ruoyi-system`、`ruoyi-common`、`ruoyi-quartz`、`ruoyi-admin`
 - 业务层：`business/src/main/java/com/saifute/{base,stock,entry,out,take,article,audit,ai}`
 
 ## 3. 目标模块
+
+### 业务域模块
+
+业务域按职责分层，避免把「主数据 / 营运单据闭环 / 读模型与辅助」混在同一级列表里。详细流程与表口径以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为准。
+
+#### 主数据域（主档与快照，不直接承担库存事务写）
+
+- `master-data`：物料、客户、供应商、人员、车间；为事务单据提供主档与快照来源
+
+#### 核心业务域（WMS 营运闭环：库存写路径 + 审核 + 单据家族）
+
+共享写路径与审核：
+
+- `inventory-core`：库存现值、库存日志、来源追踪、预警、编号区间；**全库库存唯一写入口**
+- `workflow`：轻量审核记录与单据审核状态收口（`audit_document` 投影）
+
+四类事务单据家族（各家族内可含多种业务单据类型，共用领域表与模块边界）：
+
+- `inbound`：入库家族（验收单、生产入库单等）
+- `customer`：客户收发家族（出库单、销售退货单等；路由兼容期可为 `/outbound`）
+- `workshop-material`：车间物料家族（领料、退料、报废等）
+- `project`：项目/BOM、项目物料消耗等（默认轻审核或不走审核，以模块文档为准）
+
+#### 分析与辅助域（不拥有事务写模型或仅只读/编排）
+
+- `reporting`：首页统计、库存报表、跨域汇总查询；只读读模型，不替代业务单据与 `inventory-core` 写路径
+- `ai-assistant`：SSE 对话、工具编排、页面跳转与预填；受控调用，不直接写业务数据
 
 ### 平台与横切模块
 
@@ -19,18 +48,6 @@
 - `audit-log`：登录日志、操作日志、审计字段
 - `file-storage`：本地上传下载、头像、资源映射
 - `scheduler`：数据库驱动的任务定义、调度、执行日志
-
-### 业务域模块
-
-- `master-data`：物料、客户、供应商、人员、车间
-- `inventory-core`：库存现值、库存日志、来源追踪、预警、编号区间
-- `workflow`：轻量审核记录与单据审核状态收口
-- `inbound`：验收单、生产入库单
-- `outbound`：出库单、销售退货单
-- `workshop-material`：领料单、退料单、报废单
-- `project`：项目/BOM、项目物料消耗
-- `reporting`：首页统计、库存报表、跨域汇总查询
-- `ai-assistant`：SSE 对话、工具编排、页面跳转与预填
 
 ## 3.1 目标技术栈
 
@@ -127,6 +144,7 @@ modules/<module>/
 - `domain` 只放领域规则、状态变更、校验
 - `infrastructure` 负责 Prisma repository、raw SQL query、Redis、文件、调度适配
 - `dto` 只定义接口输入输出，不承载业务逻辑
+- 当前仓库同时承载后端与前端代码；前端工程位置统一为仓库根目录下的 `web/`，本地工作区与协作路径不再引用旧的独立前端仓库路径
 
 ## 5. 共享基础设施
 
@@ -169,7 +187,7 @@ flowchart TD
     ApiLayer --> inventoryCore
     ApiLayer --> workflow
     ApiLayer --> inbound
-    ApiLayer --> outbound
+    ApiLayer --> customer
     ApiLayer --> workshopMaterial
     ApiLayer --> project
     ApiLayer --> reporting
@@ -181,9 +199,9 @@ flowchart TD
     inbound --> masterData
     inbound --> inventoryCore
     inbound --> workflow
-    outbound --> masterData
-    outbound --> inventoryCore
-    outbound --> workflow
+    customer --> masterData
+    customer --> inventoryCore
+    customer --> workflow
     workshopMaterial --> masterData
     workshopMaterial --> inventoryCore
     workshopMaterial --> workflow
@@ -192,7 +210,7 @@ flowchart TD
     reporting --> masterData
     reporting --> inventoryCore
     reporting --> inbound
-    reporting --> outbound
+    reporting --> customer
     reporting --> workshopMaterial
     aiAssistant --> reporting
     aiAssistant --> inventoryCore
@@ -219,7 +237,7 @@ flowchart TD
 5. `inventory-core`
 6. `workflow`
 7. `inbound`
-8. `outbound`
+8. `customer`
 9. `workshop-material`
 10. `project`
 11. `audit-log`

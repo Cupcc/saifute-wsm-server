@@ -61,7 +61,7 @@
 
 ## 与其他模块的依赖关系
 
-- 被 `inbound`、`outbound`、`workshop-material` 等单据模块依赖
+- 被 `inbound`、`customer`、`workshop-material` 等单据模块依赖
 - 依赖 `rbac` 做审核权限控制
 - 依赖 `audit-log` 记录审核操作审计
 

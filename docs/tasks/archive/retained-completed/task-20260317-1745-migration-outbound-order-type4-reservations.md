@@ -14,11 +14,11 @@
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/inventory-core.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `prisma/schema.prisma`
   - `package.json`
   - `scripts/migration/sql/000-create-migration-staging.sql`
-  - `scripts/migration/outbound/**`
+  - `scripts/migration/customer/**`
   - `scripts/migration/shared/deterministic.ts`
   - `E:/Projects/saifute-wms-server/ruoyi-admin/src/main/resources/saifute_202600201_1629001.sql`
   - `E:/Projects/saifute-wms-server/business/src/main/java/com/saifute/stock/domain/SaifuteInterval.java`
@@ -55,13 +55,13 @@
 ## Scope And Ownership
 
 - Allowed code paths:
-  - `scripts/migration/outbound-reservation/**` (new)
+  - `scripts/migration/customer-reservation/**` (new)
   - `scripts/migration/sql/000-create-migration-staging.sql`
   - `package.json`
   - this task doc only if the parent explicitly reassigns ownership
 - Frozen or shared paths:
   - `prisma/schema.prisma`
-  - `scripts/migration/outbound/**`
+  - `scripts/migration/customer/**`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
@@ -83,7 +83,7 @@
 ## Implementation Plan
 
 - [ ] Step 1: add `migration_staging.map_factory_number_reservation` to `scripts/migration/sql/000-create-migration-staging.sql` with the same `(legacy_table, legacy_id)` and `(target_table, target_id)` uniqueness pattern used by other migration map tables.
-- [ ] Step 2: scaffold `scripts/migration/outbound-reservation/` with:
+- [ ] Step 2: scaffold `scripts/migration/customer-reservation/` with:
   - `types.ts`
   - `legacy-reader.ts`
   - `transformer.ts`
@@ -137,9 +137,9 @@
   - backfill qualifying `customer_stock_order_line.startNumber` and `endNumber`
   - commit as one transaction
 - [ ] Step 10: add package scripts:
-  - `migration:outbound-reservation:dry-run`
-  - `migration:outbound-reservation:execute`
-  - `migration:outbound-reservation:validate`
+  - `migration:customer-reservation:dry-run`
+  - `migration:customer-reservation:execute`
+  - `migration:customer-reservation:validate`
 
 ## Coder Handoff
 
@@ -149,9 +149,9 @@
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/inventory-core.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `prisma/schema.prisma`
-  - `scripts/migration/outbound/**`
+  - `scripts/migration/customer/**`
   - `scripts/migration/sql/000-create-migration-staging.sql`
   - `E:/Projects/saifute-wms-server/ruoyi-admin/src/main/resources/saifute_202600201_1629001.sql`
   - `E:/Projects/saifute-wms-server/business/src/main/java/com/saifute/stock/domain/SaifuteInterval.java`
@@ -159,11 +159,11 @@
   - `E:/Projects/saifute-wms-server/business/src/main/resources/mapper/out/SaifuteOutboundOrderMapper.xml`
   - `E:/Projects/saifute-wms-server/business/src/main/resources/mapper/out/SaifuteOutboundDetailMapper.xml`
 - Owned paths:
-  - `scripts/migration/outbound-reservation/**`
+  - `scripts/migration/customer-reservation/**`
   - `scripts/migration/sql/000-create-migration-staging.sql`
   - `package.json`
 - Forbidden shared files:
-  - `scripts/migration/outbound/**`
+  - `scripts/migration/customer/**`
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
@@ -179,7 +179,7 @@
   - do not reset the target DB or staging schema
 - Validation command for this scope:
   - `pnpm migration:typecheck`
-  - `pnpm migration:outbound-reservation:dry-run`
+  - `pnpm migration:customer-reservation:dry-run`
 - Iteration report gates:
   - dry-run must expose counts by `order_type`
   - dry-run must expose `eligible order_type=4 live rows`, `archived order_type=4 rows`, and `archived order_type IN (2, 7)` rows
@@ -200,9 +200,9 @@
   - confirm all writes happen in one transaction
 - Final validation gate:
   - `pnpm migration:typecheck`
-  - `pnpm migration:outbound-reservation:dry-run`
-  - `pnpm migration:outbound-reservation:execute`
-  - `pnpm migration:outbound-reservation:validate`
+  - `pnpm migration:customer-reservation:dry-run`
+  - `pnpm migration:customer-reservation:execute`
+  - `pnpm migration:customer-reservation:validate`
   - DB and report gates:
     - `factory_number_reservation` rows inserted by this batch all have `businessDocumentType = 'CustomerStockOrder'`
     - batch-owned reservation count plus archived-interval count equals `161`
@@ -219,7 +219,7 @@
 - `arch-feature-modules`: keep the slice isolated to migration tooling and existing outbound/inventory-core contracts; do not spread reservation logic into runtime application modules.
 - `db-use-transactions`: reservation upserts, line backfills, staging map writes, and interval archives must commit in one DB transaction to avoid split-brain between live reservation rows and line snapshots.
 - `perf-optimize-database`: load batch2c maps and target rows in set-based queries; do not issue per-interval lookup queries.
-- `arch-avoid-circular-deps`: new migration code should depend on shared migration helpers and outbound results, but existing `scripts/migration/outbound/**` should remain unchanged to avoid cross-slice coupling drift.
+- `arch-avoid-circular-deps`: new migration code should depend on shared migration helpers and outbound results, but existing `scripts/migration/customer/**` should remain unchanged to avoid cross-slice coupling drift.
 - `security-validate-all-input`: treat legacy interval rows as untrusted data; invalid or unexpected order types should surface as blockers or archives, not reach live rows.
 - Current repository layering still applies: migration scripts adapt legacy data to the already-frozen runtime schema; they must not change current runtime behavior to fit legacy edge cases.
 
@@ -251,10 +251,10 @@
 
 - Narrow iteration commands:
   - `pnpm migration:typecheck`
-  - `pnpm migration:outbound-reservation:dry-run`
+  - `pnpm migration:customer-reservation:dry-run`
 - Final command or gate aligned to the risk surface:
-  - `pnpm migration:outbound-reservation:execute`
-  - `pnpm migration:outbound-reservation:validate`
+  - `pnpm migration:customer-reservation:execute`
+  - `pnpm migration:customer-reservation:validate`
 - Required report and DB gates:
   - report shows full partition of all `161` legacy interval rows
   - report shows exact counts for live `order_type=4`, archived `order_type=4`, archived `order_type=2`, and archived `order_type=7`
@@ -276,10 +276,10 @@
 ## Review Log
 
 - Validation results:
-  - `pnpm migration:typecheck`, `pnpm exec biome check "scripts/migration/outbound-reservation" "scripts/migration/workshop-pick" "test/migration/outbound-reservation-execute-guard.spec.ts" "test/migration/workshop-pick.spec.ts" "test/migration/workshop-pick-execute-guard.spec.ts"`, and `pnpm test -- --runTestsByPath test/migration/outbound-reservation-execute-guard.spec.ts test/migration/workshop-pick.spec.ts test/migration/workshop-pick-execute-guard.spec.ts` were already passing from the prior rereview and were intentionally not rerun in this continuation.
-  - `pnpm migration:outbound-reservation:dry-run` passed. Report: `scripts/migration/reports/outbound-reservation-dry-run-report.json`. Dry-run reconfirmed `161` source intervals partitioned into `80` live `order_type=4` reservations plus `81` archived intervals (`74` order type `2`, `2` archived order type `4`, `5` order type `7`), with `60` single-interval line backfills and `9` multi-interval live lines left `NULL`.
-  - `pnpm migration:outbound-reservation:execute` passed. Report: `scripts/migration/reports/outbound-reservation-execute-report.json`.
-  - `pnpm migration:outbound-reservation:validate` passed. Report: `scripts/migration/reports/outbound-reservation-validate-report.json`. `validationIssues` stayed empty; `80` batch-owned reservation rows matched `80` reservation map rows and `80` reservation targets; `81` archived intervals remained owned by the batch; `69` target lines were touched; forbidden table counts stayed unchanged at `0`.
+  - `pnpm migration:typecheck`, `pnpm exec biome check "scripts/migration/customer-reservation" "scripts/migration/workshop-pick" "test/migration/customer-reservation-execute-guard.spec.ts" "test/migration/workshop-pick.spec.ts" "test/migration/workshop-pick-execute-guard.spec.ts"`, and `pnpm test -- --runTestsByPath test/migration/customer-reservation-execute-guard.spec.ts test/migration/workshop-pick.spec.ts test/migration/workshop-pick-execute-guard.spec.ts` were already passing from the prior rereview and were intentionally not rerun in this continuation.
+  - `pnpm migration:customer-reservation:dry-run` passed. Report: `scripts/migration/reports/customer-reservation-dry-run-report.json`. Dry-run reconfirmed `161` source intervals partitioned into `80` live `order_type=4` reservations plus `81` archived intervals (`74` order type `2`, `2` archived order type `4`, `5` order type `7`), with `60` single-interval line backfills and `9` multi-interval live lines left `NULL`.
+  - `pnpm migration:customer-reservation:execute` passed. Report: `scripts/migration/reports/customer-reservation-execute-report.json`.
+  - `pnpm migration:customer-reservation:validate` passed. Report: `scripts/migration/reports/customer-reservation-validate-report.json`. `validationIssues` stayed empty; `80` batch-owned reservation rows matched `80` reservation map rows and `80` reservation targets; `81` archived intervals remained owned by the batch; `69` target lines were touched; forbidden table counts stayed unchanged at `0`.
 - Findings:
   - No remaining `[blocking]` or `[important]` code findings in the scoped latest-fix rereview.
 - Follow-up action:

@@ -4,6 +4,12 @@
 
 负责原 `article` 包中的项目/BOM 和项目物料消耗能力。该模块不是纯静态 BOM，而是带库存副作用的事务型领域。
 
+## 当前实现与目标范围
+
+**当前实现**：代码目前只实现了项目物料消耗链路，通过 `project` + `project_material_line` 记录物料消耗，并通过 `inventory-core` 差量扣减库存。对应已落地的单据类型为 `PROJECT_CONSUMPTION_OUT`。
+
+**目标范围**（见 `docs/requirements/PROJECT_REQUIREMENTS.md` 4.1.7 节）：项目域目标覆盖完整的项目事务家族，包括 `项目采购入库`、`项目领料`、`项目退料`、`项目报废`，以及按项目查看成本汇总与台账余额、轻量 BOM 参考能力。当前代码未实现目标范围的大部分。后续增补事务类型时，沿用本模块的事务边界与 `inventory-core` 接入规范，而不是把现有缺口理解为目标已达成。
+
 ## 原 Java 来源与映射范围
 
 - `business/src/main/java/com/saifute/article`

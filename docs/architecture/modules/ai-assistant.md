@@ -70,7 +70,7 @@
 - 依赖 `reporting`
 - 依赖 `inventory-core`
 - 依赖 `master-data`
-- 可按需读取 `inbound`、`outbound`、`workshop-material` 的查询接口
+- 可按需读取 `inbound`、`customer`、`workshop-material` 的查询接口
 
 ## 事务边界与一致性要求
 

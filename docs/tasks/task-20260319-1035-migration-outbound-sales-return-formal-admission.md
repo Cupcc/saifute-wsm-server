@@ -15,15 +15,15 @@
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
   - `docs/tasks/archive/retained-completed/task-20260317-1745-migration-outbound-order-type4-reservations.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `prisma/schema.prisma`
   - `package.json`
-  - `scripts/migration/outbound-sales-return/**`
-  - `test/migration/outbound-sales-return.spec.ts`
-  - `test/migration/outbound-sales-return-execute-guard.spec.ts`
+  - `scripts/migration/customer-sales-return/**`
+  - `test/migration/customer-sales-return.spec.ts`
+  - `test/migration/customer-sales-return-execute-guard.spec.ts`
 
 ## Goal And Acceptance Criteria
 
@@ -43,10 +43,10 @@
 ## Scope And Ownership
 
 - Allowed code paths:
-  - `scripts/migration/outbound-sales-return/**`
+  - `scripts/migration/customer-sales-return/**`
   - `package.json`
-  - `test/migration/outbound-sales-return.spec.ts`
-  - `test/migration/outbound-sales-return-execute-guard.spec.ts`
+  - `test/migration/customer-sales-return.spec.ts`
+  - `test/migration/customer-sales-return-execute-guard.spec.ts`
   - this task doc only if the parent explicitly reassigns ownership
 - Frozen or shared paths:
   - `prisma/schema.prisma`
@@ -54,11 +54,11 @@
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/modules/outbound.md`
-  - `scripts/migration/outbound/**`
-  - `scripts/migration/outbound-reservation/**`
+  - `docs/architecture/modules/customer.md`
+  - `scripts/migration/customer/**`
+  - `scripts/migration/customer-reservation/**`
   - `scripts/migration/shared/**`
-  - `scripts/migration/outbound-sales-return-finalize/**`
+  - `scripts/migration/customer-sales-return-finalize/**`
   - `document_relation`
   - `document_line_relation`
   - `workflow_audit_document`
@@ -102,29 +102,29 @@
 
 ## Coder Handoff
 
-- Execution brief: update `scripts/migration/outbound-sales-return/**` so live admission is controlled only by structural validity, while source relation proof becomes optional enrichment. Reuse current deterministic document and mapping rules, but stop turning relation ambiguity into exclusion or family-local finalization work.
+- Execution brief: update `scripts/migration/customer-sales-return/**` so live admission is controlled only by structural validity, while source relation proof becomes optional enrichment. Reuse current deterministic document and mapping rules, but stop turning relation ambiguity into exclusion or family-local finalization work.
 - Required source docs or files:
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `prisma/schema.prisma`
-  - `scripts/migration/outbound-sales-return/**`
+  - `scripts/migration/customer-sales-return/**`
 - Owned paths:
-  - `scripts/migration/outbound-sales-return/**`
+  - `scripts/migration/customer-sales-return/**`
   - `package.json`
-  - `test/migration/outbound-sales-return.spec.ts`
-  - `test/migration/outbound-sales-return-execute-guard.spec.ts`
+  - `test/migration/customer-sales-return.spec.ts`
+  - `test/migration/customer-sales-return-execute-guard.spec.ts`
 - Forbidden shared files:
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `scripts/migration/outbound/**`
-  - `scripts/migration/outbound-reservation/**`
+  - `scripts/migration/customer/**`
+  - `scripts/migration/customer-reservation/**`
   - `scripts/migration/shared/**`
-  - `scripts/migration/outbound-sales-return-finalize/**`
+  - `scripts/migration/customer-sales-return-finalize/**`
 - Constraints and non-goals:
   - do not require non-null `sourceDocument*` for admission
   - do not exclude or queue-finalize a header only because upstream relation is unprovable
@@ -137,8 +137,8 @@
   - do not convert this slice back into a family-local pending-queue drain
 - Validation command for this scope:
   - `pnpm migration:typecheck`
-  - `pnpm test -- --runTestsByPath test/migration/outbound-sales-return.spec.ts test/migration/outbound-sales-return-execute-guard.spec.ts`
-  - `pnpm migration:outbound-sales-return:dry-run`
+  - `pnpm test -- --runTestsByPath test/migration/customer-sales-return.spec.ts test/migration/customer-sales-return-execute-guard.spec.ts`
+  - `pnpm migration:customer-sales-return:dry-run`
 - Iteration report gates:
   - `sourceCounts.orders = 10`
   - `sourceCounts.lines = 14`
@@ -158,10 +158,10 @@
   - confirm no writes occur to relation, workflow, reservation, or inventory tables
 - Final validation gate:
   - `pnpm migration:typecheck`
-  - `pnpm test -- --runTestsByPath test/migration/outbound-sales-return.spec.ts test/migration/outbound-sales-return-execute-guard.spec.ts`
-  - `pnpm migration:outbound-sales-return:dry-run`
-  - `pnpm migration:outbound-sales-return:execute`
-  - `pnpm migration:outbound-sales-return:validate`
+  - `pnpm test -- --runTestsByPath test/migration/customer-sales-return.spec.ts test/migration/customer-sales-return-execute-guard.spec.ts`
+  - `pnpm migration:customer-sales-return:dry-run`
+  - `pnpm migration:customer-sales-return:execute`
+  - `pnpm migration:customer-sales-return:validate`
   - DB and report gates:
     - full header and line counts partition the legacy dataset
     - admitted lines with null `sourceDocument*` do not fail validation
@@ -196,11 +196,11 @@
 
 - Narrow iteration commands:
   - `pnpm migration:typecheck`
-  - `pnpm test -- --runTestsByPath test/migration/outbound-sales-return.spec.ts test/migration/outbound-sales-return-execute-guard.spec.ts`
-  - `pnpm migration:outbound-sales-return:dry-run`
+  - `pnpm test -- --runTestsByPath test/migration/customer-sales-return.spec.ts test/migration/customer-sales-return-execute-guard.spec.ts`
+  - `pnpm migration:customer-sales-return:dry-run`
 - Final command or gate aligned to the risk surface:
-  - `pnpm migration:outbound-sales-return:execute`
-  - `pnpm migration:outbound-sales-return:validate`
+  - `pnpm migration:customer-sales-return:execute`
+  - `pnpm migration:customer-sales-return:validate`
 - Required report and DB gates:
   - dry-run reports admitted and structurally excluded counts for the full legacy dataset
   - validate explicitly accepts null `sourceDocument*` on admitted historical rows
@@ -223,15 +223,15 @@
 ## Review Log
 
 - Validation results:
-  - Parent validation already ran `pnpm migration:typecheck`, `pnpm test -- --runTestsByPath test/migration/outbound-sales-return.spec.ts test/migration/outbound-sales-return-execute-guard.spec.ts`, `pnpm migration:outbound-sales-return:dry-run`, `pnpm migration:outbound-sales-return:execute`, and `pnpm migration:outbound-sales-return:validate`; reviewer inspected the resulting artifacts instead of rerunning the same gate.
-  - `scripts/migration/reports/outbound-sales-return-dry-run-report.json` shows `sourceCounts.orders = 10`, `sourceCounts.details = 14`, `admittedOrders = 9`, `admittedLines = 13`, `admittedLinesWithNullSourceDocument = 12`, `excludedHeaders = 1`, `pendingRelationLines = 0`, and no global blockers.
-  - `scripts/migration/reports/outbound-sales-return-execute-report.json` shows `insertedOrUpdatedOrders = 9`, `insertedOrUpdatedLines = 13`, `excludedDocumentCount = 1`, `pendingRelationCount = 0`, and zero downstream consumer counts in `targetSummary.downstreamConsumerCounts`.
-  - `scripts/migration/reports/outbound-sales-return-validate-report.json` shows `cutoverReady = true`, `validationIssues = []`, batch-owned rows and staging maps aligned at `9` order rows and `13` line rows, and forbidden table counts remained `0`.
+  - Parent validation already ran `pnpm migration:typecheck`, `pnpm test -- --runTestsByPath test/migration/customer-sales-return.spec.ts test/migration/customer-sales-return-execute-guard.spec.ts`, `pnpm migration:customer-sales-return:dry-run`, `pnpm migration:customer-sales-return:execute`, and `pnpm migration:customer-sales-return:validate`; reviewer inspected the resulting artifacts instead of rerunning the same gate.
+  - `scripts/migration/reports/customer-sales-return-dry-run-report.json` shows `sourceCounts.orders = 10`, `sourceCounts.details = 14`, `admittedOrders = 9`, `admittedLines = 13`, `admittedLinesWithNullSourceDocument = 12`, `excludedHeaders = 1`, `pendingRelationLines = 0`, and no global blockers.
+  - `scripts/migration/reports/customer-sales-return-execute-report.json` shows `insertedOrUpdatedOrders = 9`, `insertedOrUpdatedLines = 13`, `excludedDocumentCount = 1`, `pendingRelationCount = 0`, and zero downstream consumer counts in `targetSummary.downstreamConsumerCounts`.
+  - `scripts/migration/reports/customer-sales-return-validate-report.json` shows `cutoverReady = true`, `validationIssues = []`, batch-owned rows and staging maps aligned at `9` order rows and `13` line rows, and forbidden table counts remained `0`.
   - The current outputs fully partition the fixed legacy dataset: `9` admitted headers plus `1` structurally excluded header cover all `10` source headers, and the remaining excluded header (`legacyId = 17`) carries the last source detail so the `13` admitted lines plus `1` excluded-header detail cover all `14` source details.
 - Findings:
   - No remaining `[blocking]` or `[important]` code findings in this final rereview. The earlier customer-mapping and default-workshop issues are fixed in the current scoped files and reflected in the current report set.
 - Follow-up action:
-  - No further coder work is required inside `scripts/migration/outbound-sales-return/**` for this formal-admission slice. Downstream relation, replay, and workflow work should continue in the shared post-admission scope.
+  - No further coder work is required inside `scripts/migration/customer-sales-return/**` for this formal-admission slice. Downstream relation, replay, and workflow work should continue in the shared post-admission scope.
 
 ## Final Status
 

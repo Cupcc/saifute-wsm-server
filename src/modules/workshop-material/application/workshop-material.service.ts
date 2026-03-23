@@ -249,6 +249,71 @@ export class WorkshopMaterialService {
           }
         }
       } else {
+        // Pre-validate cumulative return quantities before writing any relations.
+        // Groups incoming lines by source pick-line ID to catch split-line over-returns
+        // within a single request, then checks against existing active downstream returns.
+        const incomingQtyByPickLine = new Map<number, Prisma.Decimal>();
+        const pickLineToPickOrderId = new Map<number, number>();
+        for (let i = 0; i < order.lines.length; i++) {
+          const lineDto = dto.lines[i] as CreateWorkshopMaterialOrderLineDto;
+          if (!lineDto?.sourceDocumentId || !lineDto?.sourceDocumentLineId)
+            continue;
+          const pickLineId = lineDto.sourceDocumentLineId;
+          const pickOrderId = lineDto.sourceDocumentId;
+          pickLineToPickOrderId.set(pickLineId, pickOrderId);
+          const prev =
+            incomingQtyByPickLine.get(pickLineId) ?? new Prisma.Decimal(0);
+          incomingQtyByPickLine.set(
+            pickLineId,
+            prev.add(new Prisma.Decimal(order.lines[i].quantity)),
+          );
+        }
+        // For each unique (pickOrderId, pickLineId) pair, enforce the cumulative cap.
+        const checkedPickOrders = new Map<
+          number,
+          Map<number, Prisma.Decimal>
+        >();
+        for (const [pickLineId, incomingQty] of incomingQtyByPickLine) {
+          const pickOrderId = pickLineToPickOrderId.get(pickLineId);
+          if (pickOrderId === undefined) continue;
+          if (!checkedPickOrders.has(pickOrderId)) {
+            const activeMap =
+              await this.repository.sumActiveReturnedQtyByPickLine(
+                pickOrderId,
+                tx,
+              );
+            checkedPickOrders.set(pickOrderId, activeMap);
+          }
+          const activeMap =
+            checkedPickOrders.get(pickOrderId) ??
+            new Map<number, Prisma.Decimal>();
+          const pickOrder = await this.repository.findOrderById(
+            pickOrderId,
+            tx,
+          );
+          if (
+            !pickOrder ||
+            pickOrder.orderType !== WorkshopMaterialOrderType.PICK ||
+            pickOrder.lifecycleStatus === DocumentLifecycleStatus.VOIDED
+          ) {
+            // Detailed error is raised inside validateAndRecordReturnRelation below
+            continue;
+          }
+          const pickLine = pickOrder.lines.find((l) => l.id === pickLineId);
+          if (!pickLine) continue;
+          const alreadyReturned =
+            activeMap.get(pickLineId) ?? new Prisma.Decimal(0);
+          if (
+            alreadyReturned
+              .add(incomingQty)
+              .gt(new Prisma.Decimal(pickLine.quantity))
+          ) {
+            throw new BadRequestException(
+              `领料明细 ${pickLineId} 累计有效退料数量超过领料数量`,
+            );
+          }
+        }
+
         for (const line of order.lines) {
           await this.inventoryService.increaseStock(
             {
@@ -338,32 +403,71 @@ export class WorkshopMaterialService {
       );
     }
 
-    const usages = await this.inventoryService.listSourceUsages({
-      consumerDocumentType: DOCUMENT_TYPE,
-      consumerDocumentId: sourceDocumentId,
-      limit: 100,
-      offset: 0,
-    });
-    const lineUsages = usages.items.filter(
-      (u) => u.consumerLineId === sourceDocumentLineId,
+    // Paginate through ALL source usages for this pick order so no usages are
+    // silently truncated, then filter to just the specific pick line.
+    const usagePageSize = 200;
+    let usagePage = await this.inventoryService.listSourceUsages(
+      {
+        consumerDocumentType: DOCUMENT_TYPE,
+        consumerDocumentId: sourceDocumentId,
+        limit: usagePageSize,
+        offset: 0,
+      },
+      tx,
     );
+    const allDocUsages = [...usagePage.items];
+    let usageOffset = usagePageSize;
+    while (usagePage.items.length === usagePageSize) {
+      usagePage = await this.inventoryService.listSourceUsages(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: sourceDocumentId,
+          limit: usagePageSize,
+          offset: usageOffset,
+        },
+        tx,
+      );
+      allDocUsages.push(...usagePage.items);
+      usageOffset += usagePageSize;
+    }
+
+    // Release source usage only up to the quantity returned in this operation,
+    // processing usages in deterministic (sourceLogId ascending) order so that
+    // partial returns are always applied against the oldest allocations first.
+    const lineUsages = allDocUsages
+      .filter((u) => u.consumerLineId === sourceDocumentLineId)
+      .sort((a, b) => Number(a.sourceLogId) - Number(b.sourceLogId));
+    let remainingToRelease = new Prisma.Decimal(linkedQty);
     for (const usage of lineUsages) {
+      if (remainingToRelease.lte(0)) break;
       const allocatedQty = new Prisma.Decimal(usage.allocatedQty);
       const releasedQty = new Prisma.Decimal(usage.releasedQty);
-      const toRelease = allocatedQty.sub(releasedQty);
-      if (toRelease.gt(0)) {
-        await this.inventoryService.releaseInventorySource(
-          {
-            sourceLogId: usage.sourceLogId,
-            consumerDocumentType: DOCUMENT_TYPE,
-            consumerDocumentId: sourceDocumentId,
-            consumerLineId: sourceDocumentLineId,
-            targetReleasedQty: allocatedQty,
-            operatorId: createdBy,
-          },
-          tx,
-        );
-      }
+      const unreleased = allocatedQty.sub(releasedQty);
+      if (unreleased.lte(0)) continue;
+      const toReleaseNow = unreleased.gt(remainingToRelease)
+        ? remainingToRelease
+        : unreleased;
+      await this.inventoryService.releaseInventorySource(
+        {
+          sourceLogId: usage.sourceLogId,
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: sourceDocumentId,
+          consumerLineId: sourceDocumentLineId,
+          targetReleasedQty: releasedQty.add(toReleaseNow),
+          operatorId: createdBy,
+        },
+        tx,
+      );
+      remainingToRelease = remainingToRelease.sub(toReleaseNow);
+    }
+
+    // Guard: if the source-usage scan could not release the full linkedQty,
+    // the relation must not be persisted; the data state would otherwise diverge
+    // from the active return set.
+    if (remainingToRelease.gt(0)) {
+      throw new BadRequestException(
+        `领料来源库存释放不足: pickOrderId=${sourceDocumentId}, pickLineId=${sourceDocumentLineId}，退料需释放 ${new Prisma.Decimal(linkedQty).toFixed()} 但实际只能释放 ${new Prisma.Decimal(linkedQty).sub(remainingToRelease).toFixed()}`,
+      );
     }
 
     const client = tx ?? this.prisma;
@@ -537,6 +641,23 @@ export class WorkshopMaterialService {
       }
 
       if (orderType === WorkshopMaterialOrderType.RETURN) {
+        // Restore source usages that were incrementally released when this return
+        // order was created, so that the pick line's source-usage state reflects
+        // only currently active returns after the void.
+        for (const line of order.lines) {
+          if (
+            line.sourceDocumentId != null &&
+            line.sourceDocumentLineId != null
+          ) {
+            await this.restoreSourceUsageForReturnVoid(
+              line.sourceDocumentId,
+              line.sourceDocumentLineId,
+              new Prisma.Decimal(line.quantity),
+              voidedBy,
+              tx,
+            );
+          }
+        }
         await this.repository.deactivateDocumentRelationsForReturn(id, tx);
       }
 
@@ -563,6 +684,73 @@ export class WorkshopMaterialService {
 
       return this.repository.findOrderById(id, tx);
     });
+  }
+
+  /**
+   * Reverses the source-usage releases that were applied when a return order was
+   * created. Processes usages in reverse sourceLogId order (newest first) so the
+   * un-release mirrors the forward-release sequence in reverse, restoring the pick
+   * line's available release capacity for future returns.
+   */
+  private async restoreSourceUsageForReturnVoid(
+    pickOrderId: number,
+    pickLineId: number,
+    quantityToRestore: Prisma.Decimal,
+    operatorId?: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const usagePageSize = 200;
+    let usagePage = await this.inventoryService.listSourceUsages(
+      {
+        consumerDocumentType: DOCUMENT_TYPE,
+        consumerDocumentId: pickOrderId,
+        limit: usagePageSize,
+        offset: 0,
+      },
+      tx,
+    );
+    const allDocUsages = [...usagePage.items];
+    let usageOffset = usagePageSize;
+    while (usagePage.items.length === usagePageSize) {
+      usagePage = await this.inventoryService.listSourceUsages(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: pickOrderId,
+          limit: usagePageSize,
+          offset: usageOffset,
+        },
+        tx,
+      );
+      allDocUsages.push(...usagePage.items);
+      usageOffset += usagePageSize;
+    }
+
+    // Reverse order: undo the youngest release first (mirrors forward allocation order).
+    const lineUsages = allDocUsages
+      .filter((u) => u.consumerLineId === pickLineId)
+      .sort((a, b) => Number(b.sourceLogId) - Number(a.sourceLogId));
+
+    let remainingToRestore = new Prisma.Decimal(quantityToRestore);
+    for (const usage of lineUsages) {
+      if (remainingToRestore.lte(0)) break;
+      const releasedQty = new Prisma.Decimal(usage.releasedQty);
+      if (releasedQty.lte(0)) continue;
+      const toRestoreNow = releasedQty.gt(remainingToRestore)
+        ? remainingToRestore
+        : releasedQty;
+      await this.inventoryService.releaseInventorySource(
+        {
+          sourceLogId: usage.sourceLogId,
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: pickOrderId,
+          consumerLineId: pickLineId,
+          targetReleasedQty: releasedQty.sub(toRestoreNow),
+          operatorId,
+        },
+        tx,
+      );
+      remainingToRestore = remainingToRestore.sub(toRestoreNow);
+    }
   }
 
   private async validateMasterData(dto: CreateWorkshopMaterialOrderDto) {

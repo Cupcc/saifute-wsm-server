@@ -6,8 +6,8 @@
 
 - 共享核心与事务单据的业务流程
 - 优化后的逻辑数据模型
-- 面向 MySQL 的首版物理表设计原则
-- `Prisma` 与 `migration.sql` 的落地方向
+- 面向 MySQL / Prisma 的物理表设计原则
+- `Prisma` 模型与数据结构映射口径
 
 该文档解决的问题是：原 Java 设计可能把主数据、库存副作用、审核状态、单据字段混杂在一起，导致模块职责和表职责不清。NestJS 版本统一按领域重构，不直接照搬旧表。
 
@@ -65,6 +65,26 @@ flowchart TD
     workflow --> reporting
     documentFamily --> reporting
 ```
+
+### 3.1 当前 NestJS 模块与单据家族映射
+
+本章正文按“单据家族 / 共享核心”来写，而不是按 controller 名称来写。为避免阅读时误以为 `inbound` 缺席，先补一张“模块 -> 表 -> 单据家族”的阅读映射表：
+
+| NestJS 模块           | 路由前缀                 | 覆盖对象   | 对应核心表                                                                                     | 说明                                     |
+| ------------------- | -------------------- | ------ | ----------------------------------------------------------------------------------------- | -------------------------------------- |
+| `master-data`       | `/master-data`       | 主数据    | `material_category`、`material`、`customer`、`supplier`、`personnel`、`workshop`               | 为事务单据提供主档与快照来源                         |
+| `inventory-core`    | `/inventory`         | 库存核心   | `inventory_balance`、`inventory_log`、`inventory_source_usage`、`factory_number_reservation` | 库存唯一写入口                                |
+| `workflow`          | `/workflow`          | 审核投影   | `workflow_audit_document`                                                                 | 单据表只保留审核快照                             |
+| `inbound`           | `/inbound`           | 入库家族   | `stock_in_order`、`stock_in_order_line`                                                    | `orders` 对应验收单，`into-orders` 对应生产入库单   |
+| `customer`          | `/outbound`（兼容期） | 客户收发家族 | `customer_stock_order`、`customer_stock_order_line`                                        | `orders` 对应出库单，`sales-returns` 对应销售退货单 |
+| `workshop-material` | `/workshop-material` | 车间物料家族 | `workshop_material_order`、`workshop_material_order_line`                                  | `pick` / `return` / `scrap` 共用一套主从表    |
+| `project`           | `/projects`          | 项目家族   | `project`、`project_material_line`                                                         | 默认不走审核                                 |
+| `reporting`         | `/reporting`         | 只读报表   | 读取事务表与视图                                                                                  | 不拥有事务写模型                               |
+
+补充说明：
+
+- 因此本文第 `5.1` 节“入库家族”就是当前 NestJS 的 `inbound` 模块设计口径，不是遗漏。
+- NestJS 按“模块聚合 + 家族共表”组织接口，而不是按 Java 的“每类单据一套 controller + 一套表”复刻。
 
 ## 4. 共享核心业务流程
 
@@ -134,6 +154,12 @@ flowchart TD
 5. 修改时按明细差量重算库存并重置审核
 6. 作废时调用 `reverseStock()` 冲回已入库结果
 
+NestJS `inbound` 模块映射补充：
+
+- `/inbound/orders` 对应 `StockInOrderType.ACCEPTANCE`，即验收单
+- `/inbound/into-orders` 对应 `StockInOrderType.PRODUCTION_RECEIPT`，即生产入库单
+- 两类单据共用 `stock_in_order` / `stock_in_order_line`，差异通过 `orderType`、权限前缀、应用服务入口区分
+
 ### 5.2 客户收发家族
 
 范围：
@@ -151,11 +177,18 @@ flowchart TD
 6. 通过 `document_relation`、`document_line_relation` 表达退货与出库上下游关系
 7. 作废时逆操作库存并释放编号区间
 
-历史迁移补充：
+NestJS `customer` 模块映射补充：
+
+- 模块 canonical 命名为 `customer`，兼容期对外继续暴露 `/outbound/*`
+- `/outbound/orders` 对应 `CustomerStockOrderType.OUTBOUND`，即出库单
+- `/outbound/sales-returns` 对应 `CustomerStockOrderType.SALES_RETURN`，即销售退货单
+- 两类单据共用 `customer_stock_order` / `customer_stock_order_line`
+- 销售退货与出库的来源关系优先通过 `document_relation`、`document_line_relation` 表达，而不是继续拆独立关系表
+
+历史数据兼容补充：
 
 - 在线运行时仍可保持“销售退货创建时优先校验来源出库关系”的策略。
-- 但历史迁移首批允许销售退货在无法证明上游关系时先进入正式业务表，行内 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 可为空。
-- 后续再通过共享关系增强阶段补 `document_relation`、`document_line_relation` 与可证明的行内来源字段。
+- 历史迁移数据在无法证明上游关系时，行内 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 可为空。
 
 ### 5.3 车间物料家族
 
@@ -172,16 +205,22 @@ flowchart TD
 4. 通过单据关系表表达退料对领料的回冲关系
 5. 作废时执行逆操作并释放来源占用
 
-历史迁移补充：
+历史数据兼容补充：
 
 - 在线运行时仍可保持“退料优先校验来源领料关系”的策略。
-- 但历史迁移首批允许退料在无法证明上游领料关系时先进入正式业务表，行内 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 可为空。
-- 后续再通过共享关系增强与来源追踪补录阶段恢复可证明的关系和 `inventory_source_usage` 释放链。
+- 历史迁移数据在无法证明上游领料关系时，行内 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 可为空。
 
 审核策略补充：
 
 - `workshop_material_order.auditStatusSnapshot` 在表结构上默认按 `PENDING` 处理
 - 若某类 `orderType` 明确不走审核，由应用层在创建时显式写入 `NOT_REQUIRED`
+
+NestJS `workshop-material` 模块映射补充：
+
+- `/workshop-material/pick-orders` 对应 `WorkshopMaterialOrderType.PICK`
+- `/workshop-material/return-orders` 对应 `WorkshopMaterialOrderType.RETURN`
+- `/workshop-material/scrap-orders` 对应 `WorkshopMaterialOrderType.SCRAP`
+- 三类车间物料单据共用 `workshop_material_order` / `workshop_material_order_line`，由 `orderType` 和库存方向决定业务语义
 
 ### 5.4 项目家族
 
@@ -197,44 +236,88 @@ flowchart TD
 3. 默认不接 `workflow`，`auditStatusSnapshot` 固定为 `NOT_REQUIRED`
 4. 作废项目时回补库存，并保留项目历史事实
 
+NestJS `project` / `reporting` 模块映射补充：
+
+- `/projects` 直接对应 `project` / `project_material_line`
+- `/reporting` 不拥有单独事务表，统一读取四类单据家族、库存表与只读视图
+- 因此项目域是独立写模型，而报表域是独立读模型，两者不应在实现上混成一个“统计增强版项目模块”
+
 ## 6. 优化后的逻辑数据模型
 
-## 6.1 `master-data` 表
+### 6.1 数据表总表
 
-| 表名 | 说明 | 关键字段 | 关键约束 |
-| --- | --- | --- | --- |
-| `material_category` | 物料分类树 | `categoryCode`、`categoryName`、`parentId` | `categoryCode` 唯一 |
-| `material` | 物料主档 | `materialCode`、`materialName`、`specModel`、`categoryId`、`unitCode`、`warningMinQty`、`warningMaxQty`、`status` | `materialCode` 唯一 |
-| `customer` | 客户主档 | `customerCode`、`customerName`、`parentId`、`status` | `customerCode` 唯一 |
-| `supplier` | 供应商主档 | `supplierCode`、`supplierName`、`status` | `supplierCode` 唯一 |
-| `personnel` | 人员主档 | `personnelCode`、`personnelName`、`status` | `personnelCode` 唯一 |
-| `workshop` | 车间主档 | `workshopCode`、`workshopName`、`status` | `workshopCode` 唯一 |
+| 所属模块                | 名称                             | 类型  | 说明                 |
+| ------------------- | ------------------------------ | --- | ------------------ |
+| `master-data`       | `material_category`            | 表   | 物料分类               |
+| `master-data`       | `material`                     | 表   | 物料主档               |
+| `master-data`       | `customer`                     | 表   | 客户主档               |
+| `master-data`       | `supplier`                     | 表   | 供应商主档              |
+| `master-data`       | `personnel`                    | 表   | 人员主档               |
+| `master-data`       | `workshop`                     | 表   | 车间主档               |
+| `inventory-core`    | `inventory_balance`            | 表   | 库存现值               |
+| `inventory-core`    | `inventory_log`                | 表   | 库存流水               |
+| `inventory-core`    | `inventory_source_usage`       | 表   | 来源分配 / 释放追踪        |
+| `inventory-core`    | `factory_number_reservation`   | 表   | 出厂编号区间占用           |
+| `workflow`          | `workflow_audit_document`      | 表   | 审核投影表              |
+| `inbound`           | `stock_in_order`               | 表   | 入库家族主表，承载验收单与生产入库单 |
+| `inbound`           | `stock_in_order_line`          | 表   | 入库家族明细             |
+| `customer`          | `customer_stock_order`         | 表   | 客户收发主表，承载出库单与销售退货单 |
+| `customer`          | `customer_stock_order_line`    | 表   | 客户收发明细             |
+| `workshop-material` | `workshop_material_order`      | 表   | 车间物料主表，承载领料、退料、报废  |
+| `workshop-material` | `workshop_material_order_line` | 表   | 车间物料明细             |
+| `project`           | `project`                      | 表   | 项目主表               |
+| `project`           | `project_material_line`        | 表   | 项目物料明细             |
+| `cross-document`    | `document_relation`            | 表   | 表头级上下游关系           |
+| `cross-document`    | `document_line_relation`       | 表   | 行级上下游关系            |
+| `audit-log`         | `sys_logininfor`               | 表   | 登录日志               |
+| `audit-log`         | `sys_oper_log`                 | 表   | 操作日志               |
+| `scheduler`         | `sys_job`                      | 表   | 定时任务定义             |
+| `scheduler`         | `sys_job_log`                  | 表   | 定时任务执行日志           |
+| `reporting`         | `vw_inventory_warning`         | 视图  | 库存预警读模型            |
+| `reporting`         | `vw_document_summary`          | 视图  | 单据汇总读模型            |
+| `reporting`         | `vw_document_line_summary`     | 视图  | 单据行汇总读模型           |
 
 补充说明：
 
-- 自动补建不单独拆交易表，先在主数据主表保留 `creationMode`、`sourceDocumentType`、`sourceDocumentId` 追溯来源
+- `session` 当前走 `Redis`，不落单独 MySQL 业务表。
+- `auth`、`rbac`、`file-storage`、`ai-assistant`、`reporting` 主要提供认证、路由、文件、AI、报表读接口，不额外拥有新的事务写模型表。
+
+## 6.2 `master-data` 表
+
+| 表名                  | 说明    | 关键字段                                                                                                       | 关键约束               |
+| ------------------- | ----- | ---------------------------------------------------------------------------------------------------------- | ------------------ |
+| `material_category` | 物料分类树 | `categoryCode`、`categoryName`、`parentId`                                                                   | `categoryCode` 唯一  |
+| `material`          | 物料主档  | `materialCode`、`materialName`、`specModel`、`categoryId`、`unitCode`、`warningMinQty`、`warningMaxQty`、`status` | `materialCode` 唯一  |
+| `customer`          | 客户主档  | `customerCode`、`customerName`、`parentId`、`status`                                                          | `customerCode` 唯一  |
+| `supplier`          | 供应商主档 | `supplierCode`、`supplierName`、`status`                                                                     | `supplierCode` 唯一  |
+| `personnel`         | 人员主档  | `personnelCode`、`personnelName`、`status`                                                                   | `personnelCode` 唯一 |
+| `workshop`          | 车间主档  | `workshopCode`、`workshopName`、`status`                                                                     | `workshopCode` 唯一  |
+
+补充说明：
+
+- 自动补建不单独拆交易表，在主数据主表保留 `creationMode`、`sourceDocumentType`、`sourceDocumentId` 追溯来源
 - 物料分类与主数据字典分离，不把分类字段直接塞进 `material`
-- 第一阶段不把客户、供应商、人员强行并表为通用主体
+- 客户、供应商、人员保持分表，不并表为通用主体
 
-## 6.2 `inventory-core` 表
+## 6.3 `inventory-core` 表
 
-| 表名 | 说明 | 关键字段 | 关键约束 |
-| --- | --- | --- | --- |
-| `inventory_balance` | 物料库存现值 | `materialId`、`workshopId`、`quantityOnHand`、`rowVersion` | `materialId + workshopId` 唯一 |
-| `inventory_log` | 不可变库存流水 | `balanceId`、`direction`、`operationType`、`businessDocumentType`、`businessDocumentId`、`changeQty`、`beforeQty`、`afterQty`、`idempotencyKey` | `idempotencyKey` 唯一 |
-| `inventory_source_usage` | 消耗来源追踪 | `materialId`、`sourceLogId`、`consumerDocumentType`、`consumerDocumentId`、`consumerLineId`、`allocatedQty`、`releasedQty` | `consumerDocumentType + consumerLineId + sourceLogId` 唯一 |
-| `factory_number_reservation` | 出厂编号区间占用 | `materialId`、`businessDocumentType`、`businessDocumentId`、`businessDocumentLineId`、`startNumber`、`endNumber`、`status` | 单据行与区间组合唯一 |
+| 表名                           | 说明       | 关键字段                                                                                                                                    | 关键约束                                                     |
+| ---------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `inventory_balance`          | 物料库存现值   | `materialId`、`workshopId`、`quantityOnHand`、`rowVersion`                                                                                 | `materialId + workshopId` 唯一                             |
+| `inventory_log`              | 不可变库存流水  | `balanceId`、`direction`、`operationType`、`businessDocumentType`、`businessDocumentId`、`changeQty`、`beforeQty`、`afterQty`、`idempotencyKey` | `idempotencyKey` 唯一                                      |
+| `inventory_source_usage`     | 消耗来源追踪   | `materialId`、`sourceLogId`、`consumerDocumentType`、`consumerDocumentId`、`consumerLineId`、`allocatedQty`、`releasedQty`                    | `consumerDocumentType + consumerLineId + sourceLogId` 唯一 |
+| `factory_number_reservation` | 出厂编号区间占用 | `materialId`、`businessDocumentType`、`businessDocumentId`、`businessDocumentLineId`、`startNumber`、`endNumber`、`status`                    | 单据行与区间组合唯一                                               |
 
 补充说明：
 
-- 第一阶段库存维度固定为 `materialId + workshopId`
-- 对历史上“没有明确车间”的单据，迁移阶段统一归档到默认车间
+- 库存维度固定为 `materialId + workshopId`
+- 对历史上“没有明确车间”的单据，统一归档到默认车间
 - `inventory_warning` 不落交易表，改为读模型视图 `vw_inventory_warning`
 
-## 6.3 `workflow` 表
+## 6.4 `workflow` 表
 
-| 表名 | 说明 | 关键字段 | 关键约束 |
-| --- | --- | --- | --- |
+| 表名                        | 说明    | 关键字段                                                                                                               | 关键约束                           |
+| ------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
 | `workflow_audit_document` | 审核投影表 | `documentFamily`、`documentType`、`documentId`、`documentNumber`、`auditStatus`、`submittedBy`、`decidedBy`、`resetCount` | `documentType + documentId` 唯一 |
 
 补充说明：
@@ -243,31 +326,72 @@ flowchart TD
 - 审核动作的细粒度日志继续落 `audit-log`
 - `workflow` 不和单据表建立多态外键，避免跨模块强耦合
 
-## 6.4 单据写模型表
+## 6.5 `inbound` 表
 
-| 表名 | 说明 | 关键字段 | 关键约束 |
-| --- | --- | --- | --- |
-| `stock_in_order` | 验收单、生产入库单主表 | `documentNo`、`orderType`、`supplierId`、`handlerPersonnelId`、`workshopId`、三轴状态 | `documentNo` 唯一 |
-| `stock_in_order_line` | 入库明细 | `orderId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount` | `orderId + lineNo` 唯一 |
-| `customer_stock_order` | 出库单、销售退货单主表 | `documentNo`、`orderType`、`customerId`、`handlerPersonnelId`、`workshopId`、三轴状态 | `documentNo` 唯一 |
-| `customer_stock_order_line` | 客户收发明细 | `orderId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount`、`startNumber`、`endNumber` | `orderId + lineNo` 唯一 |
-| `workshop_material_order` | 领料、退料、报废主表 | `documentNo`、`orderType`、`workshopId`、`handlerPersonnelId`、三轴状态 | `documentNo` 唯一 |
-| `workshop_material_order_line` | 车间物料明细 | `orderId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount` | `orderId + lineNo` 唯一 |
-| `project` | 项目主表 | `projectCode`、`projectName`、`customerId`、`supplierId`、`managerPersonnelId`、三轴状态 | `projectCode` 唯一 |
-| `project_material_line` | 项目物料明细 | `projectId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount` | `projectId + lineNo` 唯一 |
-| `document_relation` | 表头级上下游关系 | `relationType`、`upstreamFamily`、`upstreamDocumentId`、`downstreamFamily`、`downstreamDocumentId` | 关系组合唯一 |
-| `document_line_relation` | 行级上下游关系 | `relationType`、`upstreamLineId`、`downstreamLineId`、`linkedQty` | 关系组合唯一 |
+| 表名                    | 说明          | 关键字段                                                                         | 关键约束                  |
+| --------------------- | ----------- | ---------------------------------------------------------------------------- | --------------------- |
+| `stock_in_order`      | 验收单、生产入库单主表 | `documentNo`、`orderType`、`supplierId`、`handlerPersonnelId`、`workshopId`、三轴状态 | `documentNo` 唯一       |
+| `stock_in_order_line` | 入库明细        | `orderId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount`              | `orderId + lineNo` 唯一 |
 
 补充说明：
 
-- 销售退货与出库、退料与领料优先通过关系表表达，不在主表上堆砌大量特化字段
+- `StockInOrderType.ACCEPTANCE` 与 `StockInOrderType.PRODUCTION_RECEIPT` 共用同一套主从表
+- `inbound` 模块里的验收单与生产入库单只是在应用层入口不同，不再拆成两套独立表
+- 修改时必须按明细差量处理，不允许直接覆盖旧明细后忽略库存补偿
+
+## 6.6 `customer` 表
+
+| 表名                          | 说明          | 关键字段                                                                                      | 关键约束                  |
+| --------------------------- | ----------- | ----------------------------------------------------------------------------------------- | --------------------- |
+| `customer_stock_order`      | 出库单、销售退货单主表 | `documentNo`、`orderType`、`customerId`、`handlerPersonnelId`、`workshopId`、三轴状态              | `documentNo` 唯一       |
+| `customer_stock_order_line` | 客户收发明细      | `orderId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount`、`startNumber`、`endNumber` | `orderId + lineNo` 唯一 |
+
+补充说明：
+
+- `CustomerStockOrderType.OUTBOUND` 与 `CustomerStockOrderType.SALES_RETURN` 共用同一套主从表
+- 销售退货与出库的主关系优先通过关系表表达，不在主表持续堆砌特化字段
+- 对历史迁移数据，行级 `sourceDocument*` 可作为可空增强字段
+
+## 6.7 `workshop-material` 表
+
+| 表名                             | 说明         | 关键字段                                                            | 关键约束                  |
+| ------------------------------ | ---------- | --------------------------------------------------------------- | --------------------- |
+| `workshop_material_order`      | 领料、退料、报废主表 | `documentNo`、`orderType`、`workshopId`、`handlerPersonnelId`、三轴状态 | `documentNo` 唯一       |
+| `workshop_material_order_line` | 车间物料明细     | `orderId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount` | `orderId + lineNo` 唯一 |
+
+补充说明：
+
+- `WorkshopMaterialOrderType.PICK`、`RETURN`、`SCRAP` 共用同一套主从表
+- 退料与领料的回冲关系优先通过关系表表达，不继续复制 Java 的零散关系设计
+- 对历史迁移数据，行级 `sourceDocument*` 可作为可空增强字段
+
+## 6.8 `project` 表
+
+| 表名                      | 说明     | 关键字段                                                                            | 关键约束                    |
+| ----------------------- | ------ | ------------------------------------------------------------------------------- | ----------------------- |
+| `project`               | 项目主表   | `projectCode`、`projectName`、`customerId`、`supplierId`、`managerPersonnelId`、三轴状态 | `projectCode` 唯一        |
+| `project_material_line` | 项目物料明细 | `projectId`、`lineNo`、`materialId`、`quantity`、`unitPrice`、`amount`               | `projectId + lineNo` 唯一 |
+
+补充说明：
+
+- 项目域虽然是事务型领域，但默认不接 `workflow`
+- 项目消耗或回补库存仍必须走 `inventory-core`
+
+## 6.9 跨单据关系表
+
+| 表名                       | 说明       | 关键字段                                                                                           | 关键约束   |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------- | ------ |
+| `document_relation`      | 表头级上下游关系 | `relationType`、`upstreamFamily`、`upstreamDocumentId`、`downstreamFamily`、`downstreamDocumentId` | 关系组合唯一 |
+| `document_line_relation` | 行级上下游关系  | `relationType`、`upstreamLineId`、`downstreamLineId`、`linkedQty`                                 | 关系组合唯一 |
+
+补充说明：
+
+- 销售退货与出库、退料与领料优先通过关系表表达
 - 单据行保留物料编码、名称、规格、单位等快照，避免历史口径被主数据修改污染
-- 项目域虽然是事务型领域，但第一阶段不接 `workflow`
-- 对历史迁移数据，`customer_stock_order_line` 与 `workshop_material_order_line` 的 `sourceDocument*` 可作为可空增强字段处理；formal-row admission 先完成，关系与来源追踪后补
 
-## 6.5 只读视图
+## 6.10 只读视图
 
-首版建议直接在 MySQL 中落只读视图，而不是再造统计交易表：
+只读视图包括：
 
 - `vw_inventory_warning`
 - `vw_document_summary`
@@ -338,7 +462,7 @@ flowchart TD
 - 单据修改时的差量计算
 - 负库存策略
 
-### 8.3 查询索引建议
+### 8.3 查询索引
 
 - 单据主表：`bizDate`、`orderType`、`customerId` 或 `supplierId`、`workshopId`
 - 单据明细：`materialId`
@@ -346,9 +470,9 @@ flowchart TD
 - 关系表：`upstreamDocumentId`、`downstreamDocumentId`
 - 审核表：`auditStatus`、`documentFamily`
 
-## 9. Prisma 与迁移落地建议
+## 9. Prisma 模型映射
 
-### 9.1 `schema.prisma`
+### 9.1 `schema.prisma` 模型分组
 
 模型分组：
 
@@ -356,36 +480,3 @@ flowchart TD
 - 共享核心：`Material`、`InventoryBalance`、`WorkflowAuditDocument`
 - 单据家族：`StockInOrder`、`CustomerStockOrder`、`WorkshopMaterialOrder`、`Project`
 - 关系与只读协作：`DocumentRelation`、`DocumentLineRelation`
-
-### 9.2 首批迁移
-
-建议首批迁移文件：
-
-- `prisma/migrations/20260314_core_business_schema/migration.sql`
-
-首批只做：
-
-- 共享核心表
-- 四类单据家族主从表
-- 上下游关系表
-- 三个读视图
-
-暂不做：
-
-- 旧库兼容视图
-- 历史数据导入脚本
-- 复杂统计物化表
-
-## 10. 实施顺序
-
-1. 先落 `master-data`、`inventory-core`、`workflow`
-2. 再落四类单据家族主从表
-3. 然后补 `document_relation`、`document_line_relation`
-4. 最后补 `reporting` 只读视图与 query service
-
-## 11. 冻结结论
-
-- 共享核心必须先定型，再让单据模块依赖
-- 单据按家族建模，不再复刻原 Java 的零散表设计
-- 库存、审核、来源追踪、编号区间从单据表中剥离
-- 物理表按 MySQL 设计，Prisma 作为简单 CRUD 与事务入口，复杂报表继续保留 SQL 视图与查询服务

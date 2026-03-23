@@ -78,7 +78,7 @@
 ## 与其他模块的依赖关系
 
 - 依赖 `master-data` 获取物料等基础快照
-- 被 `inbound`、`outbound`、`workshop-material`、`project` 依赖
+- 被 `inbound`、`customer`、`workshop-material`、`project` 依赖
 - 与 `workflow` 只通过业务模块协作，不直接耦合审核表
 
 ## 事务边界与一致性要求

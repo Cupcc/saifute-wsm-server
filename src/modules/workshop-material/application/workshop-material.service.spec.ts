@@ -1,4 +1,8 @@
-import { ConflictException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   AuditStatusSnapshot,
@@ -85,7 +89,10 @@ describe("WorkshopMaterialService", () => {
   beforeEach(async () => {
     prisma = {
       runInTransaction: jest.fn((handler: (tx: unknown) => Promise<unknown>) =>
-        handler({}),
+        handler({
+          documentRelation: { upsert: jest.fn().mockResolvedValue({}) },
+          documentLineRelation: { upsert: jest.fn().mockResolvedValue({}) },
+        }),
       ),
     };
 
@@ -108,6 +115,9 @@ describe("WorkshopMaterialService", () => {
             deactivateDocumentRelationsForReturn: jest
               .fn()
               .mockResolvedValue({ count: 0 }),
+            sumActiveReturnedQtyByPickLine: jest
+              .fn()
+              .mockResolvedValue(new Map()),
           },
         },
         {
@@ -256,6 +266,36 @@ describe("WorkshopMaterialService", () => {
   });
 
   describe("createReturnOrder", () => {
+    const mockReturnOrderWithSource = {
+      ...mockPickOrder,
+      id: 2,
+      documentNo: "WM-RETURN-001",
+      orderType: WorkshopMaterialOrderType.RETURN,
+      lines: [
+        {
+          id: 10,
+          orderId: 2,
+          lineNo: 1,
+          materialId: 100,
+          materialCodeSnapshot: "MAT001",
+          materialNameSnapshot: "Material A",
+          materialSpecSnapshot: "Spec",
+          unitCodeSnapshot: "PCS",
+          quantity: new Prisma.Decimal(20),
+          unitPrice: new Prisma.Decimal(10),
+          amount: new Prisma.Decimal(200),
+          sourceDocumentType: "WorkshopMaterialOrder",
+          sourceDocumentId: 1,
+          sourceDocumentLineId: 1,
+          remark: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+        },
+      ],
+    };
+
     it("should create return order with increaseStock", async () => {
       const mockReturnOrder = {
         ...mockPickOrder,
@@ -284,6 +324,498 @@ describe("WorkshopMaterialService", () => {
           operationType: "RETURN_IN",
           quantity: expect.anything(),
         }),
+        expect.anything(),
+      );
+    });
+
+    it("should reject when split lines in same request cumulatively exceed source pick line quantity", async () => {
+      const returnOrderWithTwoLines = {
+        ...mockReturnOrderWithSource,
+        lines: [
+          {
+            ...mockReturnOrderWithSource.lines[0],
+            id: 10,
+            quantity: new Prisma.Decimal(30),
+          },
+          {
+            ...mockReturnOrderWithSource.lines[0],
+            id: 11,
+            lineNo: 2,
+            quantity: new Prisma.Decimal(30),
+          },
+        ],
+      };
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        returnOrderWithTwoLines,
+      );
+      // Pick order line qty is 50; no prior returns
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockPickOrder);
+      (
+        repository.sumActiveReturnedQtyByPickLine as jest.Mock
+      ).mockResolvedValue(new Map());
+
+      const dto = {
+        documentNo: "WM-RETURN-002",
+        orderType: WorkshopMaterialOrderType.RETURN,
+        bizDate: "2025-03-14",
+        workshopId: 1,
+        lines: [
+          // 30 + 30 = 60 > 50 (pick line qty)
+          {
+            materialId: 100,
+            quantity: "30",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+          {
+            materialId: 100,
+            quantity: "30",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+        ],
+      };
+
+      await expect(service.createReturnOrder(dto, "1")).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it("should reject when existing active returns plus new return exceed source pick line quantity", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        mockReturnOrderWithSource,
+      );
+      // 40 of 50 already returned in active documents
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockPickOrder);
+      (
+        repository.sumActiveReturnedQtyByPickLine as jest.Mock
+      ).mockResolvedValue(new Map([[1, new Prisma.Decimal("40")]]));
+
+      const dto = {
+        documentNo: "WM-RETURN-002",
+        orderType: WorkshopMaterialOrderType.RETURN,
+        bizDate: "2025-03-14",
+        workshopId: 1,
+        lines: [
+          // 40 already returned; adding 20 = 60 > 50
+          {
+            materialId: 100,
+            quantity: "20",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+        ],
+      };
+
+      await expect(service.createReturnOrder(dto, "1")).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it("should allow return when prior returns were voided, using restored source usages", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        mockReturnOrderWithSource,
+      );
+      // All prior returns voided → active returned qty is 0
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockPickOrder);
+      (
+        repository.sumActiveReturnedQtyByPickLine as jest.Mock
+      ).mockResolvedValue(new Map());
+      // Source usage has been restored after prior void: releasedQty=0, full 50 available
+      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
+        items: [
+          {
+            sourceLogId: 10,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(50),
+            releasedQty: new Prisma.Decimal(0),
+          },
+        ],
+        total: 1,
+      });
+
+      const dto = {
+        documentNo: "WM-RETURN-002",
+        orderType: WorkshopMaterialOrderType.RETURN,
+        bizDate: "2025-03-14",
+        workshopId: 1,
+        lines: [
+          {
+            materialId: 100,
+            quantity: "20",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+        ],
+      };
+
+      const result = await service.createReturnOrder(dto, "1");
+
+      expect(result).toBeDefined();
+      // Verify release is applied against the restored usage row
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceLogId: 10,
+          targetReleasedQty: new Prisma.Decimal(20),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it("should release source usage only up to the returned quantity, not the full allocation", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        mockReturnOrderWithSource,
+      );
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockPickOrder);
+      (
+        repository.sumActiveReturnedQtyByPickLine as jest.Mock
+      ).mockResolvedValue(new Map());
+      // Single usage: allocated 50, released 0 — returning only 20
+      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
+        items: [
+          {
+            sourceLogId: 10,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(50),
+            releasedQty: new Prisma.Decimal(0),
+          },
+        ],
+        total: 1,
+      });
+
+      const dto = {
+        documentNo: "WM-RETURN-002",
+        orderType: WorkshopMaterialOrderType.RETURN,
+        bizDate: "2025-03-14",
+        workshopId: 1,
+        lines: [
+          {
+            materialId: 100,
+            quantity: "20",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+        ],
+      };
+
+      await service.createReturnOrder(dto, "1");
+
+      // Must release only 20, not the full 50
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceLogId: 10,
+          targetReleasedQty: new Prisma.Decimal(20),
+        }),
+        expect.anything(),
+      );
+      // Must not release the full allocated qty (50)
+      expect(inventoryService.releaseInventorySource).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetReleasedQty: new Prisma.Decimal(50),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it("should release incrementally across multiple usage records, stopping when returned qty is exhausted", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        mockReturnOrderWithSource,
+      );
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockPickOrder);
+      (
+        repository.sumActiveReturnedQtyByPickLine as jest.Mock
+      ).mockResolvedValue(new Map());
+      // Two usages for the pick line: 30 + 20 = 50 allocated; returning 20
+      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
+        items: [
+          {
+            sourceLogId: 10,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(30),
+            releasedQty: new Prisma.Decimal(0),
+          },
+          {
+            sourceLogId: 11,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(20),
+            releasedQty: new Prisma.Decimal(0),
+          },
+        ],
+        total: 2,
+      });
+
+      const dto = {
+        documentNo: "WM-RETURN-002",
+        orderType: WorkshopMaterialOrderType.RETURN,
+        bizDate: "2025-03-14",
+        workshopId: 1,
+        lines: [
+          {
+            materialId: 100,
+            quantity: "20",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+        ],
+      };
+
+      await service.createReturnOrder(dto, "1");
+
+      // Oldest usage (sourceLogId=10) absorbs the full 20-unit return
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledTimes(1);
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceLogId: 10,
+          targetReleasedQty: new Prisma.Decimal(20),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it("should reject return creation when source usages cannot cover the full linked quantity", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      // Return order qty=20, pick line qty=50 — cumulative cap passes
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        mockReturnOrderWithSource,
+      );
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockPickOrder);
+      (
+        repository.sumActiveReturnedQtyByPickLine as jest.Mock
+      ).mockResolvedValue(new Map());
+      // Only 10 unreleased available (allocated=20, released=10)
+      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
+        items: [
+          {
+            sourceLogId: 10,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(20),
+            releasedQty: new Prisma.Decimal(10),
+          },
+        ],
+        total: 1,
+      });
+
+      const dto = {
+        documentNo: "WM-RETURN-002",
+        orderType: WorkshopMaterialOrderType.RETURN,
+        bizDate: "2025-03-14",
+        workshopId: 1,
+        lines: [
+          {
+            materialId: 100,
+            quantity: "20",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+        ],
+      };
+
+      // Guard must reject: linkedQty=20 but only 10 unreleased available
+      await expect(service.createReturnOrder(dto, "1")).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it("full sequence: re-return after void releases correctly from restored usages", async () => {
+      // Proves the return -> void return -> partial re-return story.
+      // After R1 (qty=20) is voided, source usage is restored to releasedQty=0.
+      // R2 (qty=30) must then be able to release 30 from that restored usage.
+      const mockReReturn = {
+        ...mockReturnOrderWithSource,
+        documentNo: "WM-RETURN-003",
+        lines: [
+          {
+            ...mockReturnOrderWithSource.lines[0],
+            quantity: new Prisma.Decimal(30),
+          },
+        ],
+      };
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(mockReReturn);
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockPickOrder);
+      // Prior return R1 was voided → active qty is 0 again
+      (
+        repository.sumActiveReturnedQtyByPickLine as jest.Mock
+      ).mockResolvedValue(new Map());
+      // R1 void restored releasedQty to 0; R2 sees the full allocation available
+      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
+        items: [
+          {
+            sourceLogId: 10,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(50),
+            releasedQty: new Prisma.Decimal(0),
+          },
+        ],
+        total: 1,
+      });
+
+      const dto = {
+        documentNo: "WM-RETURN-003",
+        orderType: WorkshopMaterialOrderType.RETURN,
+        bizDate: "2025-03-14",
+        workshopId: 1,
+        lines: [
+          {
+            materialId: 100,
+            quantity: "30",
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 1,
+          },
+        ],
+      };
+
+      await service.createReturnOrder(dto, "1");
+
+      // R2 releases exactly 30 from the restored usage (0 + 30 = 30)
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceLogId: 10,
+          targetReleasedQty: new Prisma.Decimal(30),
+        }),
+        expect.anything(),
+      );
+    });
+  });
+
+  describe("voidReturnOrder", () => {
+    const mockReturnOrderEffective = {
+      ...mockPickOrder,
+      id: 2,
+      documentNo: "WM-RETURN-001",
+      orderType: WorkshopMaterialOrderType.RETURN,
+      lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+      inventoryEffectStatus: InventoryEffectStatus.POSTED,
+      lines: [
+        {
+          id: 10,
+          orderId: 2,
+          lineNo: 1,
+          materialId: 100,
+          materialCodeSnapshot: "MAT001",
+          materialNameSnapshot: "Material A",
+          materialSpecSnapshot: "Spec",
+          unitCodeSnapshot: "PCS",
+          quantity: new Prisma.Decimal(20),
+          unitPrice: new Prisma.Decimal(10),
+          amount: new Prisma.Decimal(200),
+          sourceDocumentType: "WorkshopMaterialOrder",
+          sourceDocumentId: 1,
+          sourceDocumentLineId: 1,
+          remark: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+        },
+      ],
+    };
+
+    it("should restore released source usages when voiding a return order", async () => {
+      (repository.findOrderById as jest.Mock)
+        .mockResolvedValueOnce(mockReturnOrderEffective)
+        .mockResolvedValueOnce({
+          ...mockReturnOrderEffective,
+          lifecycleStatus: DocumentLifecycleStatus.VOIDED,
+          inventoryEffectStatus: InventoryEffectStatus.REVERSED,
+        });
+      // Usage: 20 of 50 was released by this return order when it was created
+      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
+        items: [
+          {
+            sourceLogId: 10,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(50),
+            releasedQty: new Prisma.Decimal(20),
+          },
+        ],
+        total: 1,
+      });
+      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+        { id: 5 },
+      ]);
+      (repository.updateOrder as jest.Mock).mockResolvedValue({});
+
+      await service.voidReturnOrder(2, "void for re-return test", "1");
+
+      // Must restore the 20 that was released: targetReleasedQty = 20 - 20 = 0
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceLogId: 10,
+          consumerDocumentId: 1,
+          consumerLineId: 1,
+          targetReleasedQty: new Prisma.Decimal(0),
+        }),
+        expect.anything(),
+      );
+      expect(
+        repository.deactivateDocumentRelationsForReturn,
+      ).toHaveBeenCalledWith(2, expect.anything());
+    });
+
+    it("should void return order, restore partial usages across multiple records, and reverse inventory", async () => {
+      // Two usage records: return released 15 from record A and 5 from record B (total 20)
+      const returnOrderWith20 = mockReturnOrderEffective;
+      (repository.findOrderById as jest.Mock)
+        .mockResolvedValueOnce(returnOrderWith20)
+        .mockResolvedValueOnce({
+          ...returnOrderWith20,
+          lifecycleStatus: DocumentLifecycleStatus.VOIDED,
+        });
+      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
+        items: [
+          {
+            sourceLogId: 10,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(15),
+            releasedQty: new Prisma.Decimal(15),
+          },
+          {
+            sourceLogId: 11,
+            consumerLineId: 1,
+            allocatedQty: new Prisma.Decimal(35),
+            releasedQty: new Prisma.Decimal(5),
+          },
+        ],
+        total: 2,
+      });
+      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+        { id: 5 },
+      ]);
+      (repository.updateOrder as jest.Mock).mockResolvedValue({});
+
+      await service.voidReturnOrder(2, "Test void", "1");
+
+      // Reverse order: newer record (11) is processed first → restore 5, then record (10) → restore 15
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceLogId: 11,
+          targetReleasedQty: new Prisma.Decimal(0),
+        }),
+        expect.anything(),
+      );
+      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceLogId: 10,
+          targetReleasedQty: new Prisma.Decimal(0),
+        }),
+        expect.anything(),
+      );
+      expect(inventoryService.reverseStock).toHaveBeenCalledWith(
+        expect.objectContaining({ logIdToReverse: 5 }),
         expect.anything(),
       );
     });

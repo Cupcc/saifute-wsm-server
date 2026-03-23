@@ -16,14 +16,14 @@
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
   - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
   - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `prisma/schema.prisma`
   - `package.json`
   - `scripts/migration/shared/**`
-  - `scripts/migration/outbound-sales-return/**`
+  - `scripts/migration/customer-sales-return/**`
   - `scripts/migration/workshop-return/**`
   - `scripts/migration/return-post-admission/**`
 
@@ -74,9 +74,9 @@
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `scripts/migration/shared/**` unless the parent explicitly expands ownership
-  - `scripts/migration/outbound-sales-return/**`
+  - `scripts/migration/customer-sales-return/**`
   - `scripts/migration/workshop-return/**`
-  - `scripts/migration/outbound-sales-return-finalize/**`
+  - `scripts/migration/customer-sales-return-finalize/**`
   - `scripts/migration/workshop-return-finalize/**`
   - `document_relation`
   - `document_line_relation`
@@ -125,13 +125,13 @@
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/modules/outbound.md`
+  - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
   - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
   - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `prisma/schema.prisma`
-  - `scripts/migration/outbound-sales-return/**`
+  - `scripts/migration/customer-sales-return/**`
   - `scripts/migration/workshop-return/**`
   - `scripts/migration/shared/**`
 - Owned paths:
@@ -144,9 +144,9 @@
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `scripts/migration/outbound-sales-return/**`
+  - `scripts/migration/customer-sales-return/**`
   - `scripts/migration/workshop-return/**`
-  - `scripts/migration/outbound-sales-return-finalize/**`
+  - `scripts/migration/customer-sales-return-finalize/**`
   - `scripts/migration/workshop-return-finalize/**`
   - `scripts/migration/shared/**` unless the parent explicitly expands ownership
 - Constraints and non-goals:
@@ -221,7 +221,7 @@
 - Reconciliation visibility:
   - unresolved source reconstruction after admission must remain visible without silently mutating or excluding business rows.
 - Historical finalize directories:
-  - `scripts/migration/outbound-sales-return-finalize/**` and `scripts/migration/workshop-return-finalize/**` are historical artifacts of the superseded family-local queue-drain model and should not be treated as the default downstream design.
+  - `scripts/migration/customer-sales-return-finalize/**` and `scripts/migration/workshop-return-finalize/**` are historical artifacts of the superseded family-local queue-drain model and should not be treated as the default downstream design.
 - Inventory-source sensitivity:
   - `inventory_source_usage` is stricter than business-row admission because it needs provable source chains; unresolved cases must be explicit rather than guessed.
 
