@@ -1331,7 +1331,7 @@ describe("project cutover readiness — structural exclusion sign-off", () => {
 
   it("should block cutover when structural exclusions exist and not yet acknowledged", () => {
     const plan = makePlanWithExcluded(2, 0);
-    const result = buildCutoverReadiness(plan, emptyConsumers, false, false);
+    const result = buildCutoverReadiness(plan, emptyConsumers, false);
 
     expect(result.cutoverReady).toBe(false);
     expect(result.structuralExcludedProjectCount).toBe(2);
@@ -1345,7 +1345,7 @@ describe("project cutover readiness — structural exclusion sign-off", () => {
 
   it("should clear structural exclusion blocker when acknowledged (no other blockers)", () => {
     const plan = makePlanWithExcluded(2, 0);
-    const result = buildCutoverReadiness(plan, emptyConsumers, false, true);
+    const result = buildCutoverReadiness(plan, emptyConsumers, true);
 
     expect(result.cutoverReady).toBe(true);
     expect(result.cutoverBlockers).toHaveLength(0);
@@ -1355,7 +1355,7 @@ describe("project cutover readiness — structural exclusion sign-off", () => {
 
   it("should still block when exclusions are acknowledged but pending projects remain", () => {
     const plan = makePlanWithExcluded(1, 3);
-    const result = buildCutoverReadiness(plan, emptyConsumers, false, true);
+    const result = buildCutoverReadiness(plan, emptyConsumers, true);
 
     expect(result.cutoverReady).toBe(false);
     // Pending backlog is still a blocker even though structural exclusions are cleared
@@ -1392,13 +1392,13 @@ describe("project cutover readiness — structural exclusion sign-off", () => {
     plan.counts.lines.source = 3;
     plan.counts.lines.pending = 3;
 
-    const result = buildCutoverReadiness(plan, emptyConsumers, false, false);
+    const result = buildCutoverReadiness(plan, emptyConsumers, false);
 
     expect(result.pendingLineCount).toBe(1);
     expect(result.cutoverBlockers[0]).toContain("(1 pending line(s))");
   });
 
-  it("should not treat downstream consumer rows as cutover blockers after replay is confirmed", () => {
+  it("should clear the replay blocker when downstream evidence covers all migrated lines", () => {
     const plan = makePlanWithExcluded(0, 0);
     plan.migratedProjects = [
       {
@@ -1407,12 +1407,14 @@ describe("project cutover readiness — structural exclusion sign-off", () => {
         targetTable: "project",
         targetCode: "PRJ-LEGACY-300",
         target: {} as never,
-        lines: [],
+        lines: [{} as never, {} as never],
         archivedPayload: {} as never,
       },
     ];
     plan.counts.projects.source = 1;
     plan.counts.projects.migrated = 1;
+    plan.counts.lines.source = 2;
+    plan.counts.lines.migrated = 2;
 
     const result = buildCutoverReadiness(
       plan,
@@ -1421,17 +1423,55 @@ describe("project cutover readiness — structural exclusion sign-off", () => {
         inventory_log: 5,
         inventory_source_usage: 5,
       },
-      true,
       false,
     );
 
     expect(result.cutoverReady).toBe(true);
     expect(result.cutoverBlockers).toHaveLength(0);
+    expect(result.inventoryReplayCompleted).toBe(true);
+    expect(result.expectedInventoryReplayLogCount).toBe(2);
+    expect(result.actualInventoryReplayLogCount).toBe(5);
+  });
+
+  it("should block cutover when replay evidence is below the migrated line count", () => {
+    const plan = makePlanWithExcluded(0, 0);
+    plan.migratedProjects = [
+      {
+        legacyTable: "saifute_composite_product",
+        legacyId: 301,
+        targetTable: "project",
+        targetCode: "PRJ-LEGACY-301",
+        target: {} as never,
+        lines: [{} as never, {} as never, {} as never],
+        archivedPayload: {} as never,
+      },
+    ];
+    plan.counts.projects.source = 1;
+    plan.counts.projects.migrated = 1;
+    plan.counts.lines.source = 3;
+    plan.counts.lines.migrated = 3;
+
+    const result = buildCutoverReadiness(
+      plan,
+      {
+        ...emptyConsumers,
+        inventory_log: 2,
+      },
+      false,
+    );
+
+    expect(result.cutoverReady).toBe(false);
+    expect(result.inventoryReplayCompleted).toBe(false);
+    expect(result.expectedInventoryReplayLogCount).toBe(3);
+    expect(result.actualInventoryReplayLogCount).toBe(2);
+    expect(result.cutoverBlockers).toContain(
+      "Inventory replay is incomplete for project slice: expected at least 3 project inventory log(s), found 2.",
+    );
   });
 
   it("should not emit structural exclusion blocker when there are no excluded projects", () => {
     const plan = makePlanWithExcluded(0, 1);
-    const result = buildCutoverReadiness(plan, emptyConsumers, false, false);
+    const result = buildCutoverReadiness(plan, emptyConsumers, false);
 
     expect(result.structuralExcludedProjectCount).toBe(0);
     expect(

@@ -150,13 +150,33 @@ function handleLogin() {
   });
 }
 
+function buildCaptchaDataUrl(code) {
+  const safeCode = String(code ?? "").trim() || "----";
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+      <rect width="120" height="40" rx="6" fill="#f5f7fa" />
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+        font-family="monospace" font-size="22" letter-spacing="4" fill="#303133">${safeCode}</text>
+    </svg>
+  `;
+  return `data:image/svg+xml;base64,${window.btoa(unescape(encodeURIComponent(svg)))}`;
+}
+
 function getCode() {
   getCodeImg().then((res) => {
+    const captchaPayload = res.data ?? res;
     captchaEnabled.value =
-      res.captchaEnabled === undefined ? true : res.captchaEnabled;
+      captchaPayload.captchaEnabled === undefined
+        ? true
+        : captchaPayload.captchaEnabled;
     if (captchaEnabled.value) {
-      codeUrl.value = "data:image/gif;base64," + res.img;
-      loginForm.value.uuid = res.uuid;
+      if (captchaPayload.img) {
+        codeUrl.value = `data:image/gif;base64,${captchaPayload.img}`;
+      } else {
+        codeUrl.value = buildCaptchaDataUrl(captchaPayload.captchaCode);
+      }
+      loginForm.value.uuid =
+        captchaPayload.uuid || captchaPayload.captchaId || "";
     }
   });
 }

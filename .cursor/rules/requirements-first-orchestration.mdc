@@ -1,22 +1,26 @@
 ---
-description: 区分轻量直做与需求文档先行的编排路径
+description: Route work between lightweight direct-do and requirement-doc-first orchestration
 alwaysApply: true
 ---
 
-Requirements First Orchestration
-================================
+# Requirements First Orchestration
 
-- 先判断工作是否属于轻量直做。满足以下大多数特征时，默认直接处理，不创建 requirement/task 文档，也不默认启动 `planner`：需求清晰、范围很小、单文件或极小路径集、无跨模块扩散、无明显方案取舍、无迁移/数据修复/基础设施风险、无需跨会话 durable handoff。
-- 典型轻量直做包括：小型文案或注释修正、单点规则措辞调整、明确定位的低风险配置改动、单文件的小 bug 修复、已有清晰报错指向的 lint/test 修复、简单命令执行或只读排查。
-- 轻量直做由父代理直接完成；按风险运行最小必要验证即可。若执行中发现隐藏复杂度、触及共享文件或冻结契约、影响多个模块、需求边界变得不清晰，必须立即升级到 requirement/task 编排。
-- 非 trivial 工作在计划前必须创建或定位一个需求文档：项目级、长期稳定、跨任务的需求记录在固定文档 `docs/requirements/PROJECT_REQUIREMENTS.md`；进行中的单次工作使用 `docs/requirements/req-*.md`（根目录）；已闭环的任务需求应迁入 `docs/requirements/archive/**` 并更新关联 task 路径，优先归档而非删除以便溯源。
-- `docs/requirements/**/*.md` 是用户与 AI 的交互层，其中 `PROJECT_REQUIREMENTS.md` 承载项目级长期需求，`req-*.md` 承载任务级需求与面向用户的简洁 orchestration 完成情况；`docs/tasks/*.md` 是详细执行真源。活跃需求与 task 绑定索引维护在 `docs/requirements/REQUIREMENT_CENTER.md`（与 `docs/tasks/TASK_CENTER.md` 配合）。
-- 需求文档必须简洁、用中文撰写，并与用户原始意图一致；先帮助用户把需求说清楚，不要替用户先写方案，也不要把详细执行日志塞进 requirement。
-- 默认使用简洁结构：`用户需求`、`当前进展`、`待确认`。
-- `待确认` 用于记录 AI 的疑问、需要用户确认的问题，以及需要用户做决定的事项，没有填 `None`。
-- `当前进展` 应简洁记录：`阶段进度`、`当前状态`、`阻塞项`、`下一步`。
-- 新建或实质改写用户需求理解的 requirement 文档默认标记为 `needs-confirmation`，只有用户明确确认后才能标记为 `confirmed`；仅同步 `当前进展` 时不必降回 `needs-confirmation`。
-- 每个任务文档都要记录关联 requirement 路径，并沿用已确认的需求理解。
-- 在非 trivial 工作的关键阶段推进、进入阻塞、或即将结束本轮对话前，需要把面向用户的简洁当前进展同步回 requirement 文档。
-- `planner`、`coder`、`code-reviewer` 仅在该任务实际进入对应子代理阶段时，才需要先读关联 requirement；不要为了满足形式而为轻量请求强行补齐整条子代理链。
-- 如果 requirement 不清晰、有未决问题、与用户意图不一致，或执行将扩大/改写需求，必须先停下向用户确认。
+## Lightweight Direct-Do
+
+When requirements are clear, scope is tiny, single-file, no cross-module spread, no trade-offs, no migration/infra risk: handle directly without creating docs.
+Typical: copy/comment fixes, single config change, single-file bug fix, clear lint/test fix, simple command execution.
+If hidden complexity surfaces or shared files / frozen contracts are touched, escalate to requirement/task orchestration immediately.
+
+## Non-Trivial Work
+
+- Before planning, create or locate a requirement: project-level → `PROJECT_REQUIREMENTS.md`; task-level → `req-*.md`; closed → `archive/`.
+- Active index: `REQUIREMENT_CENTER.md` (paired with `TASK_CENTER.md`).
+- Requirements must be concise, in Chinese, aligned with user intent. Structure: `用户需求`, `当前进展` (progress/status/blockers/next), `待确认` (None if empty).
+- `当前进展` may legitimately say `阻塞项: None` and `下一步: None / 归档 / 等待新需求`; do not invent fake blockers, fake confirmations, or placeholder next steps just to satisfy the template.
+- New requirements default to `needs-confirmation`; mark `confirmed` only after explicit user approval. Progress-only updates do not downgrade status.
+- Task docs record linked requirement path and inherit confirmed requirement understanding.
+- Sync concise progress back to requirement at key milestones, on blockers, or before ending conversation.
+- When a workflow has a `docs/workspace/<workflow>/` folder, sync decision-relevant findings (trade-offs, options, human-intervention needs) to workspace; parent orchestrator owns workspace writes.
+- Resume truth follows lifecycle first: check `REQUIREMENT_CENTER.md`, `TASK_CENTER.md`, and workspace dashboard/archive placement before treating any root doc as active. Archived docs are provenance, not active handoff.
+- When a scope is objectively complete and no real active follow-up remains, archive requirement/task/workspace in the same turn instead of leaving root-level placeholders.
+- If requirement is unclear or execution would expand scope, stop and confirm with user first.

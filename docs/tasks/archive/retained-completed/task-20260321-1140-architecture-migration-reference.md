@@ -3,17 +3,17 @@
 ## Metadata
 
 - Scope: docs-only architecture reference for the full legacy Java -> NestJS data migration, focused on explaining old tables, business purpose, target NestJS tables, replay-vs-copy rules, staging/archive handling, and cutover semantics in one organized architecture document
-- Related requirement: `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`
-- Status: `planned`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
+- Status: `implemented`
 - Review status: `reviewed-no-findings`
-- Lifecycle disposition: `active`
+- Lifecycle disposition: `retained-completed`
 - Planner: `planner`
 - Coder: `parent-orchestrator`
 - Reviewer: `code-reviewer`
 - Last updated: `2026-03-21`
 - Related checklist:
 - Related files:
-  - `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`
+  - `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
@@ -44,7 +44,7 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
 - User intent summary:
   - 用一份 architecture 文档把“旧库有哪些表、各自做什么、迁到现在哪些表、现在这些表做什么”一次性讲清楚。
   - 文档需要覆盖全局迁移范围，但组织必须按业务域和表组收口，不能写成零散表清单或执行流水账。
@@ -88,11 +88,11 @@
 ## Scope And Ownership
 
 - Allowed code paths:
-  - planner-owned: `docs/tasks/task-20260321-1140-architecture-migration-reference.md`
+  - archived successor path: `docs/tasks/archive/retained-completed/task-20260321-1140-architecture-migration-reference.md`
   - parent-owned implementation target: `docs/architecture/30-java-to-nestjs-data-migration-reference.md`
   - optional parent-owned navigation update: `docs/architecture/README.md`
 - Frozen or shared paths:
-  - `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`
+  - `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/modules/*.md`
@@ -135,7 +135,7 @@
     - `9. cutover 口径：什么算已迁移，什么只算归档或后移`
     - `10. 当前待决项与文档边界`
 - Required source docs or files:
-  - `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`
+  - `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
@@ -223,7 +223,7 @@
   - confirm no unresolved item (`project`, `scrap`, platform tables, cutover gate) is overstated as completed
   - confirm the document stays concise and domain-organized instead of becoming an execution diary
 - Requirement alignment check:
-  - confirm the final doc satisfies `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`
+  - confirm the final doc satisfies `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
   - confirm it documents current status faithfully without taking new business decisions on unresolved migration scope
 - Final validation gate:
   - docs-only semantic review against the listed requirement, master migration task, `prisma/schema.prisma`, staging SQL, slice scripts, and latest validate reports
@@ -244,7 +244,7 @@
 ## Review Log
 
 - Validation results:
-  - Resumed review from the existing task doc findings and re-read the current contents of `docs/architecture/30-java-to-nestjs-data-migration-reference.md` and `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`.
+  - Resumed review from the existing task doc findings and re-read the current contents of `docs/architecture/30-java-to-nestjs-data-migration-reference.md` and `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`.
   - Because the reviewed files are currently workspace-local rather than represented by a useful git diff, rereview was performed against the current file contents directly.
   - Cross-checked the updated wording against `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`, `prisma/schema.prisma`, `scripts/migration/sql/000-create-migration-staging.sql`, `scripts/migration/reports/workshop-return-validate-report.json`, `scripts/migration/reports/customer-sales-return-validate-report.json`, and `scripts/migration/reports/return-post-admission-validate-report.json`.
   - Confirmed the target tables and nullable source-field contracts still match `prisma/schema.prisma`, and the staging/archive terminology still matches the live `migration_staging` SQL.
@@ -259,10 +259,10 @@
 - Outcome:
   - docs-only rereview completed with no remaining `[blocking]` or `[important]` findings; the migration reference is ready for handoff for this scope.
 - Requirement alignment:
-  - aligned to `docs/requirements/req-20260321-1100-java-to-nestjs-data-migration.md`; the current architecture reference now reflects workshop-return admitted-plus-pending-relations status, the latest sales-return nullable-source count, and a conservative pre-signoff requirement progress wording.
+  - aligned to `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`; the current architecture reference now reflects workshop-return admitted-plus-pending-relations status, the latest sales-return nullable-source count, and a conservative pre-signoff requirement progress wording.
 - Residual risks or testing gaps:
   - no remaining docs-specific `[blocking]` or `[important]` risks were found in the reviewed scope.
   - this was a docs-only semantic rereview against repository source-of-truth files; no runtime validation gate applied.
-- Directory disposition after completion: once parent syncs the requirement-facing progress and any board bookkeeping, archive this task according to the linked requirement lifecycle
+- Directory disposition after completion: archived here as `retained-completed` together with the linked migration requirement
 - Next action:
-  - `parent-orchestrator` may sync the requirement-facing progress to reflect the clean rereview and then close or archive the task per normal docs-only lifecycle handling
+  - None. Future migration follow-up should open a new active requirement / task instead of resuming this archived brief

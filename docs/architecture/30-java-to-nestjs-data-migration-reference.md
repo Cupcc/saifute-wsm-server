@@ -15,8 +15,26 @@
 - 业务流程与优化后 schema 设计以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为准
 - 迁移批次、历史证据、阶段性结论以 `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` 和各批次 validate report 为准
 
-## 2. 阅读约定
+### 1.1 当前冻结基线
 
+当前迁移工作统一以以下真源作为冻结基线，不再把“当前代码已经实现到哪里”误写成目标边界：
+
+- `docs/architecture/00-architecture-overview.md`：模块边界、跨模块约束、共享核心规则
+- `docs/architecture/20-wms-business-flow-and-optimized-schema.md`：业务流程、目标 schema、表职责与状态语义
+- 本文档：legacy -> target 的迁移映射、`migrated / replayed / archived / excluded` 口径，以及 cutover 术语
+- `docs/architecture/modules/*.md`：仅用于补充模块级 `current vs target` 澄清，不用于下调迁移目标基线
+
+### 1.2 目标数据库边界
+
+本轮确认后，目标数据库边界按以下口径理解：
+
+- `prisma/schema.prisma`：NestJS 运行期正式业务表的主真源
+- `docs/architecture/20-wms-business-flow-and-optimized-schema.md`：正式表、只读视图与共享表语义的设计真源
+- `scripts/migration/sql/000-create-migration-staging.sql`：`migration_staging` 下 mapping、archive、pending、excluded 等受控迁移结构真源
+- 新库中存在 `sys_job`、`sys_job_log`、`sys_logininfor`、`sys_oper_log`，表示 NestJS 新系统保留运行期日志与调度表，不表示旧平台历史要导入这些表
+- 旧平台账号 / 权限 / 菜单 / 组织 / 配置 / 公告 / Quartz / 代码生成器历史不属于本次正式业务导入边界
+
+## 2. 阅读约定
 
 | 标签      | 含义                                        |
 | ------- | ----------------------------------------- |
@@ -27,7 +45,6 @@
 | `后移`    | 目标模型存在，但当前批次不做或等待范围确认                     |
 | `无目标落点` | 新架构不再保留该类持久化对象，通常改为重建、视图、系统重建或旧库归档        |
 
-
 迁移不是旧表到新表的一对一复制，而是把旧业务事实收敛到新的领域模型：
 
 - 旧库 `58` 张表，混合了业务表、平台表、Quartz 表、代码生成器表
@@ -37,7 +54,6 @@
 
 ### 3.1 业务主数据表
 
-
 | 旧表                  | 旧作用   |
 | ------------------- | ----- |
 | `saifute_material`  | 物料主档  |
@@ -46,9 +62,7 @@
 | `saifute_personnel` | 人员主档  |
 | `saifute_workshop`  | 车间主档  |
 
-
 ### 3.2 业务单据表
-
 
 | 旧表组                                                          | 旧作用                                            |
 | ------------------------------------------------------------ | ---------------------------------------------- |
@@ -61,9 +75,7 @@
 | `saifute_scrap_order` + `saifute_scrap_detail`               | 报废单头和明细                                        |
 | `saifute_composite_product` + `saifute_product_material`     | 项目头和项目物料明细，旧命名来自 `article` 域，本质上是带库存副作用的项目事务数据 |
 
-
 ### 3.3 业务辅助与副作用表
-
 
 | 旧表                          | 旧作用                |
 | --------------------------- | ------------------ |
@@ -75,9 +87,7 @@
 | `saifute_audit_document`    | 旧审核投影              |
 | `saifute_change_record`     | 旧字段变更/修改原因记录       |
 
-
 ### 3.4 平台组织、权限与配置表
-
 
 | 旧表              | 旧作用     |
 | --------------- | ------- |
@@ -95,9 +105,7 @@
 | `sys_dict_data` | 字典数据    |
 | `sys_notice`    | 通知公告    |
 
-
 ### 3.5 平台日志与调度表
-
 
 | 旧表               | 旧作用    |
 | ---------------- | ------ |
@@ -105,7 +113,6 @@
 | `sys_job_log`    | 任务执行日志 |
 | `sys_logininfor` | 登录日志   |
 | `sys_oper_log`   | 操作日志   |
-
 
 ### 3.6 Quartz 内部表
 
@@ -123,7 +130,6 @@
 
 ### 4.1 主数据表
 
-
 | 目标表                 | 现在的作用                  |
 | ------------------- | ---------------------- |
 | `material_category` | 物料分类树                  |
@@ -133,9 +139,7 @@
 | `personnel`         | 人员主档；承接经办人、负责人等角色      |
 | `workshop`          | 车间主档；是库存维度和单据归属维度      |
 
-
 ### 4.2 库存核心表
-
 
 | 目标表                          | 现在的作用                              |
 | ---------------------------- | ---------------------------------- |
@@ -144,17 +148,13 @@
 | `inventory_source_usage`     | 保存来源占用与释放，承接旧 `inventory_used` 语义  |
 | `factory_number_reservation` | 保存出厂编号区间占用与释放                      |
 
-
 ### 4.3 工作流投影表
-
 
 | 目标表                       | 现在的作用               |
 | ------------------------- | ------------------- |
 | `workflow_audit_document` | 保存当前有效审核投影，不替代业务主状态 |
 
-
 ### 4.4 四类事务单据表
-
 
 | 目标表组                                                       | 现在的作用                |
 | ---------------------------------------------------------- | -------------------- |
@@ -163,18 +163,14 @@
 | `workshop_material_order` + `workshop_material_order_line` | 统一承接领料单、退料单、报废单      |
 | `project` + `project_material_line`                        | 承接项目及项目物料消耗，且保持库存副作用 |
 
-
 ### 4.5 关系表
-
 
 | 目标表                      | 现在的作用    |
 | ------------------------ | -------- |
 | `document_relation`      | 表头级上下游关系 |
 | `document_line_relation` | 行级上下游关系  |
 
-
 ### 4.6 平台日志与调度表
-
 
 | 目标表              | 现在的作用         |
 | ---------------- | ------------- |
@@ -182,7 +178,6 @@
 | `sys_job_log`    | NestJS 调度执行日志 |
 | `sys_logininfor` | 登录日志          |
 | `sys_oper_log`   | 操作日志          |
-
 
 补充：
 
@@ -193,7 +188,6 @@
 
 ### 5.1 主数据域
 
-
 | 旧表组                                                      | 旧作用     | 新表组                 | 新作用     | 迁移方式     | 当前状态                                  |
 | -------------------------------------------------------- | ------- | ------------------- | ------- | -------- | ------------------------------------- |
 | `sys_dict_data`（`dict_type='saifute_material_category'`） | 旧物料分类字典 | `material_category` | 独立物料分类树 | 转换生成     | 已迁入，`8 -> 8`                          |
@@ -203,15 +197,12 @@
 | `saifute_personnel`                                      | 人员主档    | `personnel`         | 人员主档    | 字段归一化迁移  | 已迁入，`51 / 51`                         |
 | `saifute_workshop`                                       | 车间主档    | `workshop`          | 车间主档    | 迁移并补默认车间 | 已迁入，`12` 个旧车间进入 `13` 个目标车间，额外生成历史默认车间 |
 
-
 ### 5.2 入库域
-
 
 | 旧表组                                                | 旧作用   | 新表组                                      | 新作用                                 | 迁移方式        | 当前状态   |
 | -------------------------------------------------- | ----- | ---------------------------------------- | ----------------------------------- | ----------- | ------ |
 | `saifute_inbound_order` + `saifute_inbound_detail` | 验收单   | `stock_in_order` + `stock_in_order_line` | `orderType=ACCEPTANCE` 的入库单         | 两套旧表收敛为一套新表 | 已迁入一部分 |
 | `saifute_into_order` + `saifute_into_detail`       | 生产入库单 | `stock_in_order` + `stock_in_order_line` | `orderType=PRODUCTION_RECEIPT` 的入库单 | 两套旧表收敛为一套新表 | 已迁入一部分 |
-
 
 当前状态：
 
@@ -221,12 +212,10 @@
 
 ### 5.3 客户收发域：出库
 
-
 | 旧表组                                                  | 旧作用    | 新表组                                                                                   | 新作用                         | 迁移方式        | 当前状态     |
 | ---------------------------------------------------- | ------ | ------------------------------------------------------------------------------------- | --------------------------- | ----------- | -------- |
 | `saifute_outbound_order` + `saifute_outbound_detail` | 出库单    | `customer_stock_order` + `customer_stock_order_line`                                  | `orderType=OUTBOUND` 的客户出库单 | 直接收敛到客户收发家族 | 已迁入主单据   |
 | `saifute_interval`（`order_type=4`）                   | 出库编号区间 | `factory_number_reservation`，并按条件回填 `customer_stock_order_line.startNumber/endNumber` | 编号区间占用                      | 分流转换，不直拷    | 已迁入受支持部分 |
-
 
 当前状态：
 
@@ -237,12 +226,10 @@
 
 ### 5.4 客户收发域：销售退货
 
-
 | 旧表组                                                          | 旧作用        | 新表组                                                            | 新作用                           | 迁移方式                        | 当前状态     |
 | ------------------------------------------------------------ | ---------- | -------------------------------------------------------------- | ----------------------------- | --------------------------- | -------- |
 | `saifute_sales_return_order` + `saifute_sales_return_detail` | 销售退货单      | `customer_stock_order` + `customer_stock_order_line`           | `orderType=SALES_RETURN` 的退货单 | formal admission 先入正式表，关系后补 | 已部分迁入    |
 | 旧头表 `source_id/source_type`、旧明细关系线索                          | 退货对出库的来源关系 | `document_relation`、`document_line_relation`、`sourceDocument*` | 退货上下游关系与行内来源                  | 恢复式迁移，不强造关系                 | 仍有后续增强空间 |
-
 
 当前状态：
 
@@ -253,11 +240,9 @@
 
 ### 5.5 车间物料域：领料
 
-
 | 旧表组                                          | 旧作用 | 新表组                                                        | 新作用                   | 迁移方式      | 当前状态   |
 | -------------------------------------------- | --- | ---------------------------------------------------------- | --------------------- | --------- | ------ |
 | `saifute_pick_order` + `saifute_pick_detail` | 领料单 | `workshop_material_order` + `workshop_material_order_line` | `orderType=PICK` 的领料单 | 收敛到车间物料家族 | 已迁入主单据 |
-
 
 当前状态：
 
@@ -267,11 +252,9 @@
 
 ### 5.6 车间物料域：退料
 
-
 | 旧表组                                              | 旧作用 | 新表组                                                        | 新作用                     | 迁移方式                        | 当前状态  |
 | ------------------------------------------------ | --- | ---------------------------------------------------------- | ----------------------- | --------------------------- | ----- |
 | `saifute_return_order` + `saifute_return_detail` | 退料单 | `workshop_material_order` + `workshop_material_order_line` | `orderType=RETURN` 的退料单 | formal admission 先入正式表，关系后补 | 已部分迁入 |
-
 
 当前状态：
 
@@ -282,25 +265,20 @@
 
 ### 5.7 车间物料域：报废
 
-
 | 旧表组                                            | 旧作用 | 新表组                                                        | 新作用                    | 迁移方式    | 当前状态 |
 | ---------------------------------------------- | --- | ---------------------------------------------------------- | ---------------------- | ------- | ---- |
-| `saifute_scrap_order` + `saifute_scrap_detail` | 报废单 | `workshop_material_order` + `workshop_material_order_line` | `orderType=SCRAP` 的报废单 | 目标模型已预留 | 当前后移 |
-
+| `saifute_scrap_order` + `saifute_scrap_detail` | 报废单 | `workshop_material_order` + `workshop_material_order_line` | `orderType=SCRAP` 的报废单 | 已完成 | `scripts/migration/scrap/`，batch `batch3g-workshop-scrap` |
 
 当前状态：
 
-- 源表存在，但当前数据行为 `0`
-- 仓库当前没有独立 scrap 正式迁移切片
-- 是否纳入本次全量迁移仍需按业务范围确认
+- 迁移能力已补齐，dry-run / execute / validate 全通过
+- 源数据 0 行；若后续产生报废数据，迁移脚本可直接重跑
 
 ### 5.8 项目域
-
 
 | 旧表组                                                      | 旧作用          | 新表组                                 | 新作用           | 迁移方式              | 当前状态    |
 | -------------------------------------------------------- | ------------ | ----------------------------------- | ------------- | ----------------- | ------- |
 | `saifute_composite_product` + `saifute_product_material` | 项目头与项目物料消耗明细 | `project` + `project_material_line` | 项目事务数据与项目物料消耗 | 事务型迁移，不是静态 BOM 复制 | 当前未正式迁入 |
-
 
 当前状态：
 
@@ -310,7 +288,6 @@
 - 直接原因不是“项目不重要”，而是旧 `saifute_product_material.material_id` 大量缺失，无法安全落到 `project_material_line.materialId`，因此也无法继续保证库存消耗、库存日志和来源追踪语义
 
 ### 5.9 库存、审核、关系与辅助域
-
 
 | 旧表组                                                        | 旧作用           | 新表组                                                 | 新作用                         | 迁移方式              | 当前状态                                  |
 | ---------------------------------------------------------- | ------------- | --------------------------------------------------- | --------------------------- | ----------------- | ------------------------------------- |
@@ -323,24 +300,20 @@
 | `saifute_inventory_warning`                                | 旧库存预警结果表      | `vw_inventory_warning`                              | 只读预警视图                      | 视图替代              | 不做表对表迁移                               |
 | `saifute_change_record`                                    | 旧变更记录         | 无稳定同名业务表                                            | 作为历史辅助信息保留                  | 归档或旧库留存           | 当前无正式目标表                              |
 
-
 ### 5.10 平台、日志与调度域
-
 
 | 旧表组                                                                                                                                              | 旧作用            | 新表组                               | 新作用                       | 迁移方式           | 当前状态       |
 | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- | --------------------------------- | ------------------------- | -------------- | ---------- |
-| `sys_job` + `sys_job_log`                                                                                                                        | 旧调度定义与执行日志     | `sys_job` + `sys_job_log`         | NestJS 调度定义与日志            | 目标表已存在，但历史迁移后移 | 当前未纳入主迁移批次 |
-| `sys_logininfor` + `sys_oper_log`                                                                                                                | 平台日志           | `sys_logininfor` + `sys_oper_log` | 登录日志与操作日志                 | 目标表已存在，但历史迁移后移 | 当前未纳入主迁移批次 |
+| `sys_job` + `sys_job_log`                                                                                                                        | 旧调度定义与执行日志     | `sys_job` + `sys_job_log`         | NestJS 调度定义与日志            | 保留目标表，但不导入旧历史   | 新系统运行期自行生成 |
+| `sys_logininfor` + `sys_oper_log`                                                                                                                | 平台日志           | `sys_logininfor` + `sys_oper_log` | 登录日志与操作日志                 | 保留目标表，但不导入旧历史   | 新系统运行期自行生成 |
 | `sys_user`、`sys_role`、`sys_role_dept`、`sys_role_menu`、`sys_user_post`、`sys_user_role`、`sys_menu`、`sys_dept`、`sys_post`、`sys_config`、`sys_notice` | 旧平台组织、权限、配置与公告 | 无当前正式业务落点                         | NestJS 端改为重建用户、角色、菜单、权限模型 | 不按业务迁移处理       | 当前不迁入正式业务表 |
 | `sys_dict_type` + `sys_dict_data`                                                                                                                | 旧平台字典          | 仅部分语义进入业务表，如 `material_category`  | 新架构尽量避免继续依赖平台字典存业务事实      | 仅按需要拆分承接       | 不是整表迁移     |
 | `gen_table` + `gen_table_column`                                                                                                                 | 代码生成器元数据       | 无目标表                              | 不属于运行时业务事实                | 不迁             | 当前不迁       |
 | `qrtz_*`                                                                                                                                         | Quartz 内部状态    | 无目标表                              | 新架构不继续保留 Quartz 内部库表      | 不迁             | 当前不迁       |
 
-
 ## 6. 哪些对象是重放/重建，不是复制
 
 以下对象不能按 `INSERT ... SELECT * ...` 处理：
-
 
 | 对象                                             | 原因                                                         | 当前承接方式                    |
 | ---------------------------------------------- | ---------------------------------------------------------- | ------------------------- |
@@ -353,11 +326,9 @@
 | `material_category`                            | 旧库没有独立分类表，分类挂在字典中                                          | 从字典拆分生成新表                 |
 | `workshop.workshopCode`、`project.projectCode`  | 旧表没有稳定目标编码列                                                | 按确定性规则生成                  |
 
-
 ## 7. 哪些旧表没有目标落点，为什么
 
 ### 7.1 无正式业务落点
-
 
 | 旧表                             | 原因                                     |
 | ------------------------------ | -------------------------------------- |
@@ -366,26 +337,21 @@
 | `saifute_change_record`        | 新库没有对应的通用字段变更表，不能硬塞进业务表                |
 | `saifute_inventory_warning`    | 新设计改为读视图 `vw_inventory_warning`，不保留交易表 |
 
+### 7.2 目标表存在，但不等于导入旧历史
 
-### 7.2 目标表存在，但当前后移
-
-
-| 旧表组                                          | 后移原因                         |
+| 旧表组                                          | 原因                           |
 | -------------------------------------------- | ---------------------------- |
-| `sys_job`、`sys_job_log`                      | 调度目标表已在新库，但历史迁移不在当前主批次       |
-| `sys_logininfor`、`sys_oper_log`              | 日志目标表已在新库，但历史日志迁移不在当前主批次     |
-| `saifute_scrap_order`、`saifute_scrap_detail` | 目标模型已预留，但源数据当前为 `0`，是否纳入仍需确认 |
-
+| `sys_job`、`sys_job_log`                      | 目标表保留给 NestJS 新系统运行期，旧平台调度历史不导入 |
+| `sys_logininfor`、`sys_oper_log`              | 目标表保留给 NestJS 新系统运行期，旧平台日志历史不导入 |
+| `saifute_scrap_order`、`saifute_scrap_detail` | 已确认纳入本次范围；虽然当前源数据为 `0`，仍需补齐迁移能力与 validate / cutover 口径 |
 
 ### 7.3 当前不进入新业务表
-
 
 | 旧表组                                                                                   | 原因                                       |
 | ------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `sys_user`、`sys_role`、`sys_role_dept`、`sys_role_menu`、`sys_user_post`、`sys_user_role` | NestJS 侧采用新的 `rbac` 实现，不把旧平台授权关系原样带入业务迁移 |
 | `sys_menu`、`sys_dept`、`sys_post`、`sys_config`、`sys_notice`                            | 平台管理数据，不是当前业务事实迁移主线                      |
 | `sys_dict_type`、`sys_dict_data`                                                       | 只按需要拆出业务事实；不是整表保留                        |
-
 
 ## 8. staged / archived / excluded 数据如何处理
 
@@ -434,7 +400,7 @@
 - 一部分销售退货头
 - 一部分入库头、出库头、领料头
 
-## 9. cutover 口径：什么算 migrated，什么只算 archived / excluded / deferred
+## 9. cutover 口径：什么算 migrated，什么只算 replayed / archived / excluded / 未完成
 
 ### 9.1 可以算 `migrated`
 
@@ -480,14 +446,14 @@
 - `project` 全部旧项目
 - 一部分销售退货、入库、出库、领料头
 
-### 9.5 只能算 `deferred`
+### 9.5 当前不能直接写成 `completed`
 
-以下对象目前仍应写成后移，而不是已迁：
+以下对象当前都不能在文档里写成“已迁完”：
 
-- `scrap` 域
-- 历史 `sys_job` / `sys_job_log`
-- 历史 `sys_logininfor` / `sys_oper_log`
-- 整体平台层账号、角色、菜单、组织、配置数据
+- `scrap` 域：范围已确认，但当前只有目标模型与单据家族承载方式，迁移能力和验证口径尚未落地
+- 历史 `sys_job` / `sys_job_log`：旧平台调度历史不导入，只保留新系统运行期表
+- 历史 `sys_logininfor` / `sys_oper_log`：旧平台日志历史不导入，只保留新系统运行期表
+- 整体平台层账号、角色、菜单、组织、配置数据：按新系统方案重建，不纳入旧历史业务导入
 
 ## 10. 当前未决项与阅读边界
 
@@ -495,17 +461,18 @@
 
 1. `project` 域尚未正式迁入。
   原因不是业务下线，而是旧明细缺少稳定 `material_id`，会破坏目标表外键与库存副作用语义。
-2. `scrap` 域是否纳入本次全量迁移，仍需范围确认。
+2. `scrap` 域已确认纳入本次全量迁移，但迁移能力、验证口径和独立切片尚未落地。
+  当前源数据行为 `0`，不能因此把该能力缺口写成“已完成”。
 3. `inventory_source_usage`、`document_relation`、`document_line_relation` 仍未完整恢复。
   当前返回后增强批次显示：共享关系表仍为 `0`，来源占用仍为 `0`，退货家族尚有 `17` 个 unresolved source usage gap。
 4. `excluded_documents` 非空的家族，仍需要业务签收后才能作为最终 cutover 结论。
 5. `inventory_balance` 中存在 `102` 条负库存余额警告。
   当前口径将其视为旧系统历史先后顺序漂移导致的已接受 warning，而不是单独 cutover blocker。
-6. 新库中已有 `sys_job`、`sys_job_log`、`sys_logininfor`、`sys_oper_log`，但这不等于旧平台层历史数据已整体迁完。
+6. 新库中已有 `sys_job`、`sys_job_log`、`sys_logininfor`、`sys_oper_log`，但它们属于 NestJS 新系统运行期表，不等于旧平台历史数据要迁入这些表。
+7. 旧平台账号 / 权限 / 菜单 / 组织 / 配置 / 公告历史不属于本次正式业务导入边界；需要的能力由 NestJS 新系统按新方案重建。
 
 阅读边界：
 
 - 想看目标边界与模块职责，读 `00-architecture-overview.md`
 - 想看业务流程与优化后表设计，读 `20-wms-business-flow-and-optimized-schema.md`
 - 想看迁移运行时证据、批次状态、validate 细节，读 `docs/tasks/**` 与 `scripts/migration/reports/*.json`
-

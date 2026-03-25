@@ -104,17 +104,37 @@ Checks include:
 - Use `.cursor/rules/*.mdc` for durable facts and repository-wide constraints that future tasks should inherit
 - Keep detailed live execution state in `docs/tasks/*.md`, the parent handoff, or a temporary shared context artifact, not in rules
 - Keep concise user-facing orchestration status in the linked `docs/requirements/*.md`
+- Keep decision-relevant findings (trade-offs, options, human-intervention needs) in `docs/workspace/<workflow>/`; parent orchestrator owns all workspace writes
 - Good rule candidates: verified dev environment facts, frozen workflow rules, repo-wide orchestration conventions
 - Bad rule candidates: current task status, temporary blockers, one-off test failures, or branch-local workaround notes
 
 ## Suggested combinations
 
 - Lightweight direct task: parent reads the smallest relevant files -> edits directly -> runs focused validation -> optional parent self-review -> stop
-- Non-trivial task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines -> parent syncs concise progress to the requirement doc -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs concise progress to the requirement doc again -> parent commit step only if the user explicitly asked for a commit
-- Requirement-first flow for durable work: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` against it -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent keeps the requirement doc updated with concise current progress
+- Non-trivial task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines + decision_candidates -> parent syncs concise progress to the requirement doc -> parent writes qualifying decision_candidates to `docs/workspace/<workflow>/decisions.md` and updates dashboard -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs progress to requirement doc and workspace -> parent commit step only if the user explicitly asked for a commit -> parent retrospect: append lessons to `docs/playbooks/{domain}/playbook.md`
+- Requirement-first flow for durable work: create or confirm `docs/requirements/*.md` -> create workspace folder under `docs/workspace/<workflow>/` when scope is non-trivial -> `planner` writes `docs/tasks/*.md` against it -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent keeps requirement doc and workspace updated
 - Multi-module task with safe disjoint scopes: `planner` writes task docs or explicit scoped sections -> parallel `coder` workers with explicit boundaries -> `code-reviewer` -> fix loop as needed
 - Review-heavy task: `planner` writes `docs/tasks/*.md` -> `code-reviewer`
 - Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> parent commit step only if the user explicitly asked for a commit
+
+## Retrospect phase
+
+After a non-trivial task completes, the parent orchestrator reviews the full lifecycle and writes to `docs/playbooks/`.
+
+Signals worth capturing:
+
+- review → fix loop count > 1 for the same root cause
+- validation commands that had to be added mid-task (gap discovered late)
+- scope drift between plan and delivered code
+- migration edge cases: staging surprises, replay-vs-copy misfits, deterministic generation fixes
+- subagent coordination issues: shared-file conflicts, context loss across handoffs
+- patterns that shortened delivery time or prevented regressions
+
+What to produce:
+
+- A new entry in `docs/playbooks/{domain}/playbook.md` (see entry format in `docs/playbooks/README.md`)
+- Optionally a reusable script in `docs/playbooks/{domain}/` when a manual step appeared 2+ times
+- Optionally a rule candidate proposed to the user for L4 promotion
 
 ## Finalization ownership
 
@@ -156,6 +176,12 @@ Requirement doc sync:
 - 当前状态: ...
 - 阻塞项: ...
 - 下一步: ...
+
+Decision candidates (optional — items needing human decision):
+- issue: ...
+  options: ...
+  trade-offs: ...
+  recommended: ...
 ```
 
 Planner append:

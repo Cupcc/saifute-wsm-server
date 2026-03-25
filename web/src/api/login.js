@@ -5,11 +5,11 @@ export function login(username, password, code, uuid) {
   const data = {
     username,
     password,
-    code,
-    uuid,
+    captchaCode: code,
+    captchaId: uuid,
   };
   return request({
-    url: "/login",
+    url: "/api/auth/login",
     headers: {
       isToken: false,
       repeatSubmit: false,
@@ -34,7 +34,7 @@ export function register(data) {
 // 获取用户详细信息
 export function getInfo() {
   return request({
-    url: "/getInfo",
+    url: "/api/auth/me",
     method: "get",
   });
 }
@@ -42,7 +42,7 @@ export function getInfo() {
 // 退出方法
 export function logout() {
   return request({
-    url: "/logout",
+    url: "/api/auth/logout",
     method: "post",
   });
 }
@@ -50,7 +50,7 @@ export function logout() {
 // 获取验证码
 export function getCodeImg() {
   return request({
-    url: "/captchaImage",
+    url: "/api/auth/captcha",
     headers: {
       isToken: false,
     },

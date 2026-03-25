@@ -1,4 +1,1014 @@
 {
+  "autoCreatedMaterials": [
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L13-B4DE5748",
+      "materialName": "乳胶管",
+      "representativeLineLegacyId": 13,
+      "sourceLineCount": 1,
+      "specModel": "内5*外8",
+      "unitCode": "米"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L14-2FF78E7E",
+      "materialName": "蓝色变色硅胶",
+      "representativeLineLegacyId": 14,
+      "sourceLineCount": 1,
+      "specModel": "500g/瓶",
+      "unitCode": "瓶"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L15-1B6B5313",
+      "materialName": "钠石灰",
+      "representativeLineLegacyId": 15,
+      "sourceLineCount": 1,
+      "specModel": "500g/瓶",
+      "unitCode": "瓶"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L16-E94A858A",
+      "materialName": "8.8计六角螺栓",
+      "representativeLineLegacyId": 16,
+      "sourceLineCount": 1,
+      "specModel": "M20*220",
+      "unitCode": "套"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L17-E34E116C",
+      "materialName": "油性钢丝绳",
+      "representativeLineLegacyId": 17,
+      "sourceLineCount": 1,
+      "specModel": "6*19",
+      "unitCode": "米"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L18-DE4639F0",
+      "materialName": "钢丝扣",
+      "representativeLineLegacyId": 18,
+      "sourceLineCount": 1,
+      "specModel": "M8",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L19-CF8659E4",
+      "materialName": "涡轮手动蝶阀",
+      "representativeLineLegacyId": 19,
+      "sourceLineCount": 1,
+      "specModel": "D341X-10/DN300",
+      "unitCode": "套"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L20-0B817E88",
+      "materialName": "防爆电动扳手",
+      "representativeLineLegacyId": 20,
+      "sourceLineCount": 1,
+      "specModel": "YPEX-DBS/7.5JQB",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L21-999E0AF1",
+      "materialName": "显示屏",
+      "representativeLineLegacyId": 21,
+      "sourceLineCount": 1,
+      "specModel": "27寸",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L22-DA4CC9FA",
+      "materialName": "除锈润滑剂",
+      "representativeLineLegacyId": 22,
+      "sourceLineCount": 1,
+      "specModel": "500ml",
+      "unitCode": "瓶"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L23-E42199C5",
+      "materialName": "移动硬盘",
+      "representativeLineLegacyId": 23,
+      "sourceLineCount": 1,
+      "specModel": "16T",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L24-F29CC24D",
+      "materialName": "普通密闭门",
+      "representativeLineLegacyId": 24,
+      "sourceLineCount": 2,
+      "specModel": "1800*900",
+      "unitCode": "扇"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L25-6FA8A1F7",
+      "materialName": "矿用本安型水位水温传感器",
+      "representativeLineLegacyId": 25,
+      "sourceLineCount": 1,
+      "specModel": "GSW300/70",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L26-47136C8E",
+      "materialName": "矿用本安型水文监测分站",
+      "representativeLineLegacyId": 26,
+      "sourceLineCount": 1,
+      "specModel": "KJ1049-F",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L27-F2CFC4D3",
+      "materialName": "光干涉式甲烷测定器",
+      "representativeLineLegacyId": 27,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L28-650BE071",
+      "materialName": "光干涉式甲烷测定器",
+      "representativeLineLegacyId": 28,
+      "sourceLineCount": 1,
+      "specModel": "CJG100",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L29-58116F7E",
+      "materialName": "目镜组",
+      "representativeLineLegacyId": 29,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "组"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L30-04CF6A88",
+      "materialName": "测微刻度组",
+      "representativeLineLegacyId": 30,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "组"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L31-4EB5176F",
+      "materialName": "开关组",
+      "representativeLineLegacyId": 31,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "组"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L32-8771319F",
+      "materialName": "吸气球组",
+      "representativeLineLegacyId": 32,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "盒"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L33-B5513B14",
+      "materialName": "双药管组",
+      "representativeLineLegacyId": 33,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "盒"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L34-EDF3682F",
+      "materialName": "单药管组",
+      "representativeLineLegacyId": 34,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "组"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L35-CF85C854",
+      "materialName": "气室组",
+      "representativeLineLegacyId": 35,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "组"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L36-419F8BF0",
+      "materialName": "盘形管",
+      "representativeLineLegacyId": 36,
+      "sourceLineCount": 1,
+      "specModel": "CJG10",
+      "unitCode": "米"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L37-4E21D3AA",
+      "materialName": "灯泡",
+      "representativeLineLegacyId": 37,
+      "sourceLineCount": 2,
+      "specModel": "2.5V",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L38-21D5111E",
+      "materialName": "矿用机械风表",
+      "representativeLineLegacyId": 38,
+      "sourceLineCount": 1,
+      "specModel": "CFJ25",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L39-F6ED3EEE",
+      "materialName": "矿用机械风表",
+      "representativeLineLegacyId": 39,
+      "sourceLineCount": 1,
+      "specModel": "CFJ10",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L41-CE875633",
+      "materialName": "皮带扳手",
+      "representativeLineLegacyId": 41,
+      "sourceLineCount": 1,
+      "specModel": "9#",
+      "unitCode": "把"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L42-14AA2A4E",
+      "materialName": "防爆铜斧",
+      "representativeLineLegacyId": 42,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "把"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L43-C59A4D4A",
+      "materialName": "温湿度计",
+      "representativeLineLegacyId": 43,
+      "sourceLineCount": 2,
+      "specModel": null,
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L44-82F978C1",
+      "materialName": "铁钉",
+      "representativeLineLegacyId": 44,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "kg"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L45-E90D7108",
+      "materialName": "接管工具",
+      "representativeLineLegacyId": 45,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "套"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L46-BBF4A107",
+      "materialName": "镀锌钢丝绳",
+      "representativeLineLegacyId": 46,
+      "sourceLineCount": 1,
+      "specModel": "φ10",
+      "unitCode": "米"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L47-D2E613E5",
+      "materialName": "镀锌钢丝绳",
+      "representativeLineLegacyId": 47,
+      "sourceLineCount": 1,
+      "specModel": "φ12",
+      "unitCode": "米"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L48-234A7ACE",
+      "materialName": "绳梯",
+      "representativeLineLegacyId": 48,
+      "sourceLineCount": 1,
+      "specModel": "20*40cm",
+      "unitCode": "副"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L49-31B1060A",
+      "materialName": "石棉灭火毯",
+      "representativeLineLegacyId": 49,
+      "sourceLineCount": 1,
+      "specModel": "1m*1m",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L50-4D857337",
+      "materialName": "喷嘴",
+      "representativeLineLegacyId": 50,
+      "sourceLineCount": 1,
+      "specModel": "DN25锥形出口",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L51-A500842B",
+      "materialName": "一氧化碳催化剂",
+      "representativeLineLegacyId": 51,
+      "sourceLineCount": 2,
+      "specModel": null,
+      "unitCode": "kg"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L52-1A4CED90",
+      "materialName": "干燥剂",
+      "representativeLineLegacyId": 52,
+      "sourceLineCount": 2,
+      "specModel": null,
+      "unitCode": "kg"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L53-0613A6C8",
+      "materialName": "活性炭",
+      "representativeLineLegacyId": 53,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "kg"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L54-C8709470",
+      "materialName": "灭火器",
+      "representativeLineLegacyId": 54,
+      "sourceLineCount": 1,
+      "specModel": "8kg",
+      "unitCode": "具"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L55-6ADB7FD3",
+      "materialName": "氧气呼吸器",
+      "representativeLineLegacyId": 55,
+      "sourceLineCount": 1,
+      "specModel": "HYZ4",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L56-E919E86D",
+      "materialName": "急救箱",
+      "representativeLineLegacyId": 56,
+      "sourceLineCount": 1,
+      "specModel": "16寸",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L57-97B36C03",
+      "materialName": "U型压力计",
+      "representativeLineLegacyId": 57,
+      "sourceLineCount": 2,
+      "specModel": "0-3000Pa",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L58-D0ABA9D2",
+      "materialName": "压缩饼干",
+      "representativeLineLegacyId": 58,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "箱"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L61-5D0AB12F",
+      "materialName": "苏生器",
+      "representativeLineLegacyId": 61,
+      "sourceLineCount": 1,
+      "specModel": "MZS-30",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L63-56302D44",
+      "materialName": "U型卡",
+      "representativeLineLegacyId": 63,
+      "sourceLineCount": 1,
+      "specModel": "15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L64-50B1044A",
+      "materialName": "对丝",
+      "representativeLineLegacyId": 64,
+      "sourceLineCount": 1,
+      "specModel": "25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L65-55225397",
+      "materialName": "不锈钢地漏",
+      "representativeLineLegacyId": 65,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L66-BB9A0A26",
+      "materialName": "三通",
+      "representativeLineLegacyId": 66,
+      "sourceLineCount": 1,
+      "specModel": "15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L67-3C181A52",
+      "materialName": "球阀",
+      "representativeLineLegacyId": 67,
+      "sourceLineCount": 1,
+      "specModel": "15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L68-04272132",
+      "materialName": "管箍",
+      "representativeLineLegacyId": 68,
+      "sourceLineCount": 1,
+      "specModel": "25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L69-4BD87059",
+      "materialName": "三通",
+      "representativeLineLegacyId": 69,
+      "sourceLineCount": 1,
+      "specModel": "25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L70-65D2622D",
+      "materialName": "弯头",
+      "representativeLineLegacyId": 70,
+      "sourceLineCount": 1,
+      "specModel": "25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L71-0D8FB2BF",
+      "materialName": "弯头",
+      "representativeLineLegacyId": 71,
+      "sourceLineCount": 1,
+      "specModel": "25*15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L72-9729C3CB",
+      "materialName": "三通",
+      "representativeLineLegacyId": 72,
+      "sourceLineCount": 1,
+      "specModel": "25*15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L73-6E3C72FD",
+      "materialName": "弯头",
+      "representativeLineLegacyId": 73,
+      "sourceLineCount": 1,
+      "specModel": "50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L74-6F77F713",
+      "materialName": "补芯",
+      "representativeLineLegacyId": 74,
+      "sourceLineCount": 2,
+      "specModel": "50*25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L75-315DD34F",
+      "materialName": "U型卡",
+      "representativeLineLegacyId": 75,
+      "sourceLineCount": 1,
+      "specModel": "50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L77-94EC4095",
+      "materialName": "球阀",
+      "representativeLineLegacyId": 77,
+      "sourceLineCount": 1,
+      "specModel": "50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L78-5A09634A",
+      "materialName": "对丝",
+      "representativeLineLegacyId": 78,
+      "sourceLineCount": 1,
+      "specModel": "50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L79-0D793432",
+      "materialName": "管箍",
+      "representativeLineLegacyId": 79,
+      "sourceLineCount": 1,
+      "specModel": "50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L80-42801159",
+      "materialName": "三通",
+      "representativeLineLegacyId": 80,
+      "sourceLineCount": 1,
+      "specModel": "50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L81-17CB2ACB",
+      "materialName": "三通",
+      "representativeLineLegacyId": 81,
+      "sourceLineCount": 1,
+      "specModel": "50*15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L82-2321D46F",
+      "materialName": "弯头",
+      "representativeLineLegacyId": 82,
+      "sourceLineCount": 1,
+      "specModel": "50*15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L83-5432107C",
+      "materialName": "活接",
+      "representativeLineLegacyId": 83,
+      "sourceLineCount": 1,
+      "specModel": "50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L84-E422D2A6",
+      "materialName": "对丝",
+      "representativeLineLegacyId": 84,
+      "sourceLineCount": 1,
+      "specModel": "65",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L85-97D33437",
+      "materialName": "补芯",
+      "representativeLineLegacyId": 85,
+      "sourceLineCount": 1,
+      "specModel": "65*50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L86-9974892B",
+      "materialName": "补芯",
+      "representativeLineLegacyId": 86,
+      "sourceLineCount": 1,
+      "specModel": "65*25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L87-FE901D5D",
+      "materialName": "对丝",
+      "representativeLineLegacyId": 87,
+      "sourceLineCount": 1,
+      "specModel": "15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L88-B825A91A",
+      "materialName": "弯头",
+      "representativeLineLegacyId": 88,
+      "sourceLineCount": 1,
+      "specModel": "15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L89-071528E5",
+      "materialName": "管箍",
+      "representativeLineLegacyId": 89,
+      "sourceLineCount": 1,
+      "specModel": "15",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L90-661229C8",
+      "materialName": "膨胀螺栓",
+      "representativeLineLegacyId": 90,
+      "sourceLineCount": 1,
+      "specModel": "8*60",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L91-ED17A057",
+      "materialName": "膨胀钩",
+      "representativeLineLegacyId": 91,
+      "sourceLineCount": 1,
+      "specModel": "10",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L92-7B6C0415",
+      "materialName": "马牙卡子",
+      "representativeLineLegacyId": 92,
+      "sourceLineCount": 1,
+      "specModel": "8",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L93-3C063CC4",
+      "materialName": "铜扩口直接",
+      "representativeLineLegacyId": 93,
+      "sourceLineCount": 2,
+      "specModel": "PC8-04",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L94-15BC4F9F",
+      "materialName": "铜扩口弯头",
+      "representativeLineLegacyId": 94,
+      "sourceLineCount": 1,
+      "specModel": "PL8-02",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L95-398ED824",
+      "materialName": "卫生间门",
+      "representativeLineLegacyId": 95,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "扇"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L96-C4FFDE16",
+      "materialName": "钢丝绳",
+      "representativeLineLegacyId": 96,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "米"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L97-EB3C7663",
+      "materialName": "荧光棒",
+      "representativeLineLegacyId": 97,
+      "sourceLineCount": 1,
+      "specModel": "6寸",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L100-9284F560",
+      "materialName": "科麦斯工具箱",
+      "representativeLineLegacyId": 100,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L101-29759E36",
+      "materialName": "相变箱体",
+      "representativeLineLegacyId": 101,
+      "sourceLineCount": 1,
+      "specModel": "1200*1000*450",
+      "unitCode": "件"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L102-79180D5E",
+      "materialName": "座椅",
+      "representativeLineLegacyId": 102,
+      "sourceLineCount": 1,
+      "specModel": "1000*850*470",
+      "unitCode": "件"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L104-994130F9",
+      "materialName": "转龙湾硐室雕刻牌",
+      "representativeLineLegacyId": 104,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "套"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L105-1B7B3C28",
+      "materialName": "矿用隔爆锂离子蓄电池电源",
+      "representativeLineLegacyId": 105,
+      "sourceLineCount": 1,
+      "specModel": "DXBL1536/220J(B)",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L106-98C4B00F",
+      "materialName": "工控机",
+      "representativeLineLegacyId": 106,
+      "sourceLineCount": 1,
+      "specModel": "IPC-610L/600W",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L108-59D13D52",
+      "materialName": "多路阀",
+      "representativeLineLegacyId": 108,
+      "sourceLineCount": 1,
+      "specModel": "DP750",
+      "unitCode": "台"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L109-92D5E3B1",
+      "materialName": "液压锁",
+      "representativeLineLegacyId": 109,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L110-B9FCC4EB",
+      "materialName": "胶管",
+      "representativeLineLegacyId": 110,
+      "sourceLineCount": 1,
+      "specModel": "10*1000",
+      "unitCode": "根"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L111-3D8BA7E1",
+      "materialName": "胶管",
+      "representativeLineLegacyId": 111,
+      "sourceLineCount": 1,
+      "specModel": "10*7000",
+      "unitCode": "根"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L112-23F66623",
+      "materialName": "胶管",
+      "representativeLineLegacyId": 112,
+      "sourceLineCount": 1,
+      "specModel": "10*9000",
+      "unitCode": "根"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L113-4F37A482",
+      "materialName": "胶管",
+      "representativeLineLegacyId": 113,
+      "sourceLineCount": 1,
+      "specModel": "10*600",
+      "unitCode": "根"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L115-637A9465",
+      "materialName": "接头座",
+      "representativeLineLegacyId": 115,
+      "sourceLineCount": 1,
+      "specModel": "7/8-18*1.5",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L117-0AEDD9EE",
+      "materialName": "3.0厚铁柜",
+      "representativeLineLegacyId": 117,
+      "sourceLineCount": 1,
+      "specModel": "500*190",
+      "unitCode": "件"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L118-FEFDB4DE",
+      "materialName": "1.0厚铁柜",
+      "representativeLineLegacyId": 118,
+      "sourceLineCount": 1,
+      "specModel": "730*142",
+      "unitCode": "件"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L119-4A129251",
+      "materialName": "隔件",
+      "representativeLineLegacyId": 119,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "KG"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L120-2A2E797A",
+      "materialName": "退芯",
+      "representativeLineLegacyId": 120,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "KG"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L121-216467F3",
+      "materialName": "液压油缸",
+      "representativeLineLegacyId": 121,
+      "sourceLineCount": 1,
+      "specModel": "φ100/63-1345-455+479",
+      "unitCode": "支"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L122-2780EAD1",
+      "materialName": "液压油缸",
+      "representativeLineLegacyId": 122,
+      "sourceLineCount": 1,
+      "specModel": "φ80/55-940-625",
+      "unitCode": "支"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L123-4274213D",
+      "materialName": "液压油缸",
+      "representativeLineLegacyId": 123,
+      "sourceLineCount": 1,
+      "specModel": "φ50*35-1250-1001",
+      "unitCode": "支"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L124-1424266C",
+      "materialName": "液压油缸",
+      "representativeLineLegacyId": 124,
+      "sourceLineCount": 1,
+      "specModel": "φ40/28-1295-1050",
+      "unitCode": "支"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L125-DA4EC38D",
+      "materialName": "液压油缸",
+      "representativeLineLegacyId": 125,
+      "sourceLineCount": 1,
+      "specModel": "φ50/35-851-603",
+      "unitCode": "支"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L126-16830576",
+      "materialName": "回转式减速器",
+      "representativeLineLegacyId": 126,
+      "sourceLineCount": 1,
+      "specModel": "FWA12-79M-R-160-D-REW",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L127-08B3A6B8",
+      "materialName": "胶管",
+      "representativeLineLegacyId": 127,
+      "sourceLineCount": 1,
+      "specModel": "KJ-25*100m",
+      "unitCode": "条"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L128-078FDC2B",
+      "materialName": "胶管",
+      "representativeLineLegacyId": 128,
+      "sourceLineCount": 1,
+      "specModel": "KJ-19*50m",
+      "unitCode": "条"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L129-7F78DAD7",
+      "materialName": "胶管",
+      "representativeLineLegacyId": 129,
+      "sourceLineCount": 1,
+      "specModel": "KJ-19*10m",
+      "unitCode": "条"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L130-9E995831",
+      "materialName": "不锈钢变径直通",
+      "representativeLineLegacyId": 130,
+      "sourceLineCount": 1,
+      "specModel": "KJ25/19",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L131-EFC9ED6E",
+      "materialName": "不锈钢直通",
+      "representativeLineLegacyId": 131,
+      "sourceLineCount": 1,
+      "specModel": "KJ25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L132-895EDB95",
+      "materialName": "不锈钢直通",
+      "representativeLineLegacyId": 132,
+      "sourceLineCount": 1,
+      "specModel": "KJ19",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L133-0D99E0E5",
+      "materialName": "不锈钢三通",
+      "representativeLineLegacyId": 133,
+      "sourceLineCount": 1,
+      "specModel": "KJ25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L134-EC70374E",
+      "materialName": "不锈钢三通",
+      "representativeLineLegacyId": 134,
+      "sourceLineCount": 1,
+      "specModel": "KJ19",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L135-A3ABE6FC",
+      "materialName": "不锈钢截止阀",
+      "representativeLineLegacyId": 135,
+      "sourceLineCount": 1,
+      "specModel": "KJ25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L136-E8D6210F",
+      "materialName": "不锈钢截止阀",
+      "representativeLineLegacyId": 136,
+      "sourceLineCount": 1,
+      "specModel": "KJ19",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L137-06D4FAA5",
+      "materialName": "不锈钢U型卡",
+      "representativeLineLegacyId": 137,
+      "sourceLineCount": 1,
+      "specModel": "KJ25",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L138-E9DE820E",
+      "materialName": "不锈钢U型卡",
+      "representativeLineLegacyId": 138,
+      "sourceLineCount": 1,
+      "specModel": "KJ19",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L139-8452B98E",
+      "materialName": "三通",
+      "representativeLineLegacyId": 139,
+      "sourceLineCount": 1,
+      "specModel": "DN50法兰",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L140-4D843C5B",
+      "materialName": "金属波纹管",
+      "representativeLineLegacyId": 140,
+      "sourceLineCount": 1,
+      "specModel": "32*1200",
+      "unitCode": "条"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L141-6484C4B2",
+      "materialName": "变径法兰",
+      "representativeLineLegacyId": 141,
+      "sourceLineCount": 1,
+      "specModel": "DN50变100",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L142-87BA5C53",
+      "materialName": "变径管接",
+      "representativeLineLegacyId": 142,
+      "sourceLineCount": 1,
+      "specModel": "KJ25/DN50",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L143-52EBE1F2",
+      "materialName": "12.9级外六角螺栓含弹平垫",
+      "representativeLineLegacyId": 143,
+      "sourceLineCount": 1,
+      "specModel": "16*80",
+      "unitCode": "套"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L144-D246EE90",
+      "materialName": "12.9级外六角螺栓含弹平垫",
+      "representativeLineLegacyId": 144,
+      "sourceLineCount": 1,
+      "specModel": "24*50",
+      "unitCode": "套"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L145-4DF138D5",
+      "materialName": "管帽",
+      "representativeLineLegacyId": 145,
+      "sourceLineCount": 1,
+      "specModel": "DN50.橡胶",
+      "unitCode": "个"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L146-3FAE7E23",
+      "materialName": "割件",
+      "representativeLineLegacyId": 146,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "kg"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L148-9C5A9E64",
+      "materialName": "气动控制竹制防突风门及配件",
+      "representativeLineLegacyId": 148,
+      "sourceLineCount": 1,
+      "specModel": null,
+      "unitCode": "批"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L149-F9EEC3E0",
+      "materialName": "穿墙管",
+      "representativeLineLegacyId": 149,
+      "sourceLineCount": 1,
+      "specModel": "50/70cm",
+      "unitCode": "支"
+    },
+    {
+      "materialCode": "MAT-PROJECT-AUTO-L151-FBCA9442",
+      "materialName": "口具",
+      "representativeLineLegacyId": 151,
+      "sourceLineCount": 1,
+      "specModel": "a",
+      "unitCode": "个"
+    }
+  ],
   "context": {
     "batch1Baseline": {
       "actualBlockedMaterialCount": 21,
@@ -30,13 +1040,15 @@
   },
   "counts": {
     "lines": {
-      "excluded": 138,
-      "migrated": 0,
+      "excluded": 0,
+      "migrated": 138,
+      "pending": 0,
       "source": 138
     },
     "projects": {
-      "excluded": 5,
-      "migrated": 0,
+      "excluded": 0,
+      "migrated": 5,
+      "pending": 0,
       "source": 5
     },
     "sourceLineTables": {
@@ -67,54 +1079,70 @@
     },
     "issues": []
   },
-  "excludedProjects": [
-    {
-      "excludedLineCount": 33,
-      "exclusionReason": "Line saifute_product_material#13 is missing material_id.; Line saifute_product_material#14 is missing material_id.; Line saifute_product_material#15 is missing material_id.; Line saifute_product_material#16 is missing material_id.; Line saifute_product_material#17 is missing material_id.; Line saifute_product_material#18 is missing material_id.; Line saifute_product_material#19 is missing material_id.; Line saifute_product_material#20 is missing material_id.; Line saifute_product_material#21 is missing material_id.; Line saifute_product_material#22 is missing material_id.; Line saifute_product_material#23 is missing material_id.; Line saifute_product_material#24 is missing material_id.; Line saifute_product_material#25 is missing material_id.; Line saifute_product_material#26 is missing material_id.; Line saifute_product_material#27 is missing material_id.; Line saifute_product_material#28 is missing material_id.; Line saifute_product_material#29 is missing material_id.; Line saifute_product_material#30 is missing material_id.; Line saifute_product_material#31 is missing material_id.; Line saifute_product_material#32 is missing material_id.; Line saifute_product_material#33 is missing material_id.; Line saifute_product_material#34 is missing material_id.; Line saifute_product_material#35 is missing material_id.; Line saifute_product_material#36 is missing material_id.; Line saifute_product_material#37 is missing material_id.; Line saifute_product_material#38 is missing material_id.; Line saifute_product_material#39 is missing material_id.; Line saifute_product_material#40 is missing material_id.; Line saifute_product_material#106 is missing material_id.; Line saifute_product_material#145 is missing material_id.; Line saifute_product_material#148 is missing material_id.; Line saifute_product_material#149 is missing material_id.",
-      "legacyId": 13,
-      "legacyTable": "saifute_composite_product",
-      "targetProjectCodeCandidate": "PRJ-LEGACY-13"
-    },
-    {
-      "excludedLineCount": 29,
-      "exclusionReason": "Line saifute_product_material#41 is missing material_id.; Line saifute_product_material#42 is missing material_id.; Line saifute_product_material#43 is missing material_id.; Line saifute_product_material#44 is missing material_id.; Line saifute_product_material#45 is missing material_id.; Line saifute_product_material#46 is missing material_id.; Line saifute_product_material#47 is missing material_id.; Line saifute_product_material#48 is missing material_id.; Line saifute_product_material#49 is missing material_id.; Line saifute_product_material#50 is missing material_id.; Line saifute_product_material#51 is missing material_id.; Line saifute_product_material#52 is missing material_id.; Line saifute_product_material#53 is missing material_id.; Line saifute_product_material#127 is missing material_id.; Line saifute_product_material#128 is missing material_id.; Line saifute_product_material#129 is missing material_id.; Line saifute_product_material#130 is missing material_id.; Line saifute_product_material#131 is missing material_id.; Line saifute_product_material#132 is missing material_id.; Line saifute_product_material#133 is missing material_id.; Line saifute_product_material#134 is missing material_id.; Line saifute_product_material#135 is missing material_id.; Line saifute_product_material#136 is missing material_id.; Line saifute_product_material#137 is missing material_id.; Line saifute_product_material#138 is missing material_id.; Line saifute_product_material#139 is missing material_id.; Line saifute_product_material#140 is missing material_id.; Line saifute_product_material#141 is missing material_id.; Line saifute_product_material#142 is missing material_id.",
-      "legacyId": 14,
-      "legacyTable": "saifute_composite_product",
-      "targetProjectCodeCandidate": "PRJ-LEGACY-14"
-    },
-    {
-      "excludedLineCount": 52,
-      "exclusionReason": "Line saifute_product_material#54 is missing material_id.; Line saifute_product_material#55 is missing material_id.; Line saifute_product_material#56 is missing material_id.; Line saifute_product_material#57 is missing material_id.; Line saifute_product_material#58 is missing material_id.; Line saifute_product_material#59 is missing material_id.; Line saifute_product_material#60 is missing material_id.; Line saifute_product_material#61 is missing material_id.; Line saifute_product_material#62 is missing material_id.; Line saifute_product_material#63 is missing material_id.; Line saifute_product_material#64 is missing material_id.; Line saifute_product_material#65 is missing material_id.; Line saifute_product_material#66 is missing material_id.; Line saifute_product_material#67 is missing material_id.; Line saifute_product_material#68 is missing material_id.; Line saifute_product_material#69 is missing material_id.; Line saifute_product_material#70 is missing material_id.; Line saifute_product_material#71 is missing material_id.; Line saifute_product_material#72 is missing material_id.; Line saifute_product_material#73 is missing material_id.; Line saifute_product_material#74 is missing material_id.; Line saifute_product_material#75 is missing material_id.; Line saifute_product_material#76 is missing material_id.; Line saifute_product_material#77 is missing material_id.; Line saifute_product_material#78 is missing material_id.; Line saifute_product_material#79 is missing material_id.; Line saifute_product_material#80 is missing material_id.; Line saifute_product_material#81 is missing material_id.; Line saifute_product_material#82 is missing material_id.; Line saifute_product_material#83 is missing material_id.; Line saifute_product_material#84 is missing material_id.; Line saifute_product_material#85 is missing material_id.; Line saifute_product_material#86 is missing material_id.; Line saifute_product_material#87 is missing material_id.; Line saifute_product_material#88 is missing material_id.; Line saifute_product_material#89 is missing material_id.; Line saifute_product_material#90 is missing material_id.; Line saifute_product_material#91 is missing material_id.; Line saifute_product_material#92 is missing material_id.; Line saifute_product_material#93 is missing material_id.; Line saifute_product_material#94 is missing material_id.; Line saifute_product_material#95 is missing material_id.; Line saifute_product_material#96 is missing material_id.; Line saifute_product_material#97 is missing material_id.; Line saifute_product_material#98 is missing material_id.; Line saifute_product_material#99 is missing material_id.; Line saifute_product_material#100 is missing material_id.; Line saifute_product_material#101 is missing material_id.; Line saifute_product_material#102 is missing material_id.; Line saifute_product_material#103 is missing material_id.; Line saifute_product_material#104 is missing material_id.; Line saifute_product_material#105 is missing material_id.",
-      "legacyId": 15,
-      "legacyTable": "saifute_composite_product",
-      "targetProjectCodeCandidate": "PRJ-LEGACY-15"
-    },
-    {
-      "excludedLineCount": 22,
-      "exclusionReason": "Line saifute_product_material#108 is missing material_id.; Line saifute_product_material#109 is missing material_id.; Line saifute_product_material#110 is missing material_id.; Line saifute_product_material#111 is missing material_id.; Line saifute_product_material#112 is missing material_id.; Line saifute_product_material#113 is missing material_id.; Line saifute_product_material#114 is missing material_id.; Line saifute_product_material#115 is missing material_id.; Line saifute_product_material#116 is missing material_id.; Line saifute_product_material#117 is missing material_id.; Line saifute_product_material#118 is missing material_id.; Line saifute_product_material#119 is missing material_id.; Line saifute_product_material#120 is missing material_id.; Line saifute_product_material#121 is missing material_id.; Line saifute_product_material#122 is missing material_id.; Line saifute_product_material#123 is missing material_id.; Line saifute_product_material#124 is missing material_id.; Line saifute_product_material#125 is missing material_id.; Line saifute_product_material#126 is missing material_id.; Line saifute_product_material#143 is missing material_id.; Line saifute_product_material#144 is missing material_id.; Line saifute_product_material#146 is missing material_id.",
-      "legacyId": 16,
-      "legacyTable": "saifute_composite_product",
-      "targetProjectCodeCandidate": "PRJ-LEGACY-16"
-    },
-    {
-      "excludedLineCount": 2,
-      "exclusionReason": "Line saifute_product_material#151 is missing material_id.",
-      "legacyId": 17,
-      "legacyTable": "saifute_composite_product",
-      "targetProjectCodeCandidate": "PRJ-LEGACY-17"
-    }
-  ],
+  "excludedProjects": [],
   "executionRequested": true,
   "executionResult": {
-    "archivedPayloadCount": 0,
-    "excludedDocumentCount": 5,
-    "insertedOrUpdatedLines": 0,
-    "insertedOrUpdatedProjects": 0
+    "archivedPayloadCount": 269,
+    "excludedDocumentCount": 0,
+    "insertedOrUpdatedAutoCreatedMaterials": 126,
+    "insertedOrUpdatedLines": 138,
+    "insertedOrUpdatedProjects": 5,
+    "pendingArchivedPayloadCount": 0,
+    "pendingRelationCount": 0
   },
   "globalBlockers": [],
-  "migratedProjects": [],
+  "migratedProjects": [
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 13,
+      "legacyTable": "saifute_composite_product",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 33,
+      "projectCode": "PRJ-LEGACY-13"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 14,
+      "legacyTable": "saifute_composite_product",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 29,
+      "projectCode": "PRJ-LEGACY-14"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 15,
+      "legacyTable": "saifute_composite_product",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 52,
+      "projectCode": "PRJ-LEGACY-15"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 16,
+      "legacyTable": "saifute_composite_product",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 22,
+      "projectCode": "PRJ-LEGACY-16"
+    },
+    {
+      "auditStatusSnapshot": "NOT_REQUIRED",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 17,
+      "legacyTable": "saifute_composite_product",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "projectCode": "PRJ-LEGACY-17"
+    }
+  ],
   "migrationBatch": "batch2b-project",
   "mode": "execute",
+  "pendingProjects": [],
+  "pendingRuleBreakdown": {},
+  "postExecuteBlockers": [],
   "sourceCounts": {
     "lines": 138,
     "projects": 5
@@ -122,6 +1150,7 @@
   "stagingReady": true,
   "targetDatabaseName": "saifute-wsm",
   "targetSummary": {
+    "batchPendingRelationRows": 0,
     "downstreamConsumerCounts": {
       "document_line_relation": 0,
       "document_relation": 0,
@@ -130,12 +1159,13 @@
       "inventory_source_usage": 0,
       "workflow_audit_document": 0
     },
-    "lineBatchMapRows": 0,
-    "lineTargetRows": 0,
+    "expectedPendingRelationCount": 0,
+    "lineBatchMapRows": 138,
+    "lineTargetRows": 138,
     "missingMappedLines": 0,
     "missingMappedProjects": 0,
-    "projectBatchMapRows": 0,
-    "projectTargetRows": 0
+    "projectBatchMapRows": 5,
+    "projectTargetRows": 5
   },
   "warnings": [
     {

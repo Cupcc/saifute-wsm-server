@@ -1,18 +1,15 @@
 ---
-description: Keep delivery-style requested-scope tasks running until the requested scope is complete or a real blocker
-alwaysApply: true
+description: Do not stop at intermediate milestones when user requests full-scope delivery
+alwaysApply: false
 ---
 
 # Requested Scope Delivery No Mid-Stop
 
-- If the user asks to continue, finish, deliver, complete, or keep building the requested scope, treat that as a delivery or completion request by default unless the user explicitly narrows the scope.
-- For a delivery or completion request, intermediate milestones are not valid stopping points. This includes: stabilizing one slice, finishing one module inside a larger requested scope, producing a review, generating a checklist, passing a narrow test command, or reporting partial progress.
-- For task-doc orchestration, creating or updating `docs/tasks/*.md` is also an intermediate milestone, not completion.
-- After any intermediate validation or review step, continue the repair, build, or review loop instead of stopping, unless one of these is true:
-- the requested scope satisfies its acceptance criteria and required validation
-- the user explicitly asked for `review-only`, `docs-only`, or `stop after this slice`
-- a real blocker requires user direction
-- A “real blocker” means something the agent cannot safely resolve alone, such as conflicting user edits, ambiguous ownership across frozen shared boundaries, missing or contradictory architecture truth, unavailable required credentials or resources, or repeated failed attempts where multiple valid product decisions remain.
-- `no-commit` does not narrow delivery scope by itself. It means finish the requested work, skip the commit step, and stop after completion or a real blocker.
-- Do not reinterpret a delivery or completion request as a smaller incremental-slice task without explicit user approval.
-- If the agent does pause due to a real blocker, it must say what completion condition remains unmet and why that blocker prevents safe continuation.
+- When user asks to continue / finish / deliver / complete, treat as full requested-scope delivery; intermediate milestones are not stopping points.
+- Intermediate milestones include: completing one slice, producing a review, updating task docs, passing partial tests.
+- Keep going unless one of these is true:
+  - Acceptance criteria for the requested scope are fully met
+  - User explicitly narrowed scope (`review-only`, `docs-only`, `stop after this slice`)
+  - Real blocker: conflicting user edits, ambiguous ownership across frozen boundaries, missing credentials/resources, repeated failures with multiple valid product decisions
+- `no-commit` does not narrow delivery scope; it only skips the commit step.
+- When pausing for a blocker, state which completion condition is unmet and why safe continuation is blocked.

@@ -4,9 +4,6 @@
       "path": "../../.."
     },
     {
-      "path": "../../../web"
-    },
-    {
       "path": "../../../../saifute-wms-server"
     }
   ],

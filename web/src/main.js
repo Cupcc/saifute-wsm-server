@@ -1,5 +1,4 @@
 import ElementPlus from "element-plus";
-
 import Cookies from "js-cookie";
 import { createApp } from "vue";
 import "element-plus/dist/index.css";

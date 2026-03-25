@@ -1,15 +1,13 @@
 ---
-description: Coordinate multiple writer subagents safely
-alwaysApply: true
+description: Scope isolation and shared-file control when running multiple writer subagents
+alwaysApply: false
 ---
 
 # Writer Coordination
 
-- Multiple writer subagents are allowed only when their writable scopes are explicitly disjoint before launch.
-- Do not run write-capable subagents in background mode. If multiple writers are needed, launch them together in the same turn and wait for completion.
-- Shared files stay parent-owned unless one worker is explicitly assigned as the sole owner. This includes `src/app.module.ts`, `src/main.ts`, `src/shared/**`, `prisma/schema.prisma`, route or permission registries, shared docs/contracts, active `docs/tasks/*.md`, and cross-module tests.
-- Every writer handoff must list owned directories/files, forbidden shared files, and the validation commands expected for that scope.
-- Active task docs use single-owner sequencing by default: `planner` owns creation and planning updates, `coder` reads them as execution briefs unless documentation ownership is explicitly reassigned, and `code-reviewer` owns review-phase status and validation updates.
-- When parallel writers were active, the parent orchestrator must re-read the latest file content before applying any shared-file edit or merge.
-- If overlapping changes appear and can be attributed to active child writers, reconcile by reading the latest content and merging on top of it instead of stopping immediately.
-- Only stop and ask the user when the source may be a real user edit, ownership is ambiguous, or the overlap crosses a frozen boundary that was not approved.
+- Multiple writer subagents allowed only when writable scopes are explicitly disjoint; never run writers in background.
+- Shared files stay parent-owned unless one worker is explicitly assigned sole owner. Shared files: `src/app.module.ts`, `src/main.ts`, `src/shared/**`, `prisma/schema.prisma`, route/permission registries, active `docs/tasks/*.md`, cross-module tests.
+- Every writer handoff must list: owned files/dirs, forbidden shared files, expected validation commands.
+- Task docs default to single-owner sequence: `planner` creates → `coder` reads → `code-reviewer` updates review status.
+- After parallel writers finish, parent must re-read latest content before editing any shared file.
+- Overlapping changes attributable to child writers: merge. Unknown source or frozen boundary: stop and ask user.

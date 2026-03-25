@@ -24,6 +24,7 @@ This directory is the canonical home for all Saifute WMS NestJS repository archi
 - `docs/architecture/**` is the single canonical architecture-doc root. Do not add architecture content outside this subtree.
 - Module docs describe architecture and boundaries only; per-task execution plans live under `docs/tasks/**`.
 - The business-flow and schema doc is a frozen baseline. Changes to it require explicit user confirmation and a dedicated task doc.
+- For migration, backfill, or cutover work, treat `00-architecture-overview.md` + `20-wms-business-flow-and-optimized-schema.md` + `30-java-to-nestjs-data-migration-reference.md` as the architecture baseline, and confirm runtime-table vs staging-table boundaries against `prisma/schema.prisma` plus the migration staging SQL before planning or executing data movement.
 - **Current vs. target (review lens)**: when reading or updating a module doc under `docs/architecture/modules/`, treat the distinction between current implementation and target architecture as a required lens. Where a module's current code surface is narrower than the target scope in `PROJECT_REQUIREMENTS.md`, the module doc should note that gap explicitly rather than silently implying current code already satisfies the target. `project.md`, `reporting.md`, and `master-data.md` have been explicitly updated with this distinction; other module docs may still need similar clarification in future passes.
 
 ## Revision Guidance

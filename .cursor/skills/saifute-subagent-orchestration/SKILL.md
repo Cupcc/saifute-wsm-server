@@ -16,6 +16,7 @@ Default orchestration order:
 3. `review`
 4. `fix`
 5. `commit`
+6. `retrospect`
 
 Do not skip forward unless the user explicitly narrows the scope, or the step is not applicable. Migration-style work keeps the same order, but it requires stricter context, staging or exclusion handling, deterministic generation, replay-vs-copy judgment, and blocker-aware validation.
 
@@ -49,9 +50,14 @@ On the lightweight direct lane:
 Read the smallest relevant source of truth before assigning work:
 
 - the linked requirement doc under `docs/requirements/**` when the task is driven by a user request
+- the workspace folder under `docs/workspace/<workflow>/` when the workflow has one — check `docs/workspace/DASHBOARD.md` for the index
 - `docs/architecture/00-architecture-overview.md`
 - the specific module docs in `docs/architecture/modules/`
 - the files directly related to the task
+
+For any task type with an existing playbook, also read:
+
+- the relevant `docs/playbooks/*/playbook.md` for accumulated execution tips and reusable scripts
 
 For migration, backfill, reconciliation, or cutover-prep work, also read:
 
@@ -68,6 +74,7 @@ If legacy data and the current runtime disagree, adapt the legacy data to the cu
 For non-trivial work, create or locate one concise requirement doc under `docs/requirements/**` before planning.
 
 - requirement doc: a concise Chinese user-and-AI interaction layer that records the user's requirement plus concise user-facing orchestration status
+- workspace under `docs/workspace/<workflow>/`: human decision workspace — progress narrative, pending decisions with trade-offs, decision log, rich media assets; write access restricted to parent orchestrator
 - task doc in `docs/tasks/**`: detailed execution scope, validation state, review loop, handoff
 
 The requirement doc should stay concise. Use it for user-facing status only:
@@ -77,7 +84,11 @@ The requirement doc should stay concise. Use it for user-facing status only:
 - `阻塞项`
 - `下一步`
 
+Completed-state requirement docs may explicitly say `阻塞项: None` and `下一步: None / 归档 / 等待新需求`. Do not manufacture pending confirmations, blockers, or faux follow-up steps after the scoped work is objectively complete.
+
 The task doc must link back to the requirement doc and carry forward the confirmed understanding.
+
+When the workflow warrants a workspace (non-trivial scope, pending human decisions, or multiple decision points), the parent orchestrator should create or update `docs/workspace/<workflow>/` and keep the `DASHBOARD.md` index current. Workspace content is optimized for human reading — trade-off tables, option analysis, decision rationale — not agent metadata.
 
 New or materially changed requirement docs default to `needs-confirmation`. Do not treat them as accepted scope until the user explicitly confirms and the doc can be marked `confirmed`.
 
@@ -111,18 +122,20 @@ For delivery requests, do not stop after only planning, one implementation pass,
 
 When the user says `continue`, `resume`, `pick this up`, or asks to continue in a new chat:
 
-1. Look for an existing `docs/tasks/*.md` execution brief for the active scope before starting fresh exploration.
-2. If a task doc exists, treat it as the primary runtime handoff source and also read:
+1. Check lifecycle truth first: `docs/tasks/TASK_CENTER.md`, `docs/requirements/REQUIREMENT_CENTER.md`, and `docs/workspace/DASHBOARD.md` / archive placement decide whether a scope is still active.
+2. Look for an existing root-level `docs/tasks/*.md` execution brief only for the still-active scope before starting fresh exploration.
+3. If an active task doc exists, treat it as the primary runtime handoff source and also read:
    - the linked requirement doc under `docs/requirements/**`, if the task doc names one
    - the related `docs/fix-checklists/*.md`
    - any report files, validation artifacts, or generated outputs referenced by the task doc
-3. Reconstruct and state, at least to yourself before delegating:
+4. If only archived docs exist, treat them as provenance only. Do not revive that scope unless the user explicitly asks to reopen it or a new requirement/task is created for a real follow-up.
+5. Reconstruct and state, at least to yourself before delegating:
    - current scope
    - last completed step
    - validations already passed
    - remaining blockers, pending gates, or sign-off needs
    - the next smallest safe action
-4. Do not restart planning from scratch unless:
+6. Do not restart planning from scratch unless:
    - no task doc exists
    - the task doc is stale, contradictory, or no longer matches the repo state
    - the user explicitly asks to replan
@@ -155,6 +168,7 @@ Use these durable rules for migration-style orchestration:
 - do not invent relations, audit outcomes, or stock effects from ambiguous legacy signals; unresolved records stay pending, archived, or excluded until safely resolved
 - do not silently drop unmapped legacy fields; archive them, carry them through an explicit schema change, or require explicit sign-off that they are intentionally discarded
 - do not claim cutover readiness while pending relation work, unresolved exclusions, or required business sign-off are still hidden in the workflow
+- do not use `cutover` as a catch-all synonym for technical completion, operational switchover instructions, and business sign-off; name those states separately
 
 ## Default workflow
 
@@ -275,6 +289,7 @@ The parent orchestrator owns the distinction between durable rules and runtime c
 - do not write temporary runtime observations into rules
 - put detailed task-scoped runtime context in `docs/tasks/**`, the parent handoff, or another clearly temporary shared context artifact when multiple subagents need the same live status
 - keep the linked `docs/requirements/**` updated with concise user-facing progress instead of leaving orchestration status only in chat memory
+- put decision-relevant findings (trade-offs, option analysis, decision rationale, human-intervention needs) in `docs/workspace/<workflow>/` instead of leaving them only in task docs or chat history; parent orchestrator owns all workspace writes
 - before promoting a new observation into rules, confirm that it is likely to remain valid across future tasks and does not contain secrets
 
 ## End-of-turn handoff requirements
@@ -300,7 +315,21 @@ The requirement doc should capture the same turn in concise user-facing form:
 - `阻塞项`
 - `下一步`
 
+When the workflow has a workspace under `docs/workspace/<workflow>/`, also sync:
+
+- new or resolved decision items to `decisions.md`
+- progress narrative updates to the workspace `README.md`
+- dashboard row updates to `docs/workspace/DASHBOARD.md` (health status, pending decision summary)
+
 If a future chat must be able to resume safely, the task doc and related checklist should be sufficient for the parent orchestrator to continue without hidden assumptions.
+
+Also perform one explicit consistency sweep before ending the turn:
+
+- requirement lifecycle and path match the real scope state
+- task lifecycle and path match the linked requirement
+- workspace dashboard row and workspace folder placement agree on active vs archived
+- reports and user-facing docs do not describe completed technical steps as waiting on fake acknowledgement
+- if the scope is complete, archive it now instead of leaving a stale root anchor for `continue` to pick up later
 
 ## File ownership guidance
 
@@ -357,6 +386,7 @@ Ask each subagent to return:
 - which reports, artifacts, or commands should be read or run first on continuation
 - concise requirement-doc sync lines for `阶段进度` / `当前状态` / `阻塞项` / `下一步`
 - risks, blockers, sign-off needs, and follow-up work
+- `decision_candidates` (optional): items discovered during execution that may need human decision — include the issue, options considered, trade-offs, and recommended action; the parent orchestrator will evaluate and write qualifying items into `docs/workspace/<workflow>/decisions.md`
 
 Additionally require:
 
@@ -392,7 +422,7 @@ Treat commit readiness as the end of the orchestration loop, not as a side effec
 
 Stop only when one of these is true:
 
-1. The scoped task completed its `plan -> code -> review -> fix` loop and, if requested, the final commit was created.
+1. The scoped task completed its `plan -> code -> review -> fix -> commit -> retrospect` loop.
 2. The user explicitly asked for `plan-only`, `review-only`, or `docs-only`.
 3. A real blocker remains that requires user direction.
 
@@ -410,6 +440,38 @@ Use this blocker bar:
 - not a real blocker: a partial implementation is stable, one test passed, a review found issues, or the parent simply wants to pause and summarize
 
 If the user says `no-commit`, finish the requested scope and review or fix loop, then stop without creating a commit.
+
+## Retrospect protocol
+
+After a non-trivial task reaches completion (post-commit or post-completion-protocol), the parent orchestrator runs a lightweight retrospect pass. Skip retrospect for lightweight direct-lane tasks.
+
+Retrospect is also triggered when the user explicitly says `总结经验`, `复盘`, `retrospect`, or `lessons learned`.
+
+### What to capture
+
+Review the full task lifecycle and identify:
+
+- patterns that worked well (reusable approaches)
+- anti-patterns or unexpected complexity discovered
+- review → fix loops that repeated 2+ times for the same root cause
+- validation gaps discovered late
+- migration, backfill, or orchestration edge cases resolved
+
+### Where to write
+
+1. **L2 playbook entry**: append a new entry to the relevant `docs/playbooks/{domain}/playbook.md` using the entry format defined in `docs/playbooks/README.md`. Set maturity to `initial observation` for first-time patterns or `verified ✓` if the same pattern was confirmed across multiple tasks.
+2. **L2 reusable script**: if a manual check or validation step appeared 2+ times during the task, extract it as a script in `docs/playbooks/{domain}/`.
+3. **L4 rule candidate**: if an entry is stable enough to freeze as a cross-task constraint, propose it to the user for confirmation before writing to `.cursor/rules/*.mdc`. Mark the playbook entry as `promoted → rules/xxx.mdc`.
+
+### Ownership
+
+Retrospect is a parent-orchestrator step. Do not delegate it to subagents — only the parent has the full lifecycle view (plan iterations, review loop count, validation failure patterns, scope drift history).
+
+### When to skip
+
+- Lightweight direct-lane tasks with no non-obvious lessons
+- The user explicitly says `skip retrospect` or `no-retrospect`
+- The task was cancelled before meaningful execution
 
 ## Additional reference
 

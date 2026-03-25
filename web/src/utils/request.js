@@ -137,7 +137,11 @@ service.interceptors.response.use(
     // 未设置状态码则默认成功状态
     const code = res.data.code || 200;
     // 获取错误信息
-    const msg = errorCode[code] || res.data.msg || errorCode["default"];
+    const msg =
+      errorCode[code] ||
+      res.data.msg ||
+      res.data.message ||
+      errorCode["default"];
     // 二进制数据则直接返回
     if (
       res.request.responseType === "blob" ||
@@ -193,7 +197,7 @@ service.interceptors.response.use(
 
     console.log("err" + error);
     let { message } = error;
-    if (message == "Network Error") {
+    if (message === "Network Error") {
       message = "后端接口连接异常";
     } else if (message.includes("timeout")) {
       message = "系统接口请求超时";

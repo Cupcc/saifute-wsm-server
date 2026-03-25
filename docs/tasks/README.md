@@ -15,7 +15,7 @@ docs/tasks/
     └── cleanup-candidate/             # provisional; do not delete until user explicitly confirms
 ```
 
-Active task docs live at the root alongside `TASK_CENTER.md`, `README.md`, and `_template.md`. Each root `task-*.md` **must** list a `Related requirement` path to a file that still exists at **`docs/requirements/req-*.md`（根目录，且需求 Metadata 中 `Lifecycle disposition` 为 `active`）**. Completed requirements should be **moved** to `docs/requirements/archive/**` (not deleted) so archived tasks can keep stable provenance links; update those task docs to the archived full path when moving the requirement. If a requirement file is removed from the repository without archival, the task **must not** remain at the root (archive to `archive/retained-completed/` for provenance, or delete after explicit user confirmation per cleanup policy). Task–requirement cross-links are also indexed in `docs/requirements/REQUIREMENT_CENTER.md`. Once a task is no longer active, it moves into the appropriate `archive/` bucket. Filenames and content are preserved; only the directory path changes.
+Active task docs live at the root alongside `TASK_CENTER.md`, `README.md`, and `_template.md`. Each root `task-*.md` **must** list a `Related requirement` path to a file that still exists at **`docs/requirements/req-*.md`（根目录，且需求 Metadata 中 `Lifecycle disposition` 为 `active`）**. Completed requirements should be **moved** to `docs/requirements/archive/**` (not deleted) so archived tasks can keep stable provenance links; update those task docs to the archived full path when moving the requirement. If a requirement file is removed from the repository without archival, the task **must not** remain at the root (archive to `archive/retained-completed/` for provenance, or delete after explicit user confirmation per cleanup policy). Task–requirement cross-links are also indexed in `docs/requirements/REQUIREMENT_CENTER.md`. Once a task is no longer active, it moves into the appropriate `archive/` bucket in the same turn; do not keep a root task doc as a fake `continue` anchor after the scoped work is objectively complete. Filenames and content are preserved; only the directory path changes.
 
 ## Layering
 
@@ -45,6 +45,7 @@ Keep those layers separate so the board stays short, the README stays stable, an
 - `retained-completed`: completed, but intentionally kept because it is still a durable source of truth or a useful upstream reference.
 - `cleanup-candidate`: appears removable later, but remains list-only until the user explicitly confirms cleanup.
 - If an old brief is fully replaced and no longer worth retaining, write the change explanation in the current source-of-truth doc and delete the obsolete brief instead of creating a dedicated archive bucket for it.
+- `TASK_CENTER.md` is the lifecycle truth for resume. Archived task docs remain readable provenance, but should not be treated as active handoff sources unless the user explicitly reopens that scope.
 
 Maintain the live directory-wide classification in `TASK_CENTER.md`, not in this README. If a task doc is older than the lifecycle field in the template, classify it in the board instead of rewriting history just for metadata backfill.
 
@@ -75,6 +76,7 @@ Maintain the live directory-wide classification in `TASK_CENTER.md`, not in this
 4. Have `coder` implement from the task doc instead of inventing a new execution scope.
 5. Have `code-reviewer` record review status, validation, findings, and next action in the same task doc.
 6. If review finds open `[blocking]` or `[important]` items, route the work back to `coder` and keep the task doc current.
+7. If the scoped work is complete and no real active follow-up remains, archive the task doc and update `TASK_CENTER.md` before ending the turn.
 
 ## Task-Doc Field Expectations
 

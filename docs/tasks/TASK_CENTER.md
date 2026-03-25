@@ -36,7 +36,7 @@
 
 ## 活跃任务
 
-当前无绑定 **`docs/requirements/req-*.md`（根目录、Lifecycle `active`）** 的 `active` task 文档。
+当前无活跃任务。
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
@@ -44,7 +44,10 @@
 
 | Task 文档 | 保留原因 |
 | --- | --- |
+| `docs/tasks/archive/retained-completed/task-20260325-1740-agent-orchestration-completion-state.md` | 已完成 AI 编排完成态、归档协议、resume 真源与 `project` validate 假确认门修复，并以自身归档验证了新 completion-state 协议。 |
 | `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md` | 已完成 scoped architecture review，并产出 gap 与澄清结论；follow-up 已收口。 |
+| `docs/tasks/archive/retained-completed/task-20260321-1140-architecture-migration-reference.md` | 已完成全量迁移 architecture reference 的 docs-only 交付与复审，并与已归档 migration requirement 保持稳定溯源关系。 |
+| `docs/tasks/archive/retained-completed/task-20260323-1530-migration-project-material-resolution-readiness.md` | `project` 域迁移已完成：`5` 项目 / `138` 行全部准入 live，自动补建 `126` 条物料；inventory replay 完成后 validate 已改为基于下游证据判定，无残余假 blocker。 |
 | `docs/tasks/archive/retained-completed/task-20260323-1310-customer-workshop-return-invariants.md` | 已完成 `customer` / `workshop-material` return invariant 修复与 Jest 证据；`reviewed-no-findings`。 |
 | `docs/tasks/archive/retained-completed/task-20260323-1320-architecture-doc-clarity-followups.md` | 已完成 `README` / `project` / `reporting` / `master-data` 文档澄清；`reviewed-clean`。 |
 | `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md` | 已完成并在最新 DB-backed dry-run + batch-owned rows/maps 证据下确认收口；当前 `execute` / `validate` 非零来自后续已复审切片扩展 baseline，不再构成该 slice blocker。 |
@@ -67,6 +70,7 @@
 
 ## 下一步
 
+- 全域数据搬家 + 库存重放已完成。迁移工作结束，随时可切换到新系统。
 - `task-20260323-1100` 的两条 follow-up 已由 `task-20260323-1310` 与 `task-20260323-1320` 收口并完成 reviewer sign-off；上述三条 task 已迁入 `docs/tasks/archive/retained-completed/`。
 - `docs/tasks/TASK_CENTER.md` 与 requirement 进展同步仍由 parent 统一维护；若后续继续架构澄清，应另开新的 requirement / task，而不是复用已收口的切片。
 - 已完成机制简化：不再为“已被替代但当前没有保留价值”的旧 brief 设单独归档模块；此类变更说明统一写入当前真源文档。

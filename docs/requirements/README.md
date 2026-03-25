@@ -44,6 +44,7 @@ docs/requirements/
 - 任务需求文档使用 `req-YYYYMMDD-HHMM-short-topic.md`。
 - `req-*.md` 建议固定使用 `用户需求`、`当前进展`、`待确认` 三段。
 - `当前进展` 建议固定为 `阶段进度`、`当前状态`、`阻塞项`、`下一步` 四行。
+- 需求已闭环时允许写 `阻塞项: None`、`下一步: None / 归档 / 等待新需求`；不要为了套模板编造待确认项或假 blocker。
 
 ## 状态与生命周期
 
@@ -58,6 +59,7 @@ docs/requirements/
 - `active`：文件位于 `docs/requirements/` 根目录，仍参与当前交互或执行。
 - `retained-completed`：文件位于 `archive/retained-completed/`，需求已闭环但需保留溯源。
 - `cleanup-candidate`：文件位于 `archive/cleanup-candidate/`，后续经用户确认后可删除。
+- 若需求已客观完成且没有真实活跃 follow-up，不得继续留在根目录充当 resume 占位；应在同一轮同步归档 requirement / task / workspace。
 
 ## 使用规则
 
@@ -67,6 +69,7 @@ docs/requirements/
 4. 任务需求若尚未获用户确认，`Status` 设为 `needs-confirmation`；确认后改为 `confirmed`。
 5. 在关键阶段推进、进入阻塞或准备结束当前回合前，同步简洁 `当前进展`。
 6. 需求闭环后优先归档而不是删除；归档时同步更新 `REQUIREMENT_CENTER.md`、相关 task 的 `Related requirement`，以及需求内的 `Related tasks`。
+7. 恢复旧对话或处理 `continue` 时，先以 `REQUIREMENT_CENTER.md` 的 lifecycle 分类判断是否仍属活跃需求；归档需求默认只作溯源，不直接当作当前执行锚点。
 
 ## 与任务文档的关系
 

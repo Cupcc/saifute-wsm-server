@@ -25,8 +25,13 @@ const useUserStore = defineStore("user", {
       return new Promise((resolve, reject) => {
         login(username, password, code, uuid)
           .then((res) => {
-            setToken(res.token);
-            this.token = res.token;
+            const token = res.data?.accessToken;
+            if (!token) {
+              reject(new Error("登录响应缺少访问令牌"));
+              return;
+            }
+            setToken(token);
+            this.token = token;
             resolve();
           })
           .catch((error) => {
@@ -39,45 +44,29 @@ const useUserStore = defineStore("user", {
       return new Promise((resolve, reject) => {
         getInfo()
           .then((res) => {
-            const user = res.user;
-            let avatar = user.avatar || "";
+            const user = res.data || {};
+            const roles = Array.isArray(user.roles) ? user.roles : [];
+            const permissions = Array.isArray(user.permissions)
+              ? user.permissions
+              : [];
+            let avatar = user.avatarUrl || "";
             if (!isHttp(avatar)) {
               avatar = isEmpty(avatar)
                 ? defAva
                 : import.meta.env.VITE_APP_BASE_API + avatar;
             }
-            if (res.roles && res.roles.length > 0) {
-              // 验证返回的roles是否是一个非空数组
-              this.roles = res.roles;
-              this.permissions = res.permissions;
+            if (roles.length > 0) {
+              this.roles = roles;
+              this.permissions = permissions;
             } else {
               this.roles = ["ROLE_DEFAULT"];
+              this.permissions = permissions;
             }
             this.id = user.userId;
-            this.name = user.userName;
-            this.nickName = user.nickName;
+            this.name = user.username || "";
+            this.nickName = user.displayName || user.username || "";
             this.avatar = avatar;
-            /* 初始密码提示 */
-            if (res.isDefaultModifyPwd) {
-              ElMessageBox.confirm(
-                "您的密码还是初始密码，请修改密码！",
-                "安全提示",
-                {
-                  confirmButtonText: "确定",
-                  cancelButtonText: "取消",
-                  type: "warning",
-                },
-              )
-                .then(() => {
-                  router.push({
-                    name: "Profile",
-                    params: { activeTab: "resetPwd" },
-                  });
-                })
-                .catch(() => {});
-            }
-            /* 过期密码提示 */
-            if (!res.isDefaultModifyPwd && res.isPasswordExpired) {
+            if (res.isPasswordExpired) {
               ElMessageBox.confirm(
                 "您的密码已过期，请尽快修改密码！",
                 "安全提示",

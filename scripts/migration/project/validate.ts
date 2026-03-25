@@ -728,8 +728,6 @@ async function main(): Promise<void> {
     "project-validate-report.json",
   );
   const env = loadMigrationEnvironment({ requireLegacyDatabaseUrl: true });
-  const inventoryReplayConfirmed =
-    process.env["PROJECT_INVENTORY_REPLAY_CONFIRMED"] === "true";
   const structuralExclusionsAcknowledged =
     process.env["PROJECT_STRUCTURAL_EXCLUSIONS_ACKNOWLEDGED"] === "true";
   const targetDatabaseName = assertExpectedDatabaseName(
@@ -1799,7 +1797,6 @@ async function main(): Promise<void> {
         const cutoverReadiness = buildCutoverReadiness(
           plan,
           downstreamConsumerCounts,
-          inventoryReplayConfirmed,
           structuralExclusionsAcknowledged,
         );
 
