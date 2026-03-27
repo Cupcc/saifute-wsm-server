@@ -3,6 +3,15 @@ export interface SessionDepartmentSnapshot {
   departmentName: string;
 }
 
+export type SessionConsoleMode = "default" | "rd-subwarehouse";
+
+export interface SessionWorkshopScopeSnapshot {
+  mode: "ALL" | "FIXED";
+  workshopId: number | null;
+  workshopCode: string | null;
+  workshopName: string | null;
+}
+
 export interface SessionUserSnapshot {
   userId: number;
   username: string;
@@ -11,6 +20,8 @@ export interface SessionUserSnapshot {
   roles: string[];
   permissions: string[];
   department: SessionDepartmentSnapshot | null;
+  consoleMode: SessionConsoleMode;
+  workshopScope: SessionWorkshopScopeSnapshot;
 }
 
 export interface SessionClaims {

@@ -9,6 +9,7 @@ import {
 } from "@nestjs/common";
 import { CurrentUser } from "../../../shared/decorators/current-user.decorator";
 import { Permissions } from "../../../shared/decorators/permissions.decorator";
+import { WorkshopScopeService } from "../../rbac/application/workshop-scope.service";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { WorkshopMaterialService } from "../application/workshop-material.service";
 import { CreateWorkshopMaterialOrderDto } from "../dto/create-workshop-material-order.dto";
@@ -19,18 +20,37 @@ import { VoidWorkshopMaterialOrderDto } from "../dto/void-workshop-material-orde
 export class WorkshopMaterialController {
   constructor(
     private readonly workshopMaterialService: WorkshopMaterialService,
+    private readonly workshopScopeService: WorkshopScopeService,
   ) {}
 
   @Permissions("workshop-material:pick-order:list")
   @Get("pick-orders")
-  async listPickOrders(@Query() query: QueryWorkshopMaterialOrderDto) {
-    return this.workshopMaterialService.listPickOrders(query);
+  async listPickOrders(
+    @Query() query: QueryWorkshopMaterialOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    return this.workshopMaterialService.listPickOrders({
+      ...query,
+      workshopId,
+    });
   }
 
   @Permissions("workshop-material:pick-order:list")
   @Get("pick-orders/:id")
-  async getPickOrder(@Param("id", ParseIntPipe) id: number) {
-    return this.workshopMaterialService.getPickOrderById(id);
+  async getPickOrder(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const order = await this.workshopMaterialService.getPickOrderById(id);
+    await this.workshopScopeService.assertWorkshopAccess(
+      user,
+      order.workshopId,
+    );
+    return order;
   }
 
   @Permissions("workshop-material:pick-order:create")
@@ -39,8 +59,12 @@ export class WorkshopMaterialController {
     @Body() dto: CreateWorkshopMaterialOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.workshopMaterialService.createPickOrder(
+    const scopedDto = await this.workshopScopeService.applyFixedWorkshopScope(
+      user,
       dto,
+    );
+    return this.workshopMaterialService.createPickOrder(
+      scopedDto,
       user?.userId?.toString(),
     );
   }
@@ -52,6 +76,11 @@ export class WorkshopMaterialController {
     @Body() dto: VoidWorkshopMaterialOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
+    const order = await this.workshopMaterialService.getPickOrderById(id);
+    await this.workshopScopeService.assertWorkshopAccess(
+      user,
+      order.workshopId,
+    );
     return this.workshopMaterialService.voidPickOrder(
       id,
       dto.voidReason,
@@ -61,14 +90,32 @@ export class WorkshopMaterialController {
 
   @Permissions("workshop-material:return-order:list")
   @Get("return-orders")
-  async listReturnOrders(@Query() query: QueryWorkshopMaterialOrderDto) {
-    return this.workshopMaterialService.listReturnOrders(query);
+  async listReturnOrders(
+    @Query() query: QueryWorkshopMaterialOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    return this.workshopMaterialService.listReturnOrders({
+      ...query,
+      workshopId,
+    });
   }
 
   @Permissions("workshop-material:return-order:list")
   @Get("return-orders/:id")
-  async getReturnOrder(@Param("id", ParseIntPipe) id: number) {
-    return this.workshopMaterialService.getReturnOrderById(id);
+  async getReturnOrder(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const order = await this.workshopMaterialService.getReturnOrderById(id);
+    await this.workshopScopeService.assertWorkshopAccess(
+      user,
+      order.workshopId,
+    );
+    return order;
   }
 
   @Permissions("workshop-material:return-order:create")
@@ -77,8 +124,12 @@ export class WorkshopMaterialController {
     @Body() dto: CreateWorkshopMaterialOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.workshopMaterialService.createReturnOrder(
+    const scopedDto = await this.workshopScopeService.applyFixedWorkshopScope(
+      user,
       dto,
+    );
+    return this.workshopMaterialService.createReturnOrder(
+      scopedDto,
       user?.userId?.toString(),
     );
   }
@@ -90,6 +141,11 @@ export class WorkshopMaterialController {
     @Body() dto: VoidWorkshopMaterialOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
+    const order = await this.workshopMaterialService.getReturnOrderById(id);
+    await this.workshopScopeService.assertWorkshopAccess(
+      user,
+      order.workshopId,
+    );
     return this.workshopMaterialService.voidReturnOrder(
       id,
       dto.voidReason,
@@ -99,14 +155,32 @@ export class WorkshopMaterialController {
 
   @Permissions("workshop-material:scrap-order:list")
   @Get("scrap-orders")
-  async listScrapOrders(@Query() query: QueryWorkshopMaterialOrderDto) {
-    return this.workshopMaterialService.listScrapOrders(query);
+  async listScrapOrders(
+    @Query() query: QueryWorkshopMaterialOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    return this.workshopMaterialService.listScrapOrders({
+      ...query,
+      workshopId,
+    });
   }
 
   @Permissions("workshop-material:scrap-order:list")
   @Get("scrap-orders/:id")
-  async getScrapOrder(@Param("id", ParseIntPipe) id: number) {
-    return this.workshopMaterialService.getScrapOrderById(id);
+  async getScrapOrder(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const order = await this.workshopMaterialService.getScrapOrderById(id);
+    await this.workshopScopeService.assertWorkshopAccess(
+      user,
+      order.workshopId,
+    );
+    return order;
   }
 
   @Permissions("workshop-material:scrap-order:create")
@@ -115,8 +189,12 @@ export class WorkshopMaterialController {
     @Body() dto: CreateWorkshopMaterialOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.workshopMaterialService.createScrapOrder(
+    const scopedDto = await this.workshopScopeService.applyFixedWorkshopScope(
+      user,
       dto,
+    );
+    return this.workshopMaterialService.createScrapOrder(
+      scopedDto,
       user?.userId?.toString(),
     );
   }
@@ -128,6 +206,11 @@ export class WorkshopMaterialController {
     @Body() dto: VoidWorkshopMaterialOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
+    const order = await this.workshopMaterialService.getScrapOrderById(id);
+    await this.workshopScopeService.assertWorkshopAccess(
+      user,
+      order.workshopId,
+    );
     return this.workshopMaterialService.voidScrapOrder(
       id,
       dto.voidReason,

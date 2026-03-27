@@ -1,5 +1,12 @@
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Min } from "class-validator";
+import {
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from "class-validator";
 
 export class QueryInventoryBalancesDto {
   @IsOptional()
@@ -50,6 +57,24 @@ export class QueryInventoryLogsDto {
   businessDocumentType?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  businessDocumentNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  operationType?: string;
+
+  @IsOptional()
+  @IsDateString()
+  occurredAtFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  occurredAtTo?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -77,6 +102,47 @@ export class QueryInventorySourceUsagesDto {
   @IsInt()
   @Min(1)
   consumerDocumentId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit?: number = 50;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset?: number = 0;
+}
+
+export class QueryFactoryNumberReservationsDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  workshopId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  businessDocumentType?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  businessDocumentLineId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  startNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  endNumber?: string;
 
   @IsOptional()
   @Type(() => Number)

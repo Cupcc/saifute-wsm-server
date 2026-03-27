@@ -38,6 +38,22 @@ export class MasterDataService {
     return workshop;
   }
 
+  async getWorkshopByCode(workshopCode: string) {
+    const workshop = await this.repository.findWorkshopByCode(workshopCode);
+    if (!workshop) {
+      throw new NotFoundException(`车间不存在: ${workshopCode}`);
+    }
+    return workshop;
+  }
+
+  async getWorkshopByName(workshopName: string) {
+    const workshop = await this.repository.findWorkshopByName(workshopName);
+    if (!workshop) {
+      throw new NotFoundException(`车间不存在: ${workshopName}`);
+    }
+    return workshop;
+  }
+
   async getSupplierById(id: number) {
     const supplier = await this.repository.findSupplierById(id);
     if (!supplier) {

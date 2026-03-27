@@ -82,6 +82,10 @@ export class AppConfigService {
     return this.readNumber("CAPTCHA_TTL_SECONDS", 300);
   }
 
+  get captchaEnabled(): boolean {
+    return this.readBoolean("CAPTCHA_ENABLED", true);
+  }
+
   get passwordMaxRetries(): number {
     return this.readNumber("PASSWORD_MAX_RETRIES", 5);
   }

@@ -16,6 +16,22 @@ export class QueryWorkshopMaterialOrderDto {
   @MaxLength(64)
   documentNo?: string;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  handlerName?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  materialId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  materialName?: string;
+
   @IsEnum(WorkshopMaterialOrderType)
   @IsOptional()
   orderType?: WorkshopMaterialOrderType;

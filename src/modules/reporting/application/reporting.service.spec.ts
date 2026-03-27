@@ -60,6 +60,11 @@ describe("ReportingService", () => {
     expect(result.inventory.totalQuantityOnHand).toBe("88.500000");
     expect(result.todayDocuments.inboundCount).toBe(4);
     expect(result.cumulativeDocuments.inbound.totalAmount).toBe("1200.50");
+    expect(repository.getHomeMetrics).toHaveBeenCalledWith(
+      expect.any(Date),
+      expect.any(Date),
+      undefined,
+    );
   });
 
   it("should summarize inventory by material category", async () => {
@@ -147,6 +152,7 @@ describe("ReportingService", () => {
     expect(repository.findTrendDocuments).toHaveBeenCalledWith({
       dateFrom: new Date("2026-02-28T16:00:00.000Z"),
       dateTo: new Date("2026-03-02T15:59:59.999Z"),
+      workshopId: undefined,
     });
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.trendType).toBe("OUTBOUND");

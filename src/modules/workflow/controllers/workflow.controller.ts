@@ -29,6 +29,15 @@ export class WorkflowController {
     );
   }
 
+  @Permissions("workflow:audit:status")
+  @Get("audits/document")
+  async getAuditDocument(@Query() query: QueryAuditStatusDto) {
+    return this.workflowService.getAuditDocument(
+      query.documentType,
+      query.documentId,
+    );
+  }
+
   @Permissions("workflow:audit:list")
   @Get("audits")
   async listAudits(@Query() query: QueryAuditsDto) {

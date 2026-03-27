@@ -46,9 +46,13 @@ export class ReportingService {
     private readonly appConfigService: AppConfigService,
   ) {}
 
-  async getHomeDashboard() {
+  async getHomeDashboard(workshopId?: number) {
     const { start, end } = this.resolveTodayRange();
-    const metrics = await this.repository.getHomeMetrics(start, end);
+    const metrics = await this.repository.getHomeMetrics(
+      start,
+      end,
+      workshopId,
+    );
 
     return {
       generatedAt: new Date().toISOString(),
@@ -172,7 +176,7 @@ export class ReportingService {
     };
   }
 
-  async getTrendSeries(query: QueryTrendSeriesDto) {
+  async getTrendSeries(query: QueryTrendSeriesDto, workshopId?: number) {
     const { dateFrom, dateTo } = this.resolveDateRange(
       query.dateFrom,
       query.dateTo,
@@ -181,6 +185,7 @@ export class ReportingService {
     const documents = await this.repository.findTrendDocuments({
       dateFrom,
       dateTo,
+      workshopId,
     });
 
     const filtered = documents.filter(
@@ -233,7 +238,7 @@ export class ReportingService {
     };
   }
 
-  async exportReport(dto: ExportReportDto) {
+  async exportReport(dto: ExportReportDto, workshopId?: number) {
     switch (dto.reportType) {
       case ReportingExportType.INVENTORY_SUMMARY: {
         const result = await this.getInventorySummary({
@@ -276,11 +281,14 @@ export class ReportingService {
         );
       }
       case ReportingExportType.TRENDS: {
-        const result = await this.getTrendSeries({
-          trendType: dto.trendType,
-          dateFrom: dto.dateFrom,
-          dateTo: dto.dateTo,
-        });
+        const result = await this.getTrendSeries(
+          {
+            trendType: dto.trendType,
+            dateFrom: dto.dateFrom,
+            dateTo: dto.dateTo,
+          },
+          workshopId,
+        );
         return this.buildCsvExport(
           dto.reportType,
           ["date", "trendType", "documentCount", "totalQty", "totalAmount"],

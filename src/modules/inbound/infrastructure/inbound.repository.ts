@@ -19,6 +19,9 @@ export class InboundRepository {
       bizDateFrom?: Date;
       bizDateTo?: Date;
       supplierId?: number;
+      handlerName?: string;
+      materialId?: number;
+      materialName?: string;
       workshopId?: number;
       limit: number;
       offset: number;
@@ -45,6 +48,23 @@ export class InboundRepository {
     }
     if (params.supplierId) {
       where.supplierId = params.supplierId;
+    }
+    if (params.handlerName) {
+      where.handlerNameSnapshot = { contains: params.handlerName };
+    }
+    if (params.materialId || params.materialName) {
+      where.lines = {
+        some: {
+          ...(params.materialId ? { materialId: params.materialId } : {}),
+          ...(params.materialName
+            ? {
+                materialNameSnapshot: {
+                  contains: params.materialName,
+                },
+              }
+            : {}),
+        },
+      };
     }
     if (params.workshopId) {
       where.workshopId = params.workshopId;

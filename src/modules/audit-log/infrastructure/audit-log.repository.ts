@@ -21,8 +21,11 @@ export class AuditLogRepository {
 
   async findLoginLogs(params: {
     username?: string;
+    ip?: string;
     action?: LoginLogAction;
     result?: LoginLogResult;
+    beginTime?: string;
+    endTime?: string;
     limit: number;
     offset: number;
   }) {
@@ -37,6 +40,15 @@ export class AuditLogRepository {
     }
     if (params.result) {
       where.result = params.result;
+    }
+    if (params.ip) {
+      where.ip = {
+        contains: params.ip,
+      };
+    }
+    const loginOccurredAt = resolveDateRange(params.beginTime, params.endTime);
+    if (loginOccurredAt) {
+      where.occurredAt = loginOccurredAt;
     }
 
     const [items, total] = await Promise.all([
@@ -54,8 +66,11 @@ export class AuditLogRepository {
 
   async findOperLogs(params: {
     title?: string;
+    ip?: string;
     operatorName?: string;
     result?: OperLogStatus;
+    beginTime?: string;
+    endTime?: string;
     limit: number;
     offset: number;
   }) {
@@ -72,6 +87,15 @@ export class AuditLogRepository {
     }
     if (params.result) {
       where.status = params.result;
+    }
+    if (params.ip) {
+      where.ip = {
+        contains: params.ip,
+      };
+    }
+    const operOccurredAt = resolveDateRange(params.beginTime, params.endTime);
+    if (operOccurredAt) {
+      where.occurredAt = operOccurredAt;
     }
 
     const [items, total] = await Promise.all([
@@ -106,4 +130,28 @@ export class AuditLogRepository {
   async clearOperLogs() {
     return this.prisma.operLog.deleteMany();
   }
+}
+
+function resolveDateRange(beginTime?: string, endTime?: string) {
+  const gte = parseDateValue(beginTime);
+  const lte = parseDateValue(endTime);
+
+  if (!gte && !lte) {
+    return undefined;
+  }
+
+  return {
+    ...(gte ? { gte } : {}),
+    ...(lte ? { lte } : {}),
+  };
+}
+
+function parseDateValue(value?: string) {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }

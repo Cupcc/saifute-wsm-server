@@ -78,6 +78,10 @@ export class SchedulerService
     };
   }
 
+  async getJobById(id: number) {
+    return this.getRequiredJob(id);
+  }
+
   async listJobLogs(query: QuerySchedulerJobLogsDto) {
     return this.schedulerRepository.findJobLogs({
       jobName: query.jobName,

@@ -517,6 +517,10 @@ export class InventoryService {
     workshopId?: number;
     businessDocumentId?: number;
     businessDocumentType?: string;
+    businessDocumentNumber?: string;
+    operationType?: string;
+    occurredAtFrom?: string;
+    occurredAtTo?: string;
     limit?: number;
     offset?: number;
   }) {
@@ -527,6 +531,14 @@ export class InventoryService {
       workshopId: params.workshopId,
       businessDocumentId: params.businessDocumentId,
       businessDocumentType: params.businessDocumentType,
+      businessDocumentNumber: params.businessDocumentNumber,
+      operationType: params.operationType,
+      occurredAtFrom: params.occurredAtFrom
+        ? new Date(params.occurredAtFrom)
+        : undefined,
+      occurredAtTo: params.occurredAtTo
+        ? this.toInclusiveEndDate(params.occurredAtTo)
+        : undefined,
       limit,
       offset,
     });
@@ -607,6 +619,37 @@ export class InventoryService {
     );
   }
 
+  async listFactoryNumberReservations(params: {
+    workshopId?: number;
+    businessDocumentType?: string;
+    businessDocumentLineId?: number;
+    startNumber?: string;
+    endNumber?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const limit = Math.min(params.limit ?? 50, 100);
+    const offset = params.offset ?? 0;
+    return this.repository.findFactoryNumberReservations({
+      workshopId: params.workshopId,
+      businessDocumentType: params.businessDocumentType,
+      businessDocumentLineId: params.businessDocumentLineId,
+      startNumber: params.startNumber,
+      endNumber: params.endNumber,
+      limit,
+      offset,
+    });
+  }
+
+  async getFactoryNumberReservationById(id: number) {
+    const reservation =
+      await this.repository.findFactoryNumberReservationById(id);
+    if (!reservation) {
+      throw new NotFoundException(`编号区间不存在: ${id}`);
+    }
+    return reservation;
+  }
+
   private toPositiveQuantityDecimal(
     quantity: Prisma.Decimal | number | string,
   ): Prisma.Decimal {
@@ -637,6 +680,12 @@ export class InventoryService {
     }
 
     return SourceUsageStatus.PARTIALLY_RELEASED;
+  }
+
+  private toInclusiveEndDate(dateText: string): Date {
+    const date = new Date(dateText);
+    date.setHours(23, 59, 59, 999);
+    return date;
   }
 
   private withTransaction<T>(

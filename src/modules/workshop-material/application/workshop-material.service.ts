@@ -77,6 +77,9 @@ export class WorkshopMaterialService {
     const offset = query.offset ?? 0;
     return this.repository.findOrders({
       documentNo: query.documentNo,
+      handlerName: query.handlerName,
+      materialId: query.materialId,
+      materialName: query.materialName,
       orderType: query.orderType,
       bizDateFrom: query.bizDateFrom ? new Date(query.bizDateFrom) : undefined,
       bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,

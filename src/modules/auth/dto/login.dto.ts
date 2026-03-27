@@ -1,4 +1,10 @@
-import { IsString, IsUUID, Length, MinLength } from "class-validator";
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  MinLength,
+} from "class-validator";
 
 export class LoginDto {
   /** 登录用户名 */
@@ -12,11 +18,13 @@ export class LoginDto {
   password!: string;
 
   /** 图形验证码 ID */
+  @IsOptional()
   @IsUUID()
-  captchaId!: string;
+  captchaId?: string;
 
   /** 4 位图形验证码 */
+  @IsOptional()
   @IsString()
   @Length(4, 4)
-  captchaCode!: string;
+  captchaCode?: string;
 }

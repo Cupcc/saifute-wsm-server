@@ -39,6 +39,25 @@ export class QueryInboundOrderDto {
   @Min(1)
   supplierId?: number;
 
+  /** 经办人姓名关键字 */
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  handlerName?: string;
+
+  /** 物料 ID */
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  materialId?: number;
+
+  /** 物料名称关键字 */
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  materialName?: string;
+
   /** 车间 ID */
   @IsInt()
   @IsOptional()

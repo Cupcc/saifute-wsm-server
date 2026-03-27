@@ -20,23 +20,23 @@ import { UpdateOutboundOrderDto } from "../dto/update-outbound-order.dto";
 import { VoidOutboundOrderDto } from "../dto/void-outbound-order.dto";
 import { VoidSalesReturnDto } from "../dto/void-sales-return.dto";
 
-@Controller("outbound")
+@Controller("customer")
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
-  @Permissions("outbound:order:list")
+  @Permissions("customer:order:list")
   @Get("orders")
   async listOrders(@Query() query: QueryOutboundOrderDto) {
     return this.customerService.listOrders(query);
   }
 
-  @Permissions("outbound:order:list")
+  @Permissions("customer:order:list")
   @Get("orders/:id")
   async getOrder(@Param("id", ParseIntPipe) id: number) {
     return this.customerService.getOrderById(id);
   }
 
-  @Permissions("outbound:order:create")
+  @Permissions("customer:order:create")
   @Post("orders")
   async createOrder(
     @Body() dto: CreateOutboundOrderDto,
@@ -45,7 +45,7 @@ export class CustomerController {
     return this.customerService.createOrder(dto, user?.userId?.toString());
   }
 
-  @Permissions("outbound:order:update")
+  @Permissions("customer:order:update")
   @Patch("orders/:id")
   async updateOrder(
     @Param("id", ParseIntPipe) id: number,
@@ -55,7 +55,7 @@ export class CustomerController {
     return this.customerService.updateOrder(id, dto, user?.userId?.toString());
   }
 
-  @Permissions("outbound:order:void")
+  @Permissions("customer:order:void")
   @Post("orders/:id/void")
   async voidOrder(
     @Param("id", ParseIntPipe) id: number,
@@ -69,19 +69,19 @@ export class CustomerController {
     );
   }
 
-  @Permissions("outbound:sales-return:list")
+  @Permissions("customer:sales-return:list")
   @Get("sales-returns")
   async listSalesReturns(@Query() query: QuerySalesReturnDto) {
     return this.customerService.listSalesReturns(query);
   }
 
-  @Permissions("outbound:sales-return:list")
+  @Permissions("customer:sales-return:list")
   @Get("sales-returns/:id")
   async getSalesReturn(@Param("id", ParseIntPipe) id: number) {
     return this.customerService.getSalesReturnById(id);
   }
 
-  @Permissions("outbound:sales-return:create")
+  @Permissions("customer:sales-return:create")
   @Post("sales-returns")
   async createSalesReturn(
     @Body() dto: CreateSalesReturnDto,
@@ -93,7 +93,7 @@ export class CustomerController {
     );
   }
 
-  @Permissions("outbound:sales-return:void")
+  @Permissions("customer:sales-return:void")
   @Post("sales-returns/:id/void")
   async voidSalesReturn(
     @Param("id", ParseIntPipe) id: number,

@@ -61,10 +61,22 @@ export class MasterDataController {
     return this.masterDataService.listCustomers(query);
   }
 
+  @Permissions("master:customer:list")
+  @Get("customers/:id")
+  async getCustomer(@Param("id", ParseIntPipe) id: number) {
+    return this.masterDataService.getCustomerById(id);
+  }
+
   @Permissions("master:supplier:list")
   @Get("suppliers")
   async listSuppliers(@Query() query: QueryMasterDataDto) {
     return this.masterDataService.listSuppliers(query);
+  }
+
+  @Permissions("master:supplier:list")
+  @Get("suppliers/:id")
+  async getSupplier(@Param("id", ParseIntPipe) id: number) {
+    return this.masterDataService.getSupplierById(id);
   }
 
   @Permissions("master:personnel:list")
@@ -73,9 +85,21 @@ export class MasterDataController {
     return this.masterDataService.listPersonnel(query);
   }
 
+  @Permissions("master:personnel:list")
+  @Get("personnel/:id")
+  async getPersonnel(@Param("id", ParseIntPipe) id: number) {
+    return this.masterDataService.getPersonnelById(id);
+  }
+
   @Permissions("master:workshop:list")
   @Get("workshops")
   async listWorkshops(@Query() query: QueryMasterDataDto) {
     return this.masterDataService.listWorkshops(query);
+  }
+
+  @Permissions("master:workshop:list")
+  @Get("workshops/:id")
+  async getWorkshop(@Param("id", ParseIntPipe) id: number) {
+    return this.masterDataService.getWorkshopById(id);
   }
 }

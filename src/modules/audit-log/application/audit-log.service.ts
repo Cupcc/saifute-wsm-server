@@ -35,18 +35,24 @@ export interface RecordOperationLogCommand {
 
 export class ListLoginLogsQuery {
   username?: string;
+  ip?: string;
   action?: LoginLogAction;
   result?: LoginLogResult;
   limit?: number;
   offset?: number;
+  beginTime?: string;
+  endTime?: string;
 }
 
 export class ListOperLogsQuery {
   title?: string;
+  ip?: string;
   operatorName?: string;
   result?: OperLogStatus;
   limit?: number;
   offset?: number;
+  beginTime?: string;
+  endTime?: string;
 }
 
 @Injectable()
@@ -102,8 +108,11 @@ export class AuditLogService {
   }> {
     const result = await this.repository.findLoginLogs({
       username: query.username,
+      ip: query.ip,
       action: query.action,
       result: query.result,
+      beginTime: query.beginTime,
+      endTime: query.endTime,
       limit: Math.min(query.limit ?? 50, 100),
       offset: query.offset ?? 0,
     });
@@ -132,8 +141,11 @@ export class AuditLogService {
   }> {
     const result = await this.repository.findOperLogs({
       title: query.title,
+      ip: query.ip,
       operatorName: query.operatorName,
       result: query.result,
+      beginTime: query.beginTime,
+      endTime: query.endTime,
       limit: Math.min(query.limit ?? 50, 100),
       offset: query.offset ?? 0,
     });

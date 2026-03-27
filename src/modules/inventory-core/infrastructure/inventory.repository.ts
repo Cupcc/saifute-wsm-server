@@ -39,6 +39,10 @@ export class InventoryRepository {
     workshopId?: number;
     businessDocumentId?: number;
     businessDocumentType?: string;
+    businessDocumentNumber?: string;
+    operationType?: string;
+    occurredAtFrom?: Date;
+    occurredAtTo?: Date;
     limit: number;
     offset: number;
   }) {
@@ -49,6 +53,24 @@ export class InventoryRepository {
       where.businessDocumentId = params.businessDocumentId;
     if (params.businessDocumentType)
       where.businessDocumentType = params.businessDocumentType;
+    if (params.businessDocumentNumber) {
+      where.businessDocumentNumber = {
+        contains: params.businessDocumentNumber,
+      };
+    }
+    if (params.operationType) {
+      where.operationType =
+        params.operationType as Prisma.EnumInventoryOperationTypeFilter;
+    }
+    if (params.occurredAtFrom || params.occurredAtTo) {
+      where.occurredAt = {};
+      if (params.occurredAtFrom) {
+        where.occurredAt.gte = params.occurredAtFrom;
+      }
+      if (params.occurredAtTo) {
+        where.occurredAt.lte = params.occurredAtTo;
+      }
+    }
 
     const [items, total] = await Promise.all([
       this.prisma.inventoryLog.findMany({
@@ -249,6 +271,57 @@ export class InventoryRepository {
     return db.factoryNumberReservation.findMany({
       where,
       orderBy: { id: "asc" },
+    });
+  }
+
+  async findFactoryNumberReservations(params: {
+    workshopId?: number;
+    businessDocumentType?: string;
+    businessDocumentLineId?: number;
+    startNumber?: string;
+    endNumber?: string;
+    limit: number;
+    offset: number;
+  }) {
+    const where: Prisma.FactoryNumberReservationWhereInput = {};
+    if (params.workshopId) {
+      where.workshopId = params.workshopId;
+    }
+    if (params.businessDocumentType) {
+      where.businessDocumentType = params.businessDocumentType;
+    }
+    if (params.businessDocumentLineId) {
+      where.businessDocumentLineId = params.businessDocumentLineId;
+    }
+    if (params.startNumber) {
+      where.startNumber = {
+        contains: params.startNumber,
+      };
+    }
+    if (params.endNumber) {
+      where.endNumber = {
+        contains: params.endNumber,
+      };
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.factoryNumberReservation.findMany({
+        where,
+        take: params.limit,
+        skip: params.offset,
+        include: { material: true, workshop: true },
+        orderBy: { id: "desc" },
+      }),
+      this.prisma.factoryNumberReservation.count({ where }),
+    ]);
+
+    return { items, total };
+  }
+
+  async findFactoryNumberReservationById(id: number) {
+    return this.prisma.factoryNumberReservation.findUnique({
+      where: { id },
+      include: { material: true, workshop: true },
     });
   }
 

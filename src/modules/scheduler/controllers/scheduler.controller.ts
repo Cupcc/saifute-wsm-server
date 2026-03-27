@@ -28,6 +28,12 @@ export class SchedulerController {
     return this.schedulerService.listJobs(query);
   }
 
+  @Permissions("scheduler:job:list")
+  @Get("jobs/:id")
+  async getJob(@Param("id", ParseIntPipe) id: number) {
+    return this.schedulerService.getJobById(id);
+  }
+
   @Permissions("scheduler:job:create")
   @AuditLog({ title: "新增调度任务", action: "CREATE_SCHEDULER_JOB" })
   @Post("jobs")

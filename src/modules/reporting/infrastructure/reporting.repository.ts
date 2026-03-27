@@ -44,7 +44,7 @@ export interface TrendDocumentSnapshot {
 export class ReportingRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getHomeMetrics(todayStart: Date, todayEnd: Date) {
+  async getHomeMetrics(todayStart: Date, todayEnd: Date, workshopId?: number) {
     const [
       activeMaterialCount,
       activeWorkshopCount,
@@ -57,16 +57,36 @@ export class ReportingRepository {
       outboundAggregate,
       workshopMaterialAggregate,
     ] = await Promise.all([
-      this.prisma.material.count({
-        where: { status: MasterDataStatus.ACTIVE },
-      }),
+      workshopId
+        ? this.prisma.inventoryBalance
+            .findMany({
+              where: {
+                workshopId,
+                material: {
+                  status: MasterDataStatus.ACTIVE,
+                },
+              },
+              distinct: ["materialId"],
+              select: {
+                materialId: true,
+              },
+            })
+            .then((items) => items.length)
+        : this.prisma.material.count({
+            where: { status: MasterDataStatus.ACTIVE },
+          }),
       this.prisma.workshop.count({
-        where: { status: MasterDataStatus.ACTIVE },
+        where: {
+          status: MasterDataStatus.ACTIVE,
+          id: workshopId,
+        },
       }),
       this.prisma.inventoryBalance.aggregate({
+        where: { workshopId },
         _sum: { quantityOnHand: true },
       }),
       this.prisma.inventoryBalance.findMany({
+        where: { workshopId },
         include: {
           material: {
             select: {
@@ -77,12 +97,14 @@ export class ReportingRepository {
       }),
       this.prisma.stockInOrder.count({
         where: {
+          workshopId,
           lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
           bizDate: { gte: todayStart, lte: todayEnd },
         },
       }),
       this.prisma.customerStockOrder.count({
         where: {
+          workshopId,
           orderType: CustomerStockOrderType.OUTBOUND,
           lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
           bizDate: { gte: todayStart, lte: todayEnd },
@@ -90,23 +112,31 @@ export class ReportingRepository {
       }),
       this.prisma.workshopMaterialOrder.count({
         where: {
+          workshopId,
           lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
           bizDate: { gte: todayStart, lte: todayEnd },
         },
       }),
       this.prisma.stockInOrder.aggregate({
-        where: { lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE },
+        where: {
+          workshopId,
+          lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+        },
         _sum: { totalQty: true, totalAmount: true },
       }),
       this.prisma.customerStockOrder.aggregate({
         where: {
+          workshopId,
           orderType: CustomerStockOrderType.OUTBOUND,
           lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
         },
         _sum: { totalQty: true, totalAmount: true },
       }),
       this.prisma.workshopMaterialOrder.aggregate({
-        where: { lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE },
+        where: {
+          workshopId,
+          lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+        },
         _sum: { totalQty: true, totalAmount: true },
       }),
     ]);
@@ -170,10 +200,12 @@ export class ReportingRepository {
   async findTrendDocuments(params: {
     dateFrom: Date;
     dateTo: Date;
+    workshopId?: number;
   }): Promise<TrendDocumentSnapshot[]> {
     const [inbound, outbound, workshopMaterial] = await Promise.all([
       this.prisma.stockInOrder.findMany({
         where: {
+          workshopId: params.workshopId,
           lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
           bizDate: { gte: params.dateFrom, lte: params.dateTo },
         },
@@ -185,6 +217,7 @@ export class ReportingRepository {
       }),
       this.prisma.customerStockOrder.findMany({
         where: {
+          workshopId: params.workshopId,
           orderType: CustomerStockOrderType.OUTBOUND,
           lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
           bizDate: { gte: params.dateFrom, lte: params.dateTo },
@@ -197,6 +230,7 @@ export class ReportingRepository {
       }),
       this.prisma.workshopMaterialOrder.findMany({
         where: {
+          workshopId: params.workshopId,
           orderType: {
             in: [
               WorkshopMaterialOrderType.PICK,

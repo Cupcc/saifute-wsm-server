@@ -96,6 +96,10 @@ export class WorkflowService {
     return audit?.auditStatus ?? null;
   }
 
+  async getAuditDocument(documentType: string, documentId: number) {
+    return this.repository.findAuditByDocument(documentType, documentId);
+  }
+
   async approve(id: number, decidedBy?: string) {
     const audit = await this.repository.findAuditById(id);
     if (!audit) {

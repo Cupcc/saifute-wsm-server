@@ -19,6 +19,11 @@ export class QueryLoginLogsDto {
   username?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  ip?: string;
+
+  @IsOptional()
   @IsEnum(LoginLogAction)
   action?: LoginLogAction;
 
@@ -37,4 +42,14 @@ export class QueryLoginLogsDto {
   @IsInt()
   @Min(0)
   offset?: number = 0;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  beginTime?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  endTime?: string;
 }

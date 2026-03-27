@@ -22,6 +22,9 @@ export class WorkshopMaterialRepository {
   async findOrders(
     params: {
       documentNo?: string;
+      handlerName?: string;
+      materialId?: number;
+      materialName?: string;
       orderType?: WorkshopMaterialOrderType;
       bizDateFrom?: Date;
       bizDateTo?: Date;
@@ -36,6 +39,23 @@ export class WorkshopMaterialRepository {
     };
     if (params.documentNo) {
       where.documentNo = { contains: params.documentNo };
+    }
+    if (params.handlerName) {
+      where.handlerNameSnapshot = { contains: params.handlerName };
+    }
+    if (params.materialId || params.materialName) {
+      where.lines = {
+        some: {
+          ...(params.materialId ? { materialId: params.materialId } : {}),
+          ...(params.materialName
+            ? {
+                materialNameSnapshot: {
+                  contains: params.materialName,
+                },
+              }
+            : {}),
+        },
+      };
     }
     if (params.orderType) {
       where.orderType = params.orderType;

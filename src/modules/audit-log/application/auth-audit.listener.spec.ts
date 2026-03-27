@@ -79,6 +79,13 @@ async function createHarness(options?: {
       roles: ["admin"],
       permissions: ["dashboard:view"],
       department: null,
+      consoleMode: "default",
+      workshopScope: {
+        mode: "ALL",
+        workshopId: null,
+        workshopCode: null,
+        workshopName: null,
+      },
     }),
     getCurrentUser: jest.fn(),
     getRoutesForUser: jest.fn(),
@@ -108,6 +115,7 @@ async function createHarness(options?: {
       {
         provide: AppConfigService,
         useValue: {
+          captchaEnabled: true,
           authIpBlacklist: [],
         },
       },

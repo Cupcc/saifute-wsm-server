@@ -18,6 +18,11 @@ export class QueryOperLogsDto {
   @IsOptional()
   @IsString()
   @MaxLength(64)
+  ip?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
   operatorName?: string;
 
   @IsOptional()
@@ -35,4 +40,14 @@ export class QueryOperLogsDto {
   @IsInt()
   @Min(0)
   offset?: number = 0;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  beginTime?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  endTime?: string;
 }

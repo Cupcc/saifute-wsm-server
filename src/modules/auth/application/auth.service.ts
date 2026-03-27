@@ -32,36 +32,48 @@ export class AuthService {
   ) {}
 
   async generateCaptcha() {
+    if (!this.appConfigService.captchaEnabled) {
+      return {
+        captchaEnabled: false,
+        captchaId: "",
+        captchaCode: "",
+        expiresInSeconds: 0,
+      };
+    }
+
     const captchaId = randomUUID();
     const captchaCode = String(randomInt(1000, 10000));
     await this.authStateRepository.storeCaptcha(captchaId, captchaCode);
 
     return {
+      captchaEnabled: true,
       captchaId,
       captchaCode,
-      expiresInSeconds: 300,
+      expiresInSeconds: this.appConfigService.captchaTtlSeconds,
     };
   }
 
   async login(loginDto: LoginDto, request: Request) {
     const clientIp = this.resolveClientIp(request);
     const userAgent = this.resolveUserAgent(request);
-    const captchaValid = await this.authStateRepository.consumeCaptcha(
-      loginDto.captchaId,
-      loginDto.captchaCode,
-    );
-    if (!captchaValid) {
-      this.emitAuthAuditEvent(
-        createAuthAuditEvent({
-          action: AUTH_AUDIT_ACTION.LOGIN,
-          result: AUTH_AUDIT_RESULT.FAILURE,
-          username: loginDto.username,
-          ip: clientIp,
-          userAgent,
-          reason: "captcha_invalid",
-        }),
+    if (this.appConfigService.captchaEnabled) {
+      const captchaValid = await this.authStateRepository.consumeCaptcha(
+        loginDto.captchaId ?? "",
+        loginDto.captchaCode ?? "",
       );
-      throw new BadRequestException("验证码错误或已失效");
+      if (!captchaValid) {
+        this.emitAuthAuditEvent(
+          createAuthAuditEvent({
+            action: AUTH_AUDIT_ACTION.LOGIN,
+            result: AUTH_AUDIT_RESULT.FAILURE,
+            username: loginDto.username,
+            ip: clientIp,
+            userAgent,
+            reason: "captcha_invalid",
+          }),
+        );
+        throw new BadRequestException("验证码错误或已失效");
+      }
     }
 
     if (this.isBlockedIp(clientIp)) {
