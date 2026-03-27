@@ -83,7 +83,7 @@
                icon="Delete"
                :disabled="multiple"
                @click="handleDelete"
-               v-hasPermi="['monitor:operlog:remove']"
+               v-hasPermi="['audit:oper-log:delete']"
             >删除</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -92,7 +92,7 @@
                plain
                icon="Delete"
                @click="handleClean"
-               v-hasPermi="['monitor:operlog:remove']"
+               v-hasPermi="['audit:oper-log:delete']"
             >清空</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -135,7 +135,7 @@
          </el-table-column>
          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
             <template #default="scope">
-               <el-button link type="primary" icon="View" @click="handleView(scope.row, scope.index)" v-hasPermi="['monitor:operlog:query']">详细</el-button>
+               <el-button link type="primary" icon="View" @click="handleView(scope.row, scope.index)" v-hasPermi="['audit:oper-log:list']">详细</el-button>
             </template>
          </el-table-column>
       </adaptive-table>
@@ -201,10 +201,11 @@
 import { cleanOperlog, delOperlog, list } from "@/api/monitor/operlog";
 
 const { proxy } = getCurrentInstance();
-const { sys_oper_type, sys_common_status } = proxy.useDict(
-  "sys_oper_type",
-  "sys_common_status",
-);
+const sys_oper_type = ref([]);
+const sys_common_status = ref([
+  { label: "成功", value: "0" },
+  { label: "失败", value: "1" },
+]);
 
 const operlogList = ref([]);
 const open = ref(false);

@@ -1,45 +1,30 @@
-import request from "@/utils/request";
+import {
+  getWorkshopOrder,
+  listWorkshopOrders,
+  unsupportedWorkshopOrderAction,
+} from "./compat";
 
 // 查询退料单列表
 export function listReturnOrder(query) {
-  return request({
-    url: "/take/returnOrder/list",
-    method: "get",
-    params: query,
-  });
+  return listWorkshopOrders(query, "returnOrder");
 }
 
 // 查询退料单详细
 export function getReturnOrder(returnId) {
-  return request({
-    url: "/take/returnOrder/" + returnId,
-    method: "get",
-  });
+  return getWorkshopOrder(returnId, "returnOrder");
 }
 
 // 新增退料单
-export function addReturnOrder(data) {
-  return request({
-    url: "/take/returnOrder",
-    method: "post",
-    data: data,
-  });
+export function addReturnOrder() {
+  return unsupportedWorkshopOrderAction("当前退料单写操作仍在适配中");
 }
 
 // 修改退料单
-export function updateReturnOrder(data) {
-  return request({
-    url: "/take/returnOrder",
-    method: "put",
-    data: data,
-  });
+export function updateReturnOrder() {
+  return unsupportedWorkshopOrderAction("当前退料单修改仍在适配中");
 }
 
 // 删除退料单（作废）
-export function delReturnOrder(data) {
-  return request({
-    url: "/take/returnOrder/abandoned",
-    method: "post",
-    data: data,
-  });
+export function delReturnOrder() {
+  return unsupportedWorkshopOrderAction("当前退料单作废仍在适配中");
 }

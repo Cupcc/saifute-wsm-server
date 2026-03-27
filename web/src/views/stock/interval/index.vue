@@ -8,7 +8,7 @@
           clearable
           style="width: 240px">
           <el-option
-            v-for="dict in related_order_type"
+            v-for="dict in supportedRelatedOrderTypes"
             :key="dict.value"
             :label="dict.label"
             :value="dict.value"
@@ -86,7 +86,7 @@
       <el-table-column sortable show-overflow-tooltip label="主键" align="center" prop="intervalId" key="intervalId" v-if="columns[0].visible"/>
       <el-table-column sortable show-overflow-tooltip label="关联单据类型" align="center" prop="orderType" v-if="columns[1].visible">
         <template #default="scope">
-          <dict-tag :options="related_order_type" :value="scope.row.orderType"/>
+          <dict-tag :options="supportedRelatedOrderTypes" :value="scope.row.orderType"/>
         </template>
       </el-table-column>
       <el-table-column sortable show-overflow-tooltip label="明细id" align="center" prop="detailId" v-if="columns[2].visible" />
@@ -114,7 +114,7 @@
         <el-form-item label="关联单据类型" prop="orderType">
           <el-select v-model="form.orderType" placeholder="请选择关联单据类型">
             <el-option
-              v-for="dict in related_order_type"
+              v-for="dict in supportedRelatedOrderTypes"
               :key="dict.value"
               :label="dict.label"
               :value="parseInt(dict.value)"
@@ -152,6 +152,9 @@ import {
 
 const { proxy } = getCurrentInstance();
 const { related_order_type } = proxy.useDict("related_order_type");
+const supportedRelatedOrderTypes = computed(() =>
+  related_order_type.value.filter((dict) => String(dict.value) === "4"),
+);
 
 const intervalList = ref([]);
 const open = ref(false);
@@ -230,7 +233,7 @@ function resetQuery() {
 // 多选框选中数据
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.intervalId);
-  single.value = selection.length != 1;
+  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
 
@@ -254,7 +257,7 @@ function handleUpdate(row) {
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["intervalRef"].validate((valid) => {
+  proxy.$refs.intervalRef.validate((valid) => {
     if (valid) {
       if (form.value.intervalId != null) {
         updateInterval(form.value).then((response) => {
@@ -293,7 +296,7 @@ function handleExport() {
     {
       ...queryParams.value,
     },
-    `interval_${new Date().getTime()}.xlsx`,
+    `interval_${Date.now()}.xlsx`,
   );
 }
 

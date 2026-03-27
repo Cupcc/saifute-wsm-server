@@ -1,64 +1,64 @@
 import request from "@/utils/request";
+import {
+  buildDataResponse,
+  buildPageQuery,
+  buildRowsResponse,
+  mapSupplier,
+  pickKeyword,
+  unsupportedBaseAction,
+} from "./compat";
 
 // 查询供应商列表
-export function listSupplier(query) {
+export function listSupplier(query = {}) {
+  const { limit, offset } = buildPageQuery(query);
   return request({
-    url: "/base/supplier/list",
+    url: "/api/master-data/suppliers",
     method: "get",
-    params: query,
-  });
+    params: {
+      keyword: pickKeyword(query, [
+        "supplierCode",
+        "supplierName",
+        "supplierShortName",
+        "contactPerson",
+        "contactPhone",
+        "address",
+      ]),
+      limit,
+      offset,
+    },
+  }).then((response) => buildRowsResponse(response.data, mapSupplier));
 }
 
 // 根据关键字查询供应商列表（根据编号、名称或简称搜索）
 export function listSupplierByKeyword(keyword) {
-  return request({
-    url: "/base/supplier/listByKeyword",
-    method: "get",
-    params: {
-      keyword: keyword,
-    },
-  });
+  return listSupplier({ keyword, pageNum: 1, pageSize: 100 });
 }
 
 // 查询供应商详细
-export function getSupplier(supplierId) {
-  return request({
-    url: "/base/supplier/" + supplierId,
+export async function getSupplier(supplierId) {
+  const response = await request({
+    url: `/api/master-data/suppliers/${supplierId}`,
     method: "get",
   });
+  return buildDataResponse(response.data, mapSupplier);
 }
 
 // 新增供应商
-export function addSupplier(data) {
-  return request({
-    url: "/base/supplier",
-    method: "post",
-    data: data,
-  });
+export function addSupplier() {
+  return unsupportedBaseAction("当前 NestJS 后端未提供供应商新增接口");
 }
 
 // 修改供应商
-export function updateSupplier(data) {
-  return request({
-    url: "/base/supplier",
-    method: "put",
-    data: data,
-  });
+export function updateSupplier() {
+  return unsupportedBaseAction("当前 NestJS 后端未提供供应商修改接口");
 }
 
 // 删除供应商
-export function delSupplier(supplierId) {
-  return request({
-    url: "/base/supplier/" + supplierId,
-    method: "delete",
-  });
+export function delSupplier() {
+  return unsupportedBaseAction("当前 NestJS 后端未提供供应商删除接口");
 }
 
 // 作废供应商
-export function abandonSupplier(data) {
-  return request({
-    url: "/base/supplier/abandoned",
-    method: "post",
-    data: data,
-  });
+export function abandonSupplier() {
+  return unsupportedBaseAction("当前 NestJS 后端未提供供应商作废接口");
 }

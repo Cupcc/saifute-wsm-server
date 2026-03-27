@@ -68,11 +68,13 @@
 import Cookies from "js-cookie";
 import { getCodeImg } from "@/api/login";
 import logo from "@/assets/logo/logo.png";
+import useTagsViewStore from "@/store/modules/tagsView";
 import useUserStore from "@/store/modules/user";
 import { decrypt, encrypt } from "@/utils/jsencrypt";
 
 const title = import.meta.env.VITE_APP_TITLE;
 const userStore = useUserStore();
+const tagsViewStore = useTagsViewStore();
 const route = useRoute();
 const router = useRouter();
 const { proxy } = getCurrentInstance();
@@ -102,7 +104,7 @@ const redirect = ref(undefined);
 watch(
   route,
   (newRoute) => {
-    redirect.value = newRoute.query && newRoute.query.redirect;
+    redirect.value = newRoute.query?.redirect;
   },
   { immediate: true },
 );
@@ -128,6 +130,9 @@ function handleLogin() {
       userStore
         .login(loginForm.value)
         .then(() => {
+          return userStore.getInfo();
+        })
+        .then(() => {
           const query = route.query;
           const otherQueryParams = Object.keys(query).reduce((acc, cur) => {
             if (cur !== "redirect") {
@@ -135,7 +140,16 @@ function handleLogin() {
             }
             return acc;
           }, {});
-          router.push({ path: redirect.value || "/", query: otherQueryParams });
+          const isGenericHomeRedirect =
+            !redirect.value ||
+            redirect.value === "/" ||
+            redirect.value === "/index";
+          tagsViewStore.$reset();
+          const landingPath =
+            isGenericHomeRedirect && userStore.consoleMode === "rd-subwarehouse"
+              ? "/rd/workbench"
+              : redirect.value || "/";
+          router.push({ path: landingPath, query: otherQueryParams });
           // 登录成功后刷新页面
           window.location.reload();
         })
@@ -169,6 +183,8 @@ function getCode() {
       captchaPayload.captchaEnabled === undefined
         ? true
         : captchaPayload.captchaEnabled;
+    loginForm.value.code = "";
+    loginForm.value.uuid = "";
     if (captchaEnabled.value) {
       if (captchaPayload.img) {
         codeUrl.value = `data:image/gif;base64,${captchaPayload.img}`;
@@ -177,6 +193,8 @@ function getCode() {
       }
       loginForm.value.uuid =
         captchaPayload.uuid || captchaPayload.captchaId || "";
+    } else {
+      codeUrl.value = "";
     }
   });
 }
@@ -192,6 +210,8 @@ function getCookie() {
     rememberMe: rememberMe === undefined ? false : Boolean(rememberMe),
   };
 }
+
+void [logo, title, loginRules, register, handleLogin];
 
 getCode();
 getCookie();

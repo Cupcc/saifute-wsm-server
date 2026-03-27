@@ -1,61 +1,40 @@
-import request from "@/utils/request";
+import {
+  getInventorySummaryItem,
+  listInventoryGroupByMaterial,
+  listInventorySummary,
+  unsupportedStockAction,
+} from "./compat";
 
 // 查询库存列表
 export function listInventory(query) {
-  return request({
-    url: "/stock/inventory/list",
-    method: "get",
-    params: query,
-  });
+  return listInventorySummary(query);
 }
 
 export function listDetails(query) {
-  return request({
-    url: "/stock/inventory/listDetails",
-    method: "get",
-    params: query,
-  });
+  return listInventoryGroupByMaterial(query);
 }
 
 // 查询库存列表
 export function selectSaifuteInventoryListGroupByMaterial(query) {
-  return request({
-    url: "/stock/inventory/groupByMaterial",
-    method: "get",
-    params: query,
-  });
+  return listInventoryGroupByMaterial(query);
 }
 
 // 查询库存详细
 export function getInventory(inventoryId) {
-  return request({
-    url: "/stock/inventory/" + inventoryId,
-    method: "get",
-  });
+  return getInventorySummaryItem(inventoryId);
 }
 
 // 新增库存
-export function addInventory(data) {
-  return request({
-    url: "/stock/inventory",
-    method: "post",
-    data: data,
-  });
+export function addInventory() {
+  return unsupportedStockAction("当前 NestJS 后端未提供库存手工新增接口");
 }
 
 // 修改库存
-export function updateInventory(data) {
-  return request({
-    url: "/stock/inventory",
-    method: "put",
-    data: data,
-  });
+export function updateInventory() {
+  return unsupportedStockAction("当前 NestJS 后端未提供库存手工修改接口");
 }
 
 // 删除库存
-export function delInventory(inventoryId) {
-  return request({
-    url: "/stock/inventory/" + inventoryId,
-    method: "delete",
-  });
+export function delInventory() {
+  return unsupportedStockAction("当前 NestJS 后端未提供库存删除接口");
 }

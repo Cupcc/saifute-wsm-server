@@ -1,0 +1,192 @@
+<template>
+  <div class="app-container">
+    <el-card shadow="never" class="hero-card">
+      <template #header>
+        <div class="page-header">
+          <div>
+            <div class="page-title">研发小仓工作台</div>
+            <div class="page-subtitle">当前仓别：{{ workshopLabel }}</div>
+          </div>
+          <el-tag type="success">{{ consoleLabel }}</el-tag>
+        </div>
+      </template>
+
+      <el-row :gutter="16" class="metric-row">
+        <el-col :xs="24" :sm="12" :lg="6">
+          <div class="metric-box">
+            <div class="metric-label">活跃物料数</div>
+            <div class="metric-value">{{ dashboard.inventory.activeMaterialCount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="6">
+          <div class="metric-box">
+            <div class="metric-label">库存总量</div>
+            <div class="metric-value">{{ dashboard.inventory.totalQuantityOnHand }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="6">
+          <div class="metric-box">
+            <div class="metric-label">低库存项</div>
+            <div class="metric-value">{{ dashboard.inventory.lowStockCount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="6">
+          <div class="metric-box">
+            <div class="metric-label">今日入库结果</div>
+            <div class="metric-value">{{ dashboard.todayDocuments.inboundCount }}</div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <div class="quick-actions">
+        <el-button type="primary" @click="goTo('/rd/project-consumption')">
+          项目领用
+        </el-button>
+        <el-button @click="goTo('/rd/scrap-orders')">本仓报废</el-button>
+        <el-button @click="goTo('/rd/inventory-summary')">查看库存</el-button>
+        <el-button @click="goTo('/rd/inventory-logs')">查看流水</el-button>
+        <el-button @click="goTo('/rd/inbound-results')">自动入库结果</el-button>
+      </div>
+    </el-card>
+
+    <el-card shadow="never">
+      <template #header>
+        <div class="section-title">最近自动入库结果</div>
+      </template>
+
+      <el-table :data="recentInboundRows" stripe v-loading="loading">
+        <el-table-column prop="documentNo" label="单据编号" min-width="160" />
+        <el-table-column label="业务日期" min-width="120">
+          <template #default="{ row }">
+            {{ formatDate(row.bizDate) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="totalQty" label="总数量" min-width="120" />
+        <el-table-column prop="totalAmount" label="总金额" min-width="120" />
+        <el-table-column label="明细数" min-width="100">
+          <template #default="{ row }">
+            {{ row.lines?.length || 0 }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="remark" label="备注" min-width="180" />
+      </el-table>
+    </el-card>
+  </div>
+</template>
+
+<script setup name="RdWorkbenchPage">
+import { computed, onMounted, ref } from "vue";
+import { listRdInboundResults } from "@/api/rd-subwarehouse";
+import { getReportingHome } from "@/api/reporting";
+import router from "@/router";
+import useUserStore from "@/store/modules/user";
+
+const userStore = useUserStore();
+const loading = ref(false);
+const recentInboundRows = ref([]);
+const dashboard = ref({
+  inventory: {
+    activeMaterialCount: 0,
+    totalQuantityOnHand: "0.000000",
+    lowStockCount: 0,
+  },
+  todayDocuments: {
+    inboundCount: 0,
+  },
+});
+
+const workshopLabel = computed(
+  () => userStore.workshopScope?.workshopName || "未绑定研发小仓",
+);
+
+const consoleLabel = computed(() =>
+  userStore.consoleMode === "rd-subwarehouse" ? "研发小仓模式" : "默认模式",
+);
+
+function formatDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return new Date(value).toLocaleDateString("zh-CN");
+}
+
+function goTo(path) {
+  router.push(path);
+}
+
+async function loadPage() {
+  loading.value = true;
+  try {
+    const [dashboardResponse, inboundResponse] = await Promise.all([
+      getReportingHome(),
+      listRdInboundResults({ limit: 5, offset: 0 }),
+    ]);
+    dashboard.value = dashboardResponse.data || dashboard.value;
+    recentInboundRows.value = inboundResponse.data?.items || [];
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(() => {
+  loadPage();
+});
+</script>
+
+<style scoped lang="scss">
+.hero-card {
+  margin-bottom: 16px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.page-subtitle {
+  margin-top: 6px;
+  color: #909399;
+  font-size: 13px;
+}
+
+.metric-row {
+  margin-bottom: 16px;
+}
+
+.metric-box {
+  padding: 16px;
+  border-radius: 8px;
+  background: #f5f7fa;
+}
+
+.metric-label {
+  color: #909399;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  color: #303133;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+</style>

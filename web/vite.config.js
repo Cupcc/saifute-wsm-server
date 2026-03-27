@@ -1,12 +1,34 @@
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { defineConfig, loadEnv } from "vite";
 import createVitePlugins from "./vite/plugins";
+
+function readBackendPortFromRootEnv() {
+  const rootDir = path.resolve(__dirname, "..");
+  const envCandidates = [".env.dev", ".env"];
+
+  for (const envFile of envCandidates) {
+    const envPath = path.join(rootDir, envFile);
+    if (!fs.existsSync(envPath)) {
+      continue;
+    }
+
+    const content = fs.readFileSync(envPath, "utf8");
+    const match = content.match(/^\s*PORT\s*=\s*"?([^"\r\n]+)"?\s*$/m);
+    if (match?.[1]) {
+      return match[1].trim();
+    }
+  }
+
+  return "3000";
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd());
-  const { VITE_APP_ENV } = env;
-  const baseUrl = "http://localhost:8080"; // 后端接口
+  const { VITE_APP_ENV, VITE_PROXY_TARGET } = env;
+  const defaultBackendPort = readBackendPortFromRootEnv();
+  const baseUrl = VITE_PROXY_TARGET || `http://127.0.0.1:${defaultBackendPort}`; // 后端接口
   // const baseUrl = mode === 'production' ? 'http://120.26.116.249:8080' : 'http://192.168.6.20:8080' // 后端接口
   if (mode === "development") {
     console.log(baseUrl, "baseUrl");
@@ -27,6 +49,12 @@ export default defineConfig(({ mode, command }) => {
       },
       // https://cn.vitejs.dev/config/#resolve-extensions
       extensions: [".mjs", ".js", ".ts", ".jsx", ".tsx", ".json", ".vue"],
+    },
+    optimizeDeps: {
+      // Work around a dev-time bootstrap crash where Vite's pre-bundled
+      // `@element-plus/icons-vue` chunk throws `isFunction is not a function`
+      // before the Vue runtime finishes initializing.
+      exclude: ["@element-plus/icons-vue"],
     },
     // 打包配置
     build: {

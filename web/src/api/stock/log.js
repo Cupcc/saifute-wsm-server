@@ -1,53 +1,35 @@
-import request from "@/utils/request";
+import {
+  getInventoryLog,
+  listInventoryLogs,
+  unsupportedStockAction,
+} from "./compat";
 
 // 查询库存变动日志列表
 export function listLog(query) {
-  return request({
-    url: "/stock/log/list",
-    method: "get",
-    params: query,
-  });
+  return listInventoryLogs(query);
 }
 
 // 查询库存变动日志列表（包含物料、库位、仓库信息）
 export function listLogVo(query) {
-  return request({
-    url: "/stock/log/listVo",
-    method: "get",
-    params: query,
-  });
+  return listInventoryLogs(query);
 }
 
 // 查询库存变动日志详细
 export function getLog(logId) {
-  return request({
-    url: "/stock/log/" + logId,
-    method: "get",
-  });
+  return getInventoryLog(logId);
 }
 
 // 新增库存变动日志
-export function addLog(data) {
-  return request({
-    url: "/stock/log",
-    method: "post",
-    data: data,
-  });
+export function addLog() {
+  return unsupportedStockAction("当前 NestJS 后端未提供库存日志手工新增接口");
 }
 
 // 修改库存变动日志
-export function updateLog(data) {
-  return request({
-    url: "/stock/log",
-    method: "put",
-    data: data,
-  });
+export function updateLog() {
+  return unsupportedStockAction("当前 NestJS 后端未提供库存日志修改接口");
 }
 
 // 删除库存变动日志
-export function delLog(logId) {
-  return request({
-    url: "/stock/log/" + logId,
-    method: "delete",
-  });
+export function delLog() {
+  return unsupportedStockAction("当前 NestJS 后端未提供库存日志删除接口");
 }

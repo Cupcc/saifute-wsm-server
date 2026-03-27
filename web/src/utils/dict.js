@@ -1,5 +1,88 @@
 import { getDicts } from "@/api/system/dict/data";
 import useDictStore from "@/store/modules/dict";
+import request from "@/utils/request";
+
+const LOCAL_DICT_LOADERS = {
+  sys_yes_no: async () => [
+    { label: "是", value: "1" },
+    { label: "否", value: "0" },
+  ],
+  saifute_customer_type: async () => [
+    { label: "一级客户", value: "1" },
+    { label: "二级客户", value: "2" },
+    { label: "三级客户", value: "3" },
+  ],
+  related_order_type: async () => [
+    { label: "验收单", value: "1" },
+    { label: "入库单", value: "2" },
+    { label: "领料单", value: "3" },
+    { label: "出库单", value: "4" },
+    { label: "退料单", value: "5" },
+    { label: "报废单", value: "6" },
+  ],
+  source_type: async () => [{ label: "领料退料", value: "1" }],
+  saifute_disposal_method: async () => [
+    { label: "直接报废", value: "1" },
+    { label: "返修处理", value: "2" },
+    { label: "其他处理", value: "3" },
+  ],
+  scrap_reason: async () => [
+    { label: "损坏", value: "1" },
+    { label: "质量异常", value: "2" },
+    { label: "过期失效", value: "3" },
+    { label: "其他", value: "9" },
+  ],
+  saifute_material_category: loadMaterialCategoryDict,
+};
+
+async function loadMaterialCategoryDict() {
+  const rows = [];
+  const seen = new Map();
+  let offset = 0;
+  const limit = 100;
+  let total = 0;
+
+  do {
+    const response = await request({
+      url: "/api/master-data/materials",
+      method: "get",
+      params: {
+        limit,
+        offset,
+      },
+    });
+    const data = response.data || {};
+    const items = Array.isArray(data.items) ? data.items : [];
+    total = Number(data.total || 0);
+
+    for (const item of items) {
+      const category = item.category;
+      if (!category?.id || seen.has(category.id)) {
+        continue;
+      }
+      seen.set(category.id, true);
+      rows.push({
+        label: category.categoryName,
+        value: String(category.id),
+      });
+    }
+
+    offset += limit;
+  } while (offset < total);
+
+  return rows.sort((left, right) =>
+    String(left.label).localeCompare(String(right.label)),
+  );
+}
+
+async function loadFallbackDict(dictType) {
+  const loader = LOCAL_DICT_LOADERS[dictType];
+  if (!loader) {
+    return null;
+  }
+
+  return loader();
+}
 
 /**
  * 获取字典数据
@@ -13,14 +96,24 @@ export function useDict(...args) {
       if (dicts) {
         res.value[dictType] = dicts;
       } else {
-        getDicts(dictType).then((resp) => {
-          res.value[dictType] = resp.data.map((p) => ({
-            label: p.dictLabel,
-            value: p.dictValue,
-            elTagType: p.listClass,
-            elTagClass: p.cssClass,
-          }));
-          useDictStore().setDict(dictType, res.value[dictType]);
+        loadFallbackDict(dictType).then((fallback) => {
+          if (fallback) {
+            res.value[dictType] = fallback;
+            useDictStore().setDict(dictType, fallback);
+            return;
+          }
+
+          getDicts(dictType)
+            .then((resp) => {
+              res.value[dictType] = resp.data.map((p) => ({
+                label: p.dictLabel,
+                value: p.dictValue,
+                elTagType: p.listClass,
+                elTagClass: p.cssClass,
+              }));
+              useDictStore().setDict(dictType, res.value[dictType]);
+            })
+            .catch(() => {});
         });
       }
     });

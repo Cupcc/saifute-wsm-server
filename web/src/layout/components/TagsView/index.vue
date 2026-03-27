@@ -46,6 +46,7 @@
 import usePermissionStore from "@/store/modules/permission";
 import useSettingsStore from "@/store/modules/settings";
 import useTagsViewStore from "@/store/modules/tagsView";
+import useUserStore from "@/store/modules/user";
 import { getNormalPath } from "@/utils/ruoyi";
 import ScrollPane from "./ScrollPane";
 
@@ -59,6 +60,7 @@ const scrollPaneRef = ref(null);
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const visitedViews = computed(() => useTagsViewStore().visitedViews);
 const routes = computed(() => usePermissionStore().routes);
@@ -83,6 +85,21 @@ onMounted(() => {
   addTags();
 });
 
+watch(
+  [visitedViews, () => userStore.consoleMode],
+  () => {
+    if (userStore.consoleMode !== "rd-subwarehouse") {
+      return;
+    }
+    const homeTag = visitedViews.value.find((tag) => tag.path === "/index");
+    if (homeTag) {
+      void useTagsViewStore().delVisitedView(homeTag);
+      void useTagsViewStore().delCachedView(homeTag);
+    }
+  },
+  { immediate: true },
+);
+
 function isActive(r) {
   return r.path === route.path;
 }
@@ -96,7 +113,7 @@ function activeStyle(tag) {
 }
 
 function isAffix(tag) {
-  return tag.meta && tag.meta.affix;
+  return tag.meta?.affix;
 }
 
 function isFirstView() {
@@ -124,8 +141,8 @@ function isLastView() {
 function filterAffixTags(routes, basePath = "") {
   let tags = [];
   routes.forEach((route) => {
-    if (route.meta && route.meta.affix) {
-      const tagPath = getNormalPath(basePath + "/" + route.path);
+    if (route.meta?.affix) {
+      const tagPath = getNormalPath(`${basePath}/${route.path}`);
       tags.push({
         fullPath: tagPath,
         path: tagPath,
@@ -144,7 +161,12 @@ function filterAffixTags(routes, basePath = "") {
 }
 
 function initTags() {
-  const res = filterAffixTags(routes.value);
+  const res = filterAffixTags(routes.value).filter((tag) => {
+    if (userStore.consoleMode !== "rd-subwarehouse") {
+      return true;
+    }
+    return tag.path !== "/index";
+  });
   affixTags.value = res;
   for (const tag of res) {
     // Must have tag name
@@ -155,6 +177,9 @@ function initTags() {
 }
 
 function addTags() {
+  if (userStore.consoleMode === "rd-subwarehouse" && route.path === "/index") {
+    return;
+  }
   const { name } = route;
   if (name) {
     useTagsViewStore().addView(route);
@@ -229,9 +254,13 @@ function toLastView(visitedViews, view) {
   } else {
     // now the default is to redirect to the home page if there is no tags-view,
     // you can adjust it according to your needs.
-    if (view.name === "Dashboard") {
+    if (
+      view?.name === "Dashboard" ||
+      view?.name === "Index" ||
+      view?.path === "/index"
+    ) {
       // to reload home page
-      router.replace({ path: "/redirect" + view.fullPath });
+      router.replace({ path: `/redirect${view.fullPath}` });
     } else {
       router.push("/");
     }

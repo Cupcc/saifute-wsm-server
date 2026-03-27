@@ -93,19 +93,17 @@ Accept: text/event-stream
     "hint": "主表字段放在 formData 顶层，明细行数据放在 formData.details 数组中，每个明细至少包含 materialName 和 quantity"
   },
   "/entry/intoOrder": { "formName": "入库单", "..." : "..." },
-  "/out/outboundOrder": { "formName": "出库单", "..." : "..." },
   "/take/pickOrder": { "formName": "领料单", "..." : "..." }
 }
 ```
 
-当前支持 4 种表单：
+当前支持 3 种表单：
 
 | 路由路径               | 表单名 | 主表字段                                           | 明细字段                                          |
 | -------------------- | --- | ------------------------------------------------ | ------------------------------------------------ |
-| `/entry/order`       | 验收单 | supplierName, workshopName, attn, chargeBy, remark | materialName, quantity, unitPrice, taxPrice, remark |
-| `/entry/intoOrder`   | 入库单 | workshopName, attn, chargeBy, remark               | materialName, quantity, unitPrice, remark           |
-| `/out/outboundOrder` | 出库单 | customerName, bookkeeping, chargeBy, remark        | materialName, quantity, unitPrice, remark           |
-| `/take/pickOrder`    | 领料单 | workshopName, picker, chargeBy, remark             | materialName, quantity, remark                      |
+| `/entry/order`     | 验收单 | supplierName, workshopName, attn, chargeBy, remark | materialName, quantity, unitPrice, taxPrice, remark |
+| `/entry/intoOrder` | 入库单 | workshopName, attn, chargeBy, remark               | materialName, quantity, unitPrice, remark           |
+| `/take/pickOrder`  | 领料单 | workshopName, picker, chargeBy, remark             | materialName, quantity, remark                      |
 
 > **扩展新表单**：前端在 `formSchemas.js` 中新增一个路由 key，后端和 AI 侧**零改动**。
 

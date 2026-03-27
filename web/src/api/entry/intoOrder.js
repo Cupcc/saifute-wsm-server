@@ -1,53 +1,36 @@
-import request from "@/utils/request";
+import {
+  getInboundOrder,
+  listInboundOrders,
+  submitInboundOrder,
+  voidInboundOrder,
+} from "./compat";
 
 // 查询入库单列表
 export function listIntoOrder(query) {
-  return request({
-    url: "/entry/intoOrder/list",
-    method: "get",
-    params: query,
-  });
+  return listInboundOrders(query, "intoOrder");
 }
 
 // 查询入库单详细
 export function getIntoOrder(inboundId) {
-  return request({
-    url: "/entry/intoOrder/" + inboundId,
-    method: "get",
-  });
+  return getInboundOrder(inboundId, "intoOrder");
 }
 
 // 新增入库单
 export function addIntoOrder(data) {
-  return request({
-    url: "/entry/intoOrder",
-    method: "post",
-    data: data,
-  });
+  return submitInboundOrder(data, "intoOrder");
 }
 
 // 修改入库单
 export function updateIntoOrder(data) {
-  return request({
-    url: "/entry/intoOrder",
-    method: "put",
-    data: data,
-  });
+  return submitInboundOrder(data, "intoOrder");
 }
 
 // 作废入库单
 export function abandonIntoOrder(data) {
-  return request({
-    url: "/entry/intoOrder/abandoned",
-    method: "post",
-    data: data,
-  });
+  return voidInboundOrder(data, "intoOrder");
 }
 
 // 删除入库单
-export function delIntoOrder(inboundId) {
-  return request({
-    url: "/entry/intoOrder/" + inboundId,
-    method: "delete",
-  });
+export function delIntoOrder(data) {
+  return voidInboundOrder(data, "intoOrder");
 }

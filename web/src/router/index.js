@@ -64,7 +64,7 @@ export const constantRoutes = [
     children: [
       {
         path: "/index",
-        component: () => import("@/views/reporting/home/index"),
+        component: () => import("@/views/home/index"),
         name: "Index",
         meta: { title: "首页", icon: "dashboard", affix: true },
       },
@@ -134,7 +134,7 @@ export const dynamicRoutes = [
     path: "/monitor/job-log",
     component: Layout,
     hidden: true,
-    permissions: ["monitor:job:list"],
+    permissions: ["scheduler:job:log:list"],
     children: [
       {
         path: "index/:jobId(\\d+)",
@@ -163,7 +163,7 @@ export const dynamicRoutes = [
 const router = createRouter({
   history: createWebHistory(),
   routes: constantRoutes,
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior(_to, _from, savedPosition) {
     if (savedPosition) {
       return savedPosition;
     }

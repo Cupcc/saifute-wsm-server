@@ -36,9 +36,9 @@ const responseCompletedTimeMap = new Map();
 service.interceptors.request.use(
   (config) => {
     // 是否需要设置 token
-    const isToken = (config.headers || {}).isToken === false;
+    const isToken = config.headers?.isToken === false;
     // 是否需要防止数据重复提交
-    const isRepeatSubmit = (config.headers || {}).repeatSubmit === false;
+    const isRepeatSubmit = config.headers?.repeatSubmit === false;
     if (getToken() && !isToken) {
       config.headers["Authorization"] = "Bearer " + getToken(); // 让每个请求携带自定义token 请根据实际情况自行修改
     }
@@ -77,7 +77,7 @@ service.interceptors.request.use(
           typeof config.data === "object"
             ? JSON.stringify(config.data)
             : config.data,
-        time: new Date().getTime(),
+        time: Date.now(),
       };
       const requestSize = Object.keys(JSON.stringify(requestObj)).length; // 请求数据大小
       const limitSize = 5 * 1024 * 1024; // 限制存放数据5M
@@ -196,11 +196,18 @@ service.interceptors.response.use(
     }
 
     console.log("err" + error);
-    let { message } = error;
+    let message = typeof error.message === "string" ? error.message : "";
+    const responseData = error.response?.data;
+    const backendMessage =
+      responseData && typeof responseData === "object"
+        ? responseData.message || responseData.msg || responseData.error
+        : "";
     if (message === "Network Error") {
       message = "后端接口连接异常";
     } else if (message.includes("timeout")) {
       message = "系统接口请求超时";
+    } else if (backendMessage) {
+      message = backendMessage;
     } else if (message.includes("Request failed with status code")) {
       message = "系统接口" + message.substr(message.length - 3) + "异常";
     }

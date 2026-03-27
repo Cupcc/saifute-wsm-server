@@ -2,7 +2,9 @@ import { ElMessageBox } from "element-plus";
 import { getInfo, login, logout } from "@/api/login";
 import defAva from "@/assets/images/profile.png";
 import router from "@/router";
+import useTagsViewStore from "@/store/modules/tagsView";
 import { getToken, removeToken, setToken } from "@/utils/auth";
+import { expandPermissionAliases } from "@/utils/permissionCompat";
 import { isEmpty, isHttp } from "@/utils/validate";
 
 const useUserStore = defineStore("user", {
@@ -14,6 +16,13 @@ const useUserStore = defineStore("user", {
     avatar: "",
     roles: [],
     permissions: [],
+    consoleMode: "default",
+    workshopScope: {
+      mode: "ALL",
+      workshopId: null,
+      workshopCode: null,
+      workshopName: null,
+    },
   }),
   actions: {
     // 登录
@@ -46,9 +55,9 @@ const useUserStore = defineStore("user", {
           .then((res) => {
             const user = res.data || {};
             const roles = Array.isArray(user.roles) ? user.roles : [];
-            const permissions = Array.isArray(user.permissions)
-              ? user.permissions
-              : [];
+            const permissions = expandPermissionAliases(
+              Array.isArray(user.permissions) ? user.permissions : [],
+            );
             let avatar = user.avatarUrl || "";
             if (!isHttp(avatar)) {
               avatar = isEmpty(avatar)
@@ -66,6 +75,13 @@ const useUserStore = defineStore("user", {
             this.name = user.username || "";
             this.nickName = user.displayName || user.username || "";
             this.avatar = avatar;
+            this.consoleMode = user.consoleMode || "default";
+            this.workshopScope = user.workshopScope || {
+              mode: "ALL",
+              workshopId: null,
+              workshopCode: null,
+              workshopName: null,
+            };
             if (res.isPasswordExpired) {
               ElMessageBox.confirm(
                 "您的密码已过期，请尽快修改密码！",
@@ -99,6 +115,14 @@ const useUserStore = defineStore("user", {
             this.token = "";
             this.roles = [];
             this.permissions = [];
+            this.consoleMode = "default";
+            this.workshopScope = {
+              mode: "ALL",
+              workshopId: null,
+              workshopCode: null,
+              workshopName: null,
+            };
+            useTagsViewStore().$reset();
             removeToken();
             resolve();
           })

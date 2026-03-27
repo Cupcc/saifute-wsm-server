@@ -43,7 +43,7 @@
                plain
                icon="Plus"
                @click="handleAdd"
-               v-hasPermi="['monitor:job:add']"
+               v-hasPermi="['scheduler:job:create']"
             >新增</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -53,7 +53,7 @@
                icon="Edit"
                :disabled="single"
                @click="handleUpdate"
-               v-hasPermi="['monitor:job:edit']"
+               v-hasPermi="['scheduler:job:update']"
             >修改</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -81,7 +81,7 @@
                plain
                icon="Operation"
                @click="handleJobLog"
-               v-hasPermi="['monitor:job:query']"
+               v-hasPermi="['scheduler:job:log:list']"
             >日志</el-button>
          </el-col>
          <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
@@ -111,19 +111,19 @@
          <el-table-column label="操作" align="center" width="200" class-name="small-padding fixed-width">
             <template #default="scope">
                <el-tooltip content="修改" placement="top">
-                  <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['monitor:job:edit']"></el-button>
+                  <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['scheduler:job:update']"></el-button>
                </el-tooltip>
                <el-tooltip content="删除" placement="top">
                   <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['monitor:job:remove']"></el-button>
                </el-tooltip>
                <el-tooltip content="执行一次" placement="top">
-                  <el-button link type="primary" icon="CaretRight" @click="handleRun(scope.row)" v-hasPermi="['monitor:job:changeStatus']"></el-button>
+                  <el-button link type="primary" icon="CaretRight" @click="handleRun(scope.row)" v-hasPermi="['scheduler:job:run']"></el-button>
                </el-tooltip>
                <el-tooltip content="任务详细" placement="top">
-                  <el-button link type="primary" icon="View" @click="handleView(scope.row)" v-hasPermi="['monitor:job:query']"></el-button>
+                  <el-button link type="primary" icon="View" @click="handleView(scope.row)" v-hasPermi="['scheduler:job:list']"></el-button>
                </el-tooltip>
                <el-tooltip content="调度日志" placement="top">
-                  <el-button link type="primary" icon="Operation" @click="handleJobLog(scope.row)" v-hasPermi="['monitor:job:query']"></el-button>
+                  <el-button link type="primary" icon="Operation" @click="handleJobLog(scope.row)" v-hasPermi="['scheduler:job:log:list']"></el-button>
                </el-tooltip>
             </template>
          </el-table-column>
@@ -298,10 +298,11 @@ import Crontab from "@/components/Crontab";
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
-const { sys_job_group, sys_job_status } = proxy.useDict(
-  "sys_job_group",
-  "sys_job_status",
-);
+const sys_job_group = ref([{ label: "默认", value: "DEFAULT" }]);
+const sys_job_status = ref([
+  { label: "正常", value: "0" },
+  { label: "暂停", value: "1" },
+]);
 
 const jobList = ref([]);
 const open = ref(false);
@@ -389,7 +390,7 @@ function resetQuery() {
 // 多选框选中数据
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.jobId);
-  single.value = selection.length != 1;
+  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
 
@@ -456,7 +457,7 @@ function crontabFill(value) {
 
 /** 任务日志列表查询 */
 function handleJobLog(row) {
-  const jobId = row.jobId || 0;
+  const jobId = row?.jobId || 0;
   router.push("/monitor/job-log/index/" + jobId);
 }
 
@@ -482,7 +483,7 @@ function handleUpdate(row) {
 function submitForm() {
   proxy.$refs["jobRef"].validate((valid) => {
     if (valid) {
-      if (form.value.jobId != undefined) {
+      if (form.value.jobId !== undefined) {
         updateJob(form.value).then((response) => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;

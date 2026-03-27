@@ -98,44 +98,6 @@ export const FORM_SCHEMAS = {
     hint: "主表字段放在 formData 顶层，明细行数据放在 formData.details 数组中，每个明细至少包含 materialName 和 quantity",
   },
 
-  /* ========== 出库单 ========== */
-  "/out/outboundOrder": {
-    formName: "出库单",
-    mainFields: {
-      customerName: {
-        label: "客户",
-        type: "string",
-        hint: "填写客户名称，系统自动模糊匹配",
-        example: "某某有限公司",
-      },
-      bookkeeping: { label: "业务员", type: "string", hint: "填写业务员姓名" },
-      chargeBy: { label: "负责人", type: "string" },
-      remark: { label: "备注", type: "string" },
-    },
-    detailFields: {
-      materialName: {
-        label: "物料名称",
-        type: "string",
-        hint: "填写物料名称或编码，系统自动模糊搜索匹配",
-        required: true,
-        example: "靴子",
-      },
-      quantity: {
-        label: "出库数量",
-        type: "number",
-        required: true,
-        example: "50",
-      },
-      unitPrice: {
-        label: "单价",
-        type: "number",
-        hint: "可不填，系统会自动查询最近出库价",
-      },
-      remark: { label: "明细备注", type: "string" },
-    },
-    hint: "主表字段放在 formData 顶层，明细行数据放在 formData.details 数组中，每个明细至少包含 materialName 和 quantity",
-  },
-
   /* ========== 领料单 ========== */
   "/take/pickOrder": {
     formName: "领料单",

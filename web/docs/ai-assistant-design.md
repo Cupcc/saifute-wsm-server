@@ -83,7 +83,6 @@ Authorization: Bearer {token}
       "hint": "主表字段放在 formData 顶层，明细行数据放在 formData.details 数组中，每个明细至少包含 materialName 和 quantity"
     },
     "/entry/intoOrder": { "formName": "入库单", "..." : "..." },
-    "/out/outboundOrder": { "formName": "出库单", "..." : "..." },
     "/take/pickOrder": { "formName": "领料单", "..." : "..." }
   }
 }
@@ -128,13 +127,12 @@ Authorization: Bearer {token}
 }
 ```
 
-### 当前支持的 4 种表单
+### 当前支持的 3 种表单
 
 | 路由 | 表单名 | 主表字段 | 明细字段 |
 |------|--------|---------|---------|
 | `/entry/order` | 验收单 | supplierName, workshopName, attn, chargeBy, remark | materialName, quantity, unitPrice, taxPrice, remark |
 | `/entry/intoOrder` | 入库单 | workshopName, attn, chargeBy, remark | materialName, quantity, unitPrice, remark |
-| `/out/outboundOrder` | 出库单 | customerName, bookkeeping, chargeBy, remark | materialName, quantity, unitPrice, remark |
 | `/take/pickOrder` | 领料单 | workshopName, picker, chargeBy, remark | materialName, quantity, remark |
 
 ### 扩展新表单
@@ -529,8 +527,6 @@ src/
     ├── entry/
     │   ├── order/index.vue      # 验收单（含 AI 预填逻辑）
     │   └── intoOrder/index.vue  # 入库单（含 AI 预填逻辑）
-    ├── out/
-    │   └── outboundOrder/index.vue  # 出库单（含 AI 预填逻辑）
     └── take/
         └── pickOrder/index.vue  # 领料单（含 AI 预填逻辑）
 ```

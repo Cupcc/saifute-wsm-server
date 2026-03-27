@@ -1,44 +1,49 @@
 import request from "@/utils/request";
+import {
+  buildDataResponse,
+  buildPageQuery,
+  buildRowsResponse,
+  mapPersonnel,
+  pickKeyword,
+  unsupportedBaseAction,
+} from "./compat";
 
 // 查询人员信息列表
-export function listPersonnel(query) {
+export function listPersonnel(query = {}) {
+  const { limit, offset } = buildPageQuery(query);
   return request({
-    url: "/base/personnel/list",
+    url: "/api/master-data/personnel",
     method: "get",
-    params: query,
-  });
+    params: {
+      keyword: pickKeyword(query, ["code", "name", "contactPhone"]),
+      limit,
+      offset,
+    },
+  }).then((response) =>
+    buildRowsResponse(response.data, (item) => mapPersonnel(item, query)),
+  );
 }
 
 // 查询人员信息详细
-export function getPersonnel(personnelId) {
-  return request({
-    url: "/base/personnel/" + personnelId,
+export async function getPersonnel(personnelId) {
+  const response = await request({
+    url: `/api/master-data/personnel/${personnelId}`,
     method: "get",
   });
+  return buildDataResponse(response.data, (item) => mapPersonnel(item));
 }
 
 // 新增人员信息
-export function addPersonnel(data) {
-  return request({
-    url: "/base/personnel",
-    method: "post",
-    data: data,
-  });
+export function addPersonnel() {
+  return unsupportedBaseAction("当前 NestJS 后端未提供人员新增接口");
 }
 
 // 修改人员信息
-export function updatePersonnel(data) {
-  return request({
-    url: "/base/personnel",
-    method: "put",
-    data: data,
-  });
+export function updatePersonnel() {
+  return unsupportedBaseAction("当前 NestJS 后端未提供人员修改接口");
 }
 
 // 删除人员信息
-export function delPersonnel(personnelId) {
-  return request({
-    url: "/base/personnel/" + personnelId,
-    method: "delete",
-  });
+export function delPersonnel() {
+  return unsupportedBaseAction("当前 NestJS 后端未提供人员删除接口");
 }

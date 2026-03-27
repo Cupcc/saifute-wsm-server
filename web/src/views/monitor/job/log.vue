@@ -119,7 +119,7 @@
          </el-table-column>
          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
             <template #default="scope">
-               <el-button link type="primary" icon="View" @click="handleView(scope.row)" v-hasPermi="['monitor:job:query']">详细</el-button>
+               <el-button link type="primary" icon="View" @click="handleView(scope.row)" v-hasPermi="['scheduler:job:log:list']">详细</el-button>
             </template>
          </el-table-column>
       </adaptive-table>
@@ -175,10 +175,11 @@ import { getJob } from "@/api/monitor/job";
 import { cleanJobLog, delJobLog, listJobLog } from "@/api/monitor/jobLog";
 
 const { proxy } = getCurrentInstance();
-const { sys_common_status, sys_job_group } = proxy.useDict(
-  "sys_common_status",
-  "sys_job_group",
-);
+const sys_common_status = ref([
+  { label: "成功", value: "0" },
+  { label: "失败", value: "1" },
+]);
+const sys_job_group = ref([{ label: "默认", value: "DEFAULT" }]);
 
 const jobLogList = ref([]);
 const open = ref(false);
@@ -283,7 +284,7 @@ function handleExport() {
 
 (() => {
   const jobId = route.params && route.params.jobId;
-  if (jobId !== undefined && jobId != 0) {
+  if (jobId !== undefined && Number(jobId) !== 0) {
     getJob(jobId).then((response) => {
       queryParams.value.jobName = response.data.jobName;
       queryParams.value.jobGroup = response.data.jobGroup;

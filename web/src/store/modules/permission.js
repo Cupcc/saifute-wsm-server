@@ -4,35 +4,360 @@ import InnerLink from "@/layout/components/InnerLink";
 import Layout from "@/layout/index";
 import auth from "@/plugins/auth";
 import router, { constantRoutes, dynamicRoutes } from "@/router";
+import useUserStore from "@/store/modules/user";
 
 // 匹配views里面所有的.vue文件
 const modules = import.meta.glob("./../../views/**/*.vue");
 
+const CONSOLE_MODES = {
+  DEFAULT: "default",
+  RD: "rd-subwarehouse",
+};
+
+const SUPPORTED_BACKEND_ROUTE_GROUPS = [
+  {
+    key: "base",
+    path: "/base",
+    name: "Base",
+    title: "基础数据",
+    icon: "tree",
+  },
+  {
+    key: "entry",
+    path: "/entry",
+    name: "Entry",
+    title: "入库管理",
+    icon: "edit",
+  },
+  {
+    key: "customer",
+    path: "/customer",
+    name: "CustomerBusiness",
+    title: "销售管理",
+    icon: "guide",
+  },
+  {
+    key: "workshop",
+    path: "/take",
+    name: "WorkshopBusiness",
+    title: "生产车间",
+    icon: "guide",
+  },
+  {
+    key: "stock",
+    path: "/stock",
+    name: "Stock",
+    title: "库存管理",
+    icon: "build",
+  },
+  {
+    key: "rd",
+    path: "/rd",
+    name: "RdDomain",
+    titleByMode: {
+      [CONSOLE_MODES.DEFAULT]: "研发协同",
+      [CONSOLE_MODES.RD]: "研发小仓",
+    },
+    icon: "dashboard",
+  },
+  {
+    key: "monitor",
+    path: "/monitor",
+    name: "Monitor",
+    title: "系统监控",
+    icon: "monitor",
+  },
+  {
+    key: "reporting",
+    path: "/reporting",
+    name: "Reporting",
+    title: "报表中心",
+    icon: "chart",
+  },
+];
+
 const SUPPORTED_BACKEND_ROUTE_META = {
+  RdWorkbench: {
+    group: "rd",
+    path: "workbench",
+    component: "rd/workbench/index",
+    title: "研发工作台",
+    icon: "dashboard",
+    visibleInModes: [CONSOLE_MODES.RD],
+    affixInModes: [CONSOLE_MODES.RD],
+  },
+  RdInventorySummary: {
+    group: "rd",
+    path: "inventory-summary",
+    component: "reporting/inventory-summary/index",
+    title: "小仓库存",
+    icon: "table",
+    visibleInModes: [CONSOLE_MODES.RD],
+  },
+  RdInventoryLogs: {
+    group: "rd",
+    path: "inventory-logs",
+    component: "rd/inventory-logs/index",
+    title: "库存流水",
+    icon: "time",
+    visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
+  },
+  RdInboundResults: {
+    group: "rd",
+    path: "inbound-results",
+    component: "rd/inbound-results/index",
+    title: "自动入库结果",
+    icon: "form",
+    visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
+  },
+  RdProjectConsumption: {
+    group: "rd",
+    path: "project-consumption",
+    component: "rd/project-consumption/index",
+    title: "项目领用",
+    icon: "education",
+    visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
+  },
+  RdScrapOrders: {
+    group: "rd",
+    path: "scrap-orders",
+    component: "rd/scrap-orders/index",
+    title: "本仓报废",
+    icon: "bug",
+    visibleInModes: [CONSOLE_MODES.RD],
+  },
+  RdMaterialCategorySummary: {
+    group: "rd",
+    path: "material-category-summary",
+    component: "reporting/material-category-summary/index",
+    title: "分类分布",
+    icon: "tree-table",
+    visibleInModes: [CONSOLE_MODES.RD],
+  },
+  BaseMaterial: {
+    group: "base",
+    path: "material",
+    component: "base/material/index",
+    title: "物料管理",
+    icon: "list",
+  },
+  BaseCustomer: {
+    group: "base",
+    path: "customer",
+    component: "base/customer/index",
+    title: "客户管理",
+    icon: "peoples",
+  },
+  BaseSupplier: {
+    group: "base",
+    path: "supplier",
+    component: "base/supplier/index",
+    title: "供应商管理",
+    icon: "tree-table",
+  },
+  BasePersonnel: {
+    group: "base",
+    path: "personnel",
+    component: "base/personnel/index",
+    title: "人员管理",
+    icon: "user",
+  },
+  BaseWorkshop: {
+    group: "base",
+    path: "workshop",
+    component: "base/workshop/index",
+    title: "车间管理",
+    icon: "education",
+  },
+  EntryOrder: {
+    group: "entry",
+    path: "order",
+    component: "entry/order/index",
+    title: "验收单",
+    icon: "form",
+  },
+  EntryDetail: {
+    group: "entry",
+    path: "detail",
+    component: "entry/detail/index",
+    title: "验收明细",
+    icon: "list",
+  },
+  EntryIntoOrder: {
+    group: "entry",
+    path: "intoOrder",
+    component: "entry/intoOrder/index",
+    title: "入库单",
+    icon: "clipboard",
+  },
+  EntryIntoDetail: {
+    group: "entry",
+    path: "intoDetail",
+    component: "entry/intoDetail/index",
+    title: "入库明细",
+    icon: "list",
+  },
+  TakePickOrder: {
+    group: "workshop",
+    path: "pickOrder",
+    component: "take/pickOrder/index",
+    title: "生产领料单",
+    icon: "guide",
+  },
+  TakePickDetail: {
+    group: "workshop",
+    path: "pickDetail",
+    component: "take/pickDetail/index",
+    title: "生产领料明细",
+    icon: "list",
+  },
+  TakeReturnOrder: {
+    group: "workshop",
+    path: "returnOrder",
+    component: "take/returnOrder/index",
+    title: "生产退料单",
+    icon: "refresh",
+  },
+  TakeReturnDetail: {
+    group: "workshop",
+    path: "returnDetail",
+    component: "take/returnDetail/index",
+    title: "生产退料明细",
+    icon: "list",
+  },
+  StockScrapOrder: {
+    group: "workshop",
+    path: "scrapOrder",
+    component: "stock/scrapOrder/index",
+    title: "生产报废单",
+    icon: "bug",
+  },
+  StockScrapDetail: {
+    group: "workshop",
+    path: "scrapDetail",
+    component: "stock/scrapDetail/index",
+    title: "生产报废明细",
+    icon: "list",
+  },
+  StockInventory: {
+    group: "stock",
+    path: "inventory",
+    component: "stock/inventory/index",
+    title: "库存查询",
+    icon: "search",
+  },
+  StockLog: {
+    group: "stock",
+    path: "log",
+    component: "stock/log/index",
+    title: "库存日志",
+    icon: "log",
+  },
+  StockUsed: {
+    group: "stock",
+    path: "used",
+    component: "stock/used/index",
+    title: "已使用物料",
+    icon: "skill",
+  },
+  StockInterval: {
+    group: "stock",
+    path: "interval",
+    component: "stock/interval/index",
+    title: "编号区间",
+    icon: "number",
+  },
+  CustomerOrder: {
+    group: "customer",
+    path: "order",
+    component: "customer/order/index",
+    title: "出库单",
+    icon: "form",
+  },
+  CustomerDetail: {
+    group: "customer",
+    path: "detail",
+    component: "customer/detail/index",
+    title: "出库明细",
+    icon: "list",
+  },
+  CustomerSalesReturnOrder: {
+    group: "customer",
+    path: "salesReturnOrder",
+    component: "customer/salesReturnOrder/index",
+    title: "销售退货单",
+    icon: "refresh",
+  },
+  CustomerSalesReturnDetail: {
+    group: "customer",
+    path: "salesReturnDetail",
+    component: "customer/salesReturnDetail/index",
+    title: "销售退货明细",
+    icon: "list",
+  },
+  OnlineUsers: {
+    group: "monitor",
+    path: "online",
+    component: "monitor/online/index",
+    title: "在线用户",
+    icon: "user",
+  },
+  LoginLogs: {
+    group: "monitor",
+    path: "logininfor",
+    component: "monitor/logininfor/index",
+    title: "登录日志",
+    icon: "form",
+  },
+  OperLogs: {
+    group: "monitor",
+    path: "operlog",
+    component: "monitor/operlog/index",
+    title: "操作日志",
+    icon: "form",
+  },
+  SchedulerJobs: {
+    group: "monitor",
+    path: "job",
+    component: "monitor/job/index",
+    title: "定时任务",
+    icon: "job",
+  },
   ReportingHome: {
+    group: "reporting",
     path: "home",
     component: "reporting/home/index",
     title: "报表首页",
     icon: "dashboard",
   },
   InventorySummary: {
+    group: "reporting",
     path: "inventory-summary",
     component: "reporting/inventory-summary/index",
     title: "库存汇总",
     icon: "table",
   },
   MaterialCategorySummary: {
+    group: "reporting",
     path: "material-category-summary",
     component: "reporting/material-category-summary/index",
     title: "分类分布",
     icon: "tree-table",
   },
   ReportingTrends: {
+    group: "reporting",
     path: "trends",
     component: "reporting/trends/index",
     title: "趋势分析",
     icon: "time",
   },
+};
+
+const FRONTEND_ROUTE_PERMISSION_FALLBACK = {
+  CustomerOrder: ["customer:order:list"],
+  CustomerDetail: ["customer:order:list"],
+  CustomerSalesReturnOrder: ["customer:sales-return:list"],
+  CustomerSalesReturnDetail: ["customer:sales-return:list"],
 };
 
 function collectBackendRouteNames(routes, routeNames = new Set()) {
@@ -53,38 +378,102 @@ function collectBackendRouteNames(routes, routeNames = new Set()) {
   return routeNames;
 }
 
-function buildFrontendRoutes(backendRoutes) {
-  const routeNames = collectBackendRouteNames(backendRoutes);
-  const reportingChildren = Object.entries(SUPPORTED_BACKEND_ROUTE_META)
-    .filter(([routeName]) => routeNames.has(routeName))
-    .map(([routeName, routeMeta]) => ({
-      path: routeMeta.path,
-      component: routeMeta.component,
-      name: routeName,
-      meta: {
-        title: routeMeta.title,
-        icon: routeMeta.icon,
-      },
-    }));
+function resolveGroupTitle(groupMeta, currentConsoleMode) {
+  if (typeof groupMeta.title === "string") {
+    return groupMeta.title;
+  }
+  return (
+    groupMeta.titleByMode?.[currentConsoleMode] ??
+    groupMeta.titleByMode?.[CONSOLE_MODES.DEFAULT] ??
+    ""
+  );
+}
 
-  if (reportingChildren.length === 0) {
+function isRouteVisibleInConsoleMode(routeMeta, currentConsoleMode) {
+  if (!routeMeta.visibleInModes?.length) {
+    return true;
+  }
+  return routeMeta.visibleInModes.includes(currentConsoleMode);
+}
+
+function hasAffixInConsoleMode(routeMeta, currentConsoleMode) {
+  return routeMeta.affixInModes?.includes(currentConsoleMode) ?? false;
+}
+
+function isHomeConstantRoute(route) {
+  return route.children?.some((child) => child.name === "Index");
+}
+
+function buildPermissionBaseRoutes(currentConsoleMode) {
+  if (currentConsoleMode !== CONSOLE_MODES.RD) {
+    return constantRoutes;
+  }
+  return constantRoutes.filter((route) => !isHomeConstantRoute(route));
+}
+
+function buildSidebarBaseRoutes(currentConsoleMode) {
+  if (currentConsoleMode === CONSOLE_MODES.RD) {
     return [];
   }
+  return constantRoutes.filter((route) => isHomeConstantRoute(route));
+}
 
-  return [
-    {
-      path: "/reporting",
+function buildFrontendRoutes(
+  backendRoutes,
+  currentConsoleMode = CONSOLE_MODES.DEFAULT,
+) {
+  const routeNames = collectBackendRouteNames(backendRoutes);
+  return SUPPORTED_BACKEND_ROUTE_GROUPS.map((groupMeta) => {
+    const children = Object.entries(SUPPORTED_BACKEND_ROUTE_META)
+      .filter(([routeName, routeMeta]) => {
+        if (routeMeta.group !== groupMeta.key) {
+          return false;
+        }
+
+        if (!isRouteVisibleInConsoleMode(routeMeta, currentConsoleMode)) {
+          return false;
+        }
+
+        return (
+          routeNames.has(routeName) ||
+          auth.hasPermiOr(FRONTEND_ROUTE_PERMISSION_FALLBACK[routeName] || [])
+        );
+      })
+      .map(([routeName, routeMeta]) => ({
+        path: routeMeta.path,
+        component: routeMeta.component,
+        name: routeName,
+        meta: {
+          title: routeMeta.title,
+          icon: routeMeta.icon,
+          ...(hasAffixInConsoleMode(routeMeta, currentConsoleMode)
+            ? { affix: true }
+            : {}),
+        },
+      }));
+
+    if (children.length === 0) {
+      return null;
+    }
+
+    const redirectPath = children[0]?.path.startsWith("/")
+      ? children[0].path
+      : `${groupMeta.path}/${children[0]?.path}`;
+    const groupTitle = resolveGroupTitle(groupMeta, currentConsoleMode);
+
+    return {
+      path: groupMeta.path,
       component: "Layout",
-      redirect: `/reporting/${reportingChildren[0].path}`,
+      redirect: redirectPath,
       alwaysShow: true,
-      name: "Reporting",
+      name: groupMeta.name,
       meta: {
-        title: "报表中心",
-        icon: "chart",
+        title: groupTitle,
+        icon: groupMeta.icon,
       },
-      children: reportingChildren,
-    },
-  ];
+      children,
+    };
+  }).filter(Boolean);
 }
 
 const usePermissionStore = defineStore("permission", {
@@ -96,12 +485,12 @@ const usePermissionStore = defineStore("permission", {
     sidebarRouters: [],
   }),
   actions: {
-    setRoutes(routes) {
+    setRoutes(routes, baseRoutes = constantRoutes) {
       this.addRoutes = routes;
-      this.routes = constantRoutes.concat(routes);
+      this.routes = baseRoutes.concat(routes);
     },
-    setDefaultRoutes(routes) {
-      this.defaultRoutes = constantRoutes.concat(routes);
+    setDefaultRoutes(routes, baseRoutes = constantRoutes) {
+      this.defaultRoutes = baseRoutes.concat(routes);
     },
     setTopbarRoutes(routes) {
       this.topbarRouters = routes;
@@ -109,12 +498,17 @@ const usePermissionStore = defineStore("permission", {
     setSidebarRouters(routes) {
       this.sidebarRouters = routes;
     },
-    generateRoutes(roles) {
+    generateRoutes() {
       return new Promise((resolve) => {
         // 向后端请求路由数据
         getRouters().then((res) => {
+          const currentConsoleMode =
+            useUserStore().consoleMode || CONSOLE_MODES.DEFAULT;
           const backendRoutes = Array.isArray(res.data) ? res.data : [];
-          const frontendRoutes = buildFrontendRoutes(backendRoutes);
+          const frontendRoutes = buildFrontendRoutes(
+            backendRoutes,
+            currentConsoleMode,
+          );
           const sdata = JSON.parse(JSON.stringify(frontendRoutes));
           const rdata = JSON.parse(JSON.stringify(frontendRoutes));
           const defaultData = JSON.parse(JSON.stringify(frontendRoutes));
@@ -122,13 +516,16 @@ const usePermissionStore = defineStore("permission", {
           const rewriteRoutes = filterAsyncRouter(rdata, false, true);
           const defaultRoutes = filterAsyncRouter(defaultData);
           const asyncRoutes = filterDynamicRoutes(dynamicRoutes);
+          const permissionBaseRoutes =
+            buildPermissionBaseRoutes(currentConsoleMode);
+          const sidebarBaseRoutes = buildSidebarBaseRoutes(currentConsoleMode);
           asyncRoutes.forEach((route) => {
             router.addRoute(route);
           });
-          this.setRoutes(rewriteRoutes);
-          this.setSidebarRouters(constantRoutes.concat(sidebarRoutes));
-          this.setDefaultRoutes(sidebarRoutes);
-          this.setTopbarRoutes(defaultRoutes);
+          this.setRoutes(rewriteRoutes, permissionBaseRoutes);
+          this.setSidebarRouters(sidebarBaseRoutes.concat(sidebarRoutes));
+          this.setDefaultRoutes(sidebarRoutes, sidebarBaseRoutes);
+          this.setTopbarRoutes(sidebarBaseRoutes.concat(defaultRoutes));
           resolve(rewriteRoutes);
         });
       });
@@ -137,7 +534,7 @@ const usePermissionStore = defineStore("permission", {
 });
 
 // 遍历后台传来的路由字符串，转换为组件对象
-function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
+function filterAsyncRouter(asyncRouterMap, _lastRouter = false, type = false) {
   return asyncRouterMap.filter((route) => {
     if (type && route.children) {
       route.children = filterChildren(route.children);
@@ -154,11 +551,11 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
         route.component = loadView(route.component);
       }
     }
-    if (route.children != null && route.children && route.children.length) {
+    if (route.children?.length) {
       route.children = filterAsyncRouter(route.children, route, type);
     } else {
-      delete route["children"];
-      delete route["redirect"];
+      delete route.children;
+      delete route.redirect;
     }
     return true;
   });
@@ -167,8 +564,8 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
 function filterChildren(childrenMap, lastRouter = false) {
   var children = [];
   childrenMap.forEach((el) => {
-    el.path = lastRouter ? lastRouter.path + "/" + el.path : el.path;
-    if (el.children && el.children.length && el.component === "ParentView") {
+    el.path = lastRouter ? `${lastRouter.path}/${el.path}` : el.path;
+    if (el.children?.length && el.component === "ParentView") {
       children = children.concat(filterChildren(el.children, el));
     } else {
       children.push(el);

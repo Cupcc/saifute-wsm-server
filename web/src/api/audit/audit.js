@@ -1,10 +1,45 @@
 import request from "@/utils/request";
 
+const DOCUMENT_TYPE_MAP = {
+  1: "StockInOrder",
+  2: "StockInOrder",
+  3: "WorkshopMaterialOrder",
+  5: "WorkshopMaterialOrder",
+};
+
 // 审核单据
-export function auditDocument(data) {
+export async function auditDocument(data) {
+  const documentType = DOCUMENT_TYPE_MAP[data.documentType];
+  if (!documentType) {
+    throw new Error(`未支持的审核 documentType: ${data.documentType}`);
+  }
+
+  const auditResponse = await request({
+    url: "/api/workflow/audits/document",
+    method: "get",
+    params: {
+      documentType,
+      documentId: data.documentId,
+    },
+  });
+
+  const audit = auditResponse.data;
+  if (!audit?.id) {
+    throw new Error(`未找到审核记录: ${documentType}#${data.documentId}`);
+  }
+
+  if (String(data.auditStatus) === "1") {
+    return request({
+      url: `/api/workflow/audits/${audit.id}/approve`,
+      method: "post",
+    });
+  }
+
   return request({
-    url: "/audit/document",
+    url: `/api/workflow/audits/${audit.id}/reject`,
     method: "post",
-    data: data,
+    data: {
+      rejectReason: data.rejectReason ?? "legacy page reject action",
+    },
   });
 }

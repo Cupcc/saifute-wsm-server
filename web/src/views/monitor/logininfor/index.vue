@@ -59,7 +59,7 @@
                icon="Delete"
                :disabled="multiple"
                @click="handleDelete"
-               v-hasPermi="['monitor:logininfor:remove']"
+               v-hasPermi="['audit:login-log:delete']"
             >删除</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -68,7 +68,7 @@
                plain
                icon="Delete"
                @click="handleClean"
-               v-hasPermi="['monitor:logininfor:remove']"
+               v-hasPermi="['audit:login-log:delete']"
             >清空</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -133,7 +133,10 @@ import {
 } from "@/api/monitor/logininfor";
 
 const { proxy } = getCurrentInstance();
-const { sys_common_status } = proxy.useDict("sys_common_status");
+const sys_common_status = ref([
+  { label: "成功", value: "0" },
+  { label: "失败", value: "1" },
+]);
 
 const logininforList = ref([]);
 const loading = ref(true);
@@ -190,7 +193,7 @@ function resetQuery() {
 function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.infoId);
   multiple.value = !selection.length;
-  single.value = selection.length != 1;
+  single.value = selection.length !== 1;
   selectName.value = selection.map((item) => item.userName);
 }
 

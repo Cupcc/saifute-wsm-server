@@ -1,44 +1,30 @@
-import request from "@/utils/request";
+import {
+  getWorkshopOrderDetail,
+  listWorkshopOrderDetails,
+  unsupportedWorkshopOrderAction,
+} from "@/api/take/compat";
 
 // 查询报废单明细列表
 export function listScrapDetail(query) {
-  return request({
-    url: "/stock/scrapDetail/list",
-    method: "get",
-    params: query,
-  });
+  return listWorkshopOrderDetails(query, "scrapOrder");
 }
 
 // 查询报废单明细详细
 export function getScrapDetail(detailId) {
-  return request({
-    url: "/stock/scrapDetail/" + detailId,
-    method: "get",
-  });
+  return getWorkshopOrderDetail(detailId, "scrapOrder");
 }
 
 // 新增报废单明细
-export function addScrapDetail(data) {
-  return request({
-    url: "/stock/scrapDetail",
-    method: "post",
-    data: data,
-  });
+export function addScrapDetail() {
+  return unsupportedWorkshopOrderAction("请通过报废单主页面维护明细");
 }
 
 // 修改报废单明细
-export function updateScrapDetail(data) {
-  return request({
-    url: "/stock/scrapDetail",
-    method: "put",
-    data: data,
-  });
+export function updateScrapDetail() {
+  return unsupportedWorkshopOrderAction("请通过报废单主页面维护明细");
 }
 
 // 删除报废单明细
-export function delScrapDetail(detailId) {
-  return request({
-    url: "/stock/scrapDetail/" + detailId,
-    method: "delete",
-  });
+export function delScrapDetail() {
+  return unsupportedWorkshopOrderAction("请通过报废单主页面维护明细");
 }

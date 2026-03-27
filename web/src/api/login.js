@@ -5,8 +5,8 @@ export function login(username, password, code, uuid) {
   const data = {
     username,
     password,
-    captchaCode: code,
-    captchaId: uuid,
+    ...(code ? { captchaCode: code } : {}),
+    ...(uuid ? { captchaId: uuid } : {}),
   };
   return request({
     url: "/api/auth/login",

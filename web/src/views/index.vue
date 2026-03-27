@@ -7,7 +7,10 @@
         <el-col :span="16">
           <div class="welcome-section">
             <span class="welcome-title">欢迎回来，{{ userStore.nickName }}</span>
-            <p class="welcome-subtitle">今天是 <span class="current-date">{{ currentDate }}</span>，祝您工作愉快！</p>
+            <p class="welcome-subtitle">
+              今天是 <span class="current-date">{{ currentDate }}</span
+              >，祝您工作愉快！
+            </p>
           </div>
         </el-col>
         <el-col :span="8" class="text-right welcome-buttons">
@@ -20,11 +23,23 @@
           <el-card class="stat-card stat-card-primary" shadow="always">
             <div class="stat-content">
               <div class="stat-info">
-                <p class="stat-label">今日验收量</p>
+                <p class="stat-label">今日入库单据</p>
                 <p class="stat-value">{{ statisticsData.inbound.todayCount }}</p>
-                <el-tag :type="statisticsData.inbound.percentageChange >= 0 ? 'success' : 'danger'" size="small">
-                  <el-icon class="mr-1"><ArrowUp v-if="statisticsData.inbound.percentageChange >= 0" /><ArrowDown v-else /></el-icon>
-                  {{ statisticsData.inbound.percentageChange >= 0 ? '+' : '' }}{{ statisticsData.inbound.percentageChange }}% 较昨天
+                <el-tag
+                  :type="
+                    statisticsData.inbound.percentageChange >= 0
+                      ? 'success'
+                      : 'danger'
+                  "
+                  size="small"
+                >
+                  <el-icon class="mr-1"
+                    ><ArrowUp
+                      v-if="statisticsData.inbound.percentageChange >= 0"
+                    /><ArrowDown v-else
+                  /></el-icon>
+                  {{ statisticsData.inbound.percentageChange >= 0 ? "+" : ""
+                  }}{{ statisticsData.inbound.percentageChange }}% 较昨天
                 </el-tag>
               </div>
               <div class="stat-icon bg-primary-light">
@@ -38,11 +53,23 @@
           <el-card class="stat-card stat-card-success" shadow="always">
             <div class="stat-content">
               <div class="stat-info">
-                <p class="stat-label">今日入库量</p>
-                <p class="stat-value">{{ statisticsData.into.todayCount }}</p>
-                <el-tag :type="statisticsData.into.percentageChange >= 0 ? 'success' : 'danger'" size="small">
-                  <el-icon class="mr-1"><ArrowUp v-if="statisticsData.into.percentageChange >= 0" /><ArrowDown v-else /></el-icon>
-                  {{ statisticsData.into.percentageChange >= 0 ? '+' : '' }}{{ statisticsData.into.percentageChange }}% 较昨日
+                <p class="stat-label">今日出库单据</p>
+                <p class="stat-value">{{ statisticsData.outbound.todayCount }}</p>
+                <el-tag
+                  :type="
+                    statisticsData.outbound.percentageChange >= 0
+                      ? 'success'
+                      : 'danger'
+                  "
+                  size="small"
+                >
+                  <el-icon class="mr-1"
+                    ><ArrowUp
+                      v-if="statisticsData.outbound.percentageChange >= 0"
+                    /><ArrowDown v-else
+                  /></el-icon>
+                  {{ statisticsData.outbound.percentageChange >= 0 ? "+" : ""
+                  }}{{ statisticsData.outbound.percentageChange }}% 较昨日
                 </el-tag>
               </div>
               <div class="stat-icon bg-success-light">
@@ -56,11 +83,31 @@
           <el-card class="stat-card stat-card-warning" shadow="always">
             <div class="stat-content">
               <div class="stat-info">
-                <p class="stat-label">今日领出量</p>
-                <p class="stat-value">{{ statisticsData.pick.todayCount }}</p>
-                <el-tag :type="statisticsData.pick.percentageChange >= 0 ? 'success' : 'danger'" size="small">
-                  <el-icon class="mr-1"><ArrowUp v-if="statisticsData.pick.percentageChange >= 0" /><ArrowDown v-else /></el-icon>
-                  {{ statisticsData.pick.percentageChange >= 0 ? '+' : '' }}{{ statisticsData.pick.percentageChange }}% 较昨日
+                <p class="stat-label">今日领退料单据</p>
+                <p class="stat-value">
+                  {{ statisticsData.workshopMaterial.todayCount }}
+                </p>
+                <el-tag
+                  :type="
+                    statisticsData.workshopMaterial.percentageChange >= 0
+                      ? 'success'
+                      : 'danger'
+                  "
+                  size="small"
+                >
+                  <el-icon class="mr-1"
+                    ><ArrowUp
+                      v-if="
+                        statisticsData.workshopMaterial.percentageChange >= 0
+                      "
+                    /><ArrowDown v-else
+                  /></el-icon>
+                  {{
+                    statisticsData.workshopMaterial.percentageChange >= 0
+                      ? "+"
+                      : ""
+                  }}{{ statisticsData.workshopMaterial.percentageChange }}%
+                  较昨日
                 </el-tag>
               </div>
               <div class="stat-icon bg-warning-light">
@@ -73,11 +120,12 @@
           <el-card class="stat-card stat-card-error" shadow="always">
             <div class="stat-content">
               <div class="stat-info">
-                <p class="stat-label">今日出库量</p>
-                <p class="stat-value">{{ statisticsData.outbound.todayCount }}</p>
-                <el-tag :type="statisticsData.outbound.percentageChange >= 0 ? 'success' : 'danger'" size="small">
-                  <el-icon class="mr-1"><ArrowUp v-if="statisticsData.outbound.percentageChange >= 0" /><ArrowDown v-else /></el-icon>
-                  {{ statisticsData.outbound.percentageChange >= 0 ? '+' : '' }}{{ statisticsData.outbound.percentageChange }}% 较昨日
+                <p class="stat-label">在库物料数</p>
+                <p class="stat-value">
+                  {{ statisticsData.inventory.activeMaterialCount }}
+                </p>
+                <el-tag type="info" size="small">
+                  低库存 {{ statisticsData.inventory.lowStockCount }} 项
                 </el-tag>
               </div>
               <div class="stat-icon bg-error-light">
@@ -92,19 +140,23 @@
       <el-row :gutter="20" class="mb-4">
         <el-col :xs="24" :lg="12" class="mb-4">
           <el-card class="chart-card">
-            <div slot="header" class="chart-header">
-              <span class="chart-title">趋势分析</span>
-            </div>
-            <div id="inventory-trend-chart" class="chart-container"></div>
+            <template #header>
+              <div class="chart-header">
+                <span class="chart-title">业务趋势</span>
+              </div>
+            </template>
+            <div ref="trendChartRef" class="chart-container"></div>
           </el-card>
         </el-col>
 
         <el-col :xs="24" :lg="12" class="mb-4">
           <el-card class="chart-card">
-            <div slot="header" class="chart-header">
-              <span class="chart-title">库存分类分布</span>
-            </div>
-            <div id="inventory-distribution-chart" class="chart-container"></div>
+            <template #header>
+              <div class="chart-header">
+                <span class="chart-title">库存分类分布</span>
+              </div>
+            </template>
+            <div ref="distributionChartRef" class="chart-container"></div>
           </el-card>
         </el-col>
       </el-row>
@@ -116,7 +168,14 @@
 
 <script setup name="Index">
 import * as echarts from "echarts";
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import {
+  nextTick,
+  onActivated,
+  onBeforeUnmount,
+  onDeactivated,
+  onMounted,
+  ref,
+} from "vue";
 import {
   getDocumentDateStatistics,
   getHomeStatistics,
@@ -147,30 +206,32 @@ const statisticsData = ref({
     todayCount: 0,
     percentageChange: 0,
   },
-  into: {
-    todayCount: 0,
-    percentageChange: 0,
-  },
-  pick: {
-    todayCount: 0,
-    percentageChange: 0,
-  },
   outbound: {
     todayCount: 0,
     percentageChange: 0,
+  },
+  workshopMaterial: {
+    todayCount: 0,
+    percentageChange: 0,
+  },
+  inventory: {
+    activeMaterialCount: 0,
+    lowStockCount: 0,
   },
 });
 
 let trendChart = null;
 let distributionChart = null;
 let intervalId = null;
+const trendChartRef = ref(null);
+const distributionChartRef = ref(null);
+const isDashboardActive = ref(false);
+let activationSequence = 0;
 
 // 初始化图表
 function initCharts() {
-  // 库存趋势图
-  const trendChartElement = document.getElementById("inventory-trend-chart");
-  if (trendChartElement) {
-    trendChart = echarts.init(trendChartElement);
+  if (trendChartRef.value) {
+    trendChart = echarts.init(trendChartRef.value);
     const trendOption = {
       tooltip: {
         trigger: "axis",
@@ -179,7 +240,7 @@ function initCharts() {
         },
       },
       legend: {
-        data: ["入库量", "出库量", "库存量"],
+        data: ["入库单据", "出库单据", "领退料单据"],
         bottom: 0,
       },
       grid: {
@@ -198,7 +259,7 @@ function initCharts() {
       },
       series: [
         {
-          name: "入库量",
+          name: "入库单据",
           type: "bar",
           data: [],
           itemStyle: {
@@ -206,7 +267,7 @@ function initCharts() {
           },
         },
         {
-          name: "出库量",
+          name: "出库单据",
           type: "bar",
           data: [],
           itemStyle: {
@@ -214,14 +275,11 @@ function initCharts() {
           },
         },
         {
-          name: "库存量",
-          type: "line",
+          name: "领退料单据",
+          type: "bar",
           data: [],
           itemStyle: {
-            color: "#67C23A",
-          },
-          lineStyle: {
-            width: 3,
+            color: "#E6A23C",
           },
         },
       ],
@@ -229,12 +287,8 @@ function initCharts() {
     trendChart.setOption(trendOption);
   }
 
-  // 库存分布饼图
-  const distributionChartElement = document.getElementById(
-    "inventory-distribution-chart",
-  );
-  if (distributionChartElement) {
-    distributionChart = echarts.init(distributionChartElement);
+  if (distributionChartRef.value) {
+    distributionChart = echarts.init(distributionChartRef.value);
     // 初始使用空数据，稍后会被真实数据替换
     const distributionOption = {
       tooltip: {
@@ -282,6 +336,17 @@ function initCharts() {
 
   // 响应式处理
   window.addEventListener("resize", handleResize);
+}
+
+function disposeCharts() {
+  if (trendChart) {
+    trendChart.dispose();
+    trendChart = null;
+  }
+  if (distributionChart) {
+    distributionChart.dispose();
+    distributionChart = null;
+  }
 }
 
 // 处理窗口大小变化
@@ -388,7 +453,7 @@ function updateTrendChart(data) {
       },
     },
     legend: {
-      data: ["验收量", "入库量", "领出量", "出库量"],
+      data: ["入库单据", "出库单据", "领退料单据"],
       bottom: 0,
     },
     grid: {
@@ -407,7 +472,7 @@ function updateTrendChart(data) {
     },
     series: [
       {
-        name: "验收量",
+        name: "入库单据",
         type: "bar",
         data: data.map((item) => item.inboundCount),
         itemStyle: {
@@ -415,27 +480,19 @@ function updateTrendChart(data) {
         },
       },
       {
-        name: "入库量",
+        name: "出库单据",
         type: "bar",
-        data: data.map((item) => item.intoCount),
+        data: data.map((item) => item.outboundCount),
         itemStyle: {
           color: "#67C23A",
         },
       },
       {
-        name: "领出量",
+        name: "领退料单据",
         type: "bar",
-        data: data.map((item) => item.pickCount),
+        data: data.map((item) => item.workshopMaterialCount),
         itemStyle: {
           color: "#E6A23C",
-        },
-      },
-      {
-        name: "出库量",
-        type: "bar",
-        data: data.map((item) => item.outboundCount),
-        itemStyle: {
-          color: "#F56C6C",
         },
       },
     ],
@@ -447,68 +504,87 @@ function updateTrendChart(data) {
 // 组件挂载时执行
 onMounted(() => {
   setCurrentDate();
-  initCharts();
-
-  // 首次加载数据
-  loadData();
-
-  // 每5分钟请求一次数据 (5分钟 = 300000毫秒)
-  intervalId = setInterval(loadData, 300000);
+  void activateDashboard();
 });
 
 // 统一的数据加载函数
-function loadData() {
-  // 调用后端接口获取统计数据并打印
-  getHomeStatistics().then((response) => {
-    const data = response.data;
+async function loadData() {
+  try {
+    const [statisticsResponse, categoryResponse, trendResponse] =
+      await Promise.all([
+        getHomeStatistics(),
+        getInventoryCategoryStatistics(),
+        getDocumentDateStatistics(),
+      ]);
 
-    // 更新统计数据
-    if (data) {
-      statisticsData.value.inbound = data.inbound;
-      statisticsData.value.into = data.into;
-      statisticsData.value.pick = data.pick;
-      statisticsData.value.outbound = data.outbound;
+    const statistics = statisticsResponse.data;
+    if (statistics) {
+      statisticsData.value = statistics;
     }
-  });
 
-  // 调用库存分类统计接口并打印数据
-  getInventoryCategoryStatistics().then((response) => {
-    // 更新库存分类分布图表
-    updateDistributionChart(response.data);
-  });
+    updateDistributionChart(categoryResponse.data || []);
+    updateTrendChart(trendResponse.data || []);
+  } catch (error) {
+    console.error("首页图表数据加载失败:", error);
+  }
+}
 
-  getDocumentDateStatistics().then((response) => {
-    // 更新库存趋势图表
-    updateTrendChart(response.data);
-  });
+function startPolling() {
+  stopPolling();
+  intervalId = setInterval(loadData, 300000);
+}
 
-  // 添加一些交互效果
-  setTimeout(() => {
-    const cards = document.querySelectorAll(".el-card");
-    cards.forEach((card, index) => {
-      setTimeout(() => {
-        card.style.opacity = "0";
-        card.style.transform = "translateY(20px)";
-        card.style.transition = "all 0.6s ease";
-        setTimeout(() => {
-          card.style.opacity = "1";
-          card.style.transform = "translateY(0)";
-        }, 100);
-      }, index * 100);
-    });
-  }, 500);
+function stopPolling() {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+}
+
+async function activateDashboard() {
+  if (isDashboardActive.value) {
+    return;
+  }
+
+  const currentSequence = ++activationSequence;
+  isDashboardActive.value = true;
+  await nextTick();
+  if (!isDashboardActive.value || activationSequence !== currentSequence) {
+    return;
+  }
+  initCharts();
+  handleResize();
+  await loadData();
+  if (!isDashboardActive.value || activationSequence !== currentSequence) {
+    return;
+  }
+  startPolling();
+}
+
+function deactivateDashboard() {
+  if (!isDashboardActive.value) {
+    return;
+  }
+
+  activationSequence += 1;
+  isDashboardActive.value = false;
+  stopPolling();
+  window.removeEventListener("resize", handleResize);
+  disposeCharts();
 }
 
 // 组件卸载前清理
+onActivated(() => {
+  setCurrentDate();
+  void activateDashboard();
+});
+
+onDeactivated(() => {
+  deactivateDashboard();
+});
+
 onBeforeUnmount(() => {
-  if (trendChart) {
-    trendChart.dispose();
-  }
-  if (distributionChart) {
-    distributionChart.dispose();
-  }
-  window.removeEventListener("resize", handleResize);
-  clearInterval(intervalId);
+  deactivateDashboard();
 });
 </script>
 
