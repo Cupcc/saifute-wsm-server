@@ -20,7 +20,8 @@ If hidden complexity surfaces or shared files / frozen contracts are touched, es
 - New requirements default to `needs-confirmation`; mark `confirmed` only after explicit user approval. Progress-only updates do not downgrade status.
 - Task docs record linked requirement path and inherit confirmed requirement understanding.
 - Sync concise progress back to requirement at key milestones, on blockers, or before ending conversation.
-- When a workflow has a `docs/workspace/<workflow>/` folder, sync decision-relevant findings (trade-offs, options, human-intervention needs) to workspace; parent orchestrator owns workspace writes.
+- When a workflow has a `docs/workspace/<workflow>/` folder, sync decision-relevant findings (trade-offs, options, human-intervention needs) plus discovery-stage draft material (intent hypotheses, brainstorm summaries, concise dialogue traces) to workspace; parent orchestrator owns workspace writes.
+- Refined user-facing confirmation items belong in `docs/requirements/*.md`; workspace `draft.md` is the discovery layer, not the confirmation truth source.
 - Resume truth follows lifecycle first: check `REQUIREMENT_CENTER.md`, `TASK_CENTER.md`, and workspace dashboard/archive placement before treating any root doc as active. Archived docs are provenance, not active handoff.
 - When a scope is objectively complete and no real active follow-up remains, archive requirement/task/workspace in the same turn instead of leaving root-level placeholders.
 - If requirement is unclear or execution would expand scope, stop and confirm with user first.

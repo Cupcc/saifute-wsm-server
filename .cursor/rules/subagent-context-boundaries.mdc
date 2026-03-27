@@ -14,12 +14,13 @@ globs:
 - `.cursor/skills/*/SKILL.md`: structured execution flows for stable, repeatable processes.
 - `docs/playbooks/*/playbook.md`: evolving tactical experience organized by domain — survives task archival, helps agents reproduce successful patterns. Scripts in the same folder automate repeated checks.
 - `docs/dependencies/*.md`: external library versions, APIs, deprecation notes — refreshed via Context7.
-- `docs/workspace/**`: human decision workspace — progress narrative, pending decisions with trade-offs, decision log, rich media assets. Organized by workflow in subfolders. Write access restricted to parent orchestrator; subagents supply material via `decision_candidates` in handoff. See `docs/workspace/README.md`.
+- `docs/workspace/**`: human decision and draft workspace — progress narrative, pending decisions with trade-offs, decision log, intent hypotheses, brainstorm summaries, concise dialogue traces, rich media assets. Organized by workflow in subfolders. Write access restricted to parent orchestrator; subagents supply material via `decision_candidates` in handoff. See `docs/workspace/README.md`.
 - `docs/requirements/*.md`: user-facing interaction layer — concise user intent, progress, status, blockers, next steps.
 - `docs/tasks/*.md`: primary carrier for task-scoped runtime context — plans, execution scope, validation state, review conclusions.
 - Allowed in rules: verified local dev-environment facts, frozen repo-level business rules, long-lived orchestration constraints.
 - Allowed in playbooks: non-obvious execution patterns, anti-patterns, validation tips, edge cases — things that are useful across tasks but may still evolve.
-- Allowed in workspace: decision context, trade-off analysis, option comparison, decision rationale, progress narrative for human readers, supporting data tables and images.
+- Allowed in workspace: decision context, trade-off analysis, option comparison, decision rationale, draft thinking, intent hypotheses, concise dialogue traces, progress narrative for human readers, supporting data tables and images.
+- Workspace `draft.md` is the discovery layer; do not treat it as confirmed requirement truth or task-runtime handoff.
 - Never put runtime context in rules or playbooks: current task plans, temp blockers, one-off test failures, local workarounds, branch state.
 - Shared runtime info for multiple subagents goes in `docs/tasks/*.md` or parent handoff, not rules.
 - Concise user-facing stage status syncs to `docs/requirements/*.md`, not left only in chat history.

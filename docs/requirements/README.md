@@ -54,6 +54,12 @@ docs/requirements/
 - `confirmed`：用户已明确确认，可作为后续规划与执行依据。
 - `draft`：仅用于尚未整理成可发给用户确认的草稿。
 
+`draft` 的边界：
+
+- `req-*.md` 中的 `Status: draft` 只表示“该需求文档本身还没整理好”，不是承载长期脑暴日志的地方。
+- 用户与 AI 对话中产生的原始想法、意图假设、简洁留痕，优先写入 `docs/workspace/<workflow>/draft.md`。
+- 只有当内容已经被整理成可直接发给用户确认的条目时，才进入 `req-*.md` 的 `用户需求` 或 `待确认`。
+
 `Lifecycle disposition` 用于表达文件所处阶段，并与文件目录保持一致：
 
 - `active`：文件位于 `docs/requirements/` 根目录，仍参与当前交互或执行。
@@ -70,6 +76,7 @@ docs/requirements/
 5. 在关键阶段推进、进入阻塞或准备结束当前回合前，同步简洁 `当前进展`。
 6. 需求闭环后优先归档而不是删除；归档时同步更新 `REQUIREMENT_CENTER.md`、相关 task 的 `Related requirement`，以及需求内的 `Related tasks`。
 7. 恢复旧对话或处理 `continue` 时，先以 `REQUIREMENT_CENTER.md` 的 lifecycle 分类判断是否仍属活跃需求；归档需求默认只作溯源，不直接当作当前执行锚点。
+8. 若对应 workflow 已有 `docs/workspace/<workflow>/draft.md`，探索中的脑暴与意图挖掘先留在 draft；requirement 只承接已经提炼好的用户可确认内容。
 
 ## 与任务文档的关系
 
