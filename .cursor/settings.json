@@ -1,8 +1,5 @@
 {
   "plugins": {
-    "prisma": {
-      "enabled": true
-    },
     "context7-plugin": {
       "enabled": true
     }

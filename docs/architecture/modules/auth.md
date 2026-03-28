@@ -74,7 +74,11 @@
 
 ## Infrastructure 设计
 
-- Redis：保存验证码和密码错误计数
+- Redis 访问边界：`auth` 只通过 `AuthStateRepository -> RedisStoreService` 使用 Redis，不直接依赖具体客户端
+- Redis Key：`auth:captcha:{captchaId}`、`auth:password-attempt:{username}`
+- 验证码真实实现必须保持原子一次性消费；不能在真实 Redis 下退化为非原子的 `get`/`del`
+- 密码失败计数真实实现必须保证并发下不丢计数，并继续按 `PASSWORD_LOCK_MINUTES` 维护锁定窗口
+- `CAPTCHA_TTL_SECONDS`、`PASSWORD_MAX_RETRIES`、`PASSWORD_LOCK_MINUTES` 与 Redis 连接参数统一放在 `shared/config` / `AppConfigService`
 - JWT：只放最小声明，如 `sub`、`sid`、`username`
 - Password Hash：兼容现有密码校验策略
 - Event Bus：发布 `auth.login.succeeded`、`auth.login.failed`、`auth.logout`
@@ -84,11 +88,14 @@
 - 依赖 `session`：创建/销毁会话
 - 依赖 `rbac`：加载用户、角色、权限、路由树
 - 依赖 `audit-log`：通过事件记录登录日志
+- 依赖 `shared/redis`：验证码与密码失败计数的基础设施边界
+- 依赖 `shared/config`：验证码、锁定窗口与 Redis 连接相关配置
 
 ## 事务边界与一致性要求
 
 - 登录流程不使用数据库事务，但 Redis 写入和 JWT 签发必须视为同一成功单元
 - 登录失败日志与失败计数允许最终一致
+- Redis 启动探测失败时，`auth` 相关接口不得以内存替身继续提供能力；必须由共享基础设施阻止整个服务启动
 
 ## 权限点、数据权限、审计要求
 

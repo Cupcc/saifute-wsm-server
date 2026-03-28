@@ -4,7 +4,9 @@ import * as request from "supertest";
 import { AppModule } from "../src/app.module";
 import { setupApp } from "../src/app.setup";
 import { PrismaService } from "../src/shared/prisma/prisma.service";
+import { RedisStoreService } from "../src/shared/redis/redis-store.service";
 import { PrismaE2eStub } from "./prisma-e2e-stub";
+import { RedisStoreE2eStub } from "./redis-store.e2e-stub";
 
 interface TestAppContext {
   app: NestExpressApplication;
@@ -45,6 +47,8 @@ describe("Batch A acceptance (e2e)", () => {
     })
       .overrideProvider(PrismaService)
       .useClass(PrismaE2eStub)
+      .overrideProvider(RedisStoreService)
+      .useClass(RedisStoreE2eStub)
       .compile();
 
     const app = moduleRef.createNestApplication<NestExpressApplication>();
@@ -127,7 +131,10 @@ describe("Batch A acceptance (e2e)", () => {
       .get("/api/auth/routes")
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
-    expect(routesResponse.body.data).toHaveLength(2);
+    const routeNames = JSON.stringify(routesResponse.body.data);
+    expect(routeNames).toContain("Dashboard");
+    expect(routeNames).toContain("SystemManagement");
+    expect(routeNames).toContain("RdSubwarehouse");
 
     const onlineResponse = await request(server)
       .get("/api/sessions/online")

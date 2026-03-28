@@ -249,13 +249,22 @@ Treat review as a repair loop, not a stopping point.
 
 Commit creation is a parent-orchestrator step only.
 
-Only proceed to commit when all of the following are true:
+Use `.cursor/rules/commit-workflow.mdc` as the source of truth for checkpoint timing, final semantic commit rules, and squash-to-`main` expectations.
+
+Only proceed to parent-owned commit activity when all of the following are true:
 
 1. The required validation passed for the scoped work.
 2. `code-reviewer` reports no remaining open `[blocking]` or `[important]` findings.
 3. There is no unresolved shared-contract or ownership blocker.
-4. The user explicitly asked for a commit.
+4. The user did not opt out with `no-commit`, and the current session policy allows commit creation.
 5. For migration-style work, unresolved staged or excluded records are either handled within scope or explicitly reported with the required sign-off or follow-up owner.
+
+Default commit behavior:
+
+- on working branches, the parent may create at most one branch-local checkpoint commit for the active scope
+- never create checkpoint commits on `main` or `master`
+- before landing on `main`, squash branch-local checkpoint history so `main` keeps only the final semantic commit
+- if the current session policy blocks commit creation, stop at a commit-ready handoff instead of inventing a local exception
 
 Do not let subagents create the commit directly.
 

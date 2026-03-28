@@ -159,7 +159,7 @@ const { sys_normal_disable } = proxy.useDict("sys_normal_disable");
 const postList = ref([]);
 const open = ref(false);
 const loading = ref(true);
-const showSearch = ref(true);
+const _showSearch = ref(true);
 const ids = ref([]);
 const single = ref(true);
 const multiple = ref(true);
@@ -202,7 +202,7 @@ function getList() {
 }
 
 /** 取消按钮 */
-function cancel() {
+function _cancel() {
   open.value = false;
   reset();
 }
@@ -227,27 +227,27 @@ function handleQuery() {
 }
 
 /** 重置按钮操作 */
-function resetQuery() {
+function _resetQuery() {
   proxy.resetForm("queryRef");
   handleQuery();
 }
 
 /** 多选框选中数据 */
-function handleSelectionChange(selection) {
+function _handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.postId);
-  single.value = selection.length != 1;
+  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
 
 /** 新增按钮操作 */
-function handleAdd() {
+function _handleAdd() {
   reset();
   open.value = true;
   title.value = "添加岗位";
 }
 
 /** 修改按钮操作 */
-function handleUpdate(row) {
+function _handleUpdate(row) {
   reset();
   const postId = row.postId || ids.value;
   open.value = true;
@@ -263,17 +263,17 @@ function handleUpdate(row) {
 }
 
 /** 提交按钮 */
-function submitForm() {
-  proxy.$refs["postRef"].validate((valid) => {
+function _submitForm() {
+  proxy.$refs.postRef.validate((valid) => {
     if (valid) {
-      if (form.value.postId != undefined) {
-        updatePost(form.value).then((response) => {
+      if (form.value.postId !== undefined) {
+        updatePost(form.value).then((_response) => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
         });
       } else {
-        addPost(form.value).then((response) => {
+        addPost(form.value).then((_response) => {
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
@@ -284,10 +284,10 @@ function submitForm() {
 }
 
 /** 删除按钮操作 */
-function handleDelete(row) {
+function _handleDelete(row) {
   const postIds = row.postId || ids.value;
   proxy.$modal
-    .confirm('是否确认删除岗位编号为"' + postIds + '"的数据项？')
+    .confirm(`是否确认删除岗位编号为"${postIds}"的数据项？`)
     .then(() => delPost(postIds))
     .then(() => {
       getList();
@@ -297,13 +297,13 @@ function handleDelete(row) {
 }
 
 /** 导出按钮操作 */
-function handleExport() {
+function _handleExport() {
   proxy.download(
-    "system/post/export",
+    "/api/system/post/export",
     {
       ...queryParams.value,
     },
-    `post_${new Date().getTime()}.xlsx`,
+    `post_${Date.now()}.csv`,
   );
 }
 

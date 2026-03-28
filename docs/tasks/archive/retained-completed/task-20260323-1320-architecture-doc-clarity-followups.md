@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: clarify only the review-confirmed current-vs-target gaps and reading-path ambiguity in the scoped architecture docs, while keeping `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` frozen and read-only
-- Related requirement: `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
 - Status: `completed`
 - Review status: `reviewed-clean`
 - Lifecycle disposition: `retained-completed`
@@ -24,7 +24,7 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
 - Requirement status: clear enough for planning. The requirement is `confirmed`, the review task already identified the docs-only follow-up track, and the user explicitly asked to continue with parallelizable follow-up slices.
 - User intent summary:
   - continue from the completed architecture review instead of reopening the original review
@@ -151,7 +151,7 @@
   - verify no forbidden files changed, especially `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
 - Requirement alignment check:
   - confirm this slice addresses only follow-up track `2` from the completed review task
-  - confirm the final wording stays aligned with `docs/requirements/req-20260321-1109-architecture-review-clarity.md` and `docs/requirements/PROJECT_REQUIREMENTS.md`
+  - confirm the final wording stays aligned with `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md` and `docs/requirements/PROJECT_REQUIREMENTS.md`
 - Final validation gate:
   - the scoped markdown validation passes
   - the diff stays inside the owned paths

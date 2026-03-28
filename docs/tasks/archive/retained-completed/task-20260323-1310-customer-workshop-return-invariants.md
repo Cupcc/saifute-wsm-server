@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: fix only the review-confirmed return-path invariant blockers in `customer` sales returns and `workshop-material` return orders, without widening into unrelated module behavior, shared inventory contracts, schema changes, or architecture doc edits
-- Related requirement: `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
 - Status: `completed`
 - Review status: `reviewed-no-findings`
 - Lifecycle disposition: `retained-completed`
@@ -24,7 +24,7 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
 - Requirement status: clear enough for planning. The linked requirement is `confirmed`, the review task is complete, and the user explicitly approved continuing with the two follow-up slices plus parallelization when safe.
 - User intent summary:
   - continue from the completed architecture review instead of reopening the original review scope

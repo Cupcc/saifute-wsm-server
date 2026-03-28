@@ -4,12 +4,6 @@ export default async () => {
     ["./modules/reporting/dto/query-reporting.dto"]: await import(
       "./modules/reporting/dto/query-reporting.dto"
     ),
-    ["./modules/inbound/dto/create-inbound-order-line.dto"]: await import(
-      "./modules/inbound/dto/create-inbound-order-line.dto"
-    ),
-    ["./modules/inbound/dto/update-inbound-order-line.dto"]: await import(
-      "./modules/inbound/dto/update-inbound-order-line.dto"
-    ),
     ["./modules/customer/dto/create-outbound-order-line.dto"]: await import(
       "./modules/customer/dto/create-outbound-order-line.dto"
     ),
@@ -18,6 +12,12 @@ export default async () => {
     ),
     ["./modules/customer/dto/update-outbound-order-line.dto"]: await import(
       "./modules/customer/dto/update-outbound-order-line.dto"
+    ),
+    ["./modules/inbound/dto/create-inbound-order-line.dto"]: await import(
+      "./modules/inbound/dto/create-inbound-order-line.dto"
+    ),
+    ["./modules/inbound/dto/update-inbound-order-line.dto"]: await import(
+      "./modules/inbound/dto/update-inbound-order-line.dto"
     ),
     ["./modules/project/dto/create-project-line.dto"]: await import(
       "./modules/project/dto/create-project-line.dto"
@@ -460,14 +460,6 @@ export default async () => {
           },
         ],
         [
-          import("./modules/file-storage/dto/download-file.dto"),
-          {
-            DownloadFileDto: {
-              path: { required: true, type: () => String, maxLength: 255 },
-            },
-          },
-        ],
-        [
           import("./modules/workflow/dto/create-audit-document.dto"),
           {
             CreateAuditDocumentDto: {
@@ -530,183 +522,6 @@ export default async () => {
           {
             RejectAuditDto: {
               rejectReason: {
-                required: false,
-                type: () => String,
-                maxLength: 500,
-              },
-            },
-          },
-        ],
-        [
-          import("./modules/inbound/dto/create-inbound-order-line.dto"),
-          {
-            CreateInboundOrderLineDto: {
-              materialId: { required: true, type: () => Number, minimum: 1 },
-              quantity: {
-                required: true,
-                type: () => String,
-                pattern: "/^(?!0+(\\.0+)?$)\\d+(\\.\\d{1,6})?$/",
-              },
-              unitPrice: {
-                required: false,
-                type: () => String,
-                pattern: "/^\\d+(\\.\\d{1,2})?$/",
-              },
-              remark: { required: false, type: () => String, maxLength: 500 },
-            },
-          },
-        ],
-        [
-          import("./modules/inbound/dto/create-inbound-order.dto"),
-          {
-            CreateInboundOrderDto: {
-              documentNo: { required: true, type: () => String, maxLength: 64 },
-              orderType: { required: true, type: () => Object },
-              bizDate: { required: true, type: () => String },
-              supplierId: { required: false, type: () => Number, minimum: 1 },
-              handlerPersonnelId: {
-                required: false,
-                type: () => Number,
-                minimum: 1,
-              },
-              workshopId: { required: true, type: () => Number, minimum: 1 },
-              remark: { required: false, type: () => String, maxLength: 500 },
-              lines: {
-                required: true,
-                type: () => [
-                  t["./modules/inbound/dto/create-inbound-order-line.dto"]
-                    .CreateInboundOrderLineDto,
-                ],
-                minItems: 1,
-              },
-            },
-          },
-        ],
-        [
-          import("./modules/inbound/dto/query-inbound-order.dto"),
-          {
-            QueryInboundOrderDto: {
-              documentNo: {
-                required: false,
-                type: () => String,
-                description: "\u5165\u5E93\u5355\u53F7\u5173\u952E\u5B57",
-                maxLength: 64,
-              },
-              orderType: {
-                required: false,
-                type: () => Object,
-                description: "\u5165\u5E93\u5355\u636E\u7C7B\u578B",
-              },
-              bizDateFrom: {
-                required: false,
-                type: () => String,
-                description:
-                  "\u4E1A\u52A1\u65E5\u671F\u8D77\u59CB\u503C\uFF0C\u683C\u5F0F\u4E3A YYYY-MM-DD",
-              },
-              bizDateTo: {
-                required: false,
-                type: () => String,
-                description:
-                  "\u4E1A\u52A1\u65E5\u671F\u7ED3\u675F\u503C\uFF0C\u683C\u5F0F\u4E3A YYYY-MM-DD",
-              },
-              supplierId: {
-                required: false,
-                type: () => Number,
-                description: "\u4F9B\u5E94\u5546 ID",
-                minimum: 1,
-              },
-              handlerName: {
-                required: false,
-                type: () => String,
-                description: "\u7ECF\u529E\u4EBA\u59D3\u540D\u5173\u952E\u5B57",
-                maxLength: 64,
-              },
-              materialId: {
-                required: false,
-                type: () => Number,
-                description: "\u7269\u6599 ID",
-                minimum: 1,
-              },
-              materialName: {
-                required: false,
-                type: () => String,
-                description: "\u7269\u6599\u540D\u79F0\u5173\u952E\u5B57",
-                maxLength: 128,
-              },
-              workshopId: {
-                required: false,
-                type: () => Number,
-                description: "\u8F66\u95F4 ID",
-                minimum: 1,
-              },
-              limit: {
-                required: false,
-                type: () => Number,
-                description:
-                  "\u6BCF\u9875\u6761\u6570\uFF0C\u9ED8\u8BA4 50\uFF0C\u6700\u5927\u7531\u670D\u52A1\u7AEF\u9650\u5236",
-                default: 50,
-                minimum: 1,
-              },
-              offset: {
-                required: false,
-                type: () => Number,
-                description:
-                  "\u5206\u9875\u504F\u79FB\u91CF\uFF0C\u4ECE 0 \u5F00\u59CB",
-                default: 0,
-                minimum: 0,
-              },
-            },
-          },
-        ],
-        [
-          import("./modules/inbound/dto/update-inbound-order-line.dto"),
-          {
-            UpdateInboundOrderLineDto: {
-              id: { required: false, type: () => Number, minimum: 1 },
-              materialId: { required: true, type: () => Number, minimum: 1 },
-              quantity: {
-                required: true,
-                type: () => String,
-                pattern: "/^(?!0+(\\.0+)?$)\\d+(\\.\\d{1,6})?$/",
-              },
-              unitPrice: {
-                required: false,
-                type: () => String,
-                pattern: "/^\\d+(\\.\\d{1,2})?$/",
-              },
-              remark: { required: false, type: () => String, maxLength: 500 },
-            },
-          },
-        ],
-        [
-          import("./modules/inbound/dto/update-inbound-order.dto"),
-          {
-            UpdateInboundOrderDto: {
-              bizDate: { required: false, type: () => String },
-              supplierId: { required: false, type: () => Number, minimum: 1 },
-              handlerPersonnelId: {
-                required: false,
-                type: () => Number,
-                minimum: 1,
-              },
-              workshopId: { required: false, type: () => Number, minimum: 1 },
-              remark: { required: false, type: () => String, maxLength: 500 },
-              lines: {
-                required: true,
-                type: () => [
-                  t["./modules/inbound/dto/update-inbound-order-line.dto"]
-                    .UpdateInboundOrderLineDto,
-                ],
-                minItems: 1,
-              },
-            },
-          },
-        ],
-        [
-          import("./modules/inbound/dto/void-inbound-order.dto"),
-          {
-            VoidInboundOrderDto: {
-              voidReason: {
                 required: false,
                 type: () => String,
                 maxLength: 500,
@@ -946,6 +761,191 @@ export default async () => {
           import("./modules/customer/dto/void-sales-return.dto"),
           {
             VoidSalesReturnDto: {
+              voidReason: {
+                required: false,
+                type: () => String,
+                maxLength: 500,
+              },
+            },
+          },
+        ],
+        [
+          import("./modules/file-storage/dto/download-file.dto"),
+          {
+            DownloadFileDto: {
+              path: { required: true, type: () => String, maxLength: 255 },
+            },
+          },
+        ],
+        [
+          import("./modules/inbound/dto/create-inbound-order-line.dto"),
+          {
+            CreateInboundOrderLineDto: {
+              materialId: { required: true, type: () => Number, minimum: 1 },
+              quantity: {
+                required: true,
+                type: () => String,
+                pattern: "/^(?!0+(\\.0+)?$)\\d+(\\.\\d{1,6})?$/",
+              },
+              unitPrice: {
+                required: false,
+                type: () => String,
+                pattern: "/^\\d+(\\.\\d{1,2})?$/",
+              },
+              remark: { required: false, type: () => String, maxLength: 500 },
+            },
+          },
+        ],
+        [
+          import("./modules/inbound/dto/create-inbound-order.dto"),
+          {
+            CreateInboundOrderDto: {
+              documentNo: { required: true, type: () => String, maxLength: 64 },
+              orderType: { required: true, type: () => Object },
+              bizDate: { required: true, type: () => String },
+              supplierId: { required: false, type: () => Number, minimum: 1 },
+              handlerPersonnelId: {
+                required: false,
+                type: () => Number,
+                minimum: 1,
+              },
+              workshopId: { required: true, type: () => Number, minimum: 1 },
+              remark: { required: false, type: () => String, maxLength: 500 },
+              lines: {
+                required: true,
+                type: () => [
+                  t["./modules/inbound/dto/create-inbound-order-line.dto"]
+                    .CreateInboundOrderLineDto,
+                ],
+                minItems: 1,
+              },
+            },
+          },
+        ],
+        [
+          import("./modules/inbound/dto/query-inbound-order.dto"),
+          {
+            QueryInboundOrderDto: {
+              documentNo: {
+                required: false,
+                type: () => String,
+                description: "\u5165\u5E93\u5355\u53F7\u5173\u952E\u5B57",
+                maxLength: 64,
+              },
+              orderType: {
+                required: false,
+                type: () => Object,
+                description: "\u5165\u5E93\u5355\u636E\u7C7B\u578B",
+              },
+              bizDateFrom: {
+                required: false,
+                type: () => String,
+                description:
+                  "\u4E1A\u52A1\u65E5\u671F\u8D77\u59CB\u503C\uFF0C\u683C\u5F0F\u4E3A YYYY-MM-DD",
+              },
+              bizDateTo: {
+                required: false,
+                type: () => String,
+                description:
+                  "\u4E1A\u52A1\u65E5\u671F\u7ED3\u675F\u503C\uFF0C\u683C\u5F0F\u4E3A YYYY-MM-DD",
+              },
+              supplierId: {
+                required: false,
+                type: () => Number,
+                description: "\u4F9B\u5E94\u5546 ID",
+                minimum: 1,
+              },
+              handlerName: {
+                required: false,
+                type: () => String,
+                description: "\u7ECF\u529E\u4EBA\u59D3\u540D\u5173\u952E\u5B57",
+                maxLength: 64,
+              },
+              materialId: {
+                required: false,
+                type: () => Number,
+                description: "\u7269\u6599 ID",
+                minimum: 1,
+              },
+              materialName: {
+                required: false,
+                type: () => String,
+                description: "\u7269\u6599\u540D\u79F0\u5173\u952E\u5B57",
+                maxLength: 128,
+              },
+              workshopId: {
+                required: false,
+                type: () => Number,
+                description: "\u8F66\u95F4 ID",
+                minimum: 1,
+              },
+              limit: {
+                required: false,
+                type: () => Number,
+                description:
+                  "\u6BCF\u9875\u6761\u6570\uFF0C\u9ED8\u8BA4 50\uFF0C\u6700\u5927\u7531\u670D\u52A1\u7AEF\u9650\u5236",
+                default: 50,
+                minimum: 1,
+              },
+              offset: {
+                required: false,
+                type: () => Number,
+                description:
+                  "\u5206\u9875\u504F\u79FB\u91CF\uFF0C\u4ECE 0 \u5F00\u59CB",
+                default: 0,
+                minimum: 0,
+              },
+            },
+          },
+        ],
+        [
+          import("./modules/inbound/dto/update-inbound-order-line.dto"),
+          {
+            UpdateInboundOrderLineDto: {
+              id: { required: false, type: () => Number, minimum: 1 },
+              materialId: { required: true, type: () => Number, minimum: 1 },
+              quantity: {
+                required: true,
+                type: () => String,
+                pattern: "/^(?!0+(\\.0+)?$)\\d+(\\.\\d{1,6})?$/",
+              },
+              unitPrice: {
+                required: false,
+                type: () => String,
+                pattern: "/^\\d+(\\.\\d{1,2})?$/",
+              },
+              remark: { required: false, type: () => String, maxLength: 500 },
+            },
+          },
+        ],
+        [
+          import("./modules/inbound/dto/update-inbound-order.dto"),
+          {
+            UpdateInboundOrderDto: {
+              bizDate: { required: false, type: () => String },
+              supplierId: { required: false, type: () => Number, minimum: 1 },
+              handlerPersonnelId: {
+                required: false,
+                type: () => Number,
+                minimum: 1,
+              },
+              workshopId: { required: false, type: () => Number, minimum: 1 },
+              remark: { required: false, type: () => String, maxLength: 500 },
+              lines: {
+                required: true,
+                type: () => [
+                  t["./modules/inbound/dto/update-inbound-order-line.dto"]
+                    .UpdateInboundOrderLineDto,
+                ],
+                minItems: 1,
+              },
+            },
+          },
+        ],
+        [
+          import("./modules/inbound/dto/void-inbound-order.dto"),
+          {
+            VoidInboundOrderDto: {
               voidReason: {
                 required: false,
                 type: () => String,
@@ -1469,8 +1469,151 @@ export default async () => {
           },
         ],
         [
+          import("./modules/session/controllers/sessions.controller"),
+          { SessionsController: { listOnlineSessions: {}, forceLogout: {} } },
+        ],
+        [
           import("./modules/rbac/controllers/rbac.controller"),
           { RbacController: { getCurrentRoutes: { type: [Object] } } },
+        ],
+        [
+          import("./modules/rbac/controllers/system-config.controller"),
+          {
+            SystemConfigController: {
+              listConfigs: {},
+              exportConfigs: {},
+              refreshConfigCache: {},
+              getConfigByKey: {},
+              getConfig: {},
+              createConfig: { type: Object },
+              updateConfig: { type: Object },
+              deleteConfigs: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-dept.controller"),
+          {
+            SystemDeptController: {
+              listDepts: {},
+              listDeptExcludeChild: {},
+              getDept: {},
+              createDept: { type: Object },
+              updateDept: { type: Object },
+              deleteDepts: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-dict-data.controller"),
+          {
+            SystemDictDataController: {
+              listDictData: {},
+              exportDictData: {},
+              getDicts: {},
+              getDictData: {},
+              createDictData: { type: Object },
+              updateDictData: { type: Object },
+              deleteDictData: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-dict-type.controller"),
+          {
+            SystemDictTypeController: {
+              listDictTypes: {},
+              exportDictTypes: {},
+              refreshDictCache: {},
+              listDictTypeOptions: {},
+              getDictType: {},
+              createDictType: { type: Object },
+              updateDictType: { type: Object },
+              deleteDictTypes: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-menu.controller"),
+          {
+            SystemMenuController: {
+              listMenus: {},
+              getMenuTreeSelect: {},
+              getRoleMenuTree: {},
+              getMenu: {},
+              createMenu: { type: Object },
+              updateMenu: { type: Object },
+              deleteMenus: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-notice.controller"),
+          {
+            SystemNoticeController: {
+              listNotices: {},
+              getNotice: {},
+              createNotice: { type: Object },
+              updateNotice: { type: Object },
+              deleteNotices: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-post.controller"),
+          {
+            SystemPostController: {
+              listPosts: {},
+              exportPosts: {},
+              getPost: {},
+              createPost: { type: Object },
+              updatePost: { type: Object },
+              deletePosts: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-role.controller"),
+          {
+            SystemRoleController: {
+              listRoles: {},
+              exportRoles: {},
+              updateRoleDataScope: {},
+              changeRoleStatus: {},
+              listAllocatedUsers: {},
+              listUnallocatedUsers: {},
+              cancelAuthUser: {},
+              cancelAuthUserAll: {},
+              selectUsersToRole: {},
+              getRoleDeptTree: {},
+              getRole: {},
+              createRole: { type: Object },
+              updateRole: { type: Object },
+              deleteRoles: {},
+            },
+          },
+        ],
+        [
+          import("./modules/rbac/controllers/system-user.controller"),
+          {
+            SystemUserController: {
+              listUsers: {},
+              exportUsers: {},
+              getUserProfile: {},
+              updateUserProfile: {},
+              updateUserPassword: {},
+              getAuthRole: {},
+              updateAuthRole: {},
+              getDeptTree: {},
+              resetUserPassword: {},
+              changeUserStatus: {},
+              getUserTemplate: {},
+              getUser: {},
+              createUser: {},
+              updateUser: {},
+              deleteUsers: {},
+            },
+          },
         ],
         [
           import("./modules/inventory-core/controllers/inventory.controller"),
@@ -1501,10 +1644,6 @@ export default async () => {
           { AiAssistantController: { listTools: {}, chat: {} } },
         ],
         [
-          import("./modules/session/controllers/sessions.controller"),
-          { SessionsController: { listOnlineSessions: {}, forceLogout: {} } },
-        ],
-        [
           import("./modules/auth/controllers/auth.controller"),
           {
             AuthController: {
@@ -1513,16 +1652,6 @@ export default async () => {
               logout: {},
               getCurrentUser: { type: Object },
               getRoutes: { type: [Object] },
-            },
-          },
-        ],
-        [
-          import("./modules/file-storage/controllers/file-storage.controller"),
-          {
-            FileStorageController: {
-              uploadFile: { type: Object },
-              uploadAvatar: { type: Object },
-              downloadFile: {},
             },
           },
         ],
@@ -1541,6 +1670,32 @@ export default async () => {
           },
         ],
         [
+          import("./modules/customer/controllers/customer.controller"),
+          {
+            CustomerController: {
+              listOrders: {},
+              getOrder: { type: Object },
+              createOrder: { type: Object },
+              updateOrder: { type: Object },
+              voidOrder: { type: Object },
+              listSalesReturns: {},
+              getSalesReturn: { type: Object },
+              createSalesReturn: { type: Object },
+              voidSalesReturn: { type: Object },
+            },
+          },
+        ],
+        [
+          import("./modules/file-storage/controllers/file-storage.controller"),
+          {
+            FileStorageController: {
+              uploadFile: { type: Object },
+              uploadAvatar: { type: Object },
+              downloadFile: {},
+            },
+          },
+        ],
+        [
           import("./modules/inbound/controllers/inbound.controller"),
           {
             InboundController: {
@@ -1554,22 +1709,6 @@ export default async () => {
               createIntoOrder: { type: Object },
               updateIntoOrder: { type: Object },
               voidIntoOrder: { type: Object },
-            },
-          },
-        ],
-        [
-          import("./modules/customer/controllers/customer.controller"),
-          {
-            CustomerController: {
-              listOrders: {},
-              getOrder: { type: Object },
-              createOrder: { type: Object },
-              updateOrder: { type: Object },
-              voidOrder: { type: Object },
-              listSalesReturns: {},
-              getSalesReturn: { type: Object },
-              createSalesReturn: { type: Object },
-              voidSalesReturn: { type: Object },
             },
           },
         ],

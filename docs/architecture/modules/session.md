@@ -68,22 +68,27 @@
 
 ## Infrastructure 设计
 
+- Redis 访问边界：`session` 只通过 `shared/redis` 提供的 `RedisStoreService` 读写会话，不自行创建客户端连接
 - Redis Key：`login_tokens:{sid}`
-- JWT Secret 与过期配置放在 `shared/config`
+- JWT Secret、Redis 连接参数、`SESSION_TTL_SECONDS`、`SESSION_MAX_TTL_SECONDS`、`SESSION_REFRESH_THRESHOLD_SECONDS` 统一放在 `shared/config` / `AppConfigService`
 - 会话序列化对象需要版本字段，避免后续结构漂移
-- 在线用户列表优先基于 Redis 会话扫描构建
+- 在线用户列表优先基于 `RedisStoreService.listByPrefix()` 构建；真实 Redis 实现必须使用增量扫描，不使用 `KEYS`
+- 真实 Redis 连接生命周期由 `RedisModule` 管理；应用启动阶段若 Redis 连接或探测失败，服务直接启动失败，不允许会话层以内存回退继续工作
 
 ## 与其他模块的依赖关系
 
 - 被 `auth` 依赖：创建、销毁会话
 - 被 `rbac` 间接依赖：从会话读取权限快照
 - 向 `audit-log` 发布强退、过期、注销事件
+- 依赖 `shared/redis`：会话真源、TTL、在线会话扫描
+- 依赖 `shared/config`：JWT、会话 TTL 与续期阈值配置
 
 ## 事务边界与一致性要求
 
 - 创建会话时，Redis 写入成功后才返回 token
 - 强退和注销的判定依据是 Redis 删除成功
 - 续期允许最终一致，但不能越过最大存活时间约束
+- Redis 的剩余 TTL 读取结果必须先适配为仓库约定，再交给 `session` 判断是否续期或失效
 
 ## 权限点、数据权限、审计要求
 

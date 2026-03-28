@@ -48,7 +48,7 @@
                 <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete" v-hasPermi="['system:user:remove']">删除</el-button>
               </el-col>
               <el-col :span="1.5">
-                <el-button type="info" plain icon="Upload" @click="handleImport" v-hasPermi="['system:user:import']">导入</el-button>
+                <el-button v-if="USER_IMPORT_ENABLED" type="info" plain icon="Upload" @click="handleImport" v-hasPermi="['system:user:import']">导入</el-button>
               </el-col>
               <el-col :span="1.5">
                 <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['system:user:export']">导出</el-button>
@@ -214,7 +214,6 @@
 </template>
 
 <script setup name="User">
-import { Pane, Splitpanes } from "splitpanes";
 import {
   addUser,
   changeUserStatus,
@@ -225,12 +224,13 @@ import {
   resetUserPwd,
   updateUser,
 } from "@/api/system/user";
+import auth from "@/plugins/auth";
 import useAppStore from "@/store/modules/app";
 import { getToken } from "@/utils/auth";
 import "splitpanes/dist/splitpanes.css";
 
 const router = useRouter();
-const appStore = useAppStore();
+const _appStore = useAppStore();
 const { proxy } = getCurrentInstance();
 const { sys_normal_disable, sys_user_sex } = proxy.useDict(
   "sys_normal_disable",
@@ -240,7 +240,7 @@ const { sys_normal_disable, sys_user_sex } = proxy.useDict(
 const userList = ref([]);
 const open = ref(false);
 const loading = ref(true);
-const showSearch = ref(true);
+const _showSearch = ref(true);
 const ids = ref([]);
 const single = ref(true);
 const multiple = ref(true);
@@ -254,6 +254,7 @@ const initPassword = ref(undefined);
 const postOptions = ref([]);
 const dialogLoading = ref(false);
 const roleOptions = ref([]);
+const _USER_IMPORT_ENABLED = false;
 /*** 用户导入参数 */
 const upload = reactive({
   // 是否显示弹出层（用户导入）
@@ -265,12 +266,12 @@ const upload = reactive({
   // 是否更新已经存在的用户数据
   updateSupport: 0,
   // 设置上传的请求头部
-  headers: { Authorization: "Bearer " + getToken() },
+  headers: { Authorization: `Bearer ${getToken()}` },
   // 上传的地址
-  url: import.meta.env.VITE_APP_BASE_API + "/system/user/importData",
+  url: `${import.meta.env.VITE_APP_BASE_API}/api/system/user/importData`,
 });
 // 列显隐信息
-const columns = ref([
+const _columns = ref([
   { key: 0, label: `用户编号`, visible: true },
   { key: 1, label: `用户名称`, visible: true },
   { key: 2, label: `用户昵称`, visible: true },
@@ -337,14 +338,14 @@ const data = reactive({
 const { queryParams, form, rules } = toRefs(data);
 
 /** 通过条件过滤节点  */
-const filterNode = (value, data) => {
+const _filterNode = (value, data) => {
   if (!value) return true;
   return data.label.indexOf(value) !== -1;
 };
 
 /** 根据名称筛选部门树 */
 watch(deptName, (val) => {
-  proxy.$refs["deptTreeRef"].filter(val);
+  proxy.$refs.deptTreeRef.filter(val);
 });
 
 /** 查询用户列表 */
@@ -375,7 +376,7 @@ function filterDisabledDept(deptList) {
     if (dept.disabled) {
       return false;
     }
-    if (dept.children && dept.children.length) {
+    if (dept.children?.length) {
       dept.children = filterDisabledDept(dept.children);
     }
     return true;
@@ -383,7 +384,7 @@ function filterDisabledDept(deptList) {
 }
 
 /** 节点单击事件 */
-function handleNodeClick(data) {
+function _handleNodeClick(data) {
   queryParams.value.deptId = data.id;
   handleQuery();
 }
@@ -395,7 +396,7 @@ function handleQuery() {
 }
 
 /** 重置按钮操作 */
-function resetQuery() {
+function _resetQuery() {
   dateRange.value = [];
   proxy.resetForm("queryRef");
   queryParams.value.deptId = undefined;
@@ -404,10 +405,10 @@ function resetQuery() {
 }
 
 /** 删除按钮操作 */
-function handleDelete(row) {
+function _handleDelete(row) {
   const userIds = row.userId || ids.value;
   proxy.$modal
-    .confirm('是否确认删除用户编号为"' + userIds + '"的数据项？')
+    .confirm(`是否确认删除用户编号为"${userIds}"的数据项？`)
     .then(() => delUser(userIds))
     .then(() => {
       getList();
@@ -417,24 +418,24 @@ function handleDelete(row) {
 }
 
 /** 导出按钮操作 */
-function handleExport() {
+function _handleExport() {
   proxy.download(
-    "system/user/export",
+    "/api/system/user/export",
     {
       ...queryParams.value,
     },
-    `user_${new Date().getTime()}.xlsx`,
+    `user_${Date.now()}.csv`,
   );
 }
 
 /** 用户状态修改  */
-function handleStatusChange(row) {
+function _handleStatusChange(row) {
   let text = row.status === "0" ? "启用" : "停用";
   proxy.$modal
-    .confirm('确认要"' + text + '""' + row.userName + '"用户吗?')
+    .confirm(`确认要"${text}""${row.userName}"用户吗?`)
     .then(() => changeUserStatus(row.userId, row.status))
     .then(() => {
-      proxy.$modal.msgSuccess(text + "成功");
+      proxy.$modal.msgSuccess(`${text}成功`);
     })
     .catch(() => {
       row.status = row.status === "0" ? "1" : "0";
@@ -442,7 +443,7 @@ function handleStatusChange(row) {
 }
 
 /** 更多操作 */
-function handleCommand(command, row) {
+function _handleCommand(command, row) {
   switch (command) {
     case "handleResetPwd":
       handleResetPwd(row);
@@ -458,13 +459,13 @@ function handleCommand(command, row) {
 /** 跳转角色分配 */
 function handleAuthRole(row) {
   const userId = row.userId;
-  router.push("/system/user-auth/role/" + userId);
+  router.push(`/system/user-auth/role/${userId}`);
 }
 
 /** 重置密码按钮操作 */
 function handleResetPwd(row) {
   proxy
-    .$prompt('请输入"' + row.userName + '"的新密码', "提示", {
+    .$prompt(`请输入"${row.userName}"的新密码`, "提示", {
       confirmButtonText: "确定",
       cancelButtonText: "取消",
       closeOnClickModal: false,
@@ -477,45 +478,45 @@ function handleResetPwd(row) {
       },
     })
     .then(({ value }) => {
-      resetUserPwd(row.userId, value).then((response) => {
-        proxy.$modal.msgSuccess("修改成功，新密码是：" + value);
+      resetUserPwd(row.userId, value).then((_response) => {
+        proxy.$modal.msgSuccess(`修改成功，新密码是：${value}`);
       });
     })
     .catch(() => {});
 }
 
 /** 选择条数  */
-function handleSelectionChange(selection) {
+function _handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.userId);
-  single.value = selection.length != 1;
+  single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
 
 /** 导入按钮操作 */
-function handleImport() {
+function _handleImport() {
   upload.title = "用户导入";
   upload.open = true;
 }
 
 /** 下载模板操作 */
-function importTemplate() {
+function _importTemplate() {
   proxy.download(
-    "system/user/importTemplate",
+    "/api/system/user/importTemplate",
     {},
-    `user_template_${new Date().getTime()}.xlsx`,
+    `user_template_${Date.now()}.xlsx`,
   );
 }
 
 /**文件上传中处理 */
-const handleFileUploadProgress = (event, file, fileList) => {
+const _handleFileUploadProgress = (_event, _file, _fileList) => {
   upload.isUploading = true;
 };
 
 /** 文件上传成功处理 */
-const handleFileSuccess = (response, file, fileList) => {
+const _handleFileSuccess = (response, file, _fileList) => {
   upload.open = false;
   upload.isUploading = false;
-  proxy.$refs["uploadRef"].handleRemove(file);
+  proxy.$refs.uploadRef.handleRemove(file);
   proxy.$alert(
     "<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" +
       response.msg +
@@ -527,8 +528,8 @@ const handleFileSuccess = (response, file, fileList) => {
 };
 
 /** 提交上传文件 */
-function submitFileForm() {
-  proxy.$refs["uploadRef"].submit();
+function _submitFileForm() {
+  proxy.$refs.uploadRef.submit();
 }
 
 /** 重置操作表单 */
@@ -551,13 +552,13 @@ function reset() {
 }
 
 /** 取消按钮 */
-function cancel() {
+function _cancel() {
   open.value = false;
   reset();
 }
 
 /** 新增按钮操作 */
-function handleAdd() {
+function _handleAdd() {
   reset();
   title.value = "添加用户";
   open.value = true;
@@ -574,7 +575,7 @@ function handleAdd() {
 }
 
 /** 修改按钮操作 */
-function handleUpdate(row) {
+function _handleUpdate(row) {
   reset();
   title.value = "修改用户";
   open.value = true;
@@ -595,17 +596,17 @@ function handleUpdate(row) {
 }
 
 /** 提交按钮 */
-function submitForm() {
-  proxy.$refs["userRef"].validate((valid) => {
+function _submitForm() {
+  proxy.$refs.userRef.validate((valid) => {
     if (valid) {
-      if (form.value.userId != undefined) {
-        updateUser(form.value).then((response) => {
+      if (form.value.userId !== undefined) {
+        updateUser(form.value).then((_response) => {
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
         });
       } else {
-        addUser(form.value).then((response) => {
+        addUser(form.value).then((_response) => {
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
@@ -618,8 +619,10 @@ function submitForm() {
 onMounted(() => {
   getDeptTree();
   getList();
-  proxy.getConfigKey("sys.user.initPassword").then((response) => {
-    initPassword.value = response.msg;
-  });
+  if (auth.hasPermi("system:user:resetPwd")) {
+    proxy.getConfigKey("sys.user.initPassword").then((response) => {
+      initPassword.value = response.msg;
+    });
+  }
 });
 </script>

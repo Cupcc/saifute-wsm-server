@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: review-only architecture assessment for `master-data`, `inventory-core`, `workflow`, `customer`, `workshop-material`, `project`, `reporting`, and the shared-core surfaces they depend on; evaluate against the target migration architecture, keep `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` frozen, and capture clarification notes plus a docs-vs-code gap list in this task doc
-- Related requirement: `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
 - Status: `completed`
 - Review status: `reviewed-with-findings`
 - Lifecycle disposition: `retained-completed`
@@ -14,7 +14,7 @@
 - Related checklist:
 - Related files:
   - `docs/requirements/PROJECT_REQUIREMENTS.md`
-  - `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
+  - `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
@@ -38,8 +38,8 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
-- Requirement status: the linked requirement file still shows `needs-confirmation`, but the parent supplied the user-confirmed answers `Q1=B`, `Q2=B`, `Q3=C`, `Q4=B`, `Q5=all-selected`; that is sufficient for planning this review-only task, and the parent can sync the concise requirement progress separately after review.
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
+- Requirement status: the linked requirement file is `confirmed` and archived at the linked path; planning baseline answers were `Q1=B`, `Q2=B`, `Q3=C`, `Q4=B`, `Q5=all-selected`.
 - User intent summary:
   - review the scoped business domains and shared core against the target migration architecture / ideal design rather than only the current implementation snapshot
   - deliver clarification notes plus a concrete gap list between current docs and current code structure
@@ -76,7 +76,7 @@
 ## Review Method And Findings Home
 
 - Review method:
-  - re-read the source-of-truth docs in this order: `docs/requirements/PROJECT_REQUIREMENTS.md` -> `docs/requirements/req-20260321-1109-architecture-review-clarity.md` -> `docs/architecture/00-architecture-overview.md` -> `docs/architecture/20-wms-business-flow-and-optimized-schema.md` -> the scoped module docs -> shared wiring and scoped code modules
+  - re-read the source-of-truth docs in this order: `docs/requirements/PROJECT_REQUIREMENTS.md` -> `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md` -> `docs/architecture/00-architecture-overview.md` -> `docs/architecture/20-wms-business-flow-and-optimized-schema.md` -> the scoped module docs -> shared wiring and scoped code modules
   - inspect only the scoped code surfaces needed to judge architecture fit, naming, layering, and cross-module coupling; do not turn this into a full repo audit
   - compare current code and docs through five lenses: `职责`, `依赖/跨模块访问`, `shared-vs-business 边界`, `当前-vs-目标`, `文档阅读路径`
   - when code currently differs because migration is still in progress, record that as a `current-vs-target gap` rather than silently lowering the target baseline
@@ -153,7 +153,7 @@
   - If the review later justifies doc clarification edits or code-boundary fixes, open or assign a follow-up docs or code execution step explicitly rather than widening this review pass implicitly.
 - Required source docs or files:
   - `docs/requirements/PROJECT_REQUIREMENTS.md`
-  - `docs/requirements/req-20260321-1109-architecture-review-clarity.md`
+  - `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
@@ -222,7 +222,7 @@
 ## Review Log
 
 - Validation results:
-  - Re-read the required review baseline from `docs/requirements/PROJECT_REQUIREMENTS.md`, `docs/requirements/req-20260321-1109-architecture-review-clarity.md`, `docs/architecture/README.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, and the scoped module docs under `docs/architecture/modules/`.
+  - Re-read the required review baseline from `docs/requirements/PROJECT_REQUIREMENTS.md`, `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`, `docs/architecture/README.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, and the scoped module docs under `docs/architecture/modules/`.
   - Inspected the current shared-core and scoped code surfaces directly: `src/app.module.ts`, `src/swagger-metadata.ts`, all files under `src/shared/**`, and the scoped modules under `src/modules/master-data/**`, `src/modules/inventory-core/**`, `src/modules/workflow/**`, `src/modules/customer/**`, `src/modules/workshop-material/**`, `src/modules/project/**`, and `src/modules/reporting/**`.
   - Re-read the current service specs for the scoped modules to judge whether the changed risk surface already has coverage: `src/modules/inventory-core/application/inventory.service.spec.ts`, `src/modules/workflow/application/workflow.service.spec.ts`, `src/modules/customer/application/customer.service.spec.ts`, `src/modules/workshop-material/application/workshop-material.service.spec.ts`, `src/modules/project/application/project.service.spec.ts`, and `src/modules/reporting/application/reporting.service.spec.ts`.
   - Ran the task's narrow git validation command `git diff --name-only -- "docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md" "docs/tasks/TASK_CENTER.md"`; it reported only `docs/tasks/TASK_CENTER.md` because that file already has unrelated tracked changes and this review task doc is currently untracked in git, so the persisted review content was confirmed by direct reread of this file instead.
@@ -243,11 +243,11 @@
 - Outcome:
   - Scoped architecture review completed with actionable findings, and the resulting follow-up code/doc slices have now both been completed with reviewer sign-off.
 - Requirement alignment:
-  - Review output aligns to `docs/requirements/req-20260321-1109-architecture-review-clarity.md` plus the parent-provided confirmed answers `Q1=B`, `Q2=B`, `Q3=C`, `Q4=B`, and `Q5=all-selected`: the deliverable is a clarification-plus-gap list, the baseline stayed the target migration architecture, the scope stayed limited to the confirmed business domains plus shared core, the frozen `00` / `20` baselines were not edited, and the findings distinguish docs-only clarity gaps from real code-structure gaps.
+  - Review output aligns to `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md` plus the parent-provided confirmed answers `Q1=B`, `Q2=B`, `Q3=C`, `Q4=B`, and `Q5=all-selected`: the deliverable is a clarification-plus-gap list, the baseline stayed the target migration architecture, the scope stayed limited to the confirmed business domains plus shared core, the frozen `00` / `20` baselines were not edited, and the findings distinguish docs-only clarity gaps from real code-structure gaps.
 - Residual risks or testing gaps:
   - this review task itself remains review-only, so runtime proof lives in the follow-up execution tasks rather than in this doc; see `task-20260323-1310` for targeted Jest coverage and `task-20260323-1320` for docs-only semantic validation evidence.
   - other module docs outside this scoped follow-up set may still need explicit current-vs-target notes in future passes, but that is outside this task's confirmed scope.
-  - requirement-facing progress has been synced back to `docs/requirements/req-20260321-1109-architecture-review-clarity.md`; any future architecture-clarity work should open a new requirement/task anchor instead of silently extending this one.
+  - requirement-facing progress has been synced back to `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`; any future architecture-clarity work should open a new requirement/task anchor instead of silently extending this one.
 - Directory disposition after completion: parent may now close or reclassify this task alongside its two completed follow-up tasks.
 - Next action:
   - `parent-orchestrator` should sync concise requirement-facing progress, update `docs/tasks/TASK_CENTER.md`, and archive or reclassify `task-20260323-1100`, `task-20260323-1310`, and `task-20260323-1320` according to the current requirement lifecycle.

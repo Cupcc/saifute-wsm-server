@@ -20,7 +20,7 @@ alwaysApply: false
 1. **Local version**: `package.json` + `pnpm-lock.yaml` (lockfile wins on mismatch).
 2. **Local dep doc**: `docs/dependencies/<slug>.md` — trustworthy only when `Refresh status` shows completed Context7 verification.
 3. **Context7 refresh**: when doc is missing / stale / `pending` / `seed-only`, use `user-context7` with `library + version` and backfill.
-4. **WebSearch fallback**: when Context7 lacks coverage or breaking changes / migration guides are needed.
+4. **WebSearchcontext fallback**: when Context7 lacks coverage or breaking changes / migration guides are needed.
 
 ## Local Dependency Docs
 

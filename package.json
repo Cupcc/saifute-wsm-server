@@ -87,6 +87,7 @@
     "cron": "^4.4.0",
     "dotenv": "^17.3.1",
     "eventemitter2": "^6.4.9",
+    "ioredis": "^5.10.1",
     "mariadb": "^3.5.2",
     "nest-winston": "^1.10.2",
     "reflect-metadata": "^0.2.2",

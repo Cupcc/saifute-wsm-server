@@ -94,6 +94,27 @@ export class AppConfigService {
     return this.readNumber("PASSWORD_LOCK_MINUTES", 15);
   }
 
+  get redisHost(): string {
+    return this.readString("REDIS_HOST", "127.0.0.1");
+  }
+
+  get redisPort(): number {
+    return this.readNumber("REDIS_PORT", 6379);
+  }
+
+  get redisPassword(): string | null {
+    const value = this.readString("REDIS_PASSWORD", "").trim();
+    return value ? value : null;
+  }
+
+  get redisDb(): number {
+    return this.readNumber("REDIS_DB", 0);
+  }
+
+  get redisConnectTimeoutMs(): number {
+    return this.readNumber("REDIS_CONNECT_TIMEOUT_MS", 5000);
+  }
+
   get authIpBlacklist(): string[] {
     const value = this.readString("AUTH_IP_BLACKLIST", "");
     return value

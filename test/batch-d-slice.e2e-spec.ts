@@ -11,7 +11,9 @@ import { HttpExceptionFilter } from "../src/shared/common/filters/http-exception
 import { ResponseEnvelopeInterceptor } from "../src/shared/common/interceptors/response-envelope.interceptor";
 import { AppConfigService } from "../src/shared/config/app-config.service";
 import { PrismaService } from "../src/shared/prisma/prisma.service";
+import { RedisStoreService } from "../src/shared/redis/redis-store.service";
 import { PrismaE2eStub } from "./prisma-e2e-stub";
+import { RedisStoreE2eStub } from "./redis-store.e2e-stub";
 
 interface TestAppContext {
   app: INestApplication;
@@ -57,6 +59,8 @@ describe("Batch D slice acceptance (e2e)", () => {
     })
       .overrideProvider(PrismaService)
       .useClass(PrismaE2eStub)
+      .overrideProvider(RedisStoreService)
+      .useClass(RedisStoreE2eStub)
       .compile();
 
     const app = moduleRef.createNestApplication();

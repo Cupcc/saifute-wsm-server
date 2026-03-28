@@ -26,12 +26,12 @@ export class AuthStateRepository {
     captchaId: string,
     captchaCode: string,
   ): Promise<boolean> {
-    const key = this.buildCaptchaKey(captchaId);
-    const stored = await this.redisStoreService.get<{ captchaCode: string }>(
-      key,
+    return this.redisStoreService.consumeIfEquals(
+      this.buildCaptchaKey(captchaId),
+      {
+        captchaCode,
+      },
     );
-    await this.redisStoreService.del(key);
-    return stored?.captchaCode === captchaCode;
   }
 
   async getPasswordAttempt(username: string): Promise<PasswordAttemptState> {
@@ -43,24 +43,13 @@ export class AuthStateRepository {
   }
 
   async recordPasswordFailure(username: string): Promise<PasswordAttemptState> {
-    const current = await this.getPasswordAttempt(username);
-    const nextState: PasswordAttemptState = {
-      count: current.count + 1,
-    };
-
-    if (nextState.count >= this.appConfigService.passwordMaxRetries) {
-      nextState.lockedUntil = new Date(
-        Date.now() + this.appConfigService.passwordLockMinutes * 60 * 1000,
-      ).toISOString();
-    }
-
-    await this.redisStoreService.set(
+    return this.redisStoreService.incrementFailureWindow(
       this.buildPasswordAttemptKey(username),
-      nextState,
-      this.appConfigService.passwordLockMinutes * 60,
+      {
+        maxFailures: this.appConfigService.passwordMaxRetries,
+        windowSeconds: this.appConfigService.passwordLockMinutes * 60,
+      },
     );
-
-    return nextState;
   }
 
   async clearPasswordFailures(username: string): Promise<void> {

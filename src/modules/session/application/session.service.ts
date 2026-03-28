@@ -91,6 +91,26 @@ export class SessionService {
       }));
   }
 
+  async invalidateSessionsByUserIds(userIds: number[]): Promise<number> {
+    if (userIds.length === 0) {
+      return 0;
+    }
+
+    const userIdSet = new Set(userIds);
+    const sessions = await this.sessionRepository.listOnlineSessions();
+    const targets = sessions.filter((session) =>
+      userIdSet.has(session.user.userId),
+    );
+
+    await Promise.all(
+      targets.map((session) =>
+        this.sessionRepository.delete(session.sessionId),
+      ),
+    );
+
+    return targets.length;
+  }
+
   private async verifyToken(
     token: string,
     ignoreExpiration = false,

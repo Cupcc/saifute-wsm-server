@@ -61,6 +61,13 @@ const SUPPORTED_BACKEND_ROUTE_GROUPS = [
     icon: "dashboard",
   },
   {
+    key: "system",
+    path: "/system",
+    name: "SystemManagement",
+    title: "系统管理",
+    icon: "system",
+  },
+  {
     key: "monitor",
     path: "/monitor",
     name: "Monitor",
@@ -295,6 +302,62 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     title: "销售退货明细",
     icon: "list",
   },
+  SystemUser: {
+    group: "system",
+    path: "user",
+    component: "system/user/index",
+    title: "用户管理",
+    icon: "user",
+  },
+  SystemRole: {
+    group: "system",
+    path: "role",
+    component: "system/role/index",
+    title: "角色管理",
+    icon: "peoples",
+  },
+  SystemDept: {
+    group: "system",
+    path: "dept",
+    component: "system/dept/index",
+    title: "部门管理",
+    icon: "tree",
+  },
+  SystemMenu: {
+    group: "system",
+    path: "menu",
+    component: "system/menu/index",
+    title: "菜单管理",
+    icon: "tree-table",
+  },
+  SystemPost: {
+    group: "system",
+    path: "post",
+    component: "system/post/index",
+    title: "岗位管理",
+    icon: "post",
+  },
+  SystemDict: {
+    group: "system",
+    path: "dict",
+    component: "system/dict/index",
+    title: "字典管理",
+    icon: "dict",
+  },
+  SystemConfig: {
+    group: "system",
+    path: "config",
+    component: "system/config/index",
+    title: "参数设置",
+    icon: "edit",
+  },
+  SystemNotice: {
+    group: "system",
+    path: "notice",
+    component: "system/notice/index",
+    title: "通知公告",
+    icon: "message",
+  },
   OnlineUsers: {
     group: "monitor",
     path: "online",
@@ -389,7 +452,18 @@ function resolveGroupTitle(groupMeta, currentConsoleMode) {
   );
 }
 
-function isRouteVisibleInConsoleMode(routeMeta, currentConsoleMode) {
+function isAdminUser() {
+  return auth.hasRole("admin");
+}
+
+function isRouteVisibleInConsoleMode(
+  routeMeta,
+  currentConsoleMode,
+  currentIsAdminUser,
+) {
+  if (currentIsAdminUser) {
+    return true;
+  }
   if (!routeMeta.visibleInModes?.length) {
     return true;
   }
@@ -421,6 +495,7 @@ function buildSidebarBaseRoutes(currentConsoleMode) {
 function buildFrontendRoutes(
   backendRoutes,
   currentConsoleMode = CONSOLE_MODES.DEFAULT,
+  currentIsAdminUser = false,
 ) {
   const routeNames = collectBackendRouteNames(backendRoutes);
   return SUPPORTED_BACKEND_ROUTE_GROUPS.map((groupMeta) => {
@@ -430,7 +505,13 @@ function buildFrontendRoutes(
           return false;
         }
 
-        if (!isRouteVisibleInConsoleMode(routeMeta, currentConsoleMode)) {
+        if (
+          !isRouteVisibleInConsoleMode(
+            routeMeta,
+            currentConsoleMode,
+            currentIsAdminUser,
+          )
+        ) {
           return false;
         }
 
@@ -504,10 +585,12 @@ const usePermissionStore = defineStore("permission", {
         getRouters().then((res) => {
           const currentConsoleMode =
             useUserStore().consoleMode || CONSOLE_MODES.DEFAULT;
+          const currentIsAdminUser = isAdminUser();
           const backendRoutes = Array.isArray(res.data) ? res.data : [];
           const frontendRoutes = buildFrontendRoutes(
             backendRoutes,
             currentConsoleMode,
+            currentIsAdminUser,
           );
           const sdata = JSON.parse(JSON.stringify(frontendRoutes));
           const rdata = JSON.parse(JSON.stringify(frontendRoutes));

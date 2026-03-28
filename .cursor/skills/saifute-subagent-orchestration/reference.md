@@ -111,11 +111,11 @@ Checks include:
 ## Suggested combinations
 
 - Lightweight direct task: parent reads the smallest relevant files -> edits directly -> runs focused validation -> optional parent self-review -> stop
-- Non-trivial task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines + decision_candidates -> parent syncs concise progress to the requirement doc -> parent writes qualifying decision_candidates to `docs/workspace/<workflow>/decisions.md` and updates dashboard -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs progress to requirement doc and workspace -> parent commit step only if the user explicitly asked for a commit -> parent retrospect: append lessons to `docs/playbooks/{domain}/playbook.md`
+- Non-trivial task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines + decision_candidates -> parent syncs concise progress to the requirement doc -> parent writes qualifying decision_candidates to `docs/workspace/<workflow>/decisions.md` and updates dashboard -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs progress to requirement doc and workspace -> parent follows `.cursor/rules/commit-workflow.mdc` for branch-local checkpoint or final semantic commit handling -> parent retrospect: append lessons to `docs/playbooks/{domain}/playbook.md`
 - Requirement-first flow for durable work: create or confirm `docs/requirements/*.md` -> create workspace folder under `docs/workspace/<workflow>/` when scope is non-trivial -> `planner` writes `docs/tasks/*.md` against it -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent keeps requirement doc and workspace updated
 - Multi-module task with safe disjoint scopes: `planner` writes task docs or explicit scoped sections -> parallel `coder` workers with explicit boundaries -> `code-reviewer` -> fix loop as needed
 - Review-heavy task: `planner` writes `docs/tasks/*.md` -> `code-reviewer`
-- Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> parent commit step only if the user explicitly asked for a commit
+- Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> parent follows `.cursor/rules/commit-workflow.mdc` for commit handling
 
 ## Retrospect phase
 
@@ -140,7 +140,9 @@ What to produce:
 
 - Commit creation belongs to the parent orchestrator only
 - Do not let `coder` or `code-reviewer` create the commit directly
-- Only proceed to commit after required validation passes, review is clear of open `[blocking]` and `[important]` findings, and the user explicitly asked for a commit
+- Use `.cursor/rules/commit-workflow.mdc` as the source of truth for checkpoint timing, final semantic commit rules, and squash-to-`main` expectations
+- Only proceed to parent-owned commit activity after required validation passes, review is clear of open `[blocking]` and `[important]` findings, there is no unresolved shared-contract blocker, and the user did not opt out with `no-commit`
+- If the current session policy blocks commit creation, stop at a commit-ready handoff instead of inventing a local exception
 - For delivery requests, review is not a stopping point; the parent should keep the repair loop moving until commit readiness or a real blocker
 - Only stop early when the user explicitly asked for `plan-only`, `review-only`, or `docs-only`
 - If the user says `no-commit`, finish the requested scope and review or fix loop, then stop without creating a commit

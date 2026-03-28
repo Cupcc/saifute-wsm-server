@@ -44,6 +44,15 @@ describe("RbacService", () => {
     expect(routes[0]?.name).toBe("RdSubwarehouse");
   });
 
+  it("should keep full routes for admin user", async () => {
+    const routes = await rbacService.getRoutesForUser(1);
+    const routeNames = JSON.stringify(routes);
+
+    expect(routeNames).toContain("SystemManagement");
+    expect(routeNames).toContain("SystemUser");
+    expect(routeNames).toContain("RdWorkbench");
+  });
+
   it("should keep fixed workshop scope for current user", async () => {
     const user = await rbacService.getCurrentUser(5);
     expect(user.consoleMode).toBe("rd-subwarehouse");

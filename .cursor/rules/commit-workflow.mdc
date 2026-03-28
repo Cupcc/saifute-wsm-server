@@ -1,0 +1,25 @@
+---
+description: Parent-owned commit workflow with branch-local checkpoints and squash-to-main history
+alwaysApply: false
+---
+# Commit Workflow
+
+- Commit creation stays parent-owned. `planner`, `coder`, and `code-reviewer` never create commits directly.
+- Default delivery mode: when the user did not say `no-commit` and the current session permits commit creation, the parent may manage commits automatically.
+- Final semantic commit format: `type(scope): subject`
+- Preferred `type`: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
+- `scope` is optional. Prefer stable project domains such as `auth`, `session`, `rbac`, `inventory`, `workflow`, `migration`, `web`, `docs`, `tooling`, `deps`, or `api`.
+- `subject` should describe delivery intent rather than a file list. Chinese or English is acceptable, but keep one message in one language when practical.
+- Checkpoint message format: `chore(checkpoint): save <scope> progress`
+- Never create checkpoint commits on `main` or `master`.
+- On working branches, prefer `0-1` checkpoint commit per active scope.
+- Create a checkpoint only after meaningful validated progress, before a risky bulk edit, or before pausing with a dirty tree that would be hard to reconstruct.
+- Do not create checkpoints after every sub-step, doc sync, or single passing command.
+- If one checkpoint already exists for the active scope, skip another unless the branch stays open across a clearly new validated milestone.
+- `plan-only` and `review-only` normally stop without commit creation.
+- `docs-only` may still use the normal final semantic commit flow when docs are the requested delivery scope.
+- Only create the final semantic commit after required validation passes, review has no open `[blocking]` or `[important]` findings, and no unresolved shared-contract or ownership blocker remains.
+- For migration-style work, final commit also requires unresolved staged or excluded records to be handled within scope or explicitly reported with the required sign-off owner.
+- Before landing on `main`, squash checkpoint history so `main` keeps only the final semantic commit.
+- If a higher-priority instruction forbids automatic commits, stop at commit-ready handoff instead of inventing a local exception.
+- `no-commit` skips both checkpoint and final commit, but it does not narrow delivery scope.

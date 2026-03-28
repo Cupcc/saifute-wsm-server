@@ -36,7 +36,7 @@
 
 ## 活跃任务
 
-当前无仍处规划/编码/review 中的根目录 `task-*.md`；下一条前端切片需另开 task 并在此登记。
+当前无条目。
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
@@ -45,6 +45,8 @@
 | Task 文档 | 保留原因 |
 | --- | --- |
 | `docs/tasks/archive/retained-completed/task-20260326-0415-rd-subwarehouse-phase1-operating-foundation.md` | 已完成 RD Phase 1 operating foundation：研发独立工作台、固定仓别隔离、项目领用、本仓报废与研发侧库存/报表基础已落地，并通过 reviewer clean sign-off 与浏览器冒烟验证。 |
+| `docs/tasks/archive/retained-completed/task-20260327-1845-redis-real-integration.md` | 已完成真实 Redis 接入：`shared/redis` 已切到 `ioredis`，`session` / `auth` 语义与 TTL/扫描/原子消费已对齐，真实 Redis 应用级 e2e、focused integration tests 与 `pnpm verify` 均通过，并经 closing re-review `No findings` sign-off。 |
+| `docs/tasks/archive/retained-completed/task-20260327-1721-rbac-system-management-closure.md` | 已完成 RBAC system management closure：`admin` 恢复 `系统管理` 与 RD 入口可见性，`web/src/api/system/**` 与当前 NestJS `/api/system/*` 已对齐，`admin` / `operator` / `rd-operator` / `system-manager` 浏览器冒烟均通过，并经 closing re-review `No findings` sign-off。 |
 | `docs/tasks/archive/retained-completed/task-20260326-0455-system-readiness-core-business-coverage.md` | 已完成 core business 页面群收口：`base/*`、`entry/*`、`take/*`、`stock/{inventory,log,used,scrap*,interval}` 菜单/主请求/关键过滤链路已对齐当前 NestJS，并通过 build + browser 定向验证。 |
 | `docs/tasks/archive/retained-completed/task-20260326-1557-system-readiness-customer-sales-domain-coverage.md` | 已完成 `customer` / 销售域补齐：首页 `dashboard`、`销售管理` 菜单、四个页面与关键写按钮/弹窗入口已恢复，并通过 fresh backend + fresh frontend 浏览器验证。 |
 | `docs/tasks/archive/retained-completed/task-20260326-1940-frontend-old-style-phase1-shell-integration.md` | 已完成第一阶段 shell integration：默认首页回归 dashboard 节奏、`销售管理/生产车间/研发协同` 分组收口、RD 直达 `workbench` 且不残留首页标签，并通过 admin/operator/rd 浏览器联调验证。 |
