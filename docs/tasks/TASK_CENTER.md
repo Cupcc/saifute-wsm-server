@@ -36,7 +36,9 @@
 
 ## 活跃任务
 
-当前无条目。
+| Task 文档 | 当前状态 |
+| --- | --- |
+| `docs/tasks/task-20260328-1710-github-ci-workflow.md` | 已完成首版 GitHub Actions CI：后端纳入 `prisma validate + typecheck + build`，`web/` 纳入 `build:prod`，并已完成本地真实安装与命令校验；全量 lint/test 暂因仓库现存问题未纳入首版稳定门禁。 |
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
