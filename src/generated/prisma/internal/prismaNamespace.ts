@@ -433,6 +433,8 @@ export const ModelName = {
   WorkshopMaterialOrderLine: "WorkshopMaterialOrderLine",
   Project: "Project",
   ProjectMaterialLine: "ProjectMaterialLine",
+  RdHandoffOrder: "RdHandoffOrder",
+  RdHandoffOrderLine: "RdHandoffOrderLine",
   DocumentRelation: "DocumentRelation",
   DocumentLineRelation: "DocumentLineRelation",
   LoginLog: "LoginLog",
@@ -480,6 +482,8 @@ export type TypeMap<
       | "workshopMaterialOrderLine"
       | "project"
       | "projectMaterialLine"
+      | "rdHandoffOrder"
+      | "rdHandoffOrderLine"
       | "documentRelation"
       | "documentLineRelation"
       | "loginLog"
@@ -1781,6 +1785,142 @@ export type TypeMap<
         };
       };
     };
+    RdHandoffOrder: {
+      payload: Prisma.$RdHandoffOrderPayload<ExtArgs>;
+      fields: Prisma.RdHandoffOrderFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.RdHandoffOrderFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.RdHandoffOrderFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload>;
+        };
+        findFirst: {
+          args: Prisma.RdHandoffOrderFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.RdHandoffOrderFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload>;
+        };
+        findMany: {
+          args: Prisma.RdHandoffOrderFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload>[];
+        };
+        create: {
+          args: Prisma.RdHandoffOrderCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload>;
+        };
+        createMany: {
+          args: Prisma.RdHandoffOrderCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.RdHandoffOrderDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload>;
+        };
+        update: {
+          args: Prisma.RdHandoffOrderUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload>;
+        };
+        deleteMany: {
+          args: Prisma.RdHandoffOrderDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.RdHandoffOrderUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.RdHandoffOrderUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderPayload>;
+        };
+        aggregate: {
+          args: Prisma.RdHandoffOrderAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRdHandoffOrder>;
+        };
+        groupBy: {
+          args: Prisma.RdHandoffOrderGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.RdHandoffOrderGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.RdHandoffOrderCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.RdHandoffOrderCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    RdHandoffOrderLine: {
+      payload: Prisma.$RdHandoffOrderLinePayload<ExtArgs>;
+      fields: Prisma.RdHandoffOrderLineFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.RdHandoffOrderLineFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.RdHandoffOrderLineFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload>;
+        };
+        findFirst: {
+          args: Prisma.RdHandoffOrderLineFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.RdHandoffOrderLineFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload>;
+        };
+        findMany: {
+          args: Prisma.RdHandoffOrderLineFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload>[];
+        };
+        create: {
+          args: Prisma.RdHandoffOrderLineCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload>;
+        };
+        createMany: {
+          args: Prisma.RdHandoffOrderLineCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.RdHandoffOrderLineDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload>;
+        };
+        update: {
+          args: Prisma.RdHandoffOrderLineUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload>;
+        };
+        deleteMany: {
+          args: Prisma.RdHandoffOrderLineDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.RdHandoffOrderLineUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.RdHandoffOrderLineUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RdHandoffOrderLinePayload>;
+        };
+        aggregate: {
+          args: Prisma.RdHandoffOrderLineAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRdHandoffOrderLine>;
+        };
+        groupBy: {
+          args: Prisma.RdHandoffOrderLineGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.RdHandoffOrderLineGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.RdHandoffOrderLineCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.RdHandoffOrderLineCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
     DocumentRelation: {
       payload: Prisma.$DocumentRelationPayload<ExtArgs>;
       fields: Prisma.DocumentRelationFieldRefs;
@@ -2655,6 +2795,57 @@ export const ProjectMaterialLineScalarFieldEnum = {
 export type ProjectMaterialLineScalarFieldEnum =
   (typeof ProjectMaterialLineScalarFieldEnum)[keyof typeof ProjectMaterialLineScalarFieldEnum];
 
+export const RdHandoffOrderScalarFieldEnum = {
+  id: "id",
+  documentNo: "documentNo",
+  bizDate: "bizDate",
+  handlerPersonnelId: "handlerPersonnelId",
+  sourceWorkshopId: "sourceWorkshopId",
+  targetWorkshopId: "targetWorkshopId",
+  lifecycleStatus: "lifecycleStatus",
+  auditStatusSnapshot: "auditStatusSnapshot",
+  inventoryEffectStatus: "inventoryEffectStatus",
+  revisionNo: "revisionNo",
+  handlerNameSnapshot: "handlerNameSnapshot",
+  sourceWorkshopNameSnapshot: "sourceWorkshopNameSnapshot",
+  targetWorkshopNameSnapshot: "targetWorkshopNameSnapshot",
+  totalQty: "totalQty",
+  totalAmount: "totalAmount",
+  remark: "remark",
+  voidReason: "voidReason",
+  voidedBy: "voidedBy",
+  voidedAt: "voidedAt",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type RdHandoffOrderScalarFieldEnum =
+  (typeof RdHandoffOrderScalarFieldEnum)[keyof typeof RdHandoffOrderScalarFieldEnum];
+
+export const RdHandoffOrderLineScalarFieldEnum = {
+  id: "id",
+  orderId: "orderId",
+  lineNo: "lineNo",
+  materialId: "materialId",
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  quantity: "quantity",
+  unitPrice: "unitPrice",
+  amount: "amount",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type RdHandoffOrderLineScalarFieldEnum =
+  (typeof RdHandoffOrderLineScalarFieldEnum)[keyof typeof RdHandoffOrderLineScalarFieldEnum];
+
 export const DocumentRelationScalarFieldEnum = {
   id: "id",
   relationType: "relationType",
@@ -3021,6 +3212,34 @@ export const ProjectMaterialLineOrderByRelevanceFieldEnum = {
 
 export type ProjectMaterialLineOrderByRelevanceFieldEnum =
   (typeof ProjectMaterialLineOrderByRelevanceFieldEnum)[keyof typeof ProjectMaterialLineOrderByRelevanceFieldEnum];
+
+export const RdHandoffOrderOrderByRelevanceFieldEnum = {
+  documentNo: "documentNo",
+  handlerNameSnapshot: "handlerNameSnapshot",
+  sourceWorkshopNameSnapshot: "sourceWorkshopNameSnapshot",
+  targetWorkshopNameSnapshot: "targetWorkshopNameSnapshot",
+  remark: "remark",
+  voidReason: "voidReason",
+  voidedBy: "voidedBy",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type RdHandoffOrderOrderByRelevanceFieldEnum =
+  (typeof RdHandoffOrderOrderByRelevanceFieldEnum)[keyof typeof RdHandoffOrderOrderByRelevanceFieldEnum];
+
+export const RdHandoffOrderLineOrderByRelevanceFieldEnum = {
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type RdHandoffOrderLineOrderByRelevanceFieldEnum =
+  (typeof RdHandoffOrderLineOrderByRelevanceFieldEnum)[keyof typeof RdHandoffOrderLineOrderByRelevanceFieldEnum];
 
 export const DocumentRelationOrderByRelevanceFieldEnum = {
   upstreamDocumentType: "upstreamDocumentType",
@@ -3407,6 +3626,8 @@ export type GlobalOmitConfig = {
   workshopMaterialOrderLine?: Prisma.WorkshopMaterialOrderLineOmit;
   project?: Prisma.ProjectOmit;
   projectMaterialLine?: Prisma.ProjectMaterialLineOmit;
+  rdHandoffOrder?: Prisma.RdHandoffOrderOmit;
+  rdHandoffOrderLine?: Prisma.RdHandoffOrderLineOmit;
   documentRelation?: Prisma.DocumentRelationOmit;
   documentLineRelation?: Prisma.DocumentLineRelationOmit;
   loginLog?: Prisma.LoginLogOmit;

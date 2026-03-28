@@ -113,6 +113,16 @@ export type Project = Prisma.ProjectModel;
  */
 export type ProjectMaterialLine = Prisma.ProjectMaterialLineModel;
 /**
+ * Model RdHandoffOrder
+ *
+ */
+export type RdHandoffOrder = Prisma.RdHandoffOrderModel;
+/**
+ * Model RdHandoffOrderLine
+ *
+ */
+export type RdHandoffOrderLine = Prisma.RdHandoffOrderLineModel;
+/**
  * Model DocumentRelation
  *
  */

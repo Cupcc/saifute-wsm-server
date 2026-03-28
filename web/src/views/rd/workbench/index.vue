@@ -61,6 +61,11 @@
             {{ formatDate(row.bizDate) }}
           </template>
         </el-table-column>
+        <el-table-column
+          prop="sourceWorkshopNameSnapshot"
+          label="来源车间"
+          min-width="140"
+        />
         <el-table-column prop="totalQty" label="总数量" min-width="120" />
         <el-table-column prop="totalAmount" label="总金额" min-width="120" />
         <el-table-column label="明细数" min-width="100">
@@ -110,6 +115,19 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString("zh-CN");
 }
 
+function getTodayBusinessDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const year = parts.find((item) => item.type === "year")?.value || "1970";
+  const month = parts.find((item) => item.type === "month")?.value || "01";
+  const day = parts.find((item) => item.type === "day")?.value || "01";
+  return `${year}-${month}-${day}`;
+}
+
 function goTo(path) {
   router.push(path);
 }
@@ -117,11 +135,24 @@ function goTo(path) {
 async function loadPage() {
   loading.value = true;
   try {
-    const [dashboardResponse, inboundResponse] = await Promise.all([
-      getReportingHome(),
-      listRdInboundResults({ limit: 5, offset: 0 }),
-    ]);
-    dashboard.value = dashboardResponse.data || dashboard.value;
+    const today = getTodayBusinessDate();
+    const [dashboardResponse, inboundResponse, todayInboundResponse] =
+      await Promise.all([
+        getReportingHome(),
+        listRdInboundResults({ limit: 5, offset: 0 }),
+        listRdInboundResults({
+          bizDateFrom: today,
+          bizDateTo: today,
+          limit: 1,
+          offset: 0,
+        }),
+      ]);
+    dashboard.value = {
+      ...(dashboardResponse.data || dashboard.value),
+      todayDocuments: {
+        inboundCount: Number(todayInboundResponse.data?.total || 0),
+      },
+    };
     recentInboundRows.value = inboundResponse.data?.items || [];
   } finally {
     loading.value = false;

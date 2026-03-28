@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: establish a first usable `rd-subwarehouse` slice by reusing the current `workshop` inventory dimension as the constrained subwarehouse carrier, adding an RD-only workbench and workshop-scoped read/write flows, without widening into generic multi-warehouse, procurement-chain, or stocktake/adjustment work in the same slice
-- Related requirement: `docs/requirements/req-20260326-0048-rd-subwarehouse.md`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260326-0048-rd-subwarehouse.md`
 - Status: `completed`
 - Review status: `reviewed-no-findings`
 - Lifecycle disposition: `retained-completed`
@@ -13,9 +13,9 @@
 - Last updated: `2026-03-26`
 - Related checklist:
 - Related files:
-  - `docs/requirements/req-20260326-0048-rd-subwarehouse.md`
+  - `docs/requirements/archive/retained-completed/req-20260326-0048-rd-subwarehouse.md`
   - `docs/tasks/TASK_CENTER.md`
-  - `docs/workspace/rd-subwarehouse/README.md`
+  - `docs/workspace/archive/retained-completed/rd-subwarehouse/README.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/modules/inventory-core.md`
@@ -37,7 +37,7 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260326-0048-rd-subwarehouse.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260326-0048-rd-subwarehouse.md`
 - User intent summary:
   - confirmed direction is a constrained "main warehouse + RD small warehouse" collaboration inside one platform, not a second system and not a mere project tag
   - first phase must give RD users an isolated working surface and real warehouse-like operations, while keeping company-level external inbound/outbound in the main warehouse
@@ -116,8 +116,8 @@
   - implement only the first usable RD subwarehouse slice, but do it in a way that does not block later transfer/procurement slices
   - prefer fixed RD workshop context, route/menu isolation, and reuse of existing document modules over new tables or a generic warehouse abstraction
 - Required source docs or files:
-  - `docs/requirements/req-20260326-0048-rd-subwarehouse.md`
-  - `docs/workspace/rd-subwarehouse/README.md`
+  - `docs/requirements/archive/retained-completed/req-20260326-0048-rd-subwarehouse.md`
+  - `docs/workspace/archive/retained-completed/rd-subwarehouse/README.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/modules/inventory-core.md`

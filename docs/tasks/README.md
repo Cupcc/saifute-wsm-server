@@ -37,7 +37,7 @@ Keep those layers separate so the board stays short, the README stays stable, an
 - `planner` creates or updates the task doc and owns planning-phase edits.
 - `coder` reads the task doc as the execution brief and treats it as read-only unless documentation ownership is explicitly reassigned.
 - `code-reviewer` updates the task doc with review status, validation results, and follow-up state.
-- The parent orchestrator decides whether to continue the fix loop or create a commit when the user explicitly asks for one.
+- The parent orchestrator decides whether to continue the fix loop or create a commit; default delivery mode is to auto-commit validated work unless the user explicitly says `no-commit`.
 
 ## Lifecycle Guidance
 

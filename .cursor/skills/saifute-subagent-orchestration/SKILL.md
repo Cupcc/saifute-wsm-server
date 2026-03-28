@@ -256,7 +256,7 @@ Only proceed to parent-owned commit activity when all of the following are true:
 1. The required validation passed for the scoped work.
 2. `code-reviewer` reports no remaining open `[blocking]` or `[important]` findings.
 3. There is no unresolved shared-contract or ownership blocker.
-4. The user did not opt out with `no-commit`, and the current session policy allows commit creation.
+4. The user did not opt out with `no-commit`.
 5. For migration-style work, unresolved staged or excluded records are either handled within scope or explicitly reported with the required sign-off or follow-up owner.
 
 Default commit behavior:
@@ -264,7 +264,7 @@ Default commit behavior:
 - on working branches, the parent may create at most one branch-local checkpoint commit for the active scope
 - never create checkpoint commits on `main` or `master`
 - before landing on `main`, squash branch-local checkpoint history so `main` keeps only the final semantic commit
-- if the current session policy blocks commit creation, stop at a commit-ready handoff instead of inventing a local exception
+- if a higher-priority runtime policy outside the repository blocks commit creation, stop at a commit-ready handoff instead of inventing a local exception; the repository default is still auto-commit unless the user says `no-commit`
 
 Do not let subagents create the commit directly.
 
@@ -448,7 +448,7 @@ Use this blocker bar:
 - real blocker: user-edit conflict, frozen-boundary ownership ambiguity, contradictory architecture truth, missing required credentials or resources, an unresolved product choice that cannot be decided safely alone, a data-shape conflict that would widen runtime semantics, or remaining exclusions that need business sign-off before cutover
 - not a real blocker: a partial implementation is stable, one test passed, a review found issues, or the parent simply wants to pause and summarize
 
-If the user says `no-commit`, finish the requested scope and review or fix loop, then stop without creating a commit.
+If the user says `no-commit`, finish the requested scope and review or fix loop, then stop without creating a commit. Otherwise, treat validated delivery work as commit-intended by default.
 
 ## Retrospect protocol
 

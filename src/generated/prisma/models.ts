@@ -24,6 +24,8 @@ export type * from "./models/OperLog";
 export type * from "./models/Personnel";
 export type * from "./models/Project";
 export type * from "./models/ProjectMaterialLine";
+export type * from "./models/RdHandoffOrder";
+export type * from "./models/RdHandoffOrderLine";
 export type * from "./models/SchedulerJob";
 export type * from "./models/SchedulerJobLog";
 export type * from "./models/StockInOrder";

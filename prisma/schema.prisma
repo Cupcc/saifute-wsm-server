@@ -48,6 +48,8 @@ enum InventoryOperationType {
   RETURN_IN
   SCRAP_OUT
   PROJECT_CONSUMPTION_OUT
+  RD_HANDOFF_OUT
+  RD_HANDOFF_IN
   REVERSAL_IN
   REVERSAL_OUT
 }
@@ -174,6 +176,7 @@ model Material {
   customerStockOrderLines    CustomerStockOrderLine[]
   workshopMaterialOrderLines WorkshopMaterialOrderLine[]
   projectMaterialLines       ProjectMaterialLine[]
+  rdHandoffOrderLines        RdHandoffOrderLine[]
 
   @@index([categoryId])
   @@map("material")
@@ -235,6 +238,7 @@ model Personnel {
   customerStockOrders    CustomerStockOrder[]    @relation("CustomerStockOrderHandler")
   workshopMaterialOrders WorkshopMaterialOrder[] @relation("WorkshopMaterialOrderHandler")
   managedProjects        Project[]               @relation("ProjectManager")
+  rdHandoffOrders        RdHandoffOrder[]        @relation("RdHandoffOrderHandler")
 
   @@map("personnel")
 }
@@ -255,6 +259,8 @@ model Workshop {
   customerStockOrders       CustomerStockOrder[]
   workshopMaterialOrders    WorkshopMaterialOrder[]
   projects                  Project[]
+  rdHandoffSourceOrders     RdHandoffOrder[]           @relation("RdHandoffSourceWorkshop")
+  rdHandoffTargetOrders     RdHandoffOrder[]           @relation("RdHandoffTargetWorkshop")
 
   @@map("workshop")
 }
@@ -641,6 +647,66 @@ model ProjectMaterialLine {
   @@unique([projectId, lineNo])
   @@index([materialId])
   @@map("project_material_line")
+}
+
+model RdHandoffOrder {
+  id                         Int                     @id @default(autoincrement())
+  documentNo                 String                  @unique @db.VarChar(64)
+  bizDate                    DateTime                @db.Date
+  handlerPersonnelId         Int?
+  sourceWorkshopId           Int
+  targetWorkshopId           Int
+  lifecycleStatus            DocumentLifecycleStatus @default(EFFECTIVE)
+  auditStatusSnapshot        AuditStatusSnapshot     @default(NOT_REQUIRED)
+  inventoryEffectStatus      InventoryEffectStatus   @default(POSTED)
+  revisionNo                 Int                     @default(1)
+  handlerNameSnapshot        String?                 @db.VarChar(128)
+  sourceWorkshopNameSnapshot String                  @db.VarChar(128)
+  targetWorkshopNameSnapshot String                  @db.VarChar(128)
+  totalQty                   Decimal                 @default(0) @db.Decimal(18, 6)
+  totalAmount                Decimal                 @default(0) @db.Decimal(18, 2)
+  remark                     String?                 @db.VarChar(500)
+  voidReason                 String?                 @db.VarChar(500)
+  voidedBy                   String?                 @db.VarChar(64)
+  voidedAt                   DateTime?
+  createdBy                  String?                 @db.VarChar(64)
+  createdAt                  DateTime                @default(now())
+  updatedBy                  String?                 @db.VarChar(64)
+  updatedAt                  DateTime                @updatedAt
+  handlerPersonnel           Personnel?              @relation("RdHandoffOrderHandler", fields: [handlerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  sourceWorkshop             Workshop                @relation("RdHandoffSourceWorkshop", fields: [sourceWorkshopId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  targetWorkshop             Workshop                @relation("RdHandoffTargetWorkshop", fields: [targetWorkshopId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  lines                      RdHandoffOrderLine[]
+
+  @@index([bizDate])
+  @@index([sourceWorkshopId])
+  @@index([targetWorkshopId])
+  @@map("rd_handoff_order")
+}
+
+model RdHandoffOrderLine {
+  id                   Int            @id @default(autoincrement())
+  orderId              Int
+  lineNo               Int
+  materialId           Int
+  materialCodeSnapshot String         @db.VarChar(64)
+  materialNameSnapshot String         @db.VarChar(128)
+  materialSpecSnapshot String?        @db.VarChar(128)
+  unitCodeSnapshot     String         @db.VarChar(32)
+  quantity             Decimal        @db.Decimal(18, 6)
+  unitPrice            Decimal        @default(0) @db.Decimal(18, 2)
+  amount               Decimal        @default(0) @db.Decimal(18, 2)
+  remark               String?        @db.VarChar(500)
+  createdBy            String?        @db.VarChar(64)
+  createdAt            DateTime       @default(now())
+  updatedBy            String?        @db.VarChar(64)
+  updatedAt            DateTime       @updatedAt
+  order                RdHandoffOrder @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  material             Material       @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([orderId, lineNo])
+  @@index([materialId])
+  @@map("rd_handoff_order_line")
 }
 
 model DocumentRelation {

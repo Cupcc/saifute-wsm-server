@@ -73,6 +73,8 @@ export const ModelName = {
   WorkshopMaterialOrderLine: "WorkshopMaterialOrderLine",
   Project: "Project",
   ProjectMaterialLine: "ProjectMaterialLine",
+  RdHandoffOrder: "RdHandoffOrder",
+  RdHandoffOrderLine: "RdHandoffOrderLine",
   DocumentRelation: "DocumentRelation",
   DocumentLineRelation: "DocumentLineRelation",
   LoginLog: "LoginLog",
@@ -524,6 +526,57 @@ export const ProjectMaterialLineScalarFieldEnum = {
 export type ProjectMaterialLineScalarFieldEnum =
   (typeof ProjectMaterialLineScalarFieldEnum)[keyof typeof ProjectMaterialLineScalarFieldEnum];
 
+export const RdHandoffOrderScalarFieldEnum = {
+  id: "id",
+  documentNo: "documentNo",
+  bizDate: "bizDate",
+  handlerPersonnelId: "handlerPersonnelId",
+  sourceWorkshopId: "sourceWorkshopId",
+  targetWorkshopId: "targetWorkshopId",
+  lifecycleStatus: "lifecycleStatus",
+  auditStatusSnapshot: "auditStatusSnapshot",
+  inventoryEffectStatus: "inventoryEffectStatus",
+  revisionNo: "revisionNo",
+  handlerNameSnapshot: "handlerNameSnapshot",
+  sourceWorkshopNameSnapshot: "sourceWorkshopNameSnapshot",
+  targetWorkshopNameSnapshot: "targetWorkshopNameSnapshot",
+  totalQty: "totalQty",
+  totalAmount: "totalAmount",
+  remark: "remark",
+  voidReason: "voidReason",
+  voidedBy: "voidedBy",
+  voidedAt: "voidedAt",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type RdHandoffOrderScalarFieldEnum =
+  (typeof RdHandoffOrderScalarFieldEnum)[keyof typeof RdHandoffOrderScalarFieldEnum];
+
+export const RdHandoffOrderLineScalarFieldEnum = {
+  id: "id",
+  orderId: "orderId",
+  lineNo: "lineNo",
+  materialId: "materialId",
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  quantity: "quantity",
+  unitPrice: "unitPrice",
+  amount: "amount",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type RdHandoffOrderLineScalarFieldEnum =
+  (typeof RdHandoffOrderLineScalarFieldEnum)[keyof typeof RdHandoffOrderLineScalarFieldEnum];
+
 export const DocumentRelationScalarFieldEnum = {
   id: "id",
   relationType: "relationType",
@@ -890,6 +943,34 @@ export const ProjectMaterialLineOrderByRelevanceFieldEnum = {
 
 export type ProjectMaterialLineOrderByRelevanceFieldEnum =
   (typeof ProjectMaterialLineOrderByRelevanceFieldEnum)[keyof typeof ProjectMaterialLineOrderByRelevanceFieldEnum];
+
+export const RdHandoffOrderOrderByRelevanceFieldEnum = {
+  documentNo: "documentNo",
+  handlerNameSnapshot: "handlerNameSnapshot",
+  sourceWorkshopNameSnapshot: "sourceWorkshopNameSnapshot",
+  targetWorkshopNameSnapshot: "targetWorkshopNameSnapshot",
+  remark: "remark",
+  voidReason: "voidReason",
+  voidedBy: "voidedBy",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type RdHandoffOrderOrderByRelevanceFieldEnum =
+  (typeof RdHandoffOrderOrderByRelevanceFieldEnum)[keyof typeof RdHandoffOrderOrderByRelevanceFieldEnum];
+
+export const RdHandoffOrderLineOrderByRelevanceFieldEnum = {
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type RdHandoffOrderLineOrderByRelevanceFieldEnum =
+  (typeof RdHandoffOrderLineOrderByRelevanceFieldEnum)[keyof typeof RdHandoffOrderLineOrderByRelevanceFieldEnum];
 
 export const DocumentRelationOrderByRelevanceFieldEnum = {
   upstreamDocumentType: "upstreamDocumentType",

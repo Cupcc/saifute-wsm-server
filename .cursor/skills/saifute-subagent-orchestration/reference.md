@@ -142,7 +142,8 @@ What to produce:
 - Do not let `coder` or `code-reviewer` create the commit directly
 - Use `.cursor/rules/commit-workflow.mdc` as the source of truth for checkpoint timing, final semantic commit rules, and squash-to-`main` expectations
 - Only proceed to parent-owned commit activity after required validation passes, review is clear of open `[blocking]` and `[important]` findings, there is no unresolved shared-contract blocker, and the user did not opt out with `no-commit`
-- If the current session policy blocks commit creation, stop at a commit-ready handoff instead of inventing a local exception
+- Repository default: validated delivery work is commit-intended unless the user says `no-commit`
+- If a higher-priority runtime policy outside the repository blocks commit creation, stop at a commit-ready handoff instead of inventing a local exception
 - For delivery requests, review is not a stopping point; the parent should keep the repair loop moving until commit readiness or a real blocker
 - Only stop early when the user explicitly asked for `plan-only`, `review-only`, or `docs-only`
 - If the user says `no-commit`, finish the requested scope and review or fix loop, then stop without creating a commit

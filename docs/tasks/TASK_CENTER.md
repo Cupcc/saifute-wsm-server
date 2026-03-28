@@ -36,7 +36,9 @@
 
 ## 活跃任务
 
-当前无条目。
+| Task 文档 | 状态 | 说明 |
+| --- | --- | --- |
+| `docs/tasks/task-20260328-1831-rd-procurement-main-acceptance-linkage.md` | `planned` | RD 新活跃切片：把“研发采购需求”落成真实上游事实，并让主仓验收可直接选取/自动带出对应采购信息；研发物料状态链、小仓盘点/调整与最终 smoke 明确留在后续 RD 收口。 |
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
@@ -45,6 +47,7 @@
 | Task 文档 | 保留原因 |
 | --- | --- |
 | `docs/tasks/archive/retained-completed/task-20260326-0415-rd-subwarehouse-phase1-operating-foundation.md` | 已完成 RD Phase 1 operating foundation：研发独立工作台、固定仓别隔离、项目领用、本仓报废与研发侧库存/报表基础已落地，并通过 reviewer clean sign-off 与浏览器冒烟验证。 |
+| `docs/tasks/archive/retained-completed/task-20260328-1640-rd-subwarehouse-main-to-rd-handoff-foundation.md` | 已完成 RD handoff foundation：窄化 `RD handoff` 真源文档、`main - / RD +` 过账、独立权限点与 RD 真实结果面已落地，并通过 full test / build / reviewer clean sign-off。 |
 | `docs/tasks/archive/retained-completed/task-20260327-1845-redis-real-integration.md` | 已完成真实 Redis 接入：`shared/redis` 已切到 `ioredis`，`session` / `auth` 语义与 TTL/扫描/原子消费已对齐，真实 Redis 应用级 e2e、focused integration tests 与 `pnpm verify` 均通过，并经 closing re-review `No findings` sign-off。 |
 | `docs/tasks/archive/retained-completed/task-20260327-1721-rbac-system-management-closure.md` | 已完成 RBAC system management closure：`admin` 恢复 `系统管理` 与 RD 入口可见性，`web/src/api/system/**` 与当前 NestJS `/api/system/*` 已对齐，`admin` / `operator` / `rd-operator` / `system-manager` 浏览器冒烟均通过，并经 closing re-review `No findings` sign-off。 |
 | `docs/tasks/archive/retained-completed/task-20260326-0455-system-readiness-core-business-coverage.md` | 已完成 core business 页面群收口：`base/*`、`entry/*`、`take/*`、`stock/{inventory,log,used,scrap*,interval}` 菜单/主请求/关键过滤链路已对齐当前 NestJS，并通过 build + browser 定向验证。 |

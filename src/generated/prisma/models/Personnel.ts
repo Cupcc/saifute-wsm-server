@@ -280,6 +280,7 @@ export type PersonnelWhereInput = {
   customerStockOrders?: Prisma.CustomerStockOrderListRelationFilter;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderListRelationFilter;
   managedProjects?: Prisma.ProjectListRelationFilter;
+  rdHandoffOrders?: Prisma.RdHandoffOrderListRelationFilter;
 };
 
 export type PersonnelOrderByWithRelationInput = {
@@ -298,6 +299,7 @@ export type PersonnelOrderByWithRelationInput = {
   customerStockOrders?: Prisma.CustomerStockOrderOrderByRelationAggregateInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderOrderByRelationAggregateInput;
   managedProjects?: Prisma.ProjectOrderByRelationAggregateInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderOrderByRelationAggregateInput;
   _relevance?: Prisma.PersonnelOrderByRelevanceInput;
 };
 
@@ -328,6 +330,7 @@ export type PersonnelWhereUniqueInput = Prisma.AtLeast<
     customerStockOrders?: Prisma.CustomerStockOrderListRelationFilter;
     workshopMaterialOrders?: Prisma.WorkshopMaterialOrderListRelationFilter;
     managedProjects?: Prisma.ProjectListRelationFilter;
+    rdHandoffOrders?: Prisma.RdHandoffOrderListRelationFilter;
   },
   "id" | "personnelCode"
 >;
@@ -403,6 +406,7 @@ export type PersonnelCreateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelUncheckedCreateInput = {
@@ -421,6 +425,7 @@ export type PersonnelUncheckedCreateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectUncheckedCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelUpdateInput = {
@@ -448,6 +453,7 @@ export type PersonnelUpdateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelUncheckedUpdateInput = {
@@ -476,6 +482,7 @@ export type PersonnelUncheckedUpdateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUncheckedUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelCreateManyInput = {
@@ -716,6 +723,34 @@ export type PersonnelUpdateOneWithoutManagedProjectsNestedInput = {
   >;
 };
 
+export type PersonnelCreateNestedOneWithoutRdHandoffOrdersInput = {
+  create?: Prisma.XOR<
+    Prisma.PersonnelCreateWithoutRdHandoffOrdersInput,
+    Prisma.PersonnelUncheckedCreateWithoutRdHandoffOrdersInput
+  >;
+  connectOrCreate?: Prisma.PersonnelCreateOrConnectWithoutRdHandoffOrdersInput;
+  connect?: Prisma.PersonnelWhereUniqueInput;
+};
+
+export type PersonnelUpdateOneWithoutRdHandoffOrdersNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.PersonnelCreateWithoutRdHandoffOrdersInput,
+    Prisma.PersonnelUncheckedCreateWithoutRdHandoffOrdersInput
+  >;
+  connectOrCreate?: Prisma.PersonnelCreateOrConnectWithoutRdHandoffOrdersInput;
+  upsert?: Prisma.PersonnelUpsertWithoutRdHandoffOrdersInput;
+  disconnect?: Prisma.PersonnelWhereInput | boolean;
+  delete?: Prisma.PersonnelWhereInput | boolean;
+  connect?: Prisma.PersonnelWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.PersonnelUpdateToOneWithWhereWithoutRdHandoffOrdersInput,
+      Prisma.PersonnelUpdateWithoutRdHandoffOrdersInput
+    >,
+    Prisma.PersonnelUncheckedUpdateWithoutRdHandoffOrdersInput
+  >;
+};
+
 export type PersonnelCreateWithoutStockInOrdersInput = {
   personnelCode: string;
   personnelName: string;
@@ -730,6 +765,7 @@ export type PersonnelCreateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelUncheckedCreateWithoutStockInOrdersInput = {
@@ -747,6 +783,7 @@ export type PersonnelUncheckedCreateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectUncheckedCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelCreateOrConnectWithoutStockInOrdersInput = {
@@ -801,6 +838,7 @@ export type PersonnelUpdateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelUncheckedUpdateWithoutStockInOrdersInput = {
@@ -828,6 +866,7 @@ export type PersonnelUncheckedUpdateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUncheckedUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelCreateWithoutCustomerStockOrdersInput = {
@@ -844,6 +883,7 @@ export type PersonnelCreateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelUncheckedCreateWithoutCustomerStockOrdersInput = {
@@ -861,6 +901,7 @@ export type PersonnelUncheckedCreateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectUncheckedCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelCreateOrConnectWithoutCustomerStockOrdersInput = {
@@ -915,6 +956,7 @@ export type PersonnelUpdateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelUncheckedUpdateWithoutCustomerStockOrdersInput = {
@@ -942,6 +984,7 @@ export type PersonnelUncheckedUpdateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUncheckedUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelCreateWithoutWorkshopMaterialOrdersInput = {
@@ -958,6 +1001,7 @@ export type PersonnelCreateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutHandlerPersonnelInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelUncheckedCreateWithoutWorkshopMaterialOrdersInput = {
@@ -975,6 +1019,7 @@ export type PersonnelUncheckedCreateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   managedProjects?: Prisma.ProjectUncheckedCreateNestedManyWithoutManagerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelCreateOrConnectWithoutWorkshopMaterialOrdersInput = {
@@ -1029,6 +1074,7 @@ export type PersonnelUpdateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelUncheckedUpdateWithoutWorkshopMaterialOrdersInput = {
@@ -1056,6 +1102,7 @@ export type PersonnelUncheckedUpdateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   managedProjects?: Prisma.ProjectUncheckedUpdateManyWithoutManagerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelCreateWithoutManagedProjectsInput = {
@@ -1072,6 +1119,7 @@ export type PersonnelCreateWithoutManagedProjectsInput = {
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutHandlerPersonnelInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutHandlerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelUncheckedCreateWithoutManagedProjectsInput = {
@@ -1089,6 +1137,7 @@ export type PersonnelUncheckedCreateWithoutManagedProjectsInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
 };
 
 export type PersonnelCreateOrConnectWithoutManagedProjectsInput = {
@@ -1143,6 +1192,7 @@ export type PersonnelUpdateWithoutManagedProjectsInput = {
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutHandlerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUpdateManyWithoutHandlerPersonnelNestedInput;
 };
 
 export type PersonnelUncheckedUpdateWithoutManagedProjectsInput = {
@@ -1170,6 +1220,125 @@ export type PersonnelUncheckedUpdateWithoutManagedProjectsInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
+  rdHandoffOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
+};
+
+export type PersonnelCreateWithoutRdHandoffOrdersInput = {
+  personnelCode: string;
+  personnelName: string;
+  status?: $Enums.MasterDataStatus;
+  creationMode?: $Enums.DataCreationMode;
+  sourceDocumentType?: string | null;
+  sourceDocumentId?: number | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutHandlerPersonnelInput;
+  customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutHandlerPersonnelInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutHandlerPersonnelInput;
+  managedProjects?: Prisma.ProjectCreateNestedManyWithoutManagerPersonnelInput;
+};
+
+export type PersonnelUncheckedCreateWithoutRdHandoffOrdersInput = {
+  id?: number;
+  personnelCode: string;
+  personnelName: string;
+  status?: $Enums.MasterDataStatus;
+  creationMode?: $Enums.DataCreationMode;
+  sourceDocumentType?: string | null;
+  sourceDocumentId?: number | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutHandlerPersonnelInput;
+  managedProjects?: Prisma.ProjectUncheckedCreateNestedManyWithoutManagerPersonnelInput;
+};
+
+export type PersonnelCreateOrConnectWithoutRdHandoffOrdersInput = {
+  where: Prisma.PersonnelWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.PersonnelCreateWithoutRdHandoffOrdersInput,
+    Prisma.PersonnelUncheckedCreateWithoutRdHandoffOrdersInput
+  >;
+};
+
+export type PersonnelUpsertWithoutRdHandoffOrdersInput = {
+  update: Prisma.XOR<
+    Prisma.PersonnelUpdateWithoutRdHandoffOrdersInput,
+    Prisma.PersonnelUncheckedUpdateWithoutRdHandoffOrdersInput
+  >;
+  create: Prisma.XOR<
+    Prisma.PersonnelCreateWithoutRdHandoffOrdersInput,
+    Prisma.PersonnelUncheckedCreateWithoutRdHandoffOrdersInput
+  >;
+  where?: Prisma.PersonnelWhereInput;
+};
+
+export type PersonnelUpdateToOneWithWhereWithoutRdHandoffOrdersInput = {
+  where?: Prisma.PersonnelWhereInput;
+  data: Prisma.XOR<
+    Prisma.PersonnelUpdateWithoutRdHandoffOrdersInput,
+    Prisma.PersonnelUncheckedUpdateWithoutRdHandoffOrdersInput
+  >;
+};
+
+export type PersonnelUpdateWithoutRdHandoffOrdersInput = {
+  personnelCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  personnelName?: Prisma.StringFieldUpdateOperationsInput | string;
+  status?:
+    | Prisma.EnumMasterDataStatusFieldUpdateOperationsInput
+    | $Enums.MasterDataStatus;
+  creationMode?:
+    | Prisma.EnumDataCreationModeFieldUpdateOperationsInput
+    | $Enums.DataCreationMode;
+  sourceDocumentType?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceDocumentId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  stockInOrders?: Prisma.StockInOrderUpdateManyWithoutHandlerPersonnelNestedInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutHandlerPersonnelNestedInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutHandlerPersonnelNestedInput;
+  managedProjects?: Prisma.ProjectUpdateManyWithoutManagerPersonnelNestedInput;
+};
+
+export type PersonnelUncheckedUpdateWithoutRdHandoffOrdersInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  personnelCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  personnelName?: Prisma.StringFieldUpdateOperationsInput | string;
+  status?:
+    | Prisma.EnumMasterDataStatusFieldUpdateOperationsInput
+    | $Enums.MasterDataStatus;
+  creationMode?:
+    | Prisma.EnumDataCreationModeFieldUpdateOperationsInput
+    | $Enums.DataCreationMode;
+  sourceDocumentType?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceDocumentId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutHandlerPersonnelNestedInput;
+  managedProjects?: Prisma.ProjectUncheckedUpdateManyWithoutManagerPersonnelNestedInput;
 };
 
 /**
@@ -1181,6 +1350,7 @@ export type PersonnelCountOutputType = {
   customerStockOrders: number;
   workshopMaterialOrders: number;
   managedProjects: number;
+  rdHandoffOrders: number;
 };
 
 export type PersonnelCountOutputTypeSelect<
@@ -1195,6 +1365,7 @@ export type PersonnelCountOutputTypeSelect<
     | boolean
     | PersonnelCountOutputTypeCountWorkshopMaterialOrdersArgs;
   managedProjects?: boolean | PersonnelCountOutputTypeCountManagedProjectsArgs;
+  rdHandoffOrders?: boolean | PersonnelCountOutputTypeCountRdHandoffOrdersArgs;
 };
 
 /**
@@ -1250,6 +1421,16 @@ export type PersonnelCountOutputTypeCountManagedProjectsArgs<
   where?: Prisma.ProjectWhereInput;
 };
 
+/**
+ * PersonnelCountOutputType without action
+ */
+export type PersonnelCountOutputTypeCountRdHandoffOrdersArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.RdHandoffOrderWhereInput;
+};
+
 export type PersonnelSelect<
   ExtArgs extends
     runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
@@ -1274,6 +1455,7 @@ export type PersonnelSelect<
       | boolean
       | Prisma.Personnel$workshopMaterialOrdersArgs<ExtArgs>;
     managedProjects?: boolean | Prisma.Personnel$managedProjectsArgs<ExtArgs>;
+    rdHandoffOrders?: boolean | Prisma.Personnel$rdHandoffOrdersArgs<ExtArgs>;
     _count?: boolean | Prisma.PersonnelCountOutputTypeDefaultArgs<ExtArgs>;
   },
   ExtArgs["result"]["personnel"]
@@ -1322,6 +1504,7 @@ export type PersonnelInclude<
     | boolean
     | Prisma.Personnel$workshopMaterialOrdersArgs<ExtArgs>;
   managedProjects?: boolean | Prisma.Personnel$managedProjectsArgs<ExtArgs>;
+  rdHandoffOrders?: boolean | Prisma.Personnel$rdHandoffOrdersArgs<ExtArgs>;
   _count?: boolean | Prisma.PersonnelCountOutputTypeDefaultArgs<ExtArgs>;
 };
 
@@ -1335,6 +1518,7 @@ export type $PersonnelPayload<
     customerStockOrders: Prisma.$CustomerStockOrderPayload<ExtArgs>[];
     workshopMaterialOrders: Prisma.$WorkshopMaterialOrderPayload<ExtArgs>[];
     managedProjects: Prisma.$ProjectPayload<ExtArgs>[];
+    rdHandoffOrders: Prisma.$RdHandoffOrderPayload<ExtArgs>[];
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -1872,6 +2056,17 @@ export interface Prisma__PersonnelClient<
   ): Prisma.PrismaPromise<
     | runtime.Types.Result.GetResult<
         Prisma.$ProjectPayload<ExtArgs>,
+        T,
+        "findMany",
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  rdHandoffOrders<T extends Prisma.Personnel$rdHandoffOrdersArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Personnel$rdHandoffOrdersArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$RdHandoffOrderPayload<ExtArgs>,
         T,
         "findMany",
         GlobalOmitOptions
@@ -2460,6 +2655,37 @@ export type Personnel$managedProjectsArgs<
   take?: number;
   skip?: number;
   distinct?: Prisma.ProjectScalarFieldEnum | Prisma.ProjectScalarFieldEnum[];
+};
+
+/**
+ * Personnel.rdHandoffOrders
+ */
+export type Personnel$rdHandoffOrdersArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the RdHandoffOrder
+   */
+  select?: Prisma.RdHandoffOrderSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the RdHandoffOrder
+   */
+  omit?: Prisma.RdHandoffOrderOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RdHandoffOrderInclude<ExtArgs> | null;
+  where?: Prisma.RdHandoffOrderWhereInput;
+  orderBy?:
+    | Prisma.RdHandoffOrderOrderByWithRelationInput
+    | Prisma.RdHandoffOrderOrderByWithRelationInput[];
+  cursor?: Prisma.RdHandoffOrderWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.RdHandoffOrderScalarFieldEnum
+    | Prisma.RdHandoffOrderScalarFieldEnum[];
 };
 
 /**

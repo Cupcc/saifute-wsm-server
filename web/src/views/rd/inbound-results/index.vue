@@ -47,7 +47,16 @@
             {{ formatDate(row.bizDate) }}
           </template>
         </el-table-column>
-        <el-table-column prop="orderType" label="单据类型" min-width="120" />
+        <el-table-column
+          prop="sourceWorkshopNameSnapshot"
+          label="来源车间"
+          min-width="140"
+        />
+        <el-table-column
+          prop="targetWorkshopNameSnapshot"
+          label="目标车间"
+          min-width="140"
+        />
         <el-table-column prop="totalQty" label="总数量" min-width="120" />
         <el-table-column prop="totalAmount" label="总金额" min-width="120" />
         <el-table-column label="明细数" min-width="100">
@@ -72,7 +81,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="detailOpen" title="入库结果详情" width="900px">
+    <el-dialog v-model="detailOpen" title="自动入库结果详情" width="900px">
       <template v-if="detailRow">
         <el-descriptions :column="2" border class="detail-descriptions">
           <el-descriptions-item label="单据编号">
@@ -81,8 +90,11 @@
           <el-descriptions-item label="业务日期">
             {{ formatDate(detailRow.bizDate) }}
           </el-descriptions-item>
-          <el-descriptions-item label="单据类型">
-            {{ detailRow.orderType }}
+          <el-descriptions-item label="来源车间">
+            {{ detailRow.sourceWorkshopNameSnapshot || "-" }}
+          </el-descriptions-item>
+          <el-descriptions-item label="目标车间">
+            {{ detailRow.targetWorkshopNameSnapshot || "-" }}
           </el-descriptions-item>
           <el-descriptions-item label="总数量">
             {{ detailRow.totalQty }}

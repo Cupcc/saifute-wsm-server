@@ -2,9 +2,7 @@
 
 ## 模块目标与职责
 
-负责"主仓 + 研发小仓"受限协同场景下，研发小仓自有的业务编排、采购需求、物料状态链，以及主仓到小仓的协同调度。该模块对应 `src/modules/rd-subwarehouse`，是后续 RD 业务切片的代码归属。
-
-当前阶段（Slice 1）尚未新建独立后端模块目录，而是通过前端双视角壳层、会话 `consoleMode` / `workshopScope`，以及复用 `inbound`、`project`、`workshop-material`、`inventory-core`、`reporting` 现有接口完成首个 operating foundation。后续切片落地时，本模块将逐步承接独立于上述模块的 RD 业务编排。
+负责"主仓 + 研发小仓"受限协同场景下，研发小仓自有的业务编排、采购需求、物料状态链，以及主仓到小仓的协同调度。该模块对应 `src/modules/rd-subwarehouse`，已经承接主仓到 RD 自动交接 foundation，并作为后续 RD 业务切片的代码归属。
 
 ## 当前实现与目标范围
 
@@ -12,11 +10,12 @@
 
 - 前端已形成 `default` 与 `rd-subwarehouse` 两种 `consoleMode`，通过 `/rd/*` 路由提供研发小仓专属入口。
 - 会话快照承载 `consoleMode` 与 `workshopScope`，RD 账号通过固定 `workshopId` 约束查询和写入范围。
+- 后端已新增 `rd-subwarehouse` 独立交接文档：主仓管理员创建 `RD handoff` 业务事实后，系统同事务完成 `main - / RD +` 的 `inventory-core` 过账，并以该文档作为 RD 自动入库结果真源。
 - 已落地的 RD 页面与后端复用关系：
   - `研发工作台`：前端专属入口与导航壳层
   - `小仓库存`、`分类分布`：复用 `reporting`
   - `库存流水`：复用 `inventory-core`
-  - `自动入库结果`：复用 `inbound` 只读结果面
+  - `自动入库结果`：读取 `rd-subwarehouse` 自有交接结果，而不再复用 `inbound` 占位语义
   - `项目领用`：复用 `project`
   - `本仓报废`：复用 `workshop-material`
 - 当前是"受限子仓模型"首个切片，不是完整开放式多仓，也不是独立库存子系统。
@@ -24,7 +23,7 @@
 **目标范围**：
 
 - 坚持"主仓 + 研发小仓受限协同"，不扩展成通用多仓 / 库位 / 批次架构。
-- 后续切片补齐：主仓到 RD 自动过账、研发采购需求与主仓验收联动、研发物料独立状态链、小仓盘点 / 调整。
+- 后续切片补齐：研发采购需求与主仓验收联动、研发物料独立状态链、小仓盘点 / 调整。
 - 库存写入统一经过 `inventory-core`，报表统一在 `reporting` 聚合，本模块只做业务编排，不绕过核心层。
 
 ## 角色与视角架构矩阵
@@ -42,7 +41,7 @@
 | `web` 壳层 | 路由分组、首页、标签页、RD 专属入口 | 提供"大仓主视角 + RD 专属视角"的非镜像双视角体验 | 不在前端自行裁决真实业务权限，不绕过后端做数据隔离 |
 | `session` | 保存登录态快照 | 在会话里承载 `consoleMode` 与 `workshopScope`，作为视角和固定仓别约束真源 | 不直接决定业务权限，不直接改库存 |
 | `rbac` | 菜单树、权限、数据权限 | 输出主仓 / RD 路由树，维护系统管理员双视角可见，提供固定仓别约束辅助能力 | 不把 `consoleMode` 当成权限替身，不额外裁掉本应可见页面 |
-| `inbound` | 验收单、入库单 | 当前承接主仓入库事实；RD "自动入库结果" 页面现阶段复用其只读结果面 | 不能在主仓验收时直接把库存写进 RD 小仓 |
+| `inbound` | 验收单、入库单 | 继续承接主仓入库事实；后续可与 RD 采购链路做关联 | 不能在主仓验收时直接把库存写进 RD 小仓 |
 | `project` | 项目与项目物料消耗 | 承接 RD 项目领用 / 归集语义，要求小仓出库绑定项目或项目式归集项 | 不拥有主仓验收或本仓报废职责 |
 | `workshop-material` | 领料 / 退料 / 报废家族 | 当前复用其报废能力承接 RD 本仓报废 | 不承担 RD 退回主仓或公司级外部退货 |
 | `inventory-core` | 库存唯一写入口 | 统一承接主仓、小仓全部库存增减、日志与来源追踪 | 不被任何业务模块绕过；不演进成通用多仓框架作为本需求前提 |
@@ -54,7 +53,7 @@
 |------|----------|----------|----------|------|
 | 研发采购需求录入 | 后续切片 | `rd-subwarehouse` 采购需求编排 | 暂不记库存 | 录入方是小仓管理员，供采购角色接单 |
 | 外部采购到货并验收 | `inbound` | `inbound` + `rd-subwarehouse` 采购信息关联 | 先入主仓 | RD 采购信息只提供关联与追溯，不改变主仓先入账原则 |
-| 主仓到 RD 自动过账 | 后续切片 | `rd-subwarehouse` 协同编排 + `inventory-core` | 主仓减、小仓增 | 不要求小仓管理员二次确认收货 |
+| 主仓到 RD 自动过账 | `rd-subwarehouse` + `inventory-core` | `rd-subwarehouse` 协同编排 + `inventory-core` | 主仓减、小仓增 | 不要求小仓管理员二次确认收货，RD 结果面读取真实交接结果 |
 | RD 项目领用 | `project` + `inventory-core` | 继续由 `project` 承担 | 小仓减 | 必须绑定项目或项目式归集项 |
 | RD 本仓报废 | `workshop-material` + `inventory-core` | 继续由 `workshop-material` 承担 | 小仓减 | 属于小仓内部动作 |
 | RD 盘点 / 调整 | 后续切片 | `rd-subwarehouse` 库存编排 + `inventory-core` | 只调整本小仓 | 属于受限能力，不等于通用全仓盘点框架 |
@@ -75,7 +74,7 @@
 - 依赖 `inventory-core`：所有库存写入
 - 依赖 `project`：项目领用 / 归集语义
 - 依赖 `workshop-material`：本仓报废
-- 依赖 `inbound`：自动入库结果只读面、后续主仓验收关联
+- 后续依赖 `inbound`：主仓验收关联
 - 依赖 `reporting`：小仓只读报表
 - 依赖 `rbac`：路由树、权限、`WorkshopScopeService`
 - 依赖 `session`：`consoleMode`、`workshopScope` 承载
@@ -89,12 +88,12 @@
 ## 权限点、数据权限、审计要求
 
 - RD 页面需要独立权限点，不能与主仓页面混用同一组权限码。
+- 当前主仓到 RD 交接 foundation 已使用独立权限点 `rd:handoff-order:*`，不再复用 `inbound:into-order:*`。
 - 查询和命令统一受 `workshopScope` 约束，固定仓别账号只能访问本小仓数据。
-- 新增、修改、作废、导出操作需记录审计。
+- 新增、修改、作废、导出操作需记录审计；当前 `RD handoff` 已对 create / void 接入操作日志。
 
 ## 当前缺口 / 后续切片
 
-- 主仓到 RD 自动过账还缺正式业务编排与稳定读模型。
 - 研发采购需求与主仓验收联动尚未落地。
 - 研发采购链路中的独立物料状态流尚未落地。
 - 小仓盘点 / 库存调整尚未落地。

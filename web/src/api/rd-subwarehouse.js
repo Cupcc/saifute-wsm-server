@@ -18,7 +18,7 @@ export function listRdInventoryLogs(params = {}) {
 
 export function listRdInboundResults(params = {}) {
   return request({
-    url: "/api/inbound/into-orders",
+    url: "/api/rd-subwarehouse/handoff-orders",
     method: "get",
     params,
   });
