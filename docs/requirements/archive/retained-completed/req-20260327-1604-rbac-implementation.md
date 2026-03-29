@@ -23,7 +23,7 @@
 - 阶段进度: 已完成 `task-20260327-1721-rbac-system-management-closure` 并通过 closing re-review，本轮 RBAC system management closure 已收口为归档完成态。
 - 当前状态: 当前 NestJS + `web/` 已恢复 `admin` 的 `系统管理` 全量可见与 RD 入口可见性，并补齐 `用户 / 角色 / 部门 / 菜单 / 字典 / 参数 / 通知 / 岗位` 的 `system/*` 页面承接、权限注解与前端 `/api/system/*` 调用收口。浏览器冒烟已覆盖 `admin`、`operator`、`rd-operator`、`system-manager`：`admin` 可见 `系统管理` 与 8 个入口，`operator` 无系统管理，`rd-operator` 直达 `/rd/workbench`，`system-manager` 可正常进入 `系统管理 -> 用户管理` 且关键初始化接口返回 `200`。
 - 阻塞项: None。
-- 下一步: 归档。
+- 下一步: None（本需求已迁入 `docs/requirements/archive/retained-completed/`）。
 
 ## 待确认
 

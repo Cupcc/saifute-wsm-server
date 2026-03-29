@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: deliver phase 1 of `frontend-old-style-adaptation` by restoring the legacy-style login/layout/home/menu shell on top of current NestJS contracts, then run fresh frontend/backend integration debugging for the first-screen paths
-- Related requirement: `docs/requirements/req-20260326-1900-frontend-old-style-adaptation.md`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
 - Status: `completed`
 - Review status: `reviewed-clean`
 - Lifecycle disposition: `retained-completed`
@@ -13,7 +13,7 @@
 - Last updated: `2026-03-26`
 - Related checklist:
 - Related files:
-  - `docs/requirements/req-20260326-1900-frontend-old-style-adaptation.md`
+  - `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
   - `docs/tasks/TASK_CENTER.md`
   - `web/src/views/login.vue`
   - `web/src/views/home/index.vue`
@@ -27,7 +27,7 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260326-1900-frontend-old-style-adaptation.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
 - User intent summary:
   - 第一阶段先把登录页、首页、一级菜单分组、RD 专属首页与标签页行为收口到“旧壳新核”口径。
   - 保留当前 NestJS 权限、菜单、会话和 RD / workshop scope 契约，只做前端适配与最少量 blocker-driven 后端兼容。

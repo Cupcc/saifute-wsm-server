@@ -6,6 +6,7 @@ alwaysApply: false
 
 - Commit creation stays parent-owned. `planner`, `coder`, and `code-reviewer` never create commits directly.
 - Default delivery mode: unless the user explicitly says `no-commit`, the parent should treat validated delivery work as commit-intended and manage commits automatically.
+- In this workspace, automatic commit has already been explicitly confirmed by the user as the default delivery preference; treat it as pre-approved unless the user says `no-commit` for the current request.
 - Final semantic commit format: `type(scope): subject`
 - Preferred `type`: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
 - `scope` is optional. Prefer stable project domains such as `auth`, `session`, `rbac`, `inventory`, `workflow`, `migration`, `web`, `docs`, `tooling`, `deps`, or `api`.

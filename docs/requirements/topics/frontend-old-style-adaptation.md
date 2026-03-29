@@ -1,0 +1,66 @@
+# 前端旧风格回归主题需求
+
+## Metadata
+
+- ID: `topic-frontend-old-style-adaptation`
+- Status: `confirmed`
+- Scope: `topic-level`
+- Owner: `user`
+
+## 主题定义
+
+- 该主题解决“在保留当前 NestJS 后端能力的前提下，让 `web/` 前端逐步回归原项目风格与交互节奏”的长期需求。
+- 当前范围覆盖登录页、`Layout`、首页 `/index`、顶部 / 侧边栏 / 标签页、菜单分组，以及后续业务列表页、详情页和编辑流的旧风格适配。
+
+## 长期约束
+
+- `C1` 回归范围：只回归前端表现层风格与交互节奏，不回退当前 NestJS 后端架构、接口能力和权限模型。状态：`生效中`
+- `C2` 视觉基线：以原前端 `E:/Projects/saifute-wms-vue3` 为视觉与交互基线，在当前 `web/` 工程内重构。状态：`生效中`
+- `C3` 业务保留：`销售管理`、`生产车间`、`研发协同 / RD 小仓` 等真实业务分组必须保留，不能回到泛化的旧分组语义。状态：`生效中`
+- `C4` 交付节奏：按阶段推进，优先壳层与高频入口，再逐步扩展到各业务页。状态：`生效中`
+- `C5` RD 视角保留：`RD 小仓` 相关页面必须持续保留，并维持非镜像双视角与 RD 独立首页行为。状态：`生效中`
+
+## 长期业务口径
+
+### 回归范围口径
+
+- 前端回归只回归表现层风格与交互节奏，不回退当前 NestJS 后端架构、接口能力和既有权限契约。
+- 回归优先级覆盖登录页、`Layout`、首页 `/index`、顶部导航、侧边栏、标签页和一级菜单分组。
+
+### 业务与角色口径
+
+- `销售管理`、`生产车间`、`研发协同 / RD 小仓` 等真实业务分组必须保留，不回到泛化的旧分组语义。
+- `RD 小仓` 相关页面必须保留，并继续体现非镜像双视角与 RD 独立首页行为。
+- 前端风格回归不能破坏当前角色权限边界，低权限账号仍需保持安全降级和稳定可用。
+
+## 能力清单
+
+| 编号 | 能力 | 验收口径 | 阶段 | 状态 | 关联需求 |
+| --- | --- | --- | --- | --- | --- |
+| `F1` | 登录页 / Layout / 菜单壳层回归 | 登录页、壳层、顶部 / 侧边栏 / 标签页、一级菜单分组和 RD 双视角行为与目标口径一致 | Phase 1 | `已完成` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
+| `F2` | `/index` 旧版图表首页回归 | 富权限账号首页恢复旧版统计卡 + 图表节奏，RD 保持独立首页行为，并兼容当前 reporting 接口 | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
+| `F3` | 业务列表页旧风格节奏细化 | 各业务列表页恢复“查询 + 表格 + 操作”的主要节奏 | Phase 3 | `未开始` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
+| `F4` | 详情页与编辑流适配 | 详情、表单、编辑流在不破坏现有接口契约前提下回归旧风格体验 | Phase 4 | `未开始` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
+| `F5` | 多角色体验一致性 | `admin` / `operator` / `rd-operator` 等角色在各自权限范围内具备稳定可用体验，并保持当前权限契约不被风格回归破坏 | Phase 4 | `进行中` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
+
+## 阶段路线图
+
+| 阶段 | 目标 | 当前状态 |
+| --- | --- | --- |
+| Phase 1 | 登录页、壳层和菜单分组回归 | `已完成` |
+| Phase 2 | `/index` 旧版图表首页回归 | `已完成` |
+| Phase 3 | 各业务列表页旧风格节奏细化 | `待规划` |
+| Phase 4 | 详情页、编辑流与多角色一致性收口 | `待规划` |
+
+## 待确认（可选）
+
+- None
+
+## 文档关系（可选）
+
+- 项目级长期背景：`docs/requirements/PROJECT_REQUIREMENTS.md`
+- 已归档阶段基线：`docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
+- 已完成阶段任务：
+  - `docs/tasks/archive/retained-completed/task-20260326-1940-frontend-old-style-phase1-shell-integration.md`
+  - `docs/tasks/archive/retained-completed/task-20260327-1000-frontend-home-legacy-chart-restore.md`
+- 后续继续推进时，应另开新的前端切片 requirement / task。

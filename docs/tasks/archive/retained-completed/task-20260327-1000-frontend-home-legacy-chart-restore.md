@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: restore `/index` to a legacy-style chart homepage on top of current NestJS contracts, without reusing the `reporting/home` container, while preserving RD landing and low-permission safe fallback
-- Related requirement: `docs/requirements/req-20260326-1900-frontend-old-style-adaptation.md`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
 - Status: `completed`
 - Review status: `reviewed-clean`
 - Lifecycle disposition: `retained-completed`
@@ -13,7 +13,7 @@
 - Last updated: `2026-03-27`
 - Related checklist:
 - Related files:
-  - `docs/requirements/req-20260326-1900-frontend-old-style-adaptation.md`
+  - `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
   - `docs/tasks/TASK_CENTER.md`
   - `web/src/views/home/index.vue`
   - `web/src/views/index.vue`
@@ -25,7 +25,7 @@
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260326-1900-frontend-old-style-adaptation.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
 - User intent summary:
   - `/index` 要回到旧项目那种“欢迎语 + 统计卡 + 图表”富首页，而不是继续直接复用 `reporting/home` 容器。
   - `rd-subwarehouse` 用户仍应直达 `/rd/workbench`，不走普通首页。
@@ -96,7 +96,7 @@
   - 优先做前端适配，把当前 reporting API 映射到旧首页表现层；不要为了旧页面命名去倒推新增后端 legacy 接口。
   - 把 RD 直达和低权限无 `403` 视为硬性回归门，而不是“顺带保持”的软要求。
 - Required source docs or files:
-  - `docs/requirements/req-20260326-1900-frontend-old-style-adaptation.md`
+  - `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
   - `docs/tasks/archive/retained-completed/task-20260326-1940-frontend-old-style-phase1-shell-integration.md`
   - `web/src/views/home/index.vue`
   - `web/src/views/index.vue`

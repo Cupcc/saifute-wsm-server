@@ -87,7 +87,7 @@
   - `web/src/layout/components/TagsView/index.vue`
   - `web/src/router/index.js`
 - Frozen or shared paths:
-  - `docs/requirements/req-20260327-1604-rbac-implementation.md`
+  - `docs/requirements/archive/retained-completed/req-20260327-1604-rbac-implementation.md`
   - `docs/tasks/TASK_CENTER.md`
   - `docs/architecture/**`
   - `.cursor/**`
@@ -126,8 +126,8 @@
   - Phase 2 才补 `用户 / 角色 / 部门 / 菜单 / 字典 / 参数 / 通知 / 岗位` 的接口承接与非 `admin` 角色矩阵，且必须以当前仓库为真源，不允许前端连旧项目接口或直接回退旧实现。
   - 任何新 persistence / schema 设计，都要先证明它符合当前架构边界；如果只是临时把旧 `sys_*` 平台表重新当真源，会直接违反 requirement 与迁移参考冻结线。
 - Required source docs or files:
-  - `docs/requirements/req-20260327-1604-rbac-implementation.md`
-  - `docs/tasks/task-20260327-1721-rbac-system-management-closure.md`
+  - `docs/requirements/archive/retained-completed/req-20260327-1604-rbac-implementation.md`
+  - `docs/tasks/archive/retained-completed/task-20260327-1721-rbac-system-management-closure.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/rbac.md`
   - `docs/architecture/modules/session.md`
@@ -210,7 +210,7 @@
 ## Review Log
 
 - Validation results:
-  - Re-read `docs/tasks/task-20260327-1721-rbac-system-management-closure.md`、`docs/requirements/req-20260327-1604-rbac-implementation.md`、`docs/architecture/00-architecture-overview.md`、`docs/architecture/modules/rbac.md`、`docs/architecture/modules/session.md`，并按 reviewer baseline 复核当前 RBAC / session 边界。
+  - Re-read `docs/tasks/archive/retained-completed/task-20260327-1721-rbac-system-management-closure.md`、`docs/requirements/archive/retained-completed/req-20260327-1604-rbac-implementation.md`、`docs/architecture/00-architecture-overview.md`、`docs/architecture/modules/rbac.md`、`docs/architecture/modules/session.md`，并按 reviewer baseline 复核当前 RBAC / session 边界。
   - Closing re-review 继续聚焦上一轮收口面：`src/modules/rbac/controllers/system-config.controller.ts`、`src/modules/rbac/controllers/system-config.controller.spec.ts`、`src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`、`src/modules/rbac/infrastructure/in-memory-rbac.repository.spec.ts`、`src/modules/rbac/application/system-management.service.ts`、`web/src/views/system/user/index.vue`、`web/src/api/system/**`、`web/src/views/system/{config,dict,data,post,role,user}/**`。
   - 结合本轮新增证据复核最终门禁：`pnpm typecheck` 通过；`pnpm test -- src/modules/rbac/application/rbac.service.spec.ts src/modules/rbac/infrastructure/in-memory-rbac.repository.spec.ts src/modules/rbac/controllers/system-config.controller.spec.ts` 通过；`pnpm exec biome check src/modules/rbac src/modules/auth src/modules/session src/shared/guards/permissions.guard.ts` 通过；`pnpm --dir web build:prod` 通过。
   - Browser smoke 现已覆盖 `admin`、`operator`、`rd-operator`、`system-manager`；其中 `system-manager/system123` fresh login 可成功进入 `http://127.0.0.1:90/system/user`，`deptTree` / `list` / `configKey` / 字典接口返回 `200`，页面无 `404` / 白屏，且可见重置密码钥匙图标入口。
@@ -219,7 +219,7 @@
 - Findings:
   - No findings.
 - Follow-up action:
-  - `parent` 可据此同步 requirement 进展，并在确认本轮无新增 scope 后推进 task/requirement 归档。
+  - `parent` 已同步 requirement 并完成迁入 `docs/requirements/archive/retained-completed/`；后续 RBAC 新切片另开 requirement / task。
 
 ## Final Status
 
@@ -229,5 +229,5 @@
   - `getConfigByKey` 仍是一个通用 `configKey` 读取入口，只是当前前端只在重置密码初始化时读取 `sys.user.initPassword`；若后续 `system/config` 承载更敏感的运行期配置，建议再收敛为专用 endpoint 或 key allowlist，避免读权限语义继续外扩。
   - 角色菜单、角色部门、用户角色变更后的 Redis 会话一致性仍依赖现有强退/刷新策略；本轮已看到应用层会在用户/角色/菜单授权变更后主动失效相关会话，但尚无单独的端到端自动化用例覆盖中途变更场景。
   - 最终浏览器验证以代表性页面与入口为主，`system/*` 其余 CRUD 深水区仍主要依赖当前 focused tests、构建成功与手工冒烟，而非全量自动化回归。
-- Directory disposition after completion: 本 task 已满足 closing sign-off 条件；如 `parent` 确认无后续新增 scope，可迁入 `docs/tasks/archive/retained-completed/` 并同步 `docs/tasks/TASK_CENTER.md`
-- Next action: `parent` 同步 requirement 的 `阶段进度 / 当前状态 / 阻塞项 / 下一步`，并在需要时执行 task / requirement 归档。
+- Directory disposition after completion: 本 task 与关联 requirement 已迁入 `docs/tasks/archive/retained-completed/` 与 `docs/requirements/archive/retained-completed/`，`TASK_CENTER.md` / `REQUIREMENT_CENTER.md` 已对齐。
+- Next action: None（本轮 closure）；新需求另开 scope。
