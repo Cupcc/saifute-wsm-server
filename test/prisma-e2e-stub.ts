@@ -56,6 +56,14 @@ function matchesWhere(
       !Array.isArray(expected) &&
       !(expected instanceof Date)
     ) {
+      if ("in" in expected && Array.isArray(expected.in)) {
+        return expected.in.includes(actual as never);
+      }
+
+      if ("not" in expected) {
+        return actual !== expected.not;
+      }
+
       if ("contains" in expected) {
         const needle = expected.contains;
         return typeof actual === "string" && actual.includes(String(needle));
@@ -208,6 +216,39 @@ function createMemoryModel<T extends MemoryRecord>() {
   };
 }
 
+function createSeededWorkshopModel() {
+  const model = createMemoryModel<{
+    id: number;
+    workshopCode: string;
+    workshopName: string;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }>();
+
+  const now = new Date("2026-03-30T00:00:00.000Z");
+  void model.createMany({
+    data: [
+      {
+        workshopCode: "MAIN",
+        workshopName: "主仓",
+        status: "ACTIVE",
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        workshopCode: "RD",
+        workshopName: "研发小仓",
+        status: "ACTIVE",
+        createdAt: now,
+        updatedAt: now,
+      },
+    ],
+  });
+
+  return model;
+}
+
 @Injectable()
 export class PrismaE2eStub {
   material = createModelStub();
@@ -215,7 +256,7 @@ export class PrismaE2eStub {
   customer = createModelStub();
   supplier = createModelStub();
   personnel = createModelStub();
-  workshop = createModelStub();
+  workshop = createSeededWorkshopModel();
   inventoryBalance = createModelStub();
   inventoryLog = createModelStub();
   inventorySourceUsage = createModelStub();

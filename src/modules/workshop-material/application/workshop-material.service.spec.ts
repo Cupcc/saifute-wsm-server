@@ -192,7 +192,7 @@ describe("WorkshopMaterialService", () => {
       expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
-          workshopId: 1,
+          stockScope: "MAIN",
           operationType: "PICK_OUT",
           businessDocumentType: "WorkshopMaterialOrder",
           businessDocumentId: 1,
@@ -320,7 +320,7 @@ describe("WorkshopMaterialService", () => {
       expect(inventoryService.increaseStock).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
-          workshopId: 1,
+          stockScope: "MAIN",
           operationType: "RETURN_IN",
           quantity: expect.anything(),
         }),

@@ -186,7 +186,7 @@ describe("ProjectService", () => {
       expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
-          workshopId: 1,
+          stockScope: "MAIN",
           operationType: "PROJECT_CONSUMPTION_OUT",
           businessDocumentType: "Project",
           businessDocumentId: 1,

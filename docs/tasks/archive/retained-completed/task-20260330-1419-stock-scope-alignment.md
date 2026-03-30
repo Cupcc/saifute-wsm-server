@@ -3,20 +3,20 @@
 ## Metadata
 
 - Scope: 在不直接发起 `prisma/schema.prisma` 全量重构的前提下，先把运行时“真实库存范围 = MAIN / RD_SUB、`workshop` 仅归属 / 核算”的语义收敛到统一后端合约，并为后续 schema / data cutover 建立单一兼容边界。
-- Related requirement: `docs/requirements/req-20260330-1419-stock-scope-alignment.md`
-- Status: `planned`
-- Review status: `not-reviewed`
-- Lifecycle disposition: `active`
+- Related requirement: `docs/requirements/archive/retained-completed/req-20260330-1419-stock-scope-alignment.md`
+- Status: `completed`
+- Review status: `reviewed-no-findings`
+- Lifecycle disposition: `retained-completed`
 - Planner: `planner`
 - Coder: `coder`
 - Reviewer: `code-reviewer`
 - Last updated: `2026-03-30`
 - Related checklist: `None`
-- Related files: `docs/requirements/req-20260330-1419-stock-scope-alignment.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `docs/architecture/modules/inventory-core.md`, `docs/architecture/modules/rd-subwarehouse.md`, `prisma/schema.prisma`, `src/modules/session/domain/user-session.ts`, `src/modules/session/application/session.service.ts`, `src/modules/session/infrastructure/session.repository.ts`, `src/modules/rbac/application/workshop-scope.service.ts`, `src/modules/rbac/domain/rbac.types.ts`, `src/modules/rbac/application/rbac.service.ts`, `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`, `src/modules/inventory-core/**`, `src/modules/reporting/**`, `src/modules/rd-subwarehouse/**`, `src/modules/inbound/**`, `src/modules/workshop-material/**`, `src/modules/project/**`, `src/swagger-metadata.ts`
+- Related files: `docs/requirements/archive/retained-completed/req-20260330-1419-stock-scope-alignment.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `docs/architecture/modules/inventory-core.md`, `docs/architecture/modules/rd-subwarehouse.md`, `prisma/schema.prisma`, `src/modules/session/domain/user-session.ts`, `src/modules/session/application/session.service.ts`, `src/modules/session/infrastructure/session.repository.ts`, `src/modules/rbac/application/workshop-scope.service.ts`, `src/modules/rbac/domain/rbac.types.ts`, `src/modules/rbac/application/rbac.service.ts`, `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`, `src/modules/inventory-core/**`, `src/modules/reporting/**`, `src/modules/rd-subwarehouse/**`, `src/modules/inbound/**`, `src/modules/workshop-material/**`, `src/modules/project/**`, `src/swagger-metadata.ts`
 
 ## Requirement Alignment
 
-- Requirement doc: `docs/requirements/req-20260330-1419-stock-scope-alignment.md`
+- Requirement doc: `docs/requirements/archive/retained-completed/req-20260330-1419-stock-scope-alignment.md`
 - User intent summary:
   - 真实库存范围只包含 `MAIN` 与 `RD_SUB`。
   - `workshop` 只承担主仓领退料归属与成本核算，不建立车间库存余额。
@@ -32,22 +32,22 @@
 
 ## Requirement Sync
 
-- Req-facing phase progress: 已完成活跃 task 建档与真实差距盘点，建议先执行“运行时语义收敛层”再评估 schema cutover。
-- Req-facing current state: 文档真源已更新，但运行时代码仍以 `workshop/workshopScope` 承担库存范围语义，当前需要先在后端收敛 canonical `stockScope` 合约。
+- Req-facing phase progress: Phase 1 运行时 `stockScope` 语义收敛已完成，post-commit 收口已复核通过。
+- Req-facing current state: scoped runtime surfaces 已以 canonical `stockScope` 作为真实库存范围真源；`inventory-core` 仍是唯一库存写入口；最终闸门已通过。
 - Req-facing blockers: `None`
-- Req-facing next step: 按本 task 先实现 Phase 1 运行时语义收敛与 focused validation；若证明无法绕开 schema，再回到本 task 追加 Phase 2 切面。
+- Req-facing next step: 归档；若后续继续推进库存维度真切换，另开 `Phase 2` schema / data cutover 切片。
 - Requirement doc sync owner: `parent`
 
 ## Goal And Acceptance Criteria
 
 - Goal: 先把后端运行时的库存范围语义从 `workshop` 收敛到 `stockScope` canonical contract，使 `MAIN` / `RD_SUB` 成为唯一真实库存池表达，同时维持现有 API / 会话 / RD 功能兼容，并把高风险 schema cutover 显式后置。
 - Acceptance criteria:
-  - [ ] 后端存在明确的 `stockScope` canonical runtime contract（枚举 / 值对象 / 解析器 / 上下文服务皆可），并被 `session`、`rbac`、`inventory-core`、`reporting`、`rd-subwarehouse` 等运行时入口复用。
-  - [ ] 新旧兼容边界清晰：外部仍可能读到 `workshopScope` 或 `workshopId` 的地方必须由单一 compatibility layer 翻译，而不是继续在各模块散落“车间即库存池”假设。
-  - [ ] `inventory-core` 运行时只接受 `MAIN` / `RD_SUB` 作为真实库存范围；`workshop-material` / `project` 等模块里的 `workshopId` 仅保留归属 / 核算语义，不再主导库存池选择。
-  - [ ] 现有来源层成本追踪不被破坏；本轮不得把成本语义回退成“按物料静态单价出库 / 领料 / 退料”。
-  - [ ] `prisma/schema.prisma`、生成 Prisma client、DB unique key / relation 仍保持冻结；如果实现中证明必须改 schema，coder 需先停下并回写 task，而不是半切换。
-  - [ ] `pnpm swagger:metadata`、`pnpm typecheck` 与本 task 指定 focused tests 通过；最后跑 `pnpm test` 作为总闸。
+  - [x] 后端存在明确的 `stockScope` canonical runtime contract（枚举 / 值对象 / 解析器 / 上下文服务皆可），并被 `session`、`rbac`、`inventory-core`、`reporting`、`rd-subwarehouse` 等运行时入口复用。
+  - [x] 新旧兼容边界清晰：外部仍可能读到 `workshopScope` 或 `workshopId` 的地方必须由单一 compatibility layer 翻译，而不是继续在各模块散落“车间即库存池”假设。
+  - [x] `inventory-core` 运行时只接受 `MAIN` / `RD_SUB` 作为真实库存范围；`workshop-material` / `project` 等模块里的 `workshopId` 仅保留归属 / 核算语义，不再主导库存池选择。
+  - [x] 现有来源层成本追踪不被破坏；本轮不得把成本语义回退成“按物料静态单价出库 / 领料 / 退料”。
+  - [x] `prisma/schema.prisma`、生成 Prisma client、DB unique key / relation 仍保持冻结；如果实现中证明必须改 schema，coder 需先停下并回写 task，而不是半切换。
+  - [x] `pnpm swagger:metadata`、`pnpm typecheck` 与本 task 指定 focused tests 通过；最后跑 `pnpm test` 作为总闸。
 
 ## Current True Gaps
 
@@ -117,7 +117,7 @@
 - Execution brief:
   - 本轮只做 `Phase 1` 运行时语义收敛层，目标是让后端“先说同一种语言”。优先收敛 contract、resolver、DTO / service / controller 入口和 compatibility boundary；不要一上来改 Prisma、DB unique key、历史数据或前端页面。
 - Required source docs or files:
-  - `docs/requirements/req-20260330-1419-stock-scope-alignment.md`
+  - `docs/requirements/archive/retained-completed/req-20260330-1419-stock-scope-alignment.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
   - `docs/architecture/modules/inventory-core.md`
@@ -210,18 +210,25 @@
 ## Review Log
 
 - Validation results:
-  - `pending`
+  - Re-read the scoped truth from `docs/tasks/task-20260330-1419-stock-scope-alignment.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `docs/architecture/modules/inventory-core.md`, `docs/architecture/modules/rd-subwarehouse.md`, `docs/architecture/modules/project.md`, `docs/architecture/modules/workshop-material.md`, and the NestJS review guidance skill.
+  - Re-reviewed the current Phase 1 runtime surfaces directly, with special focus on `src/modules/session/domain/user-session.ts`, `src/modules/rbac/application/workshop-scope.service.ts`, `src/modules/rbac/application/rbac.service.ts`, `src/modules/inventory-core/application/stock-scope-compatibility.service.ts`, `src/modules/inventory-core/application/inventory.service.ts`, `src/modules/inventory-core/controllers/inventory.controller.ts`, `src/modules/reporting/**`, `src/modules/inbound/application/inbound.service.ts`, `src/modules/workshop-material/application/workshop-material.service.ts`, `src/modules/project/application/project.service.ts`, and `src/modules/rd-subwarehouse/application/{rd-handoff.service.ts,rd-stocktake-order.service.ts}`.
+  - Re-reviewed the post-commit follow-up diff in `src/modules/inventory-core/application/inventory.service.spec.ts`, `src/modules/project/application/project.service.spec.ts`, `src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`, `src/modules/workshop-material/application/workshop-material.service.spec.ts`, `test/prisma-e2e-stub.ts`, and regenerated `src/swagger-metadata.ts`.
+  - Confirmed that, within this task's owned scope, the inventory-affecting business writers now call `inventory-core` with canonical `stockScope` rather than散落传入 `workshopId` 作为真实库存池：`inbound` 固定 `MAIN`、`rd-handoff` 固定 `MAIN -> RD_SUB`、`rd-stocktake` 固定 `RD_SUB`、`workshop-material` 由业务语义收敛到 `MAIN/RD_SUB`、`project` 通过兼容解析收敛到 `MAIN/RD_SUB`；`workshopId` 主要保留在会话 / RBAC / 查询入口兼容层与业务归属语义中。
+  - Confirmed the post-commit spec fixes are aligned with the new contract: scoped specs now assert `stockScope` instead of旧 `workshopId` 库存池语义, and `inventory.service.spec.ts` injects `StockScopeCompatibilityService` so unit tests match the production DI boundary introduced by Phase 1.
+  - Confirmed `PrismaE2eStub` seeding minimal `MAIN` / `RD` workshop records is a reasonable test-infrastructure repair for DB-less e2e bootstrap under the new canonical resolver path, because runtime now legitimately resolves `stockScope` through workshop master data; this does not mask a business bug in the scoped Phase 1 logic.
+  - Parent reported `pnpm swagger:metadata` passed, `pnpm typecheck` passed, focused tests passed for `src/modules/session/infrastructure/session.repository.spec.ts`, `src/modules/rbac/application/rbac.service.spec.ts`, `src/modules/reporting/application/reporting.service.spec.ts`, `src/modules/inventory-core/application/inventory.service.spec.ts`, `src/modules/inbound/application/inbound.service.spec.ts`, `src/modules/workshop-material/application/workshop-material.service.spec.ts`, `src/modules/project/application/project.service.spec.ts`, and `src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`.
+  - Parent reported `test/batch-d-slice.e2e-spec.ts` passed, and the final gate `pnpm swagger:metadata && pnpm typecheck && pnpm test` passed.
 - Findings:
-  - `pending`
+  - none; this closing review found no open `[blocking]` or `[important]` issue in the scoped Phase 1 implementation or the post-commit contract-alignment fixes.
 - Follow-up action:
-  - `pending`
+  - none for this scoped review; parent can proceed with current remaining scoped changes.
 
 ## Final Status
 
-- Outcome: `planned - ready for coder`
-- Requirement alignment: 已把本轮最小安全落地固定为“先运行时语义收敛，后 schema / data cutover”，与 active requirement 和架构真源一致。
+- Outcome: `completed - Phase 1 delivered, validated, reviewed-no-findings`
+- Requirement alignment: 当前交付满足本 task 定义的 `Phase 1` 口径：运行时已收敛出 canonical `stockScope` contract，并在 `session/rbac/inventory-core/reporting/inbound/workshop-material/project/rd-subwarehouse` 的 scoped surfaces 上作为真实库存范围真源；`inventory-core` 仍是唯一库存写入口；`workshop` 保持归属 / 核算语义；本轮没有偷偷扩张到 Prisma schema / generated client cutover。
 - Residual risks or testing gaps:
-  - `InventoryBalance` 及相关 Prisma 模型仍然是 `workshopId` 维度，这一根因未在本阶段消除；Phase 1 只能通过 compatibility boundary 降低语义漂移，不能替代后续真正的 schema cutover。
-  - 成本层历史数据与 source allocation 的深层一致性，要等 canonical runtime contract 稳定后再评估 Phase 2。
-- Directory disposition after completion: keep `active` while Phase 1 coding / review is ongoing；若 Phase 1 完成但 requirement 仍未完全闭环，继续保留在根目录并在同一 task 内续写下一阶段。
-- Next action: `coder` 按本 brief 执行 Phase 1；若证明必须改 schema，先停下并回写 cutover 证据与最小方案。
+  - `InventoryBalance` 及相关 Prisma 模型仍然以 `workshopId` 作为冻结存储维度；本次 sign-off 只证明 Phase 1 的 runtime compatibility boundary 可用，不替代后续真正的 schema / data cutover。
+  - 仓库中仍有本 task scope 外的旧写路径继续沿用 `workshopId` 兼容口径（例如未纳入本 task owned paths 的模块）；这不构成本 task 的 blocking finding，但若后续想把 canonical `stockScope` 扩到更广业务面，建议另开独立 bounded slice。
+- Directory disposition after completion: archived to `docs/tasks/archive/retained-completed/` together with the linked requirement after parent-owned center sync.
+- Next action: 本切片已完成并归档；若后续继续推进库存维度真切换，再单独开 `Phase 2` schema / data cutover task。

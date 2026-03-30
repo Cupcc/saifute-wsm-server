@@ -38,7 +38,6 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
-| `docs/tasks/task-20260330-1419-stock-scope-alignment.md` | `planned` | 已确认 requirement 的活跃 implementation brief；先收敛运行时 `stockScope` 语义与兼容边界，暂不直接启动 `prisma/schema.prisma` 全量重构。 |
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
@@ -46,6 +45,7 @@
 
 | Task 文档 | 保留原因 |
 | --- | --- |
+| `docs/tasks/archive/retained-completed/task-20260330-1419-stock-scope-alignment.md` | 已完成库存范围与归属口径对齐 Phase 1：canonical `stockScope` runtime contract、会话/RBAC 兼容边界、库存/报表/业务写路径收敛与 e2e stub 补齐已落地，并通过 `swagger:metadata`、`typecheck`、focused tests、`batch-d-slice.e2e`、`pnpm test` 与 closing review `No findings`；若后续继续推进真实库存维度切换，需另开 `Phase 2` cutover scope。 |
 | `docs/tasks/archive/retained-completed/task-20260330-0129-rd-subwarehouse-phase4-phase5.md` | 已完成 `RD 小仓` `F4/F5` 收口：quantity-aware 物料状态链、RD 盘点/调整、动作级权限收紧与主仓验收联动展示已落地，并通过 focused tests、`pnpm test`、`web build:prod` 与 `rd-operator` / `admin` browser smoke。 |
 | `docs/tasks/archive/retained-completed/task-20260328-1855-biome-lint-cleanup.md` | 已完成全仓 `pnpm lint` 收口：`scripts/src/test` 低风险格式/import 噪音与 `web` 结构/宽松比较错误已按真实失败面收口，closing review `No findings`，根目录 `pnpm lint` 返回 `0`；若后续要继续压平 warnings / infos，需另开新 scope。 |
 | `docs/tasks/archive/retained-completed/task-20260328-1831-rd-procurement-main-acceptance-linkage.md` | 已完成 RD procurement/acceptance linkage foundation：RD 采购需求真源、主仓验收选择/带出、累计验收量保护、权限入口与前端页面已落地，并通过 closing review、`pnpm test` 与 `pnpm --dir web build:prod`。 |

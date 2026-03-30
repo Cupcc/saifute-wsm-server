@@ -200,7 +200,7 @@ describe("RdHandoffService", () => {
     expect(repository.createOrder).toHaveBeenCalled();
     expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
       expect.objectContaining({
-        workshopId: 1,
+        stockScope: "MAIN",
         operationType: InventoryOperationType.RD_HANDOFF_OUT,
         businessDocumentType: "RdHandoffOrder",
       }),
@@ -208,7 +208,7 @@ describe("RdHandoffService", () => {
     );
     expect(inventoryService.increaseStock).toHaveBeenCalledWith(
       expect.objectContaining({
-        workshopId: 9,
+        stockScope: "RD_SUB",
         operationType: InventoryOperationType.RD_HANDOFF_IN,
         businessDocumentType: "RdHandoffOrder",
       }),

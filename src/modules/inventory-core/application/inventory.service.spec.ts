@@ -10,6 +10,7 @@ import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { InventoryRepository } from "../infrastructure/inventory.repository";
 import { InventoryService } from "./inventory.service";
+import { StockScopeCompatibilityService } from "./stock-scope-compatibility.service";
 
 describe("InventoryService", () => {
   const mockBalance = {
@@ -62,6 +63,34 @@ describe("InventoryService", () => {
     updatedAt: new Date(),
   };
 
+  const createStockScopeCompatibilityServiceMock = () => ({
+    resolveRequired: jest
+      .fn()
+      .mockImplementation(async ({ stockScope, workshopId }) => ({
+        stockScope: stockScope ?? "MAIN",
+        workshopId: workshopId ?? 20,
+        workshopCode: stockScope === "RD_SUB" ? "RD" : "MAIN",
+        workshopName: stockScope === "RD_SUB" ? "研发小仓" : "主仓",
+      })),
+    resolveOptional: jest
+      .fn()
+      .mockImplementation(async ({ stockScope, workshopId }) => {
+        if (!stockScope && !workshopId) {
+          return null;
+        }
+
+        return {
+          stockScope: stockScope ?? "MAIN",
+          workshopId: workshopId ?? 20,
+          workshopCode: stockScope === "RD_SUB" ? "RD" : "MAIN",
+          workshopName: stockScope === "RD_SUB" ? "研发小仓" : "主仓",
+        };
+      }),
+    listRealStockWorkshopIds: jest.fn().mockResolvedValue([20]),
+    resolveByStockScope: jest.fn(),
+    resolveByWorkshopId: jest.fn(),
+  });
+
   it("should create inventory log on increaseStock", async () => {
     const mockTx = {
       inventoryBalance: {
@@ -100,6 +129,10 @@ describe("InventoryService", () => {
             findLogById: jest.fn(),
             findReversalLogBySourceLogId: jest.fn(),
           },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
         },
       ],
     }).compile();
@@ -147,6 +180,10 @@ describe("InventoryService", () => {
             findLogById: jest.fn(),
             findReversalLogBySourceLogId: jest.fn(),
           },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
         },
       ],
     }).compile();
@@ -207,6 +244,10 @@ describe("InventoryService", () => {
             findReversalLogBySourceLogId: jest.fn(),
           },
         },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
       ],
     }).compile();
 
@@ -249,6 +290,10 @@ describe("InventoryService", () => {
             findLogById: jest.fn().mockResolvedValue(null),
             findReversalLogBySourceLogId: jest.fn(),
           },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
         },
       ],
     }).compile();
@@ -314,6 +359,10 @@ describe("InventoryService", () => {
             findReversalLogBySourceLogId: jest.fn().mockResolvedValue(null),
           },
         },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
       ],
     }).compile();
 
@@ -370,6 +419,10 @@ describe("InventoryService", () => {
             updateSourceUsage: jest.fn(),
           },
         },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
       ],
     }).compile();
 
@@ -420,6 +473,10 @@ describe("InventoryService", () => {
             createSourceUsage: jest.fn(),
             updateSourceUsage: jest.fn(),
           },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
         },
       ],
     }).compile();
@@ -481,6 +538,10 @@ describe("InventoryService", () => {
             updateSourceUsage: jest.fn().mockResolvedValue(updatedUsage),
           },
         },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
       ],
     }).compile();
 
@@ -536,6 +597,10 @@ describe("InventoryService", () => {
               .mockResolvedValue(partiallyReleasedUsage),
           },
         },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
       ],
     }).compile();
 
@@ -588,6 +653,10 @@ describe("InventoryService", () => {
             createSourceUsage: jest.fn(),
             updateSourceUsage: jest.fn().mockResolvedValue(releasedUsage),
           },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
         },
       ],
     }).compile();

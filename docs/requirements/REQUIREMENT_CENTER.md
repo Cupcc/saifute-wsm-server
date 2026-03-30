@@ -30,7 +30,6 @@
 
 | 需求文档                                                 | 状态                   | 说明                                                                                          |
 | ---------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
-| `req-20260330-1419-stock-scope-alignment.md` | `confirmed` | 已确认“主仓 / RD 小仓是真实库存范围、车间只做领退料归属与成本核算、同物料不同入库批次按来源层追踪成本”的最新口径；本切片负责把该口径继续对齐到活跃代码实现。 |
 
 后续若继续推进 `rd-subwarehouse`、`monthly-reporting` 或 `frontend-old-style-adaptation` 的其它独立范围，应从对应 `topics/*.md` 新开具体切片 requirement，而不是复用旧总入口。
 
@@ -38,6 +37,7 @@
 
 | 需求文档 | 保留原因 |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `archive/retained-completed/req-20260330-1419-stock-scope-alignment.md` | 已完成库存范围与归属口径对齐 Phase 1：canonical `stockScope` runtime contract、会话/RBAC 兼容边界、库存/报表/业务写路径收敛与 e2e stub 补齐已落地，并通过 `swagger:metadata`、`typecheck`、focused tests、`batch-d-slice.e2e`、`pnpm test` 与 closing review `No findings`；若后续继续推进真实库存维度切换，需另开 `Phase 2` cutover requirement。 |
 | `archive/retained-completed/req-20260328-1855-biome-lint-cleanup.md` | 已完成全仓 `pnpm lint` 收口：根目录 `pnpm lint` 返回 `0`，`web` Biome error 校验通过，closing review 已关闭日期范围守卫的 open finding 并达到 `reviewed-no-findings`；若后续要继续收口全仓 warnings / infos，需另开新 scope。 |
 | `archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` | 前端旧风格回归主题的已完成阶段基线：Phase 1 `shell integration` 与 Phase 2 `/index` 旧版图表首页回归已收口，长期约束与后续路线图见 `topics/frontend-old-style-adaptation.md`；继续推进时应另开新的前端切片。 |
 | `archive/retained-completed/req-20260323-0910-monthly-reporting.md` | 月度报表主题的口径确认记录：月报范围、生成方式、导出形式与补录重算追溯要求已确认，长期约束与阶段路线图见 `topics/monthly-reporting.md`；真正进入设计或实现时应另开新的月报切片。 |

@@ -4,12 +4,12 @@
 
 - ID: `req-20260330-1419-stock-scope-alignment`
 - Status: `confirmed`
-- Lifecycle disposition: `active`
+- Lifecycle disposition: `retained-completed`
 - Owner: `user`
 - Topic requirement:
   - `docs/requirements/topics/rd-subwarehouse.md`
 - Related tasks:
-  - `docs/tasks/task-20260330-1419-stock-scope-alignment.md`
+- `docs/tasks/archive/retained-completed/task-20260330-1419-stock-scope-alignment.md`
 
 ## 用户需求
 
@@ -20,10 +20,10 @@
 
 ## 当前进展
 
-- 阶段进度: 已完成项目级与架构级真源文档改写，正在补活跃 task 并进入代码对齐阶段。
-- 当前状态: 需求理解已确认；下一步需盘点受影响代码、确定最小安全改造范围，并按新口径调整实现与验证。
+- 阶段进度: Phase 1 运行时 `stockScope` 语义收敛已完成，post-commit 收口已复核通过。
+- 当前状态: scoped runtime surfaces 已以 canonical `stockScope` 作为真实库存范围真源；`inventory-core` 仍是唯一库存写入口；最终闸门已通过。
 - 阻塞项: None
-- 下一步: 创建活跃 task，完成代码对齐、必要验证，并回写本需求进展。
+- 下一步: 归档；若后续继续推进库存维度真切换，另开 `Phase 2` schema / data cutover 切片。
 
 ## 待确认
 
