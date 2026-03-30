@@ -30,6 +30,7 @@
 <script setup>
 import { useRoute } from "vue-router";
 import useSettingsStore from "@/store/modules/settings";
+// biome-ignore lint/correctness/noUnusedImports: used by Vue template
 import AiChatPanel from "./AiChatPanel.vue";
 
 const settingsStore = useSettingsStore();
@@ -81,9 +82,9 @@ const contextMap = {
   "/system/config": "系统管理 - 参数设置",
   "/system/notice": "系统管理 - 通知公告",
   "/system/post": "系统管理 - 岗位管理",
-  "/monitor/operlog": "系统监控 - 操作日志",
-  "/monitor/logininfor": "系统监控 - 登录日志",
-  "/monitor/online": "系统监控 - 在线用户",
+  "/system/operlog": "系统管理 - 操作日志",
+  "/system/logininfor": "系统管理 - 登录日志",
+  "/system/online": "系统管理 - 在线用户",
   "/monitor/job": "系统监控 - 定时任务",
   "/monitor/server": "系统监控 - 服务监控",
   "/monitor/cache": "系统监控 - 缓存监控",

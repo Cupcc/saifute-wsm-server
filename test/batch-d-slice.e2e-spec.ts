@@ -414,12 +414,16 @@ describe("Batch D slice acceptance (e2e)", () => {
     const server = appContext.app.getHttpServer();
     const adminLogin = await login(server, "admin", "admin123");
     const adminToken = adminLogin.body.data.accessToken as string;
-    const operatorLogin = await login(server, "ai-operator", "aioperator123");
-    const operatorToken = operatorLogin.body.data.accessToken as string;
+    const procurementLogin = await login(
+      server,
+      "procurement",
+      "procurement123",
+    );
+    const procurementToken = procurementLogin.body.data.accessToken as string;
 
     await request(server)
       .post("/api/ai/chat")
-      .set("Authorization", `Bearer ${operatorToken}`)
+      .set("Authorization", `Bearer ${procurementToken}`)
       .send({
         message: "请帮我查看首页看板",
         toolNames: ["reporting.home"],

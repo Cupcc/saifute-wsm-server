@@ -8,8 +8,18 @@ describe("InMemoryRbacRepository", () => {
   });
 
   it("cascades descendant ancestors when moving a department", () => {
+    const parent = repository.createDept({
+      parentId: 100,
+      deptName: "临时研发组",
+      orderNum: 98,
+      leader: "测试负责人",
+      phone: "13800001233",
+      email: "parent@saifute.local",
+      status: "0",
+    });
+
     const descendant = repository.createDept({
-      parentId: 210,
+      parentId: parent.deptId,
       deptName: "临时二级组",
       orderNum: 99,
       leader: "测试负责人",
@@ -19,11 +29,11 @@ describe("InMemoryRbacRepository", () => {
     });
 
     repository.updateDept({
-      deptId: 210,
+      deptId: parent.deptId,
       parentId: 300,
     });
 
-    const updatedDept = repository.getDept(210);
+    const updatedDept = repository.getDept(parent.deptId);
     const updatedDescendant = repository.getDept(descendant.deptId);
     const expectedPrefix = `${updatedDept.ancestors},${updatedDept.deptId}`;
 
