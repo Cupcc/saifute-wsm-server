@@ -6,6 +6,7 @@
   "scripts": {
     "biome": "biome check .",
     "build": "tsc -p tsconfig.build.json",
+    "ci:autofix": "node ./scripts/ci-autofix/run.mjs",
     "commitlint": "commitlint --edit",
     "dev": "cross-env DOTENV_CONFIG_PATH=.env.dev ts-node -r dotenv/config --project tsconfig.json src/main.ts",
     "format": "biome check . --write",

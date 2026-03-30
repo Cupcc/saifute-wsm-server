@@ -21,6 +21,7 @@
 
 | 需求文档                                                 | 状态                   | 说明                                                                                          |
 | ---------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| `req-20260328-1945-github-ci-autofix.md`            | `confirmed`          | 已确认需要把现有 GitHub `CI` 升级成自动修复闭环：`CI` 结束后自动获取结果，失败时由 AI 拉取日志、尝试修复、再次推送，并把全过程日志落盘与上传 artifact；当前 self-hosted runner 已上线且 smoke test 证明可直接复用 `sft` 用户的本机 Codex 登录态。 |
 | `req-20260327-1317-migration-stage-planning.md`      | `needs-confirmation` | 新增“迁移开发阶段规划与阶段性交付展示”需求：已完成 `workspace draft` 机制首轮落地，并把当前工作流改造成“决策 + 草稿”样板；当前待确认阶段划分应更偏 `业务价值可见性` / `技术底座先行` / `需求确认→实现→验收` / `混合口径`。 |
 | `req-20260328-1710-github-ci-workflow.md`           | `confirmed`          | 已完成仓库级 GitHub CI 首版落地：当前以当前仓库可稳定通过的后端 `prisma validate + typecheck + build` 与 `web build:prod` 构成远端门禁，并已完成本地真实校验；全量 lint/test 留待后续修复既有问题后再纳入。 |
 | `req-20260326-1900-frontend-old-style-adaptation.md` | `confirmed`          | 已确认前端进入“旧壳新核 + 业务域重分组”阶段；`shell integration` 与 `/index` 旧版图表首页（`task-20260327-1000` 归档）已落地，`销售管理` / `生产车间` / `研发协同` 分域与 RD 直达 `workbench` 行为保持。后续可按新切片细化各业务页旧风格节奏，同时保留现有后端权限/菜单/会话与报表监控能力。 |

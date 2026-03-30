@@ -38,6 +38,7 @@
 
 | Task 文档 | 当前状态 |
 | --- | --- |
+| `docs/tasks/task-20260328-1945-github-ci-autofix.md` | 已完成仓库级自动修复骨架：新增 `workflow_run` 触发的 `CI Autofix` workflow、`scripts/ci-autofix/run.mjs` 与 `package.json` 入口，可在 `sft` 用户的 self-hosted runner 上抓取失败日志、调用 `codex` 修复、复跑验证、自动推送并上传全程日志 artifact；runner smoke test 已通过，下一步是做真实失败场景演练。 |
 | `docs/tasks/task-20260328-1710-github-ci-workflow.md` | 已完成首版 GitHub Actions CI：后端纳入 `prisma validate + typecheck + build`，`web/` 纳入 `build:prod`，并已完成本地真实安装与命令校验；全量 lint/test 暂因仓库现存问题未纳入首版稳定门禁。 |
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）

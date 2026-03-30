@@ -1,0 +1,95 @@
+name: CI Autofix
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ci-autofix-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  autofix:
+    name: Autofix Failed CI
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'failure' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      }}
+    runs-on:
+      - self-hosted
+      - macOS
+      - ARM64
+      - saifute-wsm-server
+    timeout-minutes: 90
+    env:
+      CI: true
+      HUSKY: 0
+      DATABASE_URL: "mysql://ci:ci@127.0.0.1:3306/saifute_ci"
+      CI_AUTOFIX_SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+      CI_AUTOFIX_ALLOWED_BRANCH_REGEX: ".*"
+      CI_AUTOFIX_PROTECTED_BRANCH_REGEX: "^(main|master|release\\/.*)$"
+      CI_AUTOFIX_MAX_ATTEMPTS: "2"
+      CI_AUTOFIX_WORKFLOW_NAME: "CI"
+      CI_AUTOFIX_COMMENT_ON_PR: "true"
+    steps:
+      - name: Checkout head branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.29.2
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            web/pnpm-lock.yaml
+
+      - name: Ensure Codex CLI
+        run: |
+          if ! command -v codex >/dev/null 2>&1; then
+            pnpm add -g @openai/codex@0.116.0
+          fi
+          codex --version
+
+      - name: Run CI autofix
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node ./scripts/ci-autofix/run.mjs
+
+      - name: Append summary
+        if: always()
+        run: |
+          ATTEMPT_FILE="logs/ci-autofix/${CI_AUTOFIX_SOURCE_RUN_ID}/latest-attempt.txt"
+          if [ -f "$ATTEMPT_FILE" ]; then
+            ATTEMPT_NAME="$(cat "$ATTEMPT_FILE")"
+            SUMMARY_PATH="logs/ci-autofix/${CI_AUTOFIX_SOURCE_RUN_ID}/${ATTEMPT_NAME}/summary.md"
+            if [ -f "$SUMMARY_PATH" ]; then
+              cat "$SUMMARY_PATH" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+      - name: Upload autofix logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-autofix-${{ github.event.workflow_run.id }}
+          path: logs/ci-autofix/${{ github.event.workflow_run.id }}
+          if-no-files-found: warn
+          retention-days: 30
