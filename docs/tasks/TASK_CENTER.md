@@ -38,6 +38,7 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
+| `docs/tasks/task-20260330-1616-stock-scope-phase2-cutover.md` | `planned` | `stockScope` Phase 2 cutover brief：`Phase 1/2` 分离理由、受影响 Prisma 模型（含行表）与 runtime/reporting 面、分段路线（expand / backfill / shadow / 维护窗 flip / rollback / cleanup）、Option A~C trade-off、**五类一等风险面**（来源层成本、逆操作、单据关系、e2e·test、回滚）、用户确认项与 workspace·plan-only 建议；**待用户确认前不实施**。 |
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
