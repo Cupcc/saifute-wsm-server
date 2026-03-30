@@ -54,6 +54,22 @@ export class MasterDataService {
     return workshop;
   }
 
+  async getStockScopeById(id: number) {
+    const stockScope = await this.repository.findStockScopeById(id);
+    if (!stockScope) {
+      throw new NotFoundException(`库存范围不存在: ${id}`);
+    }
+    return stockScope;
+  }
+
+  async getStockScopeByCode(scopeCode: string) {
+    const stockScope = await this.repository.findStockScopeByCode(scopeCode);
+    if (!stockScope) {
+      throw new NotFoundException(`库存范围不存在: ${scopeCode}`);
+    }
+    return stockScope;
+  }
+
   async getSupplierById(id: number) {
     const supplier = await this.repository.findSupplierById(id);
     if (!supplier) {

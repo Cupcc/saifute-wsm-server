@@ -13,6 +13,11 @@ export interface InventoryBalanceSnapshot {
   id: number;
   quantityOnHand: Prisma.Decimal;
   updatedAt: Date;
+  stockScope: {
+    id: number;
+    scopeCode: string;
+    scopeName: string;
+  } | null;
   material: {
     id: number;
     materialCode: string;
@@ -50,11 +55,11 @@ export class ReportingRepository {
     todayEnd: Date,
     params: {
       stockScope?: StockScopeCode;
-      inventoryWorkshopIds: number[];
+      inventoryStockScopeIds: number[];
     },
   ) {
-    const inventoryWorkshopFilter = this.buildInventoryWorkshopFilter(
-      params.inventoryWorkshopIds,
+    const inventoryStockScopeFilter = this.buildInventoryStockScopeFilter(
+      params.inventoryStockScopeIds,
     );
     const inboundTodayWhere = this.buildInboundWhere(params.stockScope, {
       bizDate: { gte: todayStart, lte: todayEnd },
@@ -95,7 +100,7 @@ export class ReportingRepository {
       this.prisma.inventoryBalance
         .findMany({
           where: {
-            workshopId: inventoryWorkshopFilter,
+            stockScopeId: inventoryStockScopeFilter,
             material: {
               status: MasterDataStatus.ACTIVE,
             },
@@ -106,19 +111,20 @@ export class ReportingRepository {
           },
         })
         .then((items) => items.length),
-      this.prisma.workshop.count({
+      this.prisma.stockScope.count({
         where: {
           status: MasterDataStatus.ACTIVE,
-          id: inventoryWorkshopFilter,
+          id: inventoryStockScopeFilter,
         },
       }),
       this.prisma.inventoryBalance.aggregate({
-        where: { workshopId: inventoryWorkshopFilter },
+        where: { stockScopeId: inventoryStockScopeFilter },
         _sum: { quantityOnHand: true },
       }),
       this.prisma.inventoryBalance.findMany({
-        where: { workshopId: inventoryWorkshopFilter },
+        where: { stockScopeId: inventoryStockScopeFilter },
         include: {
+          stockScope: true,
           material: {
             select: {
               warningMinQty: true,
@@ -189,12 +195,12 @@ export class ReportingRepository {
   async findInventoryBalanceSnapshots(params: {
     keyword?: string;
     categoryId?: number;
-    inventoryWorkshopIds: number[];
+    inventoryStockScopeIds: number[];
   }): Promise<InventoryBalanceSnapshot[]> {
     return this.prisma.inventoryBalance.findMany({
       where: {
-        workshopId: this.buildInventoryWorkshopFilter(
-          params.inventoryWorkshopIds,
+        stockScopeId: this.buildInventoryStockScopeFilter(
+          params.inventoryStockScopeIds,
         ),
         material: {
           status: MasterDataStatus.ACTIVE,
@@ -208,6 +214,7 @@ export class ReportingRepository {
         },
       },
       include: {
+        stockScope: true,
         material: {
           include: {
             category: true,
@@ -291,8 +298,10 @@ export class ReportingRepository {
     ];
   }
 
-  private buildInventoryWorkshopFilter(workshopIds: number[]) {
-    return workshopIds.length === 1 ? workshopIds[0] : { in: workshopIds };
+  private buildInventoryStockScopeFilter(stockScopeIds: number[]) {
+    return stockScopeIds.length === 1
+      ? stockScopeIds[0]
+      : { in: stockScopeIds };
   }
 
   private buildInboundWhere(
@@ -305,6 +314,15 @@ export class ReportingRepository {
 
     return {
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+      ...(stockScope
+        ? {
+            stockScope: {
+              is: {
+                scopeCode: stockScope,
+              },
+            },
+          }
+        : {}),
       ...extra,
     };
   }
@@ -323,6 +341,15 @@ export class ReportingRepository {
     return {
       orderType: CustomerStockOrderType.OUTBOUND,
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+      ...(stockScope
+        ? {
+            stockScope: {
+              is: {
+                scopeCode: stockScope,
+              },
+            },
+          }
+        : {}),
       ...extra,
     };
   }
@@ -338,9 +365,9 @@ export class ReportingRepository {
       return {
         lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
         orderType: WorkshopMaterialOrderType.SCRAP,
-        workshop: {
+        stockScope: {
           is: {
-            workshopCode: "RD",
+            scopeCode: "RD_SUB",
           },
         },
         ...extra,
@@ -361,21 +388,33 @@ export class ReportingRepository {
           },
           {
             orderType: WorkshopMaterialOrderType.SCRAP,
-            workshop: {
+            stockScope: {
               is: {
-                workshopCode: {
-                  not: "RD",
-                },
+                scopeCode: "MAIN",
               },
             },
           },
         ],
+        stockScope: {
+          is: {
+            scopeCode: "MAIN",
+          },
+        },
         ...extra,
       };
     }
 
     return {
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+      ...(stockScope
+        ? {
+            stockScope: {
+              is: {
+                scopeCode: stockScope,
+              },
+            },
+          }
+        : {}),
       orderType: {
         in: [
           WorkshopMaterialOrderType.PICK,

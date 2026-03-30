@@ -55,11 +55,11 @@ export class ReportingService {
 
   async getHomeDashboard(stockScope?: StockScopeCode) {
     const { start, end } = this.resolveTodayRange();
-    const inventoryWorkshopIds =
-      await this.resolveInventoryWorkshopIds(stockScope);
+    const inventoryStockScopeIds =
+      await this.resolveInventoryStockScopeIds(stockScope);
     const metrics = await this.repository.getHomeMetrics(start, end, {
       stockScope,
-      inventoryWorkshopIds,
+      inventoryStockScopeIds,
     });
 
     return {
@@ -95,13 +95,13 @@ export class ReportingService {
   async getInventorySummary(
     query: QueryInventorySummaryDto & { stockScope?: StockScopeCode },
   ) {
-    const inventoryWorkshopIds = await this.resolveInventoryWorkshopIds(
+    const inventoryStockScopeIds = await this.resolveInventoryStockScopeIds(
       query.stockScope,
     );
     const snapshots = await this.repository.findInventoryBalanceSnapshots({
       keyword: query.keyword,
       categoryId: query.categoryId,
-      inventoryWorkshopIds,
+      inventoryStockScopeIds,
     });
 
     const items = snapshots.map((item) => this.toInventorySummaryItem(item));
@@ -124,12 +124,12 @@ export class ReportingService {
   async getMaterialCategorySummary(
     query: QueryMaterialCategorySummaryDto & { stockScope?: StockScopeCode },
   ) {
-    const inventoryWorkshopIds = await this.resolveInventoryWorkshopIds(
+    const inventoryStockScopeIds = await this.resolveInventoryStockScopeIds(
       query.stockScope,
     );
     const snapshots = await this.repository.findInventoryBalanceSnapshots({
       keyword: query.keyword,
-      inventoryWorkshopIds,
+      inventoryStockScopeIds,
     });
 
     const grouped = new Map<
@@ -335,10 +335,12 @@ export class ReportingService {
       categoryId: item.material.category?.id ?? null,
       categoryCode: item.material.category?.categoryCode ?? null,
       categoryName: item.material.category?.categoryName ?? null,
-      stockScope: resolveStockScopeFromWorkshopIdentity({
-        workshopCode: item.workshop.workshopCode,
-        workshopName: item.workshop.workshopName,
-      }),
+      stockScope:
+        (item.stockScope?.scopeCode as StockScopeCode | undefined) ??
+        resolveStockScopeFromWorkshopIdentity({
+          workshopCode: item.workshop.workshopCode,
+          workshopName: item.workshop.workshopName,
+        }),
       workshopId: item.workshop.id,
       workshopCode: item.workshop.workshopCode,
       workshopName: item.workshop.workshopName,
@@ -369,16 +371,16 @@ export class ReportingService {
     return new Prisma.Decimal(value ?? 0).toFixed(2);
   }
 
-  private async resolveInventoryWorkshopIds(stockScope?: StockScopeCode) {
+  private async resolveInventoryStockScopeIds(stockScope?: StockScopeCode) {
     if (stockScope) {
       const scope =
         await this.stockScopeCompatibilityService.resolveByStockScope(
           stockScope,
         );
-      return [scope.workshopId];
+      return [scope.stockScopeId];
     }
 
-    return this.stockScopeCompatibilityService.listRealStockWorkshopIds();
+    return this.stockScopeCompatibilityService.listRealStockScopeIds();
   }
 
   private resolveTodayRange() {

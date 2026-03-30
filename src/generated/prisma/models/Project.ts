@@ -31,6 +31,7 @@ export type ProjectAvgAggregateOutputType = {
   customerId: number | null;
   supplierId: number | null;
   managerPersonnelId: number | null;
+  stockScopeId: number | null;
   workshopId: number | null;
   revisionNo: number | null;
   totalQty: runtime.Decimal | null;
@@ -42,6 +43,7 @@ export type ProjectSumAggregateOutputType = {
   customerId: number | null;
   supplierId: number | null;
   managerPersonnelId: number | null;
+  stockScopeId: number | null;
   workshopId: number | null;
   revisionNo: number | null;
   totalQty: runtime.Decimal | null;
@@ -56,6 +58,7 @@ export type ProjectMinAggregateOutputType = {
   customerId: number | null;
   supplierId: number | null;
   managerPersonnelId: number | null;
+  stockScopeId: number | null;
   workshopId: number | null;
   lifecycleStatus: $Enums.DocumentLifecycleStatus | null;
   auditStatusSnapshot: $Enums.AuditStatusSnapshot | null;
@@ -87,6 +90,7 @@ export type ProjectMaxAggregateOutputType = {
   customerId: number | null;
   supplierId: number | null;
   managerPersonnelId: number | null;
+  stockScopeId: number | null;
   workshopId: number | null;
   lifecycleStatus: $Enums.DocumentLifecycleStatus | null;
   auditStatusSnapshot: $Enums.AuditStatusSnapshot | null;
@@ -118,6 +122,7 @@ export type ProjectCountAggregateOutputType = {
   customerId: number;
   supplierId: number;
   managerPersonnelId: number;
+  stockScopeId: number;
   workshopId: number;
   lifecycleStatus: number;
   auditStatusSnapshot: number;
@@ -147,6 +152,7 @@ export type ProjectAvgAggregateInputType = {
   customerId?: true;
   supplierId?: true;
   managerPersonnelId?: true;
+  stockScopeId?: true;
   workshopId?: true;
   revisionNo?: true;
   totalQty?: true;
@@ -158,6 +164,7 @@ export type ProjectSumAggregateInputType = {
   customerId?: true;
   supplierId?: true;
   managerPersonnelId?: true;
+  stockScopeId?: true;
   workshopId?: true;
   revisionNo?: true;
   totalQty?: true;
@@ -172,6 +179,7 @@ export type ProjectMinAggregateInputType = {
   customerId?: true;
   supplierId?: true;
   managerPersonnelId?: true;
+  stockScopeId?: true;
   workshopId?: true;
   lifecycleStatus?: true;
   auditStatusSnapshot?: true;
@@ -203,6 +211,7 @@ export type ProjectMaxAggregateInputType = {
   customerId?: true;
   supplierId?: true;
   managerPersonnelId?: true;
+  stockScopeId?: true;
   workshopId?: true;
   lifecycleStatus?: true;
   auditStatusSnapshot?: true;
@@ -234,6 +243,7 @@ export type ProjectCountAggregateInputType = {
   customerId?: true;
   supplierId?: true;
   managerPersonnelId?: true;
+  stockScopeId?: true;
   workshopId?: true;
   lifecycleStatus?: true;
   auditStatusSnapshot?: true;
@@ -359,6 +369,7 @@ export type ProjectGroupByOutputType = {
   customerId: number | null;
   supplierId: number | null;
   managerPersonnelId: number | null;
+  stockScopeId: number | null;
   workshopId: number;
   lifecycleStatus: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot: $Enums.AuditStatusSnapshot;
@@ -411,6 +422,7 @@ export type ProjectWhereInput = {
   customerId?: Prisma.IntNullableFilter<"Project"> | number | null;
   supplierId?: Prisma.IntNullableFilter<"Project"> | number | null;
   managerPersonnelId?: Prisma.IntNullableFilter<"Project"> | number | null;
+  stockScopeId?: Prisma.IntNullableFilter<"Project"> | number | null;
   workshopId?: Prisma.IntFilter<"Project"> | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFilter<"Project">
@@ -460,6 +472,10 @@ export type ProjectWhereInput = {
     Prisma.PersonnelNullableScalarRelationFilter,
     Prisma.PersonnelWhereInput
   > | null;
+  stockScope?: Prisma.XOR<
+    Prisma.StockScopeNullableScalarRelationFilter,
+    Prisma.StockScopeWhereInput
+  > | null;
   workshop?: Prisma.XOR<
     Prisma.WorkshopScalarRelationFilter,
     Prisma.WorkshopWhereInput
@@ -475,6 +491,7 @@ export type ProjectOrderByWithRelationInput = {
   customerId?: Prisma.SortOrderInput | Prisma.SortOrder;
   supplierId?: Prisma.SortOrderInput | Prisma.SortOrder;
   managerPersonnelId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  stockScopeId?: Prisma.SortOrderInput | Prisma.SortOrder;
   workshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
   auditStatusSnapshot?: Prisma.SortOrder;
@@ -499,6 +516,7 @@ export type ProjectOrderByWithRelationInput = {
   customer?: Prisma.CustomerOrderByWithRelationInput;
   supplier?: Prisma.SupplierOrderByWithRelationInput;
   managerPersonnel?: Prisma.PersonnelOrderByWithRelationInput;
+  stockScope?: Prisma.StockScopeOrderByWithRelationInput;
   workshop?: Prisma.WorkshopOrderByWithRelationInput;
   materialLines?: Prisma.ProjectMaterialLineOrderByRelationAggregateInput;
   _relevance?: Prisma.ProjectOrderByRelevanceInput;
@@ -516,6 +534,7 @@ export type ProjectWhereUniqueInput = Prisma.AtLeast<
     customerId?: Prisma.IntNullableFilter<"Project"> | number | null;
     supplierId?: Prisma.IntNullableFilter<"Project"> | number | null;
     managerPersonnelId?: Prisma.IntNullableFilter<"Project"> | number | null;
+    stockScopeId?: Prisma.IntNullableFilter<"Project"> | number | null;
     workshopId?: Prisma.IntFilter<"Project"> | number;
     lifecycleStatus?:
       | Prisma.EnumDocumentLifecycleStatusFilter<"Project">
@@ -580,6 +599,10 @@ export type ProjectWhereUniqueInput = Prisma.AtLeast<
       Prisma.PersonnelNullableScalarRelationFilter,
       Prisma.PersonnelWhereInput
     > | null;
+    stockScope?: Prisma.XOR<
+      Prisma.StockScopeNullableScalarRelationFilter,
+      Prisma.StockScopeWhereInput
+    > | null;
     workshop?: Prisma.XOR<
       Prisma.WorkshopScalarRelationFilter,
       Prisma.WorkshopWhereInput
@@ -597,6 +620,7 @@ export type ProjectOrderByWithAggregationInput = {
   customerId?: Prisma.SortOrderInput | Prisma.SortOrder;
   supplierId?: Prisma.SortOrderInput | Prisma.SortOrder;
   managerPersonnelId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  stockScopeId?: Prisma.SortOrderInput | Prisma.SortOrder;
   workshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
   auditStatusSnapshot?: Prisma.SortOrder;
@@ -646,6 +670,10 @@ export type ProjectScalarWhereWithAggregatesInput = {
     | number
     | null;
   managerPersonnelId?:
+    | Prisma.IntNullableWithAggregatesFilter<"Project">
+    | number
+    | null;
+  stockScopeId?:
     | Prisma.IntNullableWithAggregatesFilter<"Project">
     | number
     | null;
@@ -746,6 +774,7 @@ export type ProjectCreateInput = {
   customer?: Prisma.CustomerCreateNestedOneWithoutProjectsInput;
   supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
   managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
 };
@@ -758,6 +787,7 @@ export type ProjectUncheckedCreateInput = {
   customerId?: number | null;
   supplierId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -844,6 +874,7 @@ export type ProjectUpdateInput = {
   customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
   supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
   managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
 };
@@ -859,6 +890,7 @@ export type ProjectUncheckedUpdateInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -926,6 +958,7 @@ export type ProjectCreateManyInput = {
   customerId?: number | null;
   supplierId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -1021,6 +1054,7 @@ export type ProjectUncheckedUpdateManyInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -1105,6 +1139,7 @@ export type ProjectCountOrderByAggregateInput = {
   customerId?: Prisma.SortOrder;
   supplierId?: Prisma.SortOrder;
   managerPersonnelId?: Prisma.SortOrder;
+  stockScopeId?: Prisma.SortOrder;
   workshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
   auditStatusSnapshot?: Prisma.SortOrder;
@@ -1133,6 +1168,7 @@ export type ProjectAvgOrderByAggregateInput = {
   customerId?: Prisma.SortOrder;
   supplierId?: Prisma.SortOrder;
   managerPersonnelId?: Prisma.SortOrder;
+  stockScopeId?: Prisma.SortOrder;
   workshopId?: Prisma.SortOrder;
   revisionNo?: Prisma.SortOrder;
   totalQty?: Prisma.SortOrder;
@@ -1147,6 +1183,7 @@ export type ProjectMaxOrderByAggregateInput = {
   customerId?: Prisma.SortOrder;
   supplierId?: Prisma.SortOrder;
   managerPersonnelId?: Prisma.SortOrder;
+  stockScopeId?: Prisma.SortOrder;
   workshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
   auditStatusSnapshot?: Prisma.SortOrder;
@@ -1178,6 +1215,7 @@ export type ProjectMinOrderByAggregateInput = {
   customerId?: Prisma.SortOrder;
   supplierId?: Prisma.SortOrder;
   managerPersonnelId?: Prisma.SortOrder;
+  stockScopeId?: Prisma.SortOrder;
   workshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
   auditStatusSnapshot?: Prisma.SortOrder;
@@ -1206,6 +1244,7 @@ export type ProjectSumOrderByAggregateInput = {
   customerId?: Prisma.SortOrder;
   supplierId?: Prisma.SortOrder;
   managerPersonnelId?: Prisma.SortOrder;
+  stockScopeId?: Prisma.SortOrder;
   workshopId?: Prisma.SortOrder;
   revisionNo?: Prisma.SortOrder;
   totalQty?: Prisma.SortOrder;
@@ -1593,6 +1632,100 @@ export type ProjectUncheckedUpdateManyWithoutWorkshopNestedInput = {
     | Prisma.ProjectScalarWhereInput[];
 };
 
+export type ProjectCreateNestedManyWithoutStockScopeInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.ProjectCreateWithoutStockScopeInput,
+        Prisma.ProjectUncheckedCreateWithoutStockScopeInput
+      >
+    | Prisma.ProjectCreateWithoutStockScopeInput[]
+    | Prisma.ProjectUncheckedCreateWithoutStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput[];
+  createMany?: Prisma.ProjectCreateManyStockScopeInputEnvelope;
+  connect?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+};
+
+export type ProjectUncheckedCreateNestedManyWithoutStockScopeInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.ProjectCreateWithoutStockScopeInput,
+        Prisma.ProjectUncheckedCreateWithoutStockScopeInput
+      >
+    | Prisma.ProjectCreateWithoutStockScopeInput[]
+    | Prisma.ProjectUncheckedCreateWithoutStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput[];
+  createMany?: Prisma.ProjectCreateManyStockScopeInputEnvelope;
+  connect?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+};
+
+export type ProjectUpdateManyWithoutStockScopeNestedInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.ProjectCreateWithoutStockScopeInput,
+        Prisma.ProjectUncheckedCreateWithoutStockScopeInput
+      >
+    | Prisma.ProjectCreateWithoutStockScopeInput[]
+    | Prisma.ProjectUncheckedCreateWithoutStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput[];
+  upsert?:
+    | Prisma.ProjectUpsertWithWhereUniqueWithoutStockScopeInput
+    | Prisma.ProjectUpsertWithWhereUniqueWithoutStockScopeInput[];
+  createMany?: Prisma.ProjectCreateManyStockScopeInputEnvelope;
+  set?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+  disconnect?:
+    | Prisma.ProjectWhereUniqueInput
+    | Prisma.ProjectWhereUniqueInput[];
+  delete?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+  connect?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+  update?:
+    | Prisma.ProjectUpdateWithWhereUniqueWithoutStockScopeInput
+    | Prisma.ProjectUpdateWithWhereUniqueWithoutStockScopeInput[];
+  updateMany?:
+    | Prisma.ProjectUpdateManyWithWhereWithoutStockScopeInput
+    | Prisma.ProjectUpdateManyWithWhereWithoutStockScopeInput[];
+  deleteMany?:
+    | Prisma.ProjectScalarWhereInput
+    | Prisma.ProjectScalarWhereInput[];
+};
+
+export type ProjectUncheckedUpdateManyWithoutStockScopeNestedInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.ProjectCreateWithoutStockScopeInput,
+        Prisma.ProjectUncheckedCreateWithoutStockScopeInput
+      >
+    | Prisma.ProjectCreateWithoutStockScopeInput[]
+    | Prisma.ProjectUncheckedCreateWithoutStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput
+    | Prisma.ProjectCreateOrConnectWithoutStockScopeInput[];
+  upsert?:
+    | Prisma.ProjectUpsertWithWhereUniqueWithoutStockScopeInput
+    | Prisma.ProjectUpsertWithWhereUniqueWithoutStockScopeInput[];
+  createMany?: Prisma.ProjectCreateManyStockScopeInputEnvelope;
+  set?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+  disconnect?:
+    | Prisma.ProjectWhereUniqueInput
+    | Prisma.ProjectWhereUniqueInput[];
+  delete?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+  connect?: Prisma.ProjectWhereUniqueInput | Prisma.ProjectWhereUniqueInput[];
+  update?:
+    | Prisma.ProjectUpdateWithWhereUniqueWithoutStockScopeInput
+    | Prisma.ProjectUpdateWithWhereUniqueWithoutStockScopeInput[];
+  updateMany?:
+    | Prisma.ProjectUpdateManyWithWhereWithoutStockScopeInput
+    | Prisma.ProjectUpdateManyWithWhereWithoutStockScopeInput[];
+  deleteMany?:
+    | Prisma.ProjectScalarWhereInput
+    | Prisma.ProjectScalarWhereInput[];
+};
+
 export type ProjectCreateNestedOneWithoutMaterialLinesInput = {
   create?: Prisma.XOR<
     Prisma.ProjectCreateWithoutMaterialLinesInput,
@@ -1645,6 +1778,7 @@ export type ProjectCreateWithoutCustomerInput = {
   updatedAt?: Date | string;
   supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
   managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
 };
@@ -1656,6 +1790,7 @@ export type ProjectUncheckedCreateWithoutCustomerInput = {
   bizDate: Date | string;
   supplierId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -1734,6 +1869,7 @@ export type ProjectScalarWhereInput = {
   customerId?: Prisma.IntNullableFilter<"Project"> | number | null;
   supplierId?: Prisma.IntNullableFilter<"Project"> | number | null;
   managerPersonnelId?: Prisma.IntNullableFilter<"Project"> | number | null;
+  stockScopeId?: Prisma.IntNullableFilter<"Project"> | number | null;
   workshopId?: Prisma.IntFilter<"Project"> | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFilter<"Project">
@@ -1799,6 +1935,7 @@ export type ProjectCreateWithoutSupplierInput = {
   updatedAt?: Date | string;
   customer?: Prisma.CustomerCreateNestedOneWithoutProjectsInput;
   managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
 };
@@ -1810,6 +1947,7 @@ export type ProjectUncheckedCreateWithoutSupplierInput = {
   bizDate: Date | string;
   customerId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -1903,6 +2041,7 @@ export type ProjectCreateWithoutManagerPersonnelInput = {
   updatedAt?: Date | string;
   customer?: Prisma.CustomerCreateNestedOneWithoutProjectsInput;
   supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
 };
@@ -1914,6 +2053,7 @@ export type ProjectUncheckedCreateWithoutManagerPersonnelInput = {
   bizDate: Date | string;
   customerId?: number | null;
   supplierId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -2008,6 +2148,7 @@ export type ProjectCreateWithoutWorkshopInput = {
   customer?: Prisma.CustomerCreateNestedOneWithoutProjectsInput;
   supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
   managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
 };
 
@@ -2019,6 +2160,7 @@ export type ProjectUncheckedCreateWithoutWorkshopInput = {
   customerId?: number | null;
   supplierId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
   inventoryEffectStatus?: $Enums.InventoryEffectStatus;
@@ -2085,7 +2227,7 @@ export type ProjectUpdateManyWithWhereWithoutWorkshopInput = {
   >;
 };
 
-export type ProjectCreateWithoutMaterialLinesInput = {
+export type ProjectCreateWithoutStockScopeInput = {
   projectCode: string;
   projectName: string;
   bizDate: Date | string;
@@ -2113,6 +2255,113 @@ export type ProjectCreateWithoutMaterialLinesInput = {
   supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
   managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
+  materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectUncheckedCreateWithoutStockScopeInput = {
+  id?: number;
+  projectCode: string;
+  projectName: string;
+  bizDate: Date | string;
+  customerId?: number | null;
+  supplierId?: number | null;
+  managerPersonnelId?: number | null;
+  workshopId: number;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  customerCodeSnapshot?: string | null;
+  customerNameSnapshot?: string | null;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  managerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectCreateOrConnectWithoutStockScopeInput = {
+  where: Prisma.ProjectWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutStockScopeInput,
+    Prisma.ProjectUncheckedCreateWithoutStockScopeInput
+  >;
+};
+
+export type ProjectCreateManyStockScopeInputEnvelope = {
+  data:
+    | Prisma.ProjectCreateManyStockScopeInput
+    | Prisma.ProjectCreateManyStockScopeInput[];
+  skipDuplicates?: boolean;
+};
+
+export type ProjectUpsertWithWhereUniqueWithoutStockScopeInput = {
+  where: Prisma.ProjectWhereUniqueInput;
+  update: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutStockScopeInput,
+    Prisma.ProjectUncheckedUpdateWithoutStockScopeInput
+  >;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutStockScopeInput,
+    Prisma.ProjectUncheckedCreateWithoutStockScopeInput
+  >;
+};
+
+export type ProjectUpdateWithWhereUniqueWithoutStockScopeInput = {
+  where: Prisma.ProjectWhereUniqueInput;
+  data: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutStockScopeInput,
+    Prisma.ProjectUncheckedUpdateWithoutStockScopeInput
+  >;
+};
+
+export type ProjectUpdateManyWithWhereWithoutStockScopeInput = {
+  where: Prisma.ProjectScalarWhereInput;
+  data: Prisma.XOR<
+    Prisma.ProjectUpdateManyMutationInput,
+    Prisma.ProjectUncheckedUpdateManyWithoutStockScopeInput
+  >;
+};
+
+export type ProjectCreateWithoutMaterialLinesInput = {
+  projectCode: string;
+  projectName: string;
+  bizDate: Date | string;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  customerCodeSnapshot?: string | null;
+  customerNameSnapshot?: string | null;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  managerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  customer?: Prisma.CustomerCreateNestedOneWithoutProjectsInput;
+  supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
+  managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
+  workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
 };
 
 export type ProjectUncheckedCreateWithoutMaterialLinesInput = {
@@ -2123,6 +2372,7 @@ export type ProjectUncheckedCreateWithoutMaterialLinesInput = {
   customerId?: number | null;
   supplierId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -2236,6 +2486,7 @@ export type ProjectUpdateWithoutMaterialLinesInput = {
   customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
   supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
   managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
 };
 
@@ -2250,6 +2501,7 @@ export type ProjectUncheckedUpdateWithoutMaterialLinesInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -2315,6 +2567,7 @@ export type ProjectCreateManyCustomerInput = {
   bizDate: Date | string;
   supplierId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -2399,6 +2652,7 @@ export type ProjectUpdateWithoutCustomerInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
   managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
 };
@@ -2413,6 +2667,7 @@ export type ProjectUncheckedUpdateWithoutCustomerInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -2482,6 +2737,7 @@ export type ProjectUncheckedUpdateManyWithoutCustomerInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -2547,6 +2803,7 @@ export type ProjectCreateManySupplierInput = {
   bizDate: Date | string;
   customerId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -2631,6 +2888,7 @@ export type ProjectUpdateWithoutSupplierInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
   managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
 };
@@ -2645,6 +2903,7 @@ export type ProjectUncheckedUpdateWithoutSupplierInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -2714,6 +2973,7 @@ export type ProjectUncheckedUpdateManyWithoutSupplierInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -2779,6 +3039,7 @@ export type ProjectCreateManyManagerPersonnelInput = {
   bizDate: Date | string;
   customerId?: number | null;
   supplierId?: number | null;
+  stockScopeId?: number | null;
   workshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -2863,6 +3124,7 @@ export type ProjectUpdateWithoutManagerPersonnelInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
   supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
 };
@@ -2874,6 +3136,7 @@ export type ProjectUncheckedUpdateWithoutManagerPersonnelInput = {
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   customerId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   supplierId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -2940,6 +3203,7 @@ export type ProjectUncheckedUpdateManyWithoutManagerPersonnelInput = {
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   customerId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   supplierId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
@@ -3006,6 +3270,7 @@ export type ProjectCreateManyWorkshopInput = {
   customerId?: number | null;
   supplierId?: number | null;
   managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
   inventoryEffectStatus?: $Enums.InventoryEffectStatus;
@@ -3090,6 +3355,7 @@ export type ProjectUpdateWithoutWorkshopInput = {
   customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
   supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
   managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
 };
 
@@ -3104,6 +3370,7 @@ export type ProjectUncheckedUpdateWithoutWorkshopInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
     | $Enums.DocumentLifecycleStatus;
@@ -3173,6 +3440,243 @@ export type ProjectUncheckedUpdateManyWithoutWorkshopInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  customerCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  customerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  managerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+};
+
+export type ProjectCreateManyStockScopeInput = {
+  id?: number;
+  projectCode: string;
+  projectName: string;
+  bizDate: Date | string;
+  customerId?: number | null;
+  supplierId?: number | null;
+  managerPersonnelId?: number | null;
+  workshopId: number;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  customerCodeSnapshot?: string | null;
+  customerNameSnapshot?: string | null;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  managerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+};
+
+export type ProjectUpdateWithoutStockScopeInput = {
+  projectCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectName?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  customerCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  customerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  managerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
+  supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
+  managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
+  materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectUncheckedUpdateWithoutStockScopeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  projectCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectName?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  customerId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  supplierId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  managerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  customerCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  customerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  managerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectUncheckedUpdateManyWithoutStockScopeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  projectCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectName?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  customerId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  supplierId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  managerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
     | $Enums.DocumentLifecycleStatus;
@@ -3280,6 +3784,7 @@ export type ProjectSelect<
     customerId?: boolean;
     supplierId?: boolean;
     managerPersonnelId?: boolean;
+    stockScopeId?: boolean;
     workshopId?: boolean;
     lifecycleStatus?: boolean;
     auditStatusSnapshot?: boolean;
@@ -3304,6 +3809,7 @@ export type ProjectSelect<
     customer?: boolean | Prisma.Project$customerArgs<ExtArgs>;
     supplier?: boolean | Prisma.Project$supplierArgs<ExtArgs>;
     managerPersonnel?: boolean | Prisma.Project$managerPersonnelArgs<ExtArgs>;
+    stockScope?: boolean | Prisma.Project$stockScopeArgs<ExtArgs>;
     workshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
     materialLines?: boolean | Prisma.Project$materialLinesArgs<ExtArgs>;
     _count?: boolean | Prisma.ProjectCountOutputTypeDefaultArgs<ExtArgs>;
@@ -3319,6 +3825,7 @@ export type ProjectSelectScalar = {
   customerId?: boolean;
   supplierId?: boolean;
   managerPersonnelId?: boolean;
+  stockScopeId?: boolean;
   workshopId?: boolean;
   lifecycleStatus?: boolean;
   auditStatusSnapshot?: boolean;
@@ -3353,6 +3860,7 @@ export type ProjectOmit<
   | "customerId"
   | "supplierId"
   | "managerPersonnelId"
+  | "stockScopeId"
   | "workshopId"
   | "lifecycleStatus"
   | "auditStatusSnapshot"
@@ -3383,6 +3891,7 @@ export type ProjectInclude<
   customer?: boolean | Prisma.Project$customerArgs<ExtArgs>;
   supplier?: boolean | Prisma.Project$supplierArgs<ExtArgs>;
   managerPersonnel?: boolean | Prisma.Project$managerPersonnelArgs<ExtArgs>;
+  stockScope?: boolean | Prisma.Project$stockScopeArgs<ExtArgs>;
   workshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
   materialLines?: boolean | Prisma.Project$materialLinesArgs<ExtArgs>;
   _count?: boolean | Prisma.ProjectCountOutputTypeDefaultArgs<ExtArgs>;
@@ -3397,6 +3906,7 @@ export type $ProjectPayload<
     customer: Prisma.$CustomerPayload<ExtArgs> | null;
     supplier: Prisma.$SupplierPayload<ExtArgs> | null;
     managerPersonnel: Prisma.$PersonnelPayload<ExtArgs> | null;
+    stockScope: Prisma.$StockScopePayload<ExtArgs> | null;
     workshop: Prisma.$WorkshopPayload<ExtArgs>;
     materialLines: Prisma.$ProjectMaterialLinePayload<ExtArgs>[];
   };
@@ -3409,6 +3919,7 @@ export type $ProjectPayload<
       customerId: number | null;
       supplierId: number | null;
       managerPersonnelId: number | null;
+      stockScopeId: number | null;
       workshopId: number;
       lifecycleStatus: $Enums.DocumentLifecycleStatus;
       auditStatusSnapshot: $Enums.AuditStatusSnapshot;
@@ -3947,6 +4458,19 @@ export interface Prisma__ProjectClient<
     ExtArgs,
     GlobalOmitOptions
   >;
+  stockScope<T extends Prisma.Project$stockScopeArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Project$stockScopeArgs<ExtArgs>>,
+  ): Prisma.Prisma__StockScopeClient<
+    runtime.Types.Result.GetResult<
+      Prisma.$StockScopePayload<ExtArgs>,
+      T,
+      "findUniqueOrThrow",
+      GlobalOmitOptions
+    > | null,
+    null,
+    ExtArgs,
+    GlobalOmitOptions
+  >;
   workshop<T extends Prisma.WorkshopDefaultArgs<ExtArgs> = {}>(
     args?: Prisma.Subset<T, Prisma.WorkshopDefaultArgs<ExtArgs>>,
   ): Prisma.Prisma__WorkshopClient<
@@ -4021,6 +4545,7 @@ export interface ProjectFieldRefs {
   readonly customerId: Prisma.FieldRef<"Project", "Int">;
   readonly supplierId: Prisma.FieldRef<"Project", "Int">;
   readonly managerPersonnelId: Prisma.FieldRef<"Project", "Int">;
+  readonly stockScopeId: Prisma.FieldRef<"Project", "Int">;
   readonly workshopId: Prisma.FieldRef<"Project", "Int">;
   readonly lifecycleStatus: Prisma.FieldRef<
     "Project",
@@ -4518,6 +5043,28 @@ export type Project$managerPersonnelArgs<
    */
   include?: Prisma.PersonnelInclude<ExtArgs> | null;
   where?: Prisma.PersonnelWhereInput;
+};
+
+/**
+ * Project.stockScope
+ */
+export type Project$stockScopeArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockScope
+   */
+  select?: Prisma.StockScopeSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockScope
+   */
+  omit?: Prisma.StockScopeOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockScopeInclude<ExtArgs> | null;
+  where?: Prisma.StockScopeWhereInput;
 };
 
 /**

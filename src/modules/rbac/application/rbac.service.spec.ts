@@ -14,6 +14,11 @@ describe("RbacService", () => {
         {
           provide: MasterDataService,
           useValue: {
+            getStockScopeByCode: jest.fn().mockResolvedValue({
+              id: 2,
+              scopeCode: "RD_SUB",
+              scopeName: "研发小仓",
+            }),
             getWorkshopByCode: jest.fn().mockResolvedValue({
               id: 99,
               workshopCode: "RD",

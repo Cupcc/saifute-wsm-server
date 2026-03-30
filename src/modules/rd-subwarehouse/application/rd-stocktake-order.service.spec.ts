@@ -49,6 +49,11 @@ describe("RdStocktakeOrderService", () => {
           provide: MasterDataService,
           useValue: {
             getWorkshopById: jest.fn(),
+            getStockScopeByCode: jest.fn().mockResolvedValue({
+              id: 2,
+              scopeCode: "RD_SUB",
+              scopeName: "研发小仓",
+            }),
             getMaterialById: jest.fn(),
           },
         },
@@ -106,6 +111,7 @@ describe("RdStocktakeOrderService", () => {
       id: 1,
       documentNo: "RDSTK-001",
       bizDate: new Date("2026-03-30"),
+      stockScopeId: 2,
       workshopId: 6,
       workshopNameSnapshot: "研发小仓",
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,

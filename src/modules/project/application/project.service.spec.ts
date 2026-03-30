@@ -124,6 +124,11 @@ describe("ProjectService", () => {
           useValue: {
             getMaterialById: jest.fn(),
             getWorkshopById: jest.fn(),
+            getStockScopeByCode: jest.fn().mockResolvedValue({
+              id: 1,
+              scopeCode: "MAIN",
+              scopeName: "主仓",
+            }),
             getCustomerById: jest.fn(),
             getSupplierById: jest.fn(),
             getPersonnelById: jest.fn(),

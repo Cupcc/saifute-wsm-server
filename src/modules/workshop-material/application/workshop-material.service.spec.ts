@@ -125,6 +125,11 @@ describe("WorkshopMaterialService", () => {
           useValue: {
             getMaterialById: jest.fn(),
             getWorkshopById: jest.fn(),
+            getStockScopeByCode: jest.fn().mockResolvedValue({
+              id: 1,
+              scopeCode: "MAIN",
+              scopeName: "主仓",
+            }),
             getPersonnelById: jest.fn(),
           },
         },

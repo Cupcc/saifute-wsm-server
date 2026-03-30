@@ -60,6 +60,7 @@ export const ModelName = {
   Supplier: "Supplier",
   Personnel: "Personnel",
   Workshop: "Workshop",
+  StockScope: "StockScope",
   InventoryBalance: "InventoryBalance",
   InventoryLog: "InventoryLog",
   InventorySourceUsage: "InventorySourceUsage",
@@ -209,9 +210,24 @@ export const WorkshopScalarFieldEnum = {
 export type WorkshopScalarFieldEnum =
   (typeof WorkshopScalarFieldEnum)[keyof typeof WorkshopScalarFieldEnum];
 
+export const StockScopeScalarFieldEnum = {
+  id: "id",
+  scopeCode: "scopeCode",
+  scopeName: "scopeName",
+  status: "status",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type StockScopeScalarFieldEnum =
+  (typeof StockScopeScalarFieldEnum)[keyof typeof StockScopeScalarFieldEnum];
+
 export const InventoryBalanceScalarFieldEnum = {
   id: "id",
   materialId: "materialId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   quantityOnHand: "quantityOnHand",
   rowVersion: "rowVersion",
@@ -228,6 +244,7 @@ export const InventoryLogScalarFieldEnum = {
   id: "id",
   balanceId: "balanceId",
   materialId: "materialId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   direction: "direction",
   operationType: "operationType",
@@ -271,6 +288,7 @@ export type InventorySourceUsageScalarFieldEnum =
 export const FactoryNumberReservationScalarFieldEnum = {
   id: "id",
   materialId: "materialId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   businessDocumentType: "businessDocumentType",
   businessDocumentId: "businessDocumentId",
@@ -319,6 +337,7 @@ export const StockInOrderScalarFieldEnum = {
   bizDate: "bizDate",
   supplierId: "supplierId",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   rdProcurementRequestId: "rdProcurementRequestId",
   lifecycleStatus: "lifecycleStatus",
@@ -377,6 +396,7 @@ export const CustomerStockOrderScalarFieldEnum = {
   bizDate: "bizDate",
   customerId: "customerId",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -434,6 +454,7 @@ export const WorkshopMaterialOrderScalarFieldEnum = {
   orderType: "orderType",
   bizDate: "bizDate",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -489,6 +510,7 @@ export const ProjectScalarFieldEnum = {
   customerId: "customerId",
   supplierId: "supplierId",
   managerPersonnelId: "managerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -542,6 +564,8 @@ export const RdHandoffOrderScalarFieldEnum = {
   documentNo: "documentNo",
   bizDate: "bizDate",
   handlerPersonnelId: "handlerPersonnelId",
+  sourceStockScopeId: "sourceStockScopeId",
+  targetStockScopeId: "targetStockScopeId",
   sourceWorkshopId: "sourceWorkshopId",
   targetWorkshopId: "targetWorkshopId",
   lifecycleStatus: "lifecycleStatus",
@@ -599,6 +623,7 @@ export const RdProcurementRequestScalarFieldEnum = {
   projectName: "projectName",
   supplierId: "supplierId",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -694,6 +719,7 @@ export const RdStocktakeOrderScalarFieldEnum = {
   id: "id",
   documentNo: "documentNo",
   bizDate: "bizDate",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   inventoryEffectStatus: "inventoryEffectStatus",
@@ -933,6 +959,16 @@ export const WorkshopOrderByRelevanceFieldEnum = {
 
 export type WorkshopOrderByRelevanceFieldEnum =
   (typeof WorkshopOrderByRelevanceFieldEnum)[keyof typeof WorkshopOrderByRelevanceFieldEnum];
+
+export const StockScopeOrderByRelevanceFieldEnum = {
+  scopeCode: "scopeCode",
+  scopeName: "scopeName",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type StockScopeOrderByRelevanceFieldEnum =
+  (typeof StockScopeOrderByRelevanceFieldEnum)[keyof typeof StockScopeOrderByRelevanceFieldEnum];
 
 export const InventoryBalanceOrderByRelevanceFieldEnum = {
   createdBy: "createdBy",

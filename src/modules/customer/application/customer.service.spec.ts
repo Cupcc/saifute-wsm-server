@@ -168,6 +168,11 @@ describe("CustomerService", () => {
           useValue: {
             getMaterialById: jest.fn(),
             getWorkshopById: jest.fn(),
+            getStockScopeByCode: jest.fn().mockResolvedValue({
+              id: 1,
+              scopeCode: "MAIN",
+              scopeName: "主仓",
+            }),
             getCustomerById: jest.fn(),
             getPersonnelById: jest.fn(),
           },
@@ -247,7 +252,7 @@ describe("CustomerService", () => {
       expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
-          workshopId: 1,
+          stockScope: "MAIN",
           businessDocumentType: "CustomerStockOrder",
           businessDocumentId: 1,
           businessDocumentNumber: "OB-001",
@@ -257,7 +262,7 @@ describe("CustomerService", () => {
       expect(inventoryService.reserveFactoryNumber).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
-          workshopId: 1,
+          stockScope: "MAIN",
           startNumber: "001",
           endNumber: "100",
         }),
@@ -398,7 +403,7 @@ describe("CustomerService", () => {
       expect(inventoryService.reserveFactoryNumber).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
-          workshopId: 1,
+          stockScope: "MAIN",
           businessDocumentLineId: 1,
           startNumber: "101",
           endNumber: "200",
@@ -527,7 +532,7 @@ describe("CustomerService", () => {
       expect(inventoryService.increaseStock).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
-          workshopId: 1,
+          stockScope: "MAIN",
           businessDocumentType: "CustomerStockOrder",
           businessDocumentId: 2,
           businessDocumentNumber: "SR-001",

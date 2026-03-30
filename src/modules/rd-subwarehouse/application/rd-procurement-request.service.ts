@@ -85,6 +85,8 @@ export class RdProcurementRequestService {
     if (workshop.workshopCode !== RD_SUBWAREHOUSE_CODE) {
       throw new BadRequestException("研发采购需求只能归属研发小仓");
     }
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode("RD_SUB");
 
     const supplierSnapshot = dto.supplierId
       ? await this.resolveSupplierSnapshot(dto.supplierId)
@@ -135,6 +137,7 @@ export class RdProcurementRequestService {
           projectName: dto.projectName,
           supplierId: dto.supplierId,
           handlerPersonnelId: dto.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId: dto.workshopId,
           auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,
           supplierCodeSnapshot: supplierSnapshot.supplierCodeSnapshot,

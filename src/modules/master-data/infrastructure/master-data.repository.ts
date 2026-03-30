@@ -69,6 +69,18 @@ export class MasterDataRepository {
     });
   }
 
+  async findStockScopeById(id: number) {
+    return this.prisma.stockScope.findUnique({
+      where: { id },
+    });
+  }
+
+  async findStockScopeByCode(scopeCode: string) {
+    return this.prisma.stockScope.findUnique({
+      where: { scopeCode },
+    });
+  }
+
   async findSupplierById(id: number) {
     return this.prisma.supplier.findUnique({
       where: { id },

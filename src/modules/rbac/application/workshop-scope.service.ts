@@ -34,7 +34,11 @@ export class WorkshopScopeService {
       scope.workshopCode &&
       scope.workshopName
     ) {
+      const stockScopeRecord = await this.masterDataService.getStockScopeByCode(
+        scope.stockScope,
+      );
       return {
+        stockScopeId: stockScopeRecord.id,
         stockScope: scope.stockScope,
         workshopId: scope.workshopId,
         workshopCode: scope.workshopCode,
@@ -210,10 +214,13 @@ export class WorkshopScopeService {
     legacyScope?: SessionWorkshopScopeSnapshot,
   ): Promise<ResolvedStockScopeContext> {
     if (scope.stockScope) {
-      const workshop = await this.masterDataService.getWorkshopByCode(
-        resolveWorkshopCodeFromStockScope(scope.stockScope),
-      );
-      return this.toResolvedInventoryScope(workshop);
+      const [stockScopeRecord, workshop] = await Promise.all([
+        this.masterDataService.getStockScopeByCode(scope.stockScope),
+        this.masterDataService.getWorkshopByCode(
+          resolveWorkshopCodeFromStockScope(scope.stockScope),
+        ),
+      ]);
+      return this.toResolvedInventoryScope(workshop, stockScopeRecord.id);
     }
 
     const candidateLegacyScope =
@@ -229,14 +236,32 @@ export class WorkshopScopeService {
         const workshop = await this.masterDataService.getWorkshopByCode(
           candidateLegacyScope.workshopCode,
         );
-        return this.toResolvedInventoryScope(workshop);
+        const stockScope = resolveStockScopeFromWorkshopIdentity({
+          workshopCode: workshop.workshopCode,
+          workshopName: workshop.workshopName,
+        });
+        if (!stockScope) {
+          throw new BadRequestException("真实库存范围只允许主仓或研发小仓");
+        }
+        const stockScopeRecord =
+          await this.masterDataService.getStockScopeByCode(stockScope);
+        return this.toResolvedInventoryScope(workshop, stockScopeRecord.id);
       }
 
       if (candidateLegacyScope.workshopName) {
         const workshop = await this.masterDataService.getWorkshopByName(
           candidateLegacyScope.workshopName,
         );
-        return this.toResolvedInventoryScope(workshop);
+        const stockScope = resolveStockScopeFromWorkshopIdentity({
+          workshopCode: workshop.workshopCode,
+          workshopName: workshop.workshopName,
+        });
+        if (!stockScope) {
+          throw new BadRequestException("真实库存范围只允许主仓或研发小仓");
+        }
+        const stockScopeRecord =
+          await this.masterDataService.getStockScopeByCode(stockScope);
+        return this.toResolvedInventoryScope(workshop, stockScopeRecord.id);
       }
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -252,14 +277,26 @@ export class WorkshopScopeService {
     workshopId: number,
   ): Promise<ResolvedStockScopeContext> {
     const workshop = await this.masterDataService.getWorkshopById(workshopId);
-    return this.toResolvedInventoryScope(workshop);
+    const stockScope = resolveStockScopeFromWorkshopIdentity({
+      workshopCode: workshop.workshopCode,
+      workshopName: workshop.workshopName,
+    });
+    if (!stockScope) {
+      throw new BadRequestException("真实库存范围只允许主仓或研发小仓");
+    }
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode(stockScope);
+    return this.toResolvedInventoryScope(workshop, stockScopeRecord.id);
   }
 
-  private toResolvedInventoryScope(workshop: {
-    id: number;
-    workshopCode: string;
-    workshopName: string;
-  }): ResolvedStockScopeContext {
+  private toResolvedInventoryScope(
+    workshop: {
+      id: number;
+      workshopCode: string;
+      workshopName: string;
+    },
+    stockScopeId: number,
+  ): ResolvedStockScopeContext {
     const stockScope = resolveStockScopeFromWorkshopIdentity({
       workshopCode: workshop.workshopCode,
       workshopName: workshop.workshopName,
@@ -269,6 +306,7 @@ export class WorkshopScopeService {
     }
 
     return {
+      stockScopeId,
       stockScope,
       workshopId: workshop.id,
       workshopCode: workshop.workshopCode,

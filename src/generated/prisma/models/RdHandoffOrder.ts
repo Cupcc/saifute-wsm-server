@@ -29,6 +29,8 @@ export type AggregateRdHandoffOrder = {
 export type RdHandoffOrderAvgAggregateOutputType = {
   id: number | null;
   handlerPersonnelId: number | null;
+  sourceStockScopeId: number | null;
+  targetStockScopeId: number | null;
   sourceWorkshopId: number | null;
   targetWorkshopId: number | null;
   revisionNo: number | null;
@@ -39,6 +41,8 @@ export type RdHandoffOrderAvgAggregateOutputType = {
 export type RdHandoffOrderSumAggregateOutputType = {
   id: number | null;
   handlerPersonnelId: number | null;
+  sourceStockScopeId: number | null;
+  targetStockScopeId: number | null;
   sourceWorkshopId: number | null;
   targetWorkshopId: number | null;
   revisionNo: number | null;
@@ -51,6 +55,8 @@ export type RdHandoffOrderMinAggregateOutputType = {
   documentNo: string | null;
   bizDate: Date | null;
   handlerPersonnelId: number | null;
+  sourceStockScopeId: number | null;
+  targetStockScopeId: number | null;
   sourceWorkshopId: number | null;
   targetWorkshopId: number | null;
   lifecycleStatus: $Enums.DocumentLifecycleStatus | null;
@@ -77,6 +83,8 @@ export type RdHandoffOrderMaxAggregateOutputType = {
   documentNo: string | null;
   bizDate: Date | null;
   handlerPersonnelId: number | null;
+  sourceStockScopeId: number | null;
+  targetStockScopeId: number | null;
   sourceWorkshopId: number | null;
   targetWorkshopId: number | null;
   lifecycleStatus: $Enums.DocumentLifecycleStatus | null;
@@ -103,6 +111,8 @@ export type RdHandoffOrderCountAggregateOutputType = {
   documentNo: number;
   bizDate: number;
   handlerPersonnelId: number;
+  sourceStockScopeId: number;
+  targetStockScopeId: number;
   sourceWorkshopId: number;
   targetWorkshopId: number;
   lifecycleStatus: number;
@@ -128,6 +138,8 @@ export type RdHandoffOrderCountAggregateOutputType = {
 export type RdHandoffOrderAvgAggregateInputType = {
   id?: true;
   handlerPersonnelId?: true;
+  sourceStockScopeId?: true;
+  targetStockScopeId?: true;
   sourceWorkshopId?: true;
   targetWorkshopId?: true;
   revisionNo?: true;
@@ -138,6 +150,8 @@ export type RdHandoffOrderAvgAggregateInputType = {
 export type RdHandoffOrderSumAggregateInputType = {
   id?: true;
   handlerPersonnelId?: true;
+  sourceStockScopeId?: true;
+  targetStockScopeId?: true;
   sourceWorkshopId?: true;
   targetWorkshopId?: true;
   revisionNo?: true;
@@ -150,6 +164,8 @@ export type RdHandoffOrderMinAggregateInputType = {
   documentNo?: true;
   bizDate?: true;
   handlerPersonnelId?: true;
+  sourceStockScopeId?: true;
+  targetStockScopeId?: true;
   sourceWorkshopId?: true;
   targetWorkshopId?: true;
   lifecycleStatus?: true;
@@ -176,6 +192,8 @@ export type RdHandoffOrderMaxAggregateInputType = {
   documentNo?: true;
   bizDate?: true;
   handlerPersonnelId?: true;
+  sourceStockScopeId?: true;
+  targetStockScopeId?: true;
   sourceWorkshopId?: true;
   targetWorkshopId?: true;
   lifecycleStatus?: true;
@@ -202,6 +220,8 @@ export type RdHandoffOrderCountAggregateInputType = {
   documentNo?: true;
   bizDate?: true;
   handlerPersonnelId?: true;
+  sourceStockScopeId?: true;
+  targetStockScopeId?: true;
   sourceWorkshopId?: true;
   targetWorkshopId?: true;
   lifecycleStatus?: true;
@@ -326,6 +346,8 @@ export type RdHandoffOrderGroupByOutputType = {
   documentNo: string;
   bizDate: Date;
   handlerPersonnelId: number | null;
+  sourceStockScopeId: number | null;
+  targetStockScopeId: number | null;
   sourceWorkshopId: number;
   targetWorkshopId: number;
   lifecycleStatus: $Enums.DocumentLifecycleStatus;
@@ -377,6 +399,14 @@ export type RdHandoffOrderWhereInput = {
     | Prisma.IntNullableFilter<"RdHandoffOrder">
     | number
     | null;
+  sourceStockScopeId?:
+    | Prisma.IntNullableFilter<"RdHandoffOrder">
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.IntNullableFilter<"RdHandoffOrder">
+    | number
+    | null;
   sourceWorkshopId?: Prisma.IntFilter<"RdHandoffOrder"> | number;
   targetWorkshopId?: Prisma.IntFilter<"RdHandoffOrder"> | number;
   lifecycleStatus?:
@@ -423,6 +453,14 @@ export type RdHandoffOrderWhereInput = {
     Prisma.PersonnelNullableScalarRelationFilter,
     Prisma.PersonnelWhereInput
   > | null;
+  sourceStockScope?: Prisma.XOR<
+    Prisma.StockScopeNullableScalarRelationFilter,
+    Prisma.StockScopeWhereInput
+  > | null;
+  targetStockScope?: Prisma.XOR<
+    Prisma.StockScopeNullableScalarRelationFilter,
+    Prisma.StockScopeWhereInput
+  > | null;
   sourceWorkshop?: Prisma.XOR<
     Prisma.WorkshopScalarRelationFilter,
     Prisma.WorkshopWhereInput
@@ -439,6 +477,8 @@ export type RdHandoffOrderOrderByWithRelationInput = {
   documentNo?: Prisma.SortOrder;
   bizDate?: Prisma.SortOrder;
   handlerPersonnelId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  sourceStockScopeId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  targetStockScopeId?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceWorkshopId?: Prisma.SortOrder;
   targetWorkshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
@@ -459,6 +499,8 @@ export type RdHandoffOrderOrderByWithRelationInput = {
   updatedBy?: Prisma.SortOrderInput | Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
   handlerPersonnel?: Prisma.PersonnelOrderByWithRelationInput;
+  sourceStockScope?: Prisma.StockScopeOrderByWithRelationInput;
+  targetStockScope?: Prisma.StockScopeOrderByWithRelationInput;
   sourceWorkshop?: Prisma.WorkshopOrderByWithRelationInput;
   targetWorkshop?: Prisma.WorkshopOrderByWithRelationInput;
   lines?: Prisma.RdHandoffOrderLineOrderByRelationAggregateInput;
@@ -474,6 +516,14 @@ export type RdHandoffOrderWhereUniqueInput = Prisma.AtLeast<
     NOT?: Prisma.RdHandoffOrderWhereInput | Prisma.RdHandoffOrderWhereInput[];
     bizDate?: Prisma.DateTimeFilter<"RdHandoffOrder"> | Date | string;
     handlerPersonnelId?:
+      | Prisma.IntNullableFilter<"RdHandoffOrder">
+      | number
+      | null;
+    sourceStockScopeId?:
+      | Prisma.IntNullableFilter<"RdHandoffOrder">
+      | number
+      | null;
+    targetStockScopeId?:
       | Prisma.IntNullableFilter<"RdHandoffOrder">
       | number
       | null;
@@ -523,6 +573,14 @@ export type RdHandoffOrderWhereUniqueInput = Prisma.AtLeast<
       Prisma.PersonnelNullableScalarRelationFilter,
       Prisma.PersonnelWhereInput
     > | null;
+    sourceStockScope?: Prisma.XOR<
+      Prisma.StockScopeNullableScalarRelationFilter,
+      Prisma.StockScopeWhereInput
+    > | null;
+    targetStockScope?: Prisma.XOR<
+      Prisma.StockScopeNullableScalarRelationFilter,
+      Prisma.StockScopeWhereInput
+    > | null;
     sourceWorkshop?: Prisma.XOR<
       Prisma.WorkshopScalarRelationFilter,
       Prisma.WorkshopWhereInput
@@ -541,6 +599,8 @@ export type RdHandoffOrderOrderByWithAggregationInput = {
   documentNo?: Prisma.SortOrder;
   bizDate?: Prisma.SortOrder;
   handlerPersonnelId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  sourceStockScopeId?: Prisma.SortOrderInput | Prisma.SortOrder;
+  targetStockScopeId?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceWorkshopId?: Prisma.SortOrder;
   targetWorkshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
@@ -582,6 +642,14 @@ export type RdHandoffOrderScalarWhereWithAggregatesInput = {
     | Date
     | string;
   handlerPersonnelId?:
+    | Prisma.IntNullableWithAggregatesFilter<"RdHandoffOrder">
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.IntNullableWithAggregatesFilter<"RdHandoffOrder">
+    | number
+    | null;
+  targetStockScopeId?:
     | Prisma.IntNullableWithAggregatesFilter<"RdHandoffOrder">
     | number
     | null;
@@ -675,6 +743,8 @@ export type RdHandoffOrderCreateInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   handlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutRdHandoffOrdersInput;
+  sourceStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  targetStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   sourceWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffSourceOrdersInput;
   targetWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   lines?: Prisma.RdHandoffOrderLineCreateNestedManyWithoutOrderInput;
@@ -685,6 +755,8 @@ export type RdHandoffOrderUncheckedCreateInput = {
   documentNo: string;
   bizDate: Date | string;
   handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   sourceWorkshopId: number;
   targetWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
@@ -751,6 +823,8 @@ export type RdHandoffOrderUpdateInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnel?: Prisma.PersonnelUpdateOneWithoutRdHandoffOrdersNestedInput;
+  sourceStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffSourceOrdersNestedInput;
+  targetStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffTargetOrdersNestedInput;
   sourceWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffSourceOrdersNestedInput;
   targetWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffTargetOrdersNestedInput;
   lines?: Prisma.RdHandoffOrderLineUpdateManyWithoutOrderNestedInput;
@@ -761,6 +835,14 @@ export type RdHandoffOrderUncheckedUpdateInput = {
   documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
@@ -814,6 +896,8 @@ export type RdHandoffOrderCreateManyInput = {
   documentNo: string;
   bizDate: Date | string;
   handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   sourceWorkshopId: number;
   targetWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
@@ -888,6 +972,14 @@ export type RdHandoffOrderUncheckedUpdateManyInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
   sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   targetWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
@@ -955,6 +1047,8 @@ export type RdHandoffOrderCountOrderByAggregateInput = {
   documentNo?: Prisma.SortOrder;
   bizDate?: Prisma.SortOrder;
   handlerPersonnelId?: Prisma.SortOrder;
+  sourceStockScopeId?: Prisma.SortOrder;
+  targetStockScopeId?: Prisma.SortOrder;
   sourceWorkshopId?: Prisma.SortOrder;
   targetWorkshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
@@ -979,6 +1073,8 @@ export type RdHandoffOrderCountOrderByAggregateInput = {
 export type RdHandoffOrderAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder;
   handlerPersonnelId?: Prisma.SortOrder;
+  sourceStockScopeId?: Prisma.SortOrder;
+  targetStockScopeId?: Prisma.SortOrder;
   sourceWorkshopId?: Prisma.SortOrder;
   targetWorkshopId?: Prisma.SortOrder;
   revisionNo?: Prisma.SortOrder;
@@ -991,6 +1087,8 @@ export type RdHandoffOrderMaxOrderByAggregateInput = {
   documentNo?: Prisma.SortOrder;
   bizDate?: Prisma.SortOrder;
   handlerPersonnelId?: Prisma.SortOrder;
+  sourceStockScopeId?: Prisma.SortOrder;
+  targetStockScopeId?: Prisma.SortOrder;
   sourceWorkshopId?: Prisma.SortOrder;
   targetWorkshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
@@ -1017,6 +1115,8 @@ export type RdHandoffOrderMinOrderByAggregateInput = {
   documentNo?: Prisma.SortOrder;
   bizDate?: Prisma.SortOrder;
   handlerPersonnelId?: Prisma.SortOrder;
+  sourceStockScopeId?: Prisma.SortOrder;
+  targetStockScopeId?: Prisma.SortOrder;
   sourceWorkshopId?: Prisma.SortOrder;
   targetWorkshopId?: Prisma.SortOrder;
   lifecycleStatus?: Prisma.SortOrder;
@@ -1041,6 +1141,8 @@ export type RdHandoffOrderMinOrderByAggregateInput = {
 export type RdHandoffOrderSumOrderByAggregateInput = {
   id?: Prisma.SortOrder;
   handlerPersonnelId?: Prisma.SortOrder;
+  sourceStockScopeId?: Prisma.SortOrder;
+  targetStockScopeId?: Prisma.SortOrder;
   sourceWorkshopId?: Prisma.SortOrder;
   targetWorkshopId?: Prisma.SortOrder;
   revisionNo?: Prisma.SortOrder;
@@ -1389,6 +1491,230 @@ export type RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput =
       | Prisma.RdHandoffOrderScalarWhereInput[];
   };
 
+export type RdHandoffOrderCreateNestedManyWithoutSourceStockScopeInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput,
+        Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput
+      >
+    | Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput[]
+    | Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput[];
+  createMany?: Prisma.RdHandoffOrderCreateManySourceStockScopeInputEnvelope;
+  connect?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+};
+
+export type RdHandoffOrderCreateNestedManyWithoutTargetStockScopeInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput,
+        Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput
+      >
+    | Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput[]
+    | Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput[];
+  createMany?: Prisma.RdHandoffOrderCreateManyTargetStockScopeInputEnvelope;
+  connect?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+};
+
+export type RdHandoffOrderUncheckedCreateNestedManyWithoutSourceStockScopeInput =
+  {
+    create?:
+      | Prisma.XOR<
+          Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput,
+          Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput
+        >
+      | Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput[]
+      | Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput[];
+    connectOrCreate?:
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput[];
+    createMany?: Prisma.RdHandoffOrderCreateManySourceStockScopeInputEnvelope;
+    connect?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+  };
+
+export type RdHandoffOrderUncheckedCreateNestedManyWithoutTargetStockScopeInput =
+  {
+    create?:
+      | Prisma.XOR<
+          Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput,
+          Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput
+        >
+      | Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput[]
+      | Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput[];
+    connectOrCreate?:
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput[];
+    createMany?: Prisma.RdHandoffOrderCreateManyTargetStockScopeInputEnvelope;
+    connect?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+  };
+
+export type RdHandoffOrderUpdateManyWithoutSourceStockScopeNestedInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput,
+        Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput
+      >
+    | Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput[]
+    | Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput[];
+  upsert?:
+    | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutSourceStockScopeInput
+    | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutSourceStockScopeInput[];
+  createMany?: Prisma.RdHandoffOrderCreateManySourceStockScopeInputEnvelope;
+  set?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  disconnect?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  delete?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  connect?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  update?:
+    | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutSourceStockScopeInput
+    | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutSourceStockScopeInput[];
+  updateMany?:
+    | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutSourceStockScopeInput
+    | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutSourceStockScopeInput[];
+  deleteMany?:
+    | Prisma.RdHandoffOrderScalarWhereInput
+    | Prisma.RdHandoffOrderScalarWhereInput[];
+};
+
+export type RdHandoffOrderUpdateManyWithoutTargetStockScopeNestedInput = {
+  create?:
+    | Prisma.XOR<
+        Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput,
+        Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput
+      >
+    | Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput[]
+    | Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput[];
+  connectOrCreate?:
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput
+    | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput[];
+  upsert?:
+    | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutTargetStockScopeInput
+    | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutTargetStockScopeInput[];
+  createMany?: Prisma.RdHandoffOrderCreateManyTargetStockScopeInputEnvelope;
+  set?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  disconnect?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  delete?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  connect?:
+    | Prisma.RdHandoffOrderWhereUniqueInput
+    | Prisma.RdHandoffOrderWhereUniqueInput[];
+  update?:
+    | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutTargetStockScopeInput
+    | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutTargetStockScopeInput[];
+  updateMany?:
+    | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutTargetStockScopeInput
+    | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutTargetStockScopeInput[];
+  deleteMany?:
+    | Prisma.RdHandoffOrderScalarWhereInput
+    | Prisma.RdHandoffOrderScalarWhereInput[];
+};
+
+export type RdHandoffOrderUncheckedUpdateManyWithoutSourceStockScopeNestedInput =
+  {
+    create?:
+      | Prisma.XOR<
+          Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput,
+          Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput
+        >
+      | Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput[]
+      | Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput[];
+    connectOrCreate?:
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput[];
+    upsert?:
+      | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutSourceStockScopeInput
+      | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutSourceStockScopeInput[];
+    createMany?: Prisma.RdHandoffOrderCreateManySourceStockScopeInputEnvelope;
+    set?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    disconnect?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    delete?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    connect?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    update?:
+      | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutSourceStockScopeInput
+      | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutSourceStockScopeInput[];
+    updateMany?:
+      | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutSourceStockScopeInput
+      | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutSourceStockScopeInput[];
+    deleteMany?:
+      | Prisma.RdHandoffOrderScalarWhereInput
+      | Prisma.RdHandoffOrderScalarWhereInput[];
+  };
+
+export type RdHandoffOrderUncheckedUpdateManyWithoutTargetStockScopeNestedInput =
+  {
+    create?:
+      | Prisma.XOR<
+          Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput,
+          Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput
+        >
+      | Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput[]
+      | Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput[];
+    connectOrCreate?:
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput
+      | Prisma.RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput[];
+    upsert?:
+      | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutTargetStockScopeInput
+      | Prisma.RdHandoffOrderUpsertWithWhereUniqueWithoutTargetStockScopeInput[];
+    createMany?: Prisma.RdHandoffOrderCreateManyTargetStockScopeInputEnvelope;
+    set?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    disconnect?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    delete?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    connect?:
+      | Prisma.RdHandoffOrderWhereUniqueInput
+      | Prisma.RdHandoffOrderWhereUniqueInput[];
+    update?:
+      | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutTargetStockScopeInput
+      | Prisma.RdHandoffOrderUpdateWithWhereUniqueWithoutTargetStockScopeInput[];
+    updateMany?:
+      | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutTargetStockScopeInput
+      | Prisma.RdHandoffOrderUpdateManyWithWhereWithoutTargetStockScopeInput[];
+    deleteMany?:
+      | Prisma.RdHandoffOrderScalarWhereInput
+      | Prisma.RdHandoffOrderScalarWhereInput[];
+  };
+
 export type RdHandoffOrderCreateNestedOneWithoutLinesInput = {
   create?: Prisma.XOR<
     Prisma.RdHandoffOrderCreateWithoutLinesInput,
@@ -1435,6 +1761,8 @@ export type RdHandoffOrderCreateWithoutHandlerPersonnelInput = {
   createdAt?: Date | string;
   updatedBy?: string | null;
   updatedAt?: Date | string;
+  sourceStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  targetStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   sourceWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffSourceOrdersInput;
   targetWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   lines?: Prisma.RdHandoffOrderLineCreateNestedManyWithoutOrderInput;
@@ -1444,6 +1772,8 @@ export type RdHandoffOrderUncheckedCreateWithoutHandlerPersonnelInput = {
   id?: number;
   documentNo: string;
   bizDate: Date | string;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   sourceWorkshopId: number;
   targetWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
@@ -1524,6 +1854,14 @@ export type RdHandoffOrderScalarWhereInput = {
     | Prisma.IntNullableFilter<"RdHandoffOrder">
     | number
     | null;
+  sourceStockScopeId?:
+    | Prisma.IntNullableFilter<"RdHandoffOrder">
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.IntNullableFilter<"RdHandoffOrder">
+    | number
+    | null;
   sourceWorkshopId?: Prisma.IntFilter<"RdHandoffOrder"> | number;
   targetWorkshopId?: Prisma.IntFilter<"RdHandoffOrder"> | number;
   lifecycleStatus?:
@@ -1589,6 +1927,8 @@ export type RdHandoffOrderCreateWithoutSourceWorkshopInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   handlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutRdHandoffOrdersInput;
+  sourceStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  targetStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   targetWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   lines?: Prisma.RdHandoffOrderLineCreateNestedManyWithoutOrderInput;
 };
@@ -1598,6 +1938,8 @@ export type RdHandoffOrderUncheckedCreateWithoutSourceWorkshopInput = {
   documentNo: string;
   bizDate: Date | string;
   handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   targetWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -1655,6 +1997,8 @@ export type RdHandoffOrderCreateWithoutTargetWorkshopInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   handlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutRdHandoffOrdersInput;
+  sourceStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  targetStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   sourceWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffSourceOrdersInput;
   lines?: Prisma.RdHandoffOrderLineCreateNestedManyWithoutOrderInput;
 };
@@ -1664,6 +2008,8 @@ export type RdHandoffOrderUncheckedCreateWithoutTargetWorkshopInput = {
   documentNo: string;
   bizDate: Date | string;
   handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   sourceWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -1756,6 +2102,202 @@ export type RdHandoffOrderUpdateManyWithWhereWithoutTargetWorkshopInput = {
   >;
 };
 
+export type RdHandoffOrderCreateWithoutSourceStockScopeInput = {
+  documentNo: string;
+  bizDate: Date | string;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  handlerNameSnapshot?: string | null;
+  sourceWorkshopNameSnapshot: string;
+  targetWorkshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  handlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutRdHandoffOrdersInput;
+  targetStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffTargetOrdersInput;
+  sourceWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  targetWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffTargetOrdersInput;
+  lines?: Prisma.RdHandoffOrderLineCreateNestedManyWithoutOrderInput;
+};
+
+export type RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput = {
+  id?: number;
+  documentNo: string;
+  bizDate: Date | string;
+  handlerPersonnelId?: number | null;
+  targetStockScopeId?: number | null;
+  sourceWorkshopId: number;
+  targetWorkshopId: number;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  handlerNameSnapshot?: string | null;
+  sourceWorkshopNameSnapshot: string;
+  targetWorkshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  lines?: Prisma.RdHandoffOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+};
+
+export type RdHandoffOrderCreateOrConnectWithoutSourceStockScopeInput = {
+  where: Prisma.RdHandoffOrderWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput
+  >;
+};
+
+export type RdHandoffOrderCreateManySourceStockScopeInputEnvelope = {
+  data:
+    | Prisma.RdHandoffOrderCreateManySourceStockScopeInput
+    | Prisma.RdHandoffOrderCreateManySourceStockScopeInput[];
+  skipDuplicates?: boolean;
+};
+
+export type RdHandoffOrderCreateWithoutTargetStockScopeInput = {
+  documentNo: string;
+  bizDate: Date | string;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  handlerNameSnapshot?: string | null;
+  sourceWorkshopNameSnapshot: string;
+  targetWorkshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  handlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutRdHandoffOrdersInput;
+  sourceStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  sourceWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  targetWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffTargetOrdersInput;
+  lines?: Prisma.RdHandoffOrderLineCreateNestedManyWithoutOrderInput;
+};
+
+export type RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput = {
+  id?: number;
+  documentNo: string;
+  bizDate: Date | string;
+  handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  sourceWorkshopId: number;
+  targetWorkshopId: number;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  handlerNameSnapshot?: string | null;
+  sourceWorkshopNameSnapshot: string;
+  targetWorkshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  lines?: Prisma.RdHandoffOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+};
+
+export type RdHandoffOrderCreateOrConnectWithoutTargetStockScopeInput = {
+  where: Prisma.RdHandoffOrderWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput
+  >;
+};
+
+export type RdHandoffOrderCreateManyTargetStockScopeInputEnvelope = {
+  data:
+    | Prisma.RdHandoffOrderCreateManyTargetStockScopeInput
+    | Prisma.RdHandoffOrderCreateManyTargetStockScopeInput[];
+  skipDuplicates?: boolean;
+};
+
+export type RdHandoffOrderUpsertWithWhereUniqueWithoutSourceStockScopeInput = {
+  where: Prisma.RdHandoffOrderWhereUniqueInput;
+  update: Prisma.XOR<
+    Prisma.RdHandoffOrderUpdateWithoutSourceStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedUpdateWithoutSourceStockScopeInput
+  >;
+  create: Prisma.XOR<
+    Prisma.RdHandoffOrderCreateWithoutSourceStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedCreateWithoutSourceStockScopeInput
+  >;
+};
+
+export type RdHandoffOrderUpdateWithWhereUniqueWithoutSourceStockScopeInput = {
+  where: Prisma.RdHandoffOrderWhereUniqueInput;
+  data: Prisma.XOR<
+    Prisma.RdHandoffOrderUpdateWithoutSourceStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedUpdateWithoutSourceStockScopeInput
+  >;
+};
+
+export type RdHandoffOrderUpdateManyWithWhereWithoutSourceStockScopeInput = {
+  where: Prisma.RdHandoffOrderScalarWhereInput;
+  data: Prisma.XOR<
+    Prisma.RdHandoffOrderUpdateManyMutationInput,
+    Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceStockScopeInput
+  >;
+};
+
+export type RdHandoffOrderUpsertWithWhereUniqueWithoutTargetStockScopeInput = {
+  where: Prisma.RdHandoffOrderWhereUniqueInput;
+  update: Prisma.XOR<
+    Prisma.RdHandoffOrderUpdateWithoutTargetStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedUpdateWithoutTargetStockScopeInput
+  >;
+  create: Prisma.XOR<
+    Prisma.RdHandoffOrderCreateWithoutTargetStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedCreateWithoutTargetStockScopeInput
+  >;
+};
+
+export type RdHandoffOrderUpdateWithWhereUniqueWithoutTargetStockScopeInput = {
+  where: Prisma.RdHandoffOrderWhereUniqueInput;
+  data: Prisma.XOR<
+    Prisma.RdHandoffOrderUpdateWithoutTargetStockScopeInput,
+    Prisma.RdHandoffOrderUncheckedUpdateWithoutTargetStockScopeInput
+  >;
+};
+
+export type RdHandoffOrderUpdateManyWithWhereWithoutTargetStockScopeInput = {
+  where: Prisma.RdHandoffOrderScalarWhereInput;
+  data: Prisma.XOR<
+    Prisma.RdHandoffOrderUpdateManyMutationInput,
+    Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetStockScopeInput
+  >;
+};
+
 export type RdHandoffOrderCreateWithoutLinesInput = {
   documentNo: string;
   bizDate: Date | string;
@@ -1777,6 +2319,8 @@ export type RdHandoffOrderCreateWithoutLinesInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   handlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutRdHandoffOrdersInput;
+  sourceStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffSourceOrdersInput;
+  targetStockScope?: Prisma.StockScopeCreateNestedOneWithoutRdHandoffTargetOrdersInput;
   sourceWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffSourceOrdersInput;
   targetWorkshop: Prisma.WorkshopCreateNestedOneWithoutRdHandoffTargetOrdersInput;
 };
@@ -1786,6 +2330,8 @@ export type RdHandoffOrderUncheckedCreateWithoutLinesInput = {
   documentNo: string;
   bizDate: Date | string;
   handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   sourceWorkshopId: number;
   targetWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
@@ -1879,6 +2425,8 @@ export type RdHandoffOrderUpdateWithoutLinesInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnel?: Prisma.PersonnelUpdateOneWithoutRdHandoffOrdersNestedInput;
+  sourceStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffSourceOrdersNestedInput;
+  targetStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffTargetOrdersNestedInput;
   sourceWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffSourceOrdersNestedInput;
   targetWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffTargetOrdersNestedInput;
 };
@@ -1888,6 +2436,14 @@ export type RdHandoffOrderUncheckedUpdateWithoutLinesInput = {
   documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
@@ -1939,6 +2495,8 @@ export type RdHandoffOrderCreateManyHandlerPersonnelInput = {
   id?: number;
   documentNo: string;
   bizDate: Date | string;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   sourceWorkshopId: number;
   targetWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
@@ -2003,6 +2561,8 @@ export type RdHandoffOrderUpdateWithoutHandlerPersonnelInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  sourceStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffSourceOrdersNestedInput;
+  targetStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffTargetOrdersNestedInput;
   sourceWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffSourceOrdersNestedInput;
   targetWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffTargetOrdersNestedInput;
   lines?: Prisma.RdHandoffOrderLineUpdateManyWithoutOrderNestedInput;
@@ -2012,6 +2572,14 @@ export type RdHandoffOrderUncheckedUpdateWithoutHandlerPersonnelInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number;
   documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
   sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   targetWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
@@ -2061,6 +2629,14 @@ export type RdHandoffOrderUncheckedUpdateManyWithoutHandlerPersonnelInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number;
   documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
   sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   targetWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
@@ -2110,6 +2686,8 @@ export type RdHandoffOrderCreateManySourceWorkshopInput = {
   documentNo: string;
   bizDate: Date | string;
   handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   targetWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -2135,6 +2713,8 @@ export type RdHandoffOrderCreateManyTargetWorkshopInput = {
   documentNo: string;
   bizDate: Date | string;
   handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  targetStockScopeId?: number | null;
   sourceWorkshopId: number;
   lifecycleStatus?: $Enums.DocumentLifecycleStatus;
   auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
@@ -2199,6 +2779,8 @@ export type RdHandoffOrderUpdateWithoutSourceWorkshopInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnel?: Prisma.PersonnelUpdateOneWithoutRdHandoffOrdersNestedInput;
+  sourceStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffSourceOrdersNestedInput;
+  targetStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffTargetOrdersNestedInput;
   targetWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffTargetOrdersNestedInput;
   lines?: Prisma.RdHandoffOrderLineUpdateManyWithoutOrderNestedInput;
 };
@@ -2208,6 +2790,14 @@ export type RdHandoffOrderUncheckedUpdateWithoutSourceWorkshopInput = {
   documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
@@ -2260,6 +2850,14 @@ export type RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopInput = {
   documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
@@ -2350,6 +2948,8 @@ export type RdHandoffOrderUpdateWithoutTargetWorkshopInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnel?: Prisma.PersonnelUpdateOneWithoutRdHandoffOrdersNestedInput;
+  sourceStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffSourceOrdersNestedInput;
+  targetStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffTargetOrdersNestedInput;
   sourceWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffSourceOrdersNestedInput;
   lines?: Prisma.RdHandoffOrderLineUpdateManyWithoutOrderNestedInput;
 };
@@ -2359,6 +2959,14 @@ export type RdHandoffOrderUncheckedUpdateWithoutTargetWorkshopInput = {
   documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
   bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
@@ -2414,7 +3022,395 @@ export type RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopInput = {
     | Prisma.NullableIntFieldUpdateOperationsInput
     | number
     | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
   sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  targetWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+};
+
+export type RdHandoffOrderCreateManySourceStockScopeInput = {
+  id?: number;
+  documentNo: string;
+  bizDate: Date | string;
+  handlerPersonnelId?: number | null;
+  targetStockScopeId?: number | null;
+  sourceWorkshopId: number;
+  targetWorkshopId: number;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  handlerNameSnapshot?: string | null;
+  sourceWorkshopNameSnapshot: string;
+  targetWorkshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+};
+
+export type RdHandoffOrderCreateManyTargetStockScopeInput = {
+  id?: number;
+  documentNo: string;
+  bizDate: Date | string;
+  handlerPersonnelId?: number | null;
+  sourceStockScopeId?: number | null;
+  sourceWorkshopId: number;
+  targetWorkshopId: number;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  handlerNameSnapshot?: string | null;
+  sourceWorkshopNameSnapshot: string;
+  targetWorkshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+};
+
+export type RdHandoffOrderUpdateWithoutSourceStockScopeInput = {
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  targetWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  handlerPersonnel?: Prisma.PersonnelUpdateOneWithoutRdHandoffOrdersNestedInput;
+  targetStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffTargetOrdersNestedInput;
+  sourceWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffSourceOrdersNestedInput;
+  targetWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffTargetOrdersNestedInput;
+  lines?: Prisma.RdHandoffOrderLineUpdateManyWithoutOrderNestedInput;
+};
+
+export type RdHandoffOrderUncheckedUpdateWithoutSourceStockScopeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  targetWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  targetWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lines?: Prisma.RdHandoffOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+};
+
+export type RdHandoffOrderUncheckedUpdateManyWithoutSourceStockScopeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  targetStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  targetWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  targetWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+};
+
+export type RdHandoffOrderUpdateWithoutTargetStockScopeInput = {
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  targetWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  handlerPersonnel?: Prisma.PersonnelUpdateOneWithoutRdHandoffOrdersNestedInput;
+  sourceStockScope?: Prisma.StockScopeUpdateOneWithoutRdHandoffSourceOrdersNestedInput;
+  sourceWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffSourceOrdersNestedInput;
+  targetWorkshop?: Prisma.WorkshopUpdateOneRequiredWithoutRdHandoffTargetOrdersNestedInput;
+  lines?: Prisma.RdHandoffOrderLineUpdateManyWithoutOrderNestedInput;
+};
+
+export type RdHandoffOrderUncheckedUpdateWithoutTargetStockScopeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  targetWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  sourceWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  targetWorkshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lines?: Prisma.RdHandoffOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+};
+
+export type RdHandoffOrderUncheckedUpdateManyWithoutTargetStockScopeInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceStockScopeId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  sourceWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  targetWorkshopId?: Prisma.IntFieldUpdateOperationsInput | number;
   lifecycleStatus?:
     | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
     | $Enums.DocumentLifecycleStatus;
@@ -2504,6 +3500,8 @@ export type RdHandoffOrderSelect<
     documentNo?: boolean;
     bizDate?: boolean;
     handlerPersonnelId?: boolean;
+    sourceStockScopeId?: boolean;
+    targetStockScopeId?: boolean;
     sourceWorkshopId?: boolean;
     targetWorkshopId?: boolean;
     lifecycleStatus?: boolean;
@@ -2526,6 +3524,12 @@ export type RdHandoffOrderSelect<
     handlerPersonnel?:
       | boolean
       | Prisma.RdHandoffOrder$handlerPersonnelArgs<ExtArgs>;
+    sourceStockScope?:
+      | boolean
+      | Prisma.RdHandoffOrder$sourceStockScopeArgs<ExtArgs>;
+    targetStockScope?:
+      | boolean
+      | Prisma.RdHandoffOrder$targetStockScopeArgs<ExtArgs>;
     sourceWorkshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
     targetWorkshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
     lines?: boolean | Prisma.RdHandoffOrder$linesArgs<ExtArgs>;
@@ -2539,6 +3543,8 @@ export type RdHandoffOrderSelectScalar = {
   documentNo?: boolean;
   bizDate?: boolean;
   handlerPersonnelId?: boolean;
+  sourceStockScopeId?: boolean;
+  targetStockScopeId?: boolean;
   sourceWorkshopId?: boolean;
   targetWorkshopId?: boolean;
   lifecycleStatus?: boolean;
@@ -2568,6 +3574,8 @@ export type RdHandoffOrderOmit<
   | "documentNo"
   | "bizDate"
   | "handlerPersonnelId"
+  | "sourceStockScopeId"
+  | "targetStockScopeId"
   | "sourceWorkshopId"
   | "targetWorkshopId"
   | "lifecycleStatus"
@@ -2596,6 +3604,12 @@ export type RdHandoffOrderInclude<
   handlerPersonnel?:
     | boolean
     | Prisma.RdHandoffOrder$handlerPersonnelArgs<ExtArgs>;
+  sourceStockScope?:
+    | boolean
+    | Prisma.RdHandoffOrder$sourceStockScopeArgs<ExtArgs>;
+  targetStockScope?:
+    | boolean
+    | Prisma.RdHandoffOrder$targetStockScopeArgs<ExtArgs>;
   sourceWorkshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
   targetWorkshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
   lines?: boolean | Prisma.RdHandoffOrder$linesArgs<ExtArgs>;
@@ -2609,6 +3623,8 @@ export type $RdHandoffOrderPayload<
   name: "RdHandoffOrder";
   objects: {
     handlerPersonnel: Prisma.$PersonnelPayload<ExtArgs> | null;
+    sourceStockScope: Prisma.$StockScopePayload<ExtArgs> | null;
+    targetStockScope: Prisma.$StockScopePayload<ExtArgs> | null;
     sourceWorkshop: Prisma.$WorkshopPayload<ExtArgs>;
     targetWorkshop: Prisma.$WorkshopPayload<ExtArgs>;
     lines: Prisma.$RdHandoffOrderLinePayload<ExtArgs>[];
@@ -2619,6 +3635,8 @@ export type $RdHandoffOrderPayload<
       documentNo: string;
       bizDate: Date;
       handlerPersonnelId: number | null;
+      sourceStockScopeId: number | null;
+      targetStockScopeId: number | null;
       sourceWorkshopId: number;
       targetWorkshopId: number;
       lifecycleStatus: $Enums.DocumentLifecycleStatus;
@@ -3140,6 +4158,42 @@ export interface Prisma__RdHandoffOrderClient<
     ExtArgs,
     GlobalOmitOptions
   >;
+  sourceStockScope<
+    T extends Prisma.RdHandoffOrder$sourceStockScopeArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.RdHandoffOrder$sourceStockScopeArgs<ExtArgs>
+    >,
+  ): Prisma.Prisma__StockScopeClient<
+    runtime.Types.Result.GetResult<
+      Prisma.$StockScopePayload<ExtArgs>,
+      T,
+      "findUniqueOrThrow",
+      GlobalOmitOptions
+    > | null,
+    null,
+    ExtArgs,
+    GlobalOmitOptions
+  >;
+  targetStockScope<
+    T extends Prisma.RdHandoffOrder$targetStockScopeArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.RdHandoffOrder$targetStockScopeArgs<ExtArgs>
+    >,
+  ): Prisma.Prisma__StockScopeClient<
+    runtime.Types.Result.GetResult<
+      Prisma.$StockScopePayload<ExtArgs>,
+      T,
+      "findUniqueOrThrow",
+      GlobalOmitOptions
+    > | null,
+    null,
+    ExtArgs,
+    GlobalOmitOptions
+  >;
   sourceWorkshop<T extends Prisma.WorkshopDefaultArgs<ExtArgs> = {}>(
     args?: Prisma.Subset<T, Prisma.WorkshopDefaultArgs<ExtArgs>>,
   ): Prisma.Prisma__WorkshopClient<
@@ -3225,6 +4279,8 @@ export interface RdHandoffOrderFieldRefs {
   readonly documentNo: Prisma.FieldRef<"RdHandoffOrder", "String">;
   readonly bizDate: Prisma.FieldRef<"RdHandoffOrder", "DateTime">;
   readonly handlerPersonnelId: Prisma.FieldRef<"RdHandoffOrder", "Int">;
+  readonly sourceStockScopeId: Prisma.FieldRef<"RdHandoffOrder", "Int">;
+  readonly targetStockScopeId: Prisma.FieldRef<"RdHandoffOrder", "Int">;
   readonly sourceWorkshopId: Prisma.FieldRef<"RdHandoffOrder", "Int">;
   readonly targetWorkshopId: Prisma.FieldRef<"RdHandoffOrder", "Int">;
   readonly lifecycleStatus: Prisma.FieldRef<
@@ -3690,6 +4746,50 @@ export type RdHandoffOrder$handlerPersonnelArgs<
    */
   include?: Prisma.PersonnelInclude<ExtArgs> | null;
   where?: Prisma.PersonnelWhereInput;
+};
+
+/**
+ * RdHandoffOrder.sourceStockScope
+ */
+export type RdHandoffOrder$sourceStockScopeArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockScope
+   */
+  select?: Prisma.StockScopeSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockScope
+   */
+  omit?: Prisma.StockScopeOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockScopeInclude<ExtArgs> | null;
+  where?: Prisma.StockScopeWhereInput;
+};
+
+/**
+ * RdHandoffOrder.targetStockScope
+ */
+export type RdHandoffOrder$targetStockScopeArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockScope
+   */
+  select?: Prisma.StockScopeSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockScope
+   */
+  omit?: Prisma.StockScopeOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockScopeInclude<ExtArgs> | null;
+  where?: Prisma.StockScopeWhereInput;
 };
 
 /**

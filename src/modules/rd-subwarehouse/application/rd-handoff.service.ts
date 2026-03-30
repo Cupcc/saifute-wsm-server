@@ -86,6 +86,10 @@ export class RdHandoffService {
     if (sourceWorkshop.workshopCode !== MAIN_WAREHOUSE_CODE) {
       throw new BadRequestException("当前切片只允许主仓发起到 RD 小仓的交接");
     }
+    const [sourceStockScopeRecord, targetStockScopeRecord] = await Promise.all([
+      this.masterDataService.getStockScopeByCode("MAIN"),
+      this.masterDataService.getStockScopeByCode("RD_SUB"),
+    ]);
 
     const handlerSnapshot = dto.handlerPersonnelId
       ? await this.resolveHandlerSnapshot(dto.handlerPersonnelId)
@@ -160,6 +164,8 @@ export class RdHandoffService {
           documentNo: dto.documentNo,
           bizDate,
           handlerPersonnelId: dto.handlerPersonnelId,
+          sourceStockScopeId: sourceStockScopeRecord.id,
+          targetStockScopeId: targetStockScopeRecord.id,
           sourceWorkshopId: sourceWorkshop.id,
           targetWorkshopId: targetWorkshop.id,
           auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,

@@ -42,6 +42,8 @@ describe("RdHandoffService", () => {
     documentNo: "RDH-001",
     bizDate: new Date("2026-03-28"),
     handlerPersonnelId: 20,
+    sourceStockScopeId: 1,
+    targetStockScopeId: 2,
     sourceWorkshopId: 1,
     targetWorkshopId: 9,
     lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
@@ -126,6 +128,13 @@ describe("RdHandoffService", () => {
         {
           provide: MasterDataService,
           useValue: {
+            getStockScopeByCode: jest
+              .fn()
+              .mockImplementation(async (scopeCode: string) => ({
+                id: scopeCode === "RD_SUB" ? 2 : 1,
+                scopeCode,
+                scopeName: scopeCode === "RD_SUB" ? "研发小仓" : "主仓",
+              })),
             getMaterialById: jest.fn().mockResolvedValue({
               id: 100,
               materialCode: "MAT001",

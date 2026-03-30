@@ -249,6 +249,39 @@ function createSeededWorkshopModel() {
   return model;
 }
 
+function createSeededStockScopeModel() {
+  const model = createMemoryModel<{
+    id: number;
+    scopeCode: string;
+    scopeName: string;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }>();
+
+  const now = new Date("2026-03-30T00:00:00.000Z");
+  void model.createMany({
+    data: [
+      {
+        scopeCode: "MAIN",
+        scopeName: "主仓",
+        status: "ACTIVE",
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        scopeCode: "RD_SUB",
+        scopeName: "研发小仓",
+        status: "ACTIVE",
+        createdAt: now,
+        updatedAt: now,
+      },
+    ],
+  });
+
+  return model;
+}
+
 @Injectable()
 export class PrismaE2eStub {
   material = createModelStub();
@@ -257,6 +290,7 @@ export class PrismaE2eStub {
   supplier = createModelStub();
   personnel = createModelStub();
   workshop = createSeededWorkshopModel();
+  stockScope = createSeededStockScopeModel();
   inventoryBalance = createModelStub();
   inventoryLog = createModelStub();
   inventorySourceUsage = createModelStub();

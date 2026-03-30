@@ -127,9 +127,9 @@ export class InventoryService {
       return await this.withTransaction(tx, async (db) => {
         let balance = await db.inventoryBalance.findUnique({
           where: {
-            materialId_workshopId: {
+            materialId_stockScopeId: {
               materialId: cmd.materialId,
-              workshopId: scope.workshopId,
+              stockScopeId: scope.stockScopeId,
             },
           },
         });
@@ -138,6 +138,7 @@ export class InventoryService {
           balance = await db.inventoryBalance.create({
             data: {
               materialId: cmd.materialId,
+              stockScopeId: scope.stockScopeId,
               workshopId: scope.workshopId,
               quantityOnHand: 0,
               createdBy: cmd.operatorId,
@@ -162,6 +163,7 @@ export class InventoryService {
             data: {
               balanceId: balance.id,
               materialId: cmd.materialId,
+              stockScopeId: scope.stockScopeId,
               workshopId: scope.workshopId,
               direction: StockDirection.IN,
               operationType: cmd.operationType,
@@ -210,9 +212,9 @@ export class InventoryService {
       return await this.withTransaction(tx, async (db) => {
         const balance = await db.inventoryBalance.findUnique({
           where: {
-            materialId_workshopId: {
+            materialId_stockScopeId: {
               materialId: cmd.materialId,
-              workshopId: scope.workshopId,
+              stockScopeId: scope.stockScopeId,
             },
           },
         });
@@ -236,6 +238,7 @@ export class InventoryService {
           data: {
             balanceId: balance.id,
             materialId: cmd.materialId,
+            stockScopeId: scope.stockScopeId,
             workshopId: scope.workshopId,
             direction: StockDirection.OUT,
             operationType: cmd.operationType,
@@ -317,6 +320,7 @@ export class InventoryService {
           data: {
             balanceId: balance.id,
             materialId: sourceLog.materialId,
+            stockScopeId: sourceLog.stockScopeId,
             workshopId: sourceLog.workshopId,
             direction: reverseDirection,
             operationType: isIn
@@ -522,10 +526,10 @@ export class InventoryService {
   }) {
     const limit = Math.min(params.limit ?? 50, 100);
     const offset = params.offset ?? 0;
-    const workshopIds = await this.resolveInventoryWorkshopIds(params);
+    const stockScopeIds = await this.resolveInventoryStockScopeIds(params);
     const result = await this.repository.findBalances({
       materialId: params.materialId,
-      workshopIds,
+      stockScopeIds,
       limit,
       offset,
     });
@@ -549,9 +553,9 @@ export class InventoryService {
       workshopId: params.workshopId,
     });
     await this.ensureMasterDataExists(params.materialId, scope.workshopId);
-    return this.repository.findBalanceByMaterialAndWorkshop(
+    return this.repository.findBalanceByMaterialAndStockScope(
       params.materialId,
-      scope.workshopId,
+      scope.stockScopeId,
       tx,
     );
   }
@@ -571,10 +575,10 @@ export class InventoryService {
   }) {
     const limit = Math.min(params.limit ?? 50, 100);
     const offset = params.offset ?? 0;
-    const workshopIds = await this.resolveInventoryWorkshopIds(params);
+    const stockScopeIds = await this.resolveInventoryStockScopeIds(params);
     const result = await this.repository.findLogs({
       materialId: params.materialId,
-      workshopIds,
+      stockScopeIds,
       businessDocumentId: params.businessDocumentId,
       businessDocumentType: params.businessDocumentType,
       businessDocumentNumber: params.businessDocumentNumber,
@@ -618,6 +622,7 @@ export class InventoryService {
       return this.repository.createFactoryNumberReservation(
         {
           materialId: cmd.materialId,
+          stockScopeId: scope.stockScopeId,
           workshopId: scope.workshopId,
           businessDocumentType: cmd.businessDocumentType,
           businessDocumentId: cmd.businessDocumentId,
@@ -686,9 +691,9 @@ export class InventoryService {
   }) {
     const limit = Math.min(params.limit ?? 50, 100);
     const offset = params.offset ?? 0;
-    const workshopIds = await this.resolveInventoryWorkshopIds(params);
+    const stockScopeIds = await this.resolveInventoryStockScopeIds(params);
     const result = await this.repository.findFactoryNumberReservations({
-      workshopIds,
+      stockScopeIds,
       businessDocumentType: params.businessDocumentType,
       businessDocumentLineId: params.businessDocumentLineId,
       startNumber: params.startNumber,
@@ -803,7 +808,7 @@ export class InventoryService {
     throw error;
   }
 
-  private async resolveInventoryWorkshopIds(params: {
+  private async resolveInventoryStockScopeIds(params: {
     stockScope?: StockScopeCode;
     workshopId?: number;
   }) {
@@ -812,14 +817,19 @@ export class InventoryService {
       workshopId: params.workshopId,
     });
     if (scope) {
-      return [scope.workshopId];
+      return [scope.stockScopeId];
     }
 
-    return this.stockScopeCompatibilityService.listRealStockWorkshopIds();
+    return this.stockScopeCompatibilityService.listRealStockScopeIds();
   }
 
   private withStockScope<
     T extends {
+      stockScope?: {
+        id: number;
+        scopeCode: string;
+        scopeName: string;
+      } | null;
       workshop?: {
         id: number;
         workshopCode: string;
@@ -829,12 +839,14 @@ export class InventoryService {
   >(item: T): T & { stockScope: StockScopeCode | null } {
     return {
       ...item,
-      stockScope: item.workshop
-        ? resolveStockScopeFromWorkshopIdentity({
-            workshopCode: item.workshop.workshopCode,
-            workshopName: item.workshop.workshopName,
-          })
-        : null,
+      stockScope: item.stockScope
+        ? (item.stockScope.scopeCode as StockScopeCode)
+        : item.workshop
+          ? resolveStockScopeFromWorkshopIdentity({
+              workshopCode: item.workshop.workshopCode,
+              workshopName: item.workshop.workshopName,
+            })
+          : null,
     };
   }
 

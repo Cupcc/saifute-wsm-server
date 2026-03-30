@@ -80,6 +80,8 @@ export class CustomerService {
     const { handlerNameSnapshot } = await this.resolveHandlerSnapshot(
       dto.handlerPersonnelId,
     );
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode("MAIN");
     const workshop = await this.masterDataService.getWorkshopById(
       dto.workshopId,
     );
@@ -126,6 +128,7 @@ export class CustomerService {
           bizDate,
           customerId: dto.customerId,
           handlerPersonnelId: dto.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId: dto.workshopId,
           customerCodeSnapshot,
           customerNameSnapshot,
@@ -150,7 +153,7 @@ export class CustomerService {
         await this.inventoryService.decreaseStock(
           {
             materialId: line.materialId,
-            workshopId: order.workshopId,
+            stockScope: "MAIN",
             quantity: line.quantity,
             operationType: InventoryOperationType.OUTBOUND_OUT,
             businessModule: BUSINESS_MODULE,
@@ -168,7 +171,7 @@ export class CustomerService {
           await this.inventoryService.reserveFactoryNumber(
             {
               materialId: line.materialId,
-              workshopId: order.workshopId,
+              stockScope: "MAIN",
               businessDocumentType: DOCUMENT_TYPE,
               businessDocumentId: order.id,
               businessDocumentLineId: line.id,
@@ -230,6 +233,8 @@ export class CustomerService {
     const handlerSnapshot = dto.handlerPersonnelId
       ? await this.resolveHandlerSnapshot(dto.handlerPersonnelId)
       : { handlerNameSnapshot: existing.handlerNameSnapshot };
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode("MAIN");
     const workshop = dto.workshopId
       ? await this.masterDataService.getWorkshopById(dto.workshopId)
       : { workshopName: existing.workshopNameSnapshot };
@@ -257,7 +262,6 @@ export class CustomerService {
       );
       const seenLineIds = new Set<number>();
       const workshopId = dto.workshopId ?? currentOrder.workshopId;
-      const workshopChanged = workshopId !== currentOrder.workshopId;
 
       for (const line of dto.lines) {
         if (!line.id) continue;
@@ -317,11 +321,9 @@ export class CustomerService {
           }
 
           const inventoryNeedsRepost =
-            workshopChanged ||
             currentLine.materialId !== lineData.materialId ||
             !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity);
           const reservationChanged =
-            workshopChanged ||
             currentLine.materialId !== lineData.materialId ||
             currentLine.startNumber !== lineData.startNumber ||
             currentLine.endNumber !== lineData.endNumber;
@@ -383,7 +385,7 @@ export class CustomerService {
             await this.inventoryService.decreaseStock(
               {
                 materialId: updatedLine.materialId,
-                workshopId,
+                stockScope: "MAIN",
                 quantity: updatedLine.quantity,
                 operationType: InventoryOperationType.OUTBOUND_OUT,
                 businessModule: BUSINESS_MODULE,
@@ -405,7 +407,7 @@ export class CustomerService {
             await this.inventoryService.reserveFactoryNumber(
               {
                 materialId: updatedLine.materialId,
-                workshopId,
+                stockScope: "MAIN",
                 businessDocumentType: DOCUMENT_TYPE,
                 businessDocumentId: id,
                 businessDocumentLineId: updatedLine.id,
@@ -445,7 +447,7 @@ export class CustomerService {
         await this.inventoryService.decreaseStock(
           {
             materialId: createdLine.materialId,
-            workshopId,
+            stockScope: "MAIN",
             quantity: createdLine.quantity,
             operationType: InventoryOperationType.OUTBOUND_OUT,
             businessModule: BUSINESS_MODULE,
@@ -463,7 +465,7 @@ export class CustomerService {
           await this.inventoryService.reserveFactoryNumber(
             {
               materialId: createdLine.materialId,
-              workshopId,
+              stockScope: "MAIN",
               businessDocumentType: DOCUMENT_TYPE,
               businessDocumentId: id,
               businessDocumentLineId: createdLine.id,
@@ -494,6 +496,7 @@ export class CustomerService {
           customerId: finalCustomerId,
           handlerPersonnelId:
             dto.handlerPersonnelId ?? existing.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId,
           customerCodeSnapshot: customerSnapshot.customerCodeSnapshot,
           customerNameSnapshot: customerSnapshot.customerNameSnapshot,
@@ -668,6 +671,8 @@ export class CustomerService {
     const { handlerNameSnapshot } = await this.resolveHandlerSnapshot(
       dto.handlerPersonnelId,
     );
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode("MAIN");
     const workshop = await this.masterDataService.getWorkshopById(
       dto.workshopId,
     );
@@ -771,6 +776,7 @@ export class CustomerService {
           bizDate,
           customerId,
           handlerPersonnelId: dto.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId: dto.workshopId,
           customerCodeSnapshot,
           customerNameSnapshot,
@@ -811,7 +817,7 @@ export class CustomerService {
         await this.inventoryService.increaseStock(
           {
             materialId: line.materialId,
-            workshopId: order.workshopId,
+            stockScope: "MAIN",
             quantity: line.quantity,
             operationType: InventoryOperationType.SALES_RETURN_IN,
             businessModule: BUSINESS_MODULE,

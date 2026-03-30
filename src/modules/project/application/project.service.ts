@@ -81,6 +81,8 @@ export class ProjectService {
       dto.workshopId,
     );
     const inventoryStockScope = this.resolveInventoryStockScope(workshop);
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode(inventoryStockScope);
 
     const linesWithSnapshots = await Promise.all(
       dto.lines.map(async (line, idx) => {
@@ -123,6 +125,7 @@ export class ProjectService {
           customerId: dto.customerId,
           supplierId: dto.supplierId,
           managerPersonnelId: dto.managerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId: dto.workshopId,
           customerCodeSnapshot: customerSnapshot.customerCodeSnapshot,
           customerNameSnapshot: customerSnapshot.customerNameSnapshot,
@@ -208,6 +211,15 @@ export class ProjectService {
       dto.workshopId ?? existing.workshopId,
     );
     const inventoryStockScope = this.resolveInventoryStockScope(workshop);
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode(inventoryStockScope);
+    const currentWorkshop = await this.masterDataService.getWorkshopById(
+      existing.workshopId,
+    );
+    const currentInventoryStockScope =
+      this.resolveInventoryStockScope(currentWorkshop);
+    const inventoryScopeChanged =
+      currentInventoryStockScope !== inventoryStockScope;
 
     return this.prisma.runInTransaction(async (tx) => {
       const currentProject = await this.repository.findProjectById(id, tx);
@@ -232,7 +244,6 @@ export class ProjectService {
       );
       const seenLineIds = new Set<number>();
       const workshopId = dto.workshopId ?? currentProject.workshopId;
-      const workshopChanged = workshopId !== currentProject.workshopId;
 
       for (const line of dto.lines) {
         if (!line.id) continue;
@@ -278,7 +289,7 @@ export class ProjectService {
           }
 
           const inventoryNeedsRepost =
-            workshopChanged ||
+            inventoryScopeChanged ||
             currentLine.materialId !== lineData.materialId ||
             !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity);
 
@@ -396,6 +407,7 @@ export class ProjectService {
           customerId: finalCustomerId,
           supplierId: finalSupplierId,
           managerPersonnelId: finalManagerId,
+          stockScopeId: stockScopeRecord.id,
           workshopId,
           customerCodeSnapshot: customerSnapshot.customerCodeSnapshot,
           customerNameSnapshot: customerSnapshot.customerNameSnapshot,

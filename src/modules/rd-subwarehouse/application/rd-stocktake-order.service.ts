@@ -68,6 +68,8 @@ export class RdStocktakeOrderService {
     if (workshop.workshopCode !== RD_SUBWAREHOUSE_CODE) {
       throw new BadRequestException("RD 盘点调整单只能归属研发小仓");
     }
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode("RD_SUB");
 
     return this.prisma.runInTransaction(async (tx) => {
       const linesWithSnapshots = await Promise.all(
@@ -119,6 +121,7 @@ export class RdStocktakeOrderService {
         {
           documentNo: dto.documentNo,
           bizDate: new Date(dto.bizDate),
+          stockScopeId: stockScopeRecord.id,
           workshopId: dto.workshopId,
           inventoryEffectStatus: InventoryEffectStatus.POSTED,
           auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,

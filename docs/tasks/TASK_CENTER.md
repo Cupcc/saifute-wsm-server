@@ -38,7 +38,6 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
-| `docs/tasks/task-20260330-1616-stock-scope-phase2-cutover.md` | `planned` | `stockScope` Phase 2 cutover brief：`Phase 1/2` 分离理由、受影响 Prisma 模型（含行表）与 runtime/reporting 面、分段路线（expand / backfill / shadow / 维护窗 flip / rollback / cleanup）、Option A~C trade-off、**五类一等风险面**（来源层成本、逆操作、单据关系、e2e·test、回滚）、用户确认项与 workspace·plan-only 建议；**待用户确认前不实施**。 |
 
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
@@ -46,6 +45,8 @@
 
 | Task 文档 | 保留原因 |
 | --- | --- |
+| `docs/tasks/archive/retained-completed/task-20260330-2205-stock-scope-rd-persistence-followup.md` | 已完成 `rd-subwarehouse` 持久化轴补齐 follow-up：`rd_handoff_order`、`rd_procurement_request`、`rd_stocktake_order` 已补 `stockScope` 相关持久化字段、运行时代码与 tests，对应目标库 schema apply 和 `stock-scope-phase2` 的 `dry-run / execute / validate` 也已再次通过；若后续要验证非空历史数据回填，应另开新的 rehearsal scope。 |
+| `docs/tasks/archive/retained-completed/task-20260330-1616-stock-scope-phase2-cutover.md` | 已完成 `stockScope` Phase 2 首波实现：Prisma schema 已补 `StockScope` / `stockScopeId`，首波 runtime 与 `stock-scope-phase2` migration 脚本已落地，并已在目标库 `saifute-wsm` 上通过安全 schema apply 与 `dry-run / execute / validate`；当前目标库首波相关表为 `0` 行，若后续要验证非空历史数据回填，应另开新的 rehearsal scope。 |
 | `docs/tasks/archive/retained-completed/task-20260330-1419-stock-scope-alignment.md` | 已完成库存范围与归属口径对齐 Phase 1：canonical `stockScope` runtime contract、会话/RBAC 兼容边界、库存/报表/业务写路径收敛与 e2e stub 补齐已落地，并通过 `swagger:metadata`、`typecheck`、focused tests、`batch-d-slice.e2e`、`pnpm test` 与 closing review `No findings`；若后续继续推进真实库存维度切换，需另开 `Phase 2` cutover scope。 |
 | `docs/tasks/archive/retained-completed/task-20260330-0129-rd-subwarehouse-phase4-phase5.md` | 已完成 `RD 小仓` `F4/F5` 收口：quantity-aware 物料状态链、RD 盘点/调整、动作级权限收紧与主仓验收联动展示已落地，并通过 focused tests、`pnpm test`、`web build:prod` 与 `rd-operator` / `admin` browser smoke。 |
 | `docs/tasks/archive/retained-completed/task-20260328-1855-biome-lint-cleanup.md` | 已完成全仓 `pnpm lint` 收口：`scripts/src/test` 低风险格式/import 噪音与 `web` 结构/宽松比较错误已按真实失败面收口，closing review `No findings`，根目录 `pnpm lint` 返回 `0`；若后续要继续压平 warnings / infos，需另开新 scope。 |

@@ -46,6 +46,7 @@ describe("RdProcurementRequestService", () => {
     projectName: "研发治具归集",
     supplierId: 10,
     handlerPersonnelId: 20,
+    stockScopeId: 2,
     workshopId: 9,
     lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
     auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,
@@ -137,6 +138,11 @@ describe("RdProcurementRequestService", () => {
         {
           provide: MasterDataService,
           useValue: {
+            getStockScopeByCode: jest.fn().mockResolvedValue({
+              id: 2,
+              scopeCode: "RD_SUB",
+              scopeName: "研发小仓",
+            }),
             getMaterialById: jest.fn().mockResolvedValue({
               id: 100,
               materialCode: "MAT001",

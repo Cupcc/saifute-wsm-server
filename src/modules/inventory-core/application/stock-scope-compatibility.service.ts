@@ -57,27 +57,52 @@ export class StockScopeCompatibilityService {
     return scopes.map((scope) => scope.workshopId);
   }
 
+  async listRealStockScopeIds(): Promise<number[]> {
+    const scopes = await Promise.all([
+      this.resolveByStockScope("MAIN"),
+      this.resolveByStockScope("RD_SUB"),
+    ]);
+
+    return scopes.map((scope) => scope.stockScopeId);
+  }
+
   async resolveByStockScope(
     stockScope: StockScopeCode,
   ): Promise<ResolvedStockScopeContext> {
-    const workshop = await this.masterDataService.getWorkshopByCode(
-      resolveWorkshopCodeFromStockScope(stockScope),
-    );
-    return this.toResolvedInventoryScope(workshop);
+    const [stockScopeRecord, workshop] = await Promise.all([
+      this.masterDataService.getStockScopeByCode(stockScope),
+      this.masterDataService.getWorkshopByCode(
+        resolveWorkshopCodeFromStockScope(stockScope),
+      ),
+    ]);
+    return this.toResolvedInventoryScope(workshop, stockScopeRecord.id);
   }
 
   async resolveByWorkshopId(
     workshopId: number,
   ): Promise<ResolvedStockScopeContext> {
     const workshop = await this.masterDataService.getWorkshopById(workshopId);
-    return this.toResolvedInventoryScope(workshop);
+    const stockScope = resolveStockScopeFromWorkshopIdentity({
+      workshopCode: workshop.workshopCode,
+      workshopName: workshop.workshopName,
+    });
+    if (!stockScope) {
+      throw new BadRequestException("真实库存范围只允许主仓或研发小仓");
+    }
+
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode(stockScope);
+    return this.toResolvedInventoryScope(workshop, stockScopeRecord.id);
   }
 
-  toResolvedInventoryScope(workshop: {
-    id: number;
-    workshopCode: string;
-    workshopName: string;
-  }): ResolvedStockScopeContext {
+  toResolvedInventoryScope(
+    workshop: {
+      id: number;
+      workshopCode: string;
+      workshopName: string;
+    },
+    stockScopeId: number,
+  ): ResolvedStockScopeContext {
     const stockScope = resolveStockScopeFromWorkshopIdentity({
       workshopCode: workshop.workshopCode,
       workshopName: workshop.workshopName,
@@ -87,6 +112,7 @@ export class StockScopeCompatibilityService {
     }
 
     return {
+      stockScopeId,
       stockScope,
       workshopId: workshop.id,
       workshopCode: workshop.workshopCode,

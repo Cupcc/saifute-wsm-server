@@ -13,16 +13,16 @@ export class InventoryRepository {
 
   async findBalances(params: {
     materialId?: number;
-    workshopIds?: number[];
+    stockScopeIds?: number[];
     limit: number;
     offset: number;
   }) {
     const where: Prisma.InventoryBalanceWhereInput = {};
     if (params.materialId) where.materialId = params.materialId;
-    if (params.workshopIds?.length === 1) {
-      where.workshopId = params.workshopIds[0];
-    } else if (params.workshopIds?.length) {
-      where.workshopId = { in: params.workshopIds };
+    if (params.stockScopeIds?.length === 1) {
+      where.stockScopeId = params.stockScopeIds[0];
+    } else if (params.stockScopeIds?.length) {
+      where.stockScopeId = { in: params.stockScopeIds };
     }
 
     const [items, total] = await Promise.all([
@@ -30,7 +30,7 @@ export class InventoryRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        include: { material: true, workshop: true },
+        include: { material: true, stockScope: true, workshop: true },
       }),
       this.prisma.inventoryBalance.count({ where }),
     ]);
@@ -38,16 +38,16 @@ export class InventoryRepository {
     return { items, total };
   }
 
-  async findBalanceByMaterialAndWorkshop(
+  async findBalanceByMaterialAndStockScope(
     materialId: number,
-    workshopId: number,
+    stockScopeId: number,
     db: InventoryDbClient = this.prisma,
   ) {
     return db.inventoryBalance.findUnique({
       where: {
-        materialId_workshopId: {
+        materialId_stockScopeId: {
           materialId,
-          workshopId,
+          stockScopeId,
         },
       },
     });
@@ -55,7 +55,7 @@ export class InventoryRepository {
 
   async findLogs(params: {
     materialId?: number;
-    workshopIds?: number[];
+    stockScopeIds?: number[];
     businessDocumentId?: number;
     businessDocumentType?: string;
     businessDocumentNumber?: string;
@@ -67,10 +67,10 @@ export class InventoryRepository {
   }) {
     const where: Prisma.InventoryLogWhereInput = {};
     if (params.materialId) where.materialId = params.materialId;
-    if (params.workshopIds?.length === 1) {
-      where.workshopId = params.workshopIds[0];
-    } else if (params.workshopIds?.length) {
-      where.workshopId = { in: params.workshopIds };
+    if (params.stockScopeIds?.length === 1) {
+      where.stockScopeId = params.stockScopeIds[0];
+    } else if (params.stockScopeIds?.length) {
+      where.stockScopeId = { in: params.stockScopeIds };
     }
     if (params.businessDocumentId)
       where.businessDocumentId = params.businessDocumentId;
@@ -101,7 +101,7 @@ export class InventoryRepository {
         take: params.limit,
         skip: params.offset,
         orderBy: { occurredAt: "desc" },
-        include: { material: true, workshop: true },
+        include: { material: true, stockScope: true, workshop: true },
       }),
       this.prisma.inventoryLog.count({ where }),
     ]);
@@ -298,7 +298,7 @@ export class InventoryRepository {
   }
 
   async findFactoryNumberReservations(params: {
-    workshopIds?: number[];
+    stockScopeIds?: number[];
     businessDocumentType?: string;
     businessDocumentLineId?: number;
     startNumber?: string;
@@ -307,10 +307,10 @@ export class InventoryRepository {
     offset: number;
   }) {
     const where: Prisma.FactoryNumberReservationWhereInput = {};
-    if (params.workshopIds?.length === 1) {
-      where.workshopId = params.workshopIds[0];
-    } else if (params.workshopIds?.length) {
-      where.workshopId = { in: params.workshopIds };
+    if (params.stockScopeIds?.length === 1) {
+      where.stockScopeId = params.stockScopeIds[0];
+    } else if (params.stockScopeIds?.length) {
+      where.stockScopeId = { in: params.stockScopeIds };
     }
     if (params.businessDocumentType) {
       where.businessDocumentType = params.businessDocumentType;
@@ -334,7 +334,7 @@ export class InventoryRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        include: { material: true, workshop: true },
+        include: { material: true, stockScope: true, workshop: true },
         orderBy: { id: "desc" },
       }),
       this.prisma.factoryNumberReservation.count({ where }),
@@ -346,7 +346,7 @@ export class InventoryRepository {
   async findFactoryNumberReservationById(id: number) {
     return this.prisma.factoryNumberReservation.findUnique({
       where: { id },
-      include: { material: true, workshop: true },
+      include: { material: true, stockScope: true, workshop: true },
     });
   }
 

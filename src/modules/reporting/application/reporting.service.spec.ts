@@ -38,12 +38,13 @@ describe("ReportingService", () => {
             resolveByStockScope: jest
               .fn()
               .mockImplementation(async (stockScope) => ({
+                stockScopeId: stockScope === "RD_SUB" ? 2 : 1,
                 stockScope,
                 workshopId: stockScope === "RD_SUB" ? 9 : 1,
                 workshopCode: stockScope === "RD_SUB" ? "RD" : "MAIN",
                 workshopName: stockScope === "RD_SUB" ? "研发小仓" : "主仓",
               })),
-            listRealStockWorkshopIds: jest.fn().mockResolvedValue([1, 9]),
+            listRealStockScopeIds: jest.fn().mockResolvedValue([1, 2]),
           },
         },
       ],
@@ -84,11 +85,11 @@ describe("ReportingService", () => {
       expect.any(Date),
       {
         stockScope: undefined,
-        inventoryWorkshopIds: [1, 9],
+        inventoryStockScopeIds: [1, 2],
       },
     );
     expect(
-      stockScopeCompatibilityService.listRealStockWorkshopIds,
+      stockScopeCompatibilityService.listRealStockScopeIds,
     ).toHaveBeenCalled();
   });
 
@@ -98,6 +99,11 @@ describe("ReportingService", () => {
         id: 1,
         quantityOnHand: new Prisma.Decimal("10"),
         updatedAt: new Date("2026-03-15T00:00:00Z"),
+        stockScope: {
+          id: 1,
+          scopeCode: "MAIN",
+          scopeName: "主仓",
+        },
         material: {
           id: 11,
           materialCode: "MAT-01",
@@ -122,6 +128,11 @@ describe("ReportingService", () => {
         id: 2,
         quantityOnHand: new Prisma.Decimal("5"),
         updatedAt: new Date("2026-03-15T00:00:00Z"),
+        stockScope: {
+          id: 1,
+          scopeCode: "MAIN",
+          scopeName: "主仓",
+        },
         material: {
           id: 12,
           materialCode: "MAT-02",
@@ -190,6 +201,11 @@ describe("ReportingService", () => {
         id: 1,
         quantityOnHand: new Prisma.Decimal("12"),
         updatedAt: new Date("2026-03-15T00:00:00Z"),
+        stockScope: {
+          id: 1,
+          scopeCode: "MAIN",
+          scopeName: "主仓",
+        },
         material: {
           id: 11,
           materialCode: "MAT-01",

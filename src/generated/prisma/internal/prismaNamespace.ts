@@ -420,6 +420,7 @@ export const ModelName = {
   Supplier: "Supplier",
   Personnel: "Personnel",
   Workshop: "Workshop",
+  StockScope: "StockScope",
   InventoryBalance: "InventoryBalance",
   InventoryLog: "InventoryLog",
   InventorySourceUsage: "InventorySourceUsage",
@@ -475,6 +476,7 @@ export type TypeMap<
       | "supplier"
       | "personnel"
       | "workshop"
+      | "stockScope"
       | "inventoryBalance"
       | "inventoryLog"
       | "inventorySourceUsage"
@@ -909,6 +911,74 @@ export type TypeMap<
           args: Prisma.WorkshopCountArgs<ExtArgs>;
           result:
             | runtime.Types.Utils.Optional<Prisma.WorkshopCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    StockScope: {
+      payload: Prisma.$StockScopePayload<ExtArgs>;
+      fields: Prisma.StockScopeFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.StockScopeFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.StockScopeFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload>;
+        };
+        findFirst: {
+          args: Prisma.StockScopeFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.StockScopeFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload>;
+        };
+        findMany: {
+          args: Prisma.StockScopeFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload>[];
+        };
+        create: {
+          args: Prisma.StockScopeCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload>;
+        };
+        createMany: {
+          args: Prisma.StockScopeCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.StockScopeDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload>;
+        };
+        update: {
+          args: Prisma.StockScopeUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload>;
+        };
+        deleteMany: {
+          args: Prisma.StockScopeDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.StockScopeUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.StockScopeUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockScopePayload>;
+        };
+        aggregate: {
+          args: Prisma.StockScopeAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStockScope>;
+        };
+        groupBy: {
+          args: Prisma.StockScopeGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.StockScopeGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.StockScopeCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.StockScopeCountAggregateOutputType>
             | number;
         };
       };
@@ -2892,9 +2962,24 @@ export const WorkshopScalarFieldEnum = {
 export type WorkshopScalarFieldEnum =
   (typeof WorkshopScalarFieldEnum)[keyof typeof WorkshopScalarFieldEnum];
 
+export const StockScopeScalarFieldEnum = {
+  id: "id",
+  scopeCode: "scopeCode",
+  scopeName: "scopeName",
+  status: "status",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type StockScopeScalarFieldEnum =
+  (typeof StockScopeScalarFieldEnum)[keyof typeof StockScopeScalarFieldEnum];
+
 export const InventoryBalanceScalarFieldEnum = {
   id: "id",
   materialId: "materialId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   quantityOnHand: "quantityOnHand",
   rowVersion: "rowVersion",
@@ -2911,6 +2996,7 @@ export const InventoryLogScalarFieldEnum = {
   id: "id",
   balanceId: "balanceId",
   materialId: "materialId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   direction: "direction",
   operationType: "operationType",
@@ -2954,6 +3040,7 @@ export type InventorySourceUsageScalarFieldEnum =
 export const FactoryNumberReservationScalarFieldEnum = {
   id: "id",
   materialId: "materialId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   businessDocumentType: "businessDocumentType",
   businessDocumentId: "businessDocumentId",
@@ -3002,6 +3089,7 @@ export const StockInOrderScalarFieldEnum = {
   bizDate: "bizDate",
   supplierId: "supplierId",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   rdProcurementRequestId: "rdProcurementRequestId",
   lifecycleStatus: "lifecycleStatus",
@@ -3060,6 +3148,7 @@ export const CustomerStockOrderScalarFieldEnum = {
   bizDate: "bizDate",
   customerId: "customerId",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -3117,6 +3206,7 @@ export const WorkshopMaterialOrderScalarFieldEnum = {
   orderType: "orderType",
   bizDate: "bizDate",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -3172,6 +3262,7 @@ export const ProjectScalarFieldEnum = {
   customerId: "customerId",
   supplierId: "supplierId",
   managerPersonnelId: "managerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -3225,6 +3316,8 @@ export const RdHandoffOrderScalarFieldEnum = {
   documentNo: "documentNo",
   bizDate: "bizDate",
   handlerPersonnelId: "handlerPersonnelId",
+  sourceStockScopeId: "sourceStockScopeId",
+  targetStockScopeId: "targetStockScopeId",
   sourceWorkshopId: "sourceWorkshopId",
   targetWorkshopId: "targetWorkshopId",
   lifecycleStatus: "lifecycleStatus",
@@ -3282,6 +3375,7 @@ export const RdProcurementRequestScalarFieldEnum = {
   projectName: "projectName",
   supplierId: "supplierId",
   handlerPersonnelId: "handlerPersonnelId",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   auditStatusSnapshot: "auditStatusSnapshot",
@@ -3377,6 +3471,7 @@ export const RdStocktakeOrderScalarFieldEnum = {
   id: "id",
   documentNo: "documentNo",
   bizDate: "bizDate",
+  stockScopeId: "stockScopeId",
   workshopId: "workshopId",
   lifecycleStatus: "lifecycleStatus",
   inventoryEffectStatus: "inventoryEffectStatus",
@@ -3616,6 +3711,16 @@ export const WorkshopOrderByRelevanceFieldEnum = {
 
 export type WorkshopOrderByRelevanceFieldEnum =
   (typeof WorkshopOrderByRelevanceFieldEnum)[keyof typeof WorkshopOrderByRelevanceFieldEnum];
+
+export const StockScopeOrderByRelevanceFieldEnum = {
+  scopeCode: "scopeCode",
+  scopeName: "scopeName",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type StockScopeOrderByRelevanceFieldEnum =
+  (typeof StockScopeOrderByRelevanceFieldEnum)[keyof typeof StockScopeOrderByRelevanceFieldEnum];
 
 export const InventoryBalanceOrderByRelevanceFieldEnum = {
   createdBy: "createdBy",
@@ -4289,6 +4394,7 @@ export type GlobalOmitConfig = {
   supplier?: Prisma.SupplierOmit;
   personnel?: Prisma.PersonnelOmit;
   workshop?: Prisma.WorkshopOmit;
+  stockScope?: Prisma.StockScopeOmit;
   inventoryBalance?: Prisma.InventoryBalanceOmit;
   inventoryLog?: Prisma.InventoryLogOmit;
   inventorySourceUsage?: Prisma.InventorySourceUsageOmit;

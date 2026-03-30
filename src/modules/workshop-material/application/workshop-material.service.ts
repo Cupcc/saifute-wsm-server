@@ -175,6 +175,8 @@ export class WorkshopMaterialService {
       dto.orderType,
       workshop,
     );
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode(inventoryStockScope);
     const isRdScrapOrder =
       dto.orderType === WorkshopMaterialOrderType.SCRAP &&
       workshop.workshopCode === RD_SUBWAREHOUSE_CODE;
@@ -221,6 +223,7 @@ export class WorkshopMaterialService {
           orderType: dto.orderType,
           bizDate,
           handlerPersonnelId: dto.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId: dto.workshopId,
           handlerNameSnapshot,
           workshopNameSnapshot: workshop.workshopName,

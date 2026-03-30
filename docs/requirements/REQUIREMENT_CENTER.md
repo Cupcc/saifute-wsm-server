@@ -30,7 +30,6 @@
 
 | 需求文档                                                 | 状态                   | 说明                                                                                          |
 | ---------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
-| `req-20260330-1616-stock-scope-phase2-cutover.md` | `confirmed` | 基于已完成的 `stockScope` Phase 1 运行时收敛，继续规划 `Phase 2` schema/data cutover：明确库存真实维度切换、数据迁移/回填、兼容边界、回滚与验证策略；当前仍是规划阶段，不直接进入实现。 |
 
 后续若继续推进 `rd-subwarehouse`、`monthly-reporting` 或 `frontend-old-style-adaptation` 的其它独立范围，应从对应 `topics/*.md` 新开具体切片 requirement，而不是复用旧总入口。
 
@@ -38,6 +37,8 @@
 
 | 需求文档 | 保留原因 |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `archive/retained-completed/req-20260330-2205-stock-scope-rd-persistence-followup.md` | 已完成 `rd-subwarehouse` 持久化轴补齐 follow-up：`rd_handoff_order`、`rd_procurement_request`、`rd_stocktake_order` 已补 `stockScope` 相关持久化字段、运行时代码与 tests，对应目标库 schema apply 和 `stock-scope-phase2` 的 `dry-run / execute / validate` 也已再次通过；若后续要验证非空历史数据回填，应另开新的 rehearsal scope。 |
+| `archive/retained-completed/req-20260330-1616-stock-scope-phase2-cutover.md` | 已完成 `stockScope` Phase 2 首波实现：Prisma schema 已补 `StockScope` / `stockScopeId`，首波 runtime 与 `stock-scope-phase2` migration 脚本已落地，并已在目标库 `saifute-wsm` 上通过安全 schema apply 与 `dry-run / execute / validate`；当前目标库首波相关表为 `0` 行，若后续要验证非空历史数据回填，应另开新的 rehearsal scope。 |
 | `archive/retained-completed/req-20260330-1419-stock-scope-alignment.md` | 已完成库存范围与归属口径对齐 Phase 1：canonical `stockScope` runtime contract、会话/RBAC 兼容边界、库存/报表/业务写路径收敛与 e2e stub 补齐已落地，并通过 `swagger:metadata`、`typecheck`、focused tests、`batch-d-slice.e2e`、`pnpm test` 与 closing review `No findings`；若后续继续推进真实库存维度切换，需另开 `Phase 2` cutover requirement。 |
 | `archive/retained-completed/req-20260328-1855-biome-lint-cleanup.md` | 已完成全仓 `pnpm lint` 收口：根目录 `pnpm lint` 返回 `0`，`web` Biome error 校验通过，closing review 已关闭日期范围守卫的 open finding 并达到 `reviewed-no-findings`；若后续要继续收口全仓 warnings / infos，需另开新 scope。 |
 | `archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` | 前端旧风格回归主题的已完成阶段基线：Phase 1 `shell integration` 与 Phase 2 `/index` 旧版图表首页回归已收口，长期约束与后续路线图见 `topics/frontend-old-style-adaptation.md`；继续推进时应另开新的前端切片。 |

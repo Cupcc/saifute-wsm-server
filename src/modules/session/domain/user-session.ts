@@ -22,6 +22,7 @@ export interface SessionStockScopeSnapshot {
 }
 
 export interface ResolvedStockScopeContext {
+  stockScopeId: number;
   stockScope: StockScopeCode;
   workshopId: number;
   workshopCode: string;

@@ -158,6 +158,11 @@ describe("InboundService", () => {
           useValue: {
             getMaterialById: jest.fn(),
             getWorkshopById: jest.fn(),
+            getStockScopeByCode: jest.fn().mockResolvedValue({
+              id: 1,
+              scopeCode: "MAIN",
+              scopeName: "主仓",
+            }),
             getSupplierById: jest.fn(),
             getPersonnelById: jest.fn(),
           },

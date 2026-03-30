@@ -110,6 +110,8 @@ export class InboundService {
     const { handlerNameSnapshot } = await this.resolveHandlerSnapshot(
       dto.handlerPersonnelId,
     );
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode("MAIN");
     const seenRdProcurementLineIds = new Set<number>();
     const linesWithSnapshots: Array<{
       lineNo: number;
@@ -157,6 +159,7 @@ export class InboundService {
           bizDate,
           supplierId: rdProcurementLink.supplierId,
           handlerPersonnelId: dto.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId: dto.workshopId,
           rdProcurementRequestId: rdProcurementLink.request?.id,
           supplierCodeSnapshot,
@@ -281,6 +284,8 @@ export class InboundService {
     const handlerSnapshot = dto.handlerPersonnelId
       ? await this.resolveHandlerSnapshot(dto.handlerPersonnelId)
       : { handlerNameSnapshot: existing.handlerNameSnapshot };
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode("MAIN");
 
     const operationType = toOperationType(existing.orderType);
 
@@ -322,7 +327,6 @@ export class InboundService {
       );
       const seenLineIds = new Set<number>();
       const workshopId = dto.workshopId ?? currentOrder.workshopId;
-      const workshopChanged = workshopId !== currentOrder.workshopId;
       const seenRdProcurementLineIds = new Set<number>();
 
       for (const line of dto.lines) {
@@ -386,7 +390,6 @@ export class InboundService {
           );
 
           const inventoryNeedsRepost =
-            workshopChanged ||
             currentLine.materialId !== lineData.materialId ||
             !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity);
 
@@ -524,6 +527,7 @@ export class InboundService {
           supplierId: finalSupplierId,
           handlerPersonnelId:
             dto.handlerPersonnelId ?? existing.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
           workshopId,
           rdProcurementRequestId: rdProcurementLink.request?.id ?? null,
           supplierCodeSnapshot: supplierSnapshot.supplierCodeSnapshot,

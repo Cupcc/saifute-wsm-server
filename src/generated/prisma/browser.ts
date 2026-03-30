@@ -48,6 +48,11 @@ export type Personnel = Prisma.PersonnelModel;
  */
 export type Workshop = Prisma.WorkshopModel;
 /**
+ * Model StockScope
+ *
+ */
+export type StockScope = Prisma.StockScopeModel;
+/**
  * Model InventoryBalance
  *
  */
