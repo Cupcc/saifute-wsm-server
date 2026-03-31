@@ -1,10 +1,10 @@
 # Workspace Dashboard
 
-> 最后更新: 2026-03-30
+> 最后更新: 2026-03-31
 
 ## 当前状态
 
-**`rd-subwarehouse-frontend-display-dual-primary`** 已确认一级菜单命名为 `研发协同` / `研发小仓`，并确认“小仓发起退回 + 大仓确认完成退回”的最简闭环；当前待继续收敛的是 `研发协同` 如何同时承载“小仓全量状态查看”和“大仓侧操作入口”。`migration-stage-planning` 仍在等待阶段拆分主轴确认；`stock-scope-phase2-cutover` 已归档为“首波代码 + 脚本 + 空目标库路径验证完成”的稳定基线，后续若要验证非空历史数据回填，应另开新的 rehearsal scope。
+**`fifo-costing-default-fifo`** 已新增 workspace 草稿，当前推荐方向是“保留汇总库存 + 以入库 `inventory_log` 作为 FIFO 成本层 + 以 `inventory_source_usage` 记录来源消耗”，用于实现默认 FIFO 成本核算而不直接引入完整批次模型。`rd-subwarehouse-frontend-display-dual-primary` 仍在等待界面组织方式收敛；`migration-stage-planning` 仍在等待阶段拆分主轴确认；`stock-scope-phase2-cutover` 已归档为稳定基线。
 
 ## 需要你确认的
 
@@ -15,14 +15,16 @@
 
 | 优先级 | 任务                             | 状态       | 说明                                                                                                   |
 | --- | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
-| 1   | rd-subwarehouse-frontend-display-dual-primary | 探索中 / 等待用户输入 | 已确认一级菜单命名与退回闭环；当前待收敛 `研发协同` 的信息组织与操作分区，阻塞于上方「需要你确认的」首条；[详情](rd-subwarehouse-frontend-display-dual-primary/README.md) |
-| 2   | migration-stage-planning       | 等待用户输入 | 新工作流已创建并启用 `draft.md`；迁移范围与成功展示主受众已澄清，当前待确认阶段拆分主轴；确认后即可进入阶段拆解与展示模板头脑风暴；[详情](migration-stage-planning/README.md) |
-| 3   | monthly-reporting              | 需求已确认，待设计 | 已确认“全包含”指标与销售域口径、固定正式月报 + 人工重算 + 日期范围报表、系统查看 + Excel 导出，以及补录后重算且需保证追溯；[详情](monthly-reporting/README.md) |
+| 1   | fifo-costing-default-fifo      | 方案已成稿，待细化 | 已沉淀默认 FIFO 成本核算草案；下一步适合进入 schema 变更清单与库存核心改造拆解；[详情](fifo-costing-default-fifo/README.md) |
+| 2   | rd-subwarehouse-frontend-display-dual-primary | 探索中 / 等待用户输入 | 已确认一级菜单命名与退回闭环；当前待收敛 `研发协同` 的信息组织与操作分区，阻塞于上方「需要你确认的」首条；[详情](rd-subwarehouse-frontend-display-dual-primary/README.md) |
+| 3   | migration-stage-planning       | 等待用户输入 | 新工作流已创建并启用 `draft.md`；迁移范围与成功展示主受众已澄清，当前待确认阶段拆分主轴；确认后即可进入阶段拆解与展示模板头脑风暴；[详情](migration-stage-planning/README.md) |
+| 4   | monthly-reporting              | 需求已确认，待设计 | 已确认“全包含”指标与销售域口径、固定正式月报 + 人工重算 + 日期范围报表、系统查看 + Excel 导出，以及补录后重算且需保证追溯；[详情](monthly-reporting/README.md) |
 
 ## 活跃工作流
 
 | 工作流                                                            | 阶段   | 健康度    | 简述                |
 | -------------------------------------------------------------- | ---- | ------ | ----------------- |
+| [fifo-costing-default-fifo](fifo-costing-default-fifo/README.md) | 方案草拟 | ● 就绪 | 已沉淀默认 FIFO 成本核算 draft，主张以 `inventory_log(IN)` 作为成本层、`inventory_source_usage` 作为来源消耗明细，避免当前就扩到完整批次模型 |
 | [rd-subwarehouse-frontend-display-dual-primary](rd-subwarehouse-frontend-display-dual-primary/README.md) | 需求确认 | ○ 等待输入 | 澄清 RD 小仓前端应为「大仓 / 小仓两个一级操作面」及系统管理员双侧可见；业务层功能清单见 `draft.md` |
 | [migration-stage-planning](migration-stage-planning/README.md) | 需求确认 | ○ 等待输入 | 目标是明确迁移开发阶段、每阶段的成功展示口径与后续沉淀方式；已启用 `draft.md` 沉淀脑暴与意图挖掘，当前等待用户确认阶段拆分主轴 |
 | [monthly-reporting](monthly-reporting/README.md)               | 需求已确认 | ● 稳定   | 5 项核心口径已确认，下一步进入详细设计与实施规划 |
