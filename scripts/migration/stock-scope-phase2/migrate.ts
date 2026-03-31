@@ -169,10 +169,6 @@ async function getUnmappedWorkshopReferences(
         UNION ALL
         SELECT 'factory_number_reservation' AS tableName, workshopId FROM factory_number_reservation WHERE stockScopeId IS NULL
         UNION ALL
-        SELECT 'project' AS tableName, workshopId FROM project WHERE stockScopeId IS NULL
-        UNION ALL
-        SELECT 'workshop_material_order' AS tableName, workshopId FROM workshop_material_order WHERE stockScopeId IS NULL
-        UNION ALL
         SELECT 'rd_procurement_request' AS tableName, workshopId FROM rd_procurement_request WHERE stockScopeId IS NULL
         UNION ALL
         SELECT 'rd_stocktake_order' AS tableName, workshopId FROM rd_stocktake_order WHERE stockScopeId IS NULL

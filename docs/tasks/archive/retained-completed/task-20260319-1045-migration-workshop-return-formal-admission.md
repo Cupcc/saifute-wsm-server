@@ -104,7 +104,7 @@
   - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/modules/workshop-material.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `prisma/schema.prisma`
   - `scripts/migration/workshop-return/**`

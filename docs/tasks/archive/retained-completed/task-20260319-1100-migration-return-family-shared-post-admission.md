@@ -18,8 +18,8 @@
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `prisma/schema.prisma`
   - `package.json`
   - `scripts/migration/shared/**`
@@ -86,7 +86,7 @@
   - `inventory_source_usage`
 - Task doc owner: `planner`
 - Contracts that must not change silently:
-  - Reviewed-no-findings `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md` and `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md` define the admitted return-family baseline; this shared phase may consume that baseline but must not widen back into family-local admission rework.
+  - Reviewed-no-findings `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md` and `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md` define the admitted return-family baseline; this shared phase may consume that baseline but must not widen back into family-local admission rework.
   - Already admitted sales-return and workshop-return rows remain formal business truth even if later relation enrichment is incomplete.
   - No downstream phase may reclassify an admitted row into `excluded_documents` solely because source reconstruction stays unresolved.
   - `inventory-core` remains the only stock write entry point, so replay and derived projections must align with current runtime semantics rather than direct legacy-table copy.
@@ -127,8 +127,8 @@
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `prisma/schema.prisma`
   - `scripts/migration/customer-sales-return/**`
@@ -213,7 +213,7 @@
 ## Risks And Contract-Sensitive Areas
 
 - Resume-state boundary:
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md` and `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md` are already reviewed-no-findings; reopening those family-local admission slices would widen scope and contradict the confirmed requirement.
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md` and `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md` are already reviewed-no-findings; reopening those family-local admission slices would widen scope and contradict the confirmed requirement.
 - Stale repository text:
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` preserves the repository-level migration baseline, but the later formal-admission and shared post-admission task docs remain authoritative for the return-family execution contract.
 - Shared-table coupling:

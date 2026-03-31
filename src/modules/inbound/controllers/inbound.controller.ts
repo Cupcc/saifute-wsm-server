@@ -31,13 +31,14 @@ export class InboundController {
     @Query() query: QueryInboundOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
-      user,
-      query.workshopId,
-    );
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
     return this.inboundService.listOrders({
       ...query,
-      workshopId,
+      stockScopeId: inventoryScope?.stockScopeId,
     });
   }
 
@@ -48,9 +49,9 @@ export class InboundController {
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
     const order = await this.inboundService.getOrderById(id);
-    await this.workshopScopeService.assertWorkshopAccess(
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
       user,
-      order.workshopId,
+      order.stockScopeId,
     );
     return order;
   }
@@ -76,9 +77,9 @@ export class InboundController {
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
     const order = await this.inboundService.getOrderById(id);
-    await this.workshopScopeService.assertWorkshopAccess(
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
       user,
-      order.workshopId,
+      order.stockScopeId,
     );
     const scopedDto = await this.workshopScopeService.applyFixedWorkshopScope(
       user,
@@ -99,9 +100,9 @@ export class InboundController {
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
     const order = await this.inboundService.getOrderById(id);
-    await this.workshopScopeService.assertWorkshopAccess(
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
       user,
-      order.workshopId,
+      order.stockScopeId,
     );
     return this.inboundService.voidOrder(
       id,
@@ -116,13 +117,14 @@ export class InboundController {
     @Query() query: QueryInboundOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
-      user,
-      query.workshopId,
-    );
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
     return this.inboundService.listIntoOrders({
       ...query,
-      workshopId,
+      stockScopeId: inventoryScope?.stockScopeId,
     });
   }
 
@@ -133,9 +135,9 @@ export class InboundController {
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
     const order = await this.inboundService.getOrderById(id);
-    await this.workshopScopeService.assertWorkshopAccess(
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
       user,
-      order.workshopId,
+      order.stockScopeId,
     );
     return order;
   }
@@ -164,9 +166,9 @@ export class InboundController {
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
     const order = await this.inboundService.getOrderById(id);
-    await this.workshopScopeService.assertWorkshopAccess(
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
       user,
-      order.workshopId,
+      order.stockScopeId,
     );
     const scopedDto = await this.workshopScopeService.applyFixedWorkshopScope(
       user,
@@ -187,9 +189,9 @@ export class InboundController {
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
     const order = await this.inboundService.getOrderById(id);
-    await this.workshopScopeService.assertWorkshopAccess(
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
       user,
-      order.workshopId,
+      order.stockScopeId,
     );
     return this.inboundService.voidOrder(
       id,

@@ -166,6 +166,24 @@ export class WorkshopScopeService {
     }
   }
 
+  async assertInventoryStockScopeAccess(
+    user: SessionUserSnapshot | undefined,
+    stockScopeId: number | null | undefined,
+  ): Promise<void> {
+    if (!stockScopeId) {
+      return;
+    }
+
+    const fixedScope = await this.getResolvedStockScope(user);
+    if (!fixedScope) {
+      return;
+    }
+
+    if (fixedScope.stockScopeId !== stockScopeId) {
+      throw new ForbiddenException("当前用户只能访问研发小仓数据");
+    }
+  }
+
   async getVisibleWorkshops(user: SessionUserSnapshot | undefined): Promise<{
     items: Array<{
       id: number;

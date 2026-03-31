@@ -1,10 +1,10 @@
 # Workspace Dashboard
 
-> 最后更新: 2026-03-30
+> 最后更新: 2026-03-31
 
 ## 当前状态
 
-**`rd-subwarehouse-frontend-display-dual-primary`** 已确认一级菜单命名为 `研发协同` / `研发小仓`，并确认“小仓发起退回 + 大仓确认完成退回”的最简闭环；当前待继续收敛的是 `研发协同` 如何同时承载“小仓全量状态查看”和“大仓侧操作入口”。`migration-stage-planning` 仍在等待阶段拆分主轴确认；`stock-scope-phase2-cutover` 已归档为“首波代码 + 脚本 + 空目标库路径验证完成”的稳定基线，后续若要验证非空历史数据回填，应另开新的 rehearsal scope。
+**活跃工作流** 当前主要剩余 `rd-subwarehouse-frontend-display-dual-primary`、`migration-stage-planning` 与 `monthly-reporting` 三条线；其中 `system-management-module` 已完成 `F2/F3` 基线收口并归档，后续若继续推进持久化方案或邻接能力边界，应另开新的切片 requirement / task / workspace。`stock-scope-phase2-cutover` 也已在空库与最小非空样本两条路径上完成验证并归档，若后续要验证更大规模真实历史数据，应另开新的 rehearsal scope。
 
 ## 需要你确认的
 
@@ -15,7 +15,7 @@
 
 | 优先级 | 任务                             | 状态       | 说明                                                                                                   |
 | --- | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
-| 1   | rd-subwarehouse-frontend-display-dual-primary | 探索中 / 等待用户输入 | 已确认一级菜单命名与退回闭环；当前待收敛 `研发协同` 的信息组织与操作分区，阻塞于上方「需要你确认的」首条；[详情](rd-subwarehouse-frontend-display-dual-primary/README.md) |
+| 1   | rd-subwarehouse-frontend-display-dual-primary | 探索中 / 等待用户输入 | 已确认一级菜单命名与退回闭环；当前待收敛 `研发协同` 的信息组织与操作分区，阻塞于上方确认项；[详情](rd-subwarehouse-frontend-display-dual-primary/README.md) |
 | 2   | migration-stage-planning       | 等待用户输入 | 新工作流已创建并启用 `draft.md`；迁移范围与成功展示主受众已澄清，当前待确认阶段拆分主轴；确认后即可进入阶段拆解与展示模板头脑风暴；[详情](migration-stage-planning/README.md) |
 | 3   | monthly-reporting              | 需求已确认，待设计 | 已确认“全包含”指标与销售域口径、固定正式月报 + 人工重算 + 日期范围报表、系统查看 + Excel 导出，以及补录后重算且需保证追溯；[详情](monthly-reporting/README.md) |
 
@@ -31,7 +31,8 @@
 
 | 工作流                                                                                       | 完成时间       | 简述                      |
 | ----------------------------------------------------------------------------------------- | ---------- | ----------------------- |
-| [stock-scope-phase2-cutover](archive/retained-completed/stock-scope-phase2-cutover/README.md) | 2026-03-30 | 已完成 `stockScope` Phase 2 全体代码与脚本收口：首波与 `rd-subwarehouse` follow-up 的持久化轴、目标库 schema apply、`dry-run / execute / validate` 均已通过；当前目标库相关表为 `0` 行，若后续要验证非空历史数据回填，应另开新的 rehearsal scope |
+| [system-management-module](archive/retained-completed/system-management-module/README.md) | 2026-03-31 | 已完成 `system-management` 主题 `F2/F3` 基线与运行态收口：真实部门、主角色、预留查看角色、账号维护职责，以及 `在线用户 / 登录日志 / 操作日志` 的主题归属已同步到 topic、项目级需求、架构文档、运行态样例矩阵与前端治理菜单分组 |
+| [stock-scope-phase2-cutover](archive/retained-completed/stock-scope-phase2-cutover/README.md) | 2026-03-30 | 已完成 `stockScope` Phase 2 全体代码与脚本收口：首波与 `rd-subwarehouse` follow-up 的持久化轴、目标库 schema apply、`dry-run / execute / validate` 均已通过，并已在最小非空样本上补过 rehearsal；若后续要验证更大规模真实历史数据，应另开新的 rehearsal scope |
 | [system-readiness](archive/retained-completed/system-readiness/README.md)                 | 2026-03-26 | 最终 `customer` / 销售域缺口已关闭；首页、菜单、四个页面与关键动作入口均通过 fresh login 浏览器验证 |
 | [outbound-customer-rename](archive/retained-completed/outbound-customer-rename/README.md) | 2026-03-26 | repo 内 `outbound` 兼容层已清理完成；工作流已归档 |
 | [migration-java-to-nestjs](archive/retained-completed/migration-java-to-nestjs/README.md) | 2026-03-25 | 全域数据搬家 + 库存重放已完成；工作流已归档 |

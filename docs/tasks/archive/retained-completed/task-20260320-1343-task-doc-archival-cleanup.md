@@ -22,9 +22,9 @@
   - `docs/tasks/archive/retained-completed/task-20260317-2035-migration-workshop-pick-base.md`
   - `task-20260319-1632-req-interaction-layer.md`（已于 2026-03-20 经用户确认删除）
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - historical `docs/fix-checklists/review-*.md` artifacts were deleted after closure（2026-03-20）；recover via git history if needed
 
@@ -132,9 +132,9 @@
   - `docs/tasks/archive/retained-completed/task-20260317-2035-migration-workshop-pick-base.md`
   - `task-20260319-1632-req-interaction-layer.md`（已于 2026-03-20 经用户确认删除）
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
 - Owned paths:
   - `docs/tasks/TASK_CENTER.md`

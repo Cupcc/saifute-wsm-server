@@ -36,6 +36,7 @@ describe("InboundService", () => {
     bizDate: new Date("2025-03-14"),
     supplierId: 10,
     handlerPersonnelId: 20,
+    stockScopeId: 1,
     workshopId: 1,
     lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
     auditStatusSnapshot: AuditStatusSnapshot.PENDING,
@@ -330,7 +331,52 @@ describe("InboundService", () => {
           },
           "1",
         ),
-      ).rejects.toThrow("关联 RD 采购需求的验收单必须先入主仓");
+      ).rejects.toThrow("入库单只能归属主仓");
+    });
+
+    it("should reject plain acceptance when workshop is not main", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (masterDataService.getWorkshopById as jest.Mock).mockResolvedValueOnce({
+        id: 6,
+        workshopCode: "RD",
+        workshopName: "研发小仓",
+      });
+
+      await expect(
+        service.createOrder(
+          {
+            documentNo: "SI-PLAIN-RD",
+            orderType: StockInOrderType.ACCEPTANCE,
+            bizDate: "2025-03-14",
+            workshopId: 6,
+            supplierId: 10,
+            lines: [{ materialId: 100, quantity: "10", unitPrice: "10" }],
+          },
+          "1",
+        ),
+      ).rejects.toThrow("入库单只能归属主仓");
+    });
+
+    it("should reject production receipt when workshop is not main", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (masterDataService.getWorkshopById as jest.Mock).mockResolvedValueOnce({
+        id: 6,
+        workshopCode: "RD",
+        workshopName: "研发小仓",
+      });
+
+      await expect(
+        service.createIntoOrder(
+          {
+            documentNo: "INTO-RD-001",
+            orderType: StockInOrderType.PRODUCTION_RECEIPT,
+            bizDate: "2025-03-14",
+            workshopId: 6,
+            lines: [{ materialId: 100, quantity: "10", unitPrice: "10" }],
+          },
+          "1",
+        ),
+      ).rejects.toThrow("入库单只能归属主仓");
     });
 
     it("should reject linked acceptance when cumulative quantity exceeds request", async () => {

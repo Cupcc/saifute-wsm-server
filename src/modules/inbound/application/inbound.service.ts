@@ -53,7 +53,7 @@ export class InboundService {
     private readonly rdProcurementRequestService: RdProcurementRequestService,
   ) {}
 
-  async listOrders(query: QueryInboundOrderDto) {
+  async listOrders(query: QueryInboundOrderDto & { stockScopeId?: number }) {
     const limit = Math.min(query.limit ?? 50, 100);
     const offset = query.offset ?? 0;
     return this.repository.findOrders({
@@ -65,13 +65,16 @@ export class InboundService {
       handlerName: query.handlerName,
       materialId: query.materialId,
       materialName: query.materialName,
+      stockScopeId: query.stockScopeId,
       workshopId: query.workshopId,
       limit,
       offset,
     });
   }
 
-  async listIntoOrders(query: QueryInboundOrderDto) {
+  async listIntoOrders(
+    query: QueryInboundOrderDto & { stockScopeId?: number },
+  ) {
     return this.listOrders({
       ...query,
       orderType: StockInOrderType.PRODUCTION_RECEIPT,
@@ -98,6 +101,7 @@ export class InboundService {
     const workshop = await this.masterDataService.getWorkshopById(
       dto.workshopId,
     );
+    this.assertMainWarehouse(workshop);
     const rdProcurementLink = await this.resolveRdProcurementLink(
       dto.orderType,
       workshop,
@@ -263,6 +267,7 @@ export class InboundService {
     const workshop = await this.masterDataService.getWorkshopById(
       dto.workshopId ?? existing.workshopId,
     );
+    this.assertMainWarehouse(workshop);
     const rdProcurementLink = await this.resolveRdProcurementLink(
       existing.orderType,
       workshop,
@@ -711,6 +716,15 @@ export class InboundService {
   ) {
     if (orderType === StockInOrderType.ACCEPTANCE && !supplierId) {
       throw new BadRequestException("验收单必须选择供应商");
+    }
+  }
+
+  private assertMainWarehouse(workshop: {
+    workshopCode: string;
+    workshopName: string;
+  }) {
+    if (workshop.workshopCode !== MAIN_WAREHOUSE_CODE) {
+      throw new BadRequestException("入库单只能归属主仓");
     }
   }
 

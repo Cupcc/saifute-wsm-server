@@ -16,7 +16,7 @@
   - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/modules/customer.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
   - `docs/tasks/archive/retained-completed/task-20260317-1745-migration-outbound-order-type4-reservations.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `prisma/schema.prisma`
@@ -108,7 +108,7 @@
   - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/modules/customer.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `prisma/schema.prisma`
   - `scripts/migration/customer-sales-return/**`

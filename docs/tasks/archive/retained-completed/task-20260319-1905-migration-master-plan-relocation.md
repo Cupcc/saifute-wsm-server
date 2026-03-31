@@ -19,11 +19,11 @@
   - `.cursor/agents/coder.md`
   - `.cursor/agents/code-reviewer.md`
   - `.cursor/skills/saifute-subagent-orchestration/SKILL.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
   - `docs/tasks/archive/retained-completed/task-20260317-1745-migration-outbound-order-type4-reservations.md`
   - `docs/tasks/archive/retained-completed/task-20260317-2035-migration-workshop-pick-base.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
 ## Requirement Alignment
 
@@ -90,8 +90,8 @@
 - Required source docs or files:
   - `docs/requirements/req-20260319-1905-migration-plan-to-task.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - `.cursor/agents/planner.md`
   - `.cursor/agents/coder.md`
@@ -171,11 +171,11 @@
 - Use this file instead of `docs/30-data-migration-plan.md` for repository-level migration planning context.
 - For narrower execution work, the latest slice task docs remain the active source of truth. If this master doc and a later slice doc differ, the later slice doc wins for that slice.
 - Active slice docs that already supersede parts of the old plan:
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
   - `docs/tasks/archive/retained-completed/task-20260317-1745-migration-outbound-order-type4-reservations.md`
   - `docs/tasks/archive/retained-completed/task-20260317-2035-migration-workshop-pick-base.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
 - Historical task docs that should remain treated as superseded evidence only:
 - The key planning correction carried forward here is that old recoverable-only or family-local queue-drain wording for sales returns and workshop returns is historical context, while the formal-admission plus shared post-admission task docs are the current runtime contract.
@@ -341,8 +341,8 @@
 - 需要显式携带到新 master doc 的更正：
   - 原顶层计划里关于销售退货单、退料单的 recoverable-only / queue-drain 语言已经被后续 task 文档 supersede
   - 当前有效规则来自：
-    - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-    - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+    - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+    - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
     - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
   - 在这些新任务文档下：
     - 结构性有效的销售退货单、退料单允许先进入正式业务表
@@ -501,7 +501,7 @@
 
 当前仓库中与该顺序相衔接的已知 task-doc 状态：
 
-- `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+- `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
   - 作为 `batch2c-outbound-base` 的主任务文档存在
   - 当前 rereview 无剩余重要问题，但文档记录 DB-backed gate 仍受 `LEGACY_DATABASE_URL` 环境缺失影响
 - `docs/tasks/archive/retained-completed/task-20260317-1745-migration-outbound-order-type4-reservations.md`
@@ -510,10 +510,10 @@
 - `docs/tasks/archive/retained-completed/task-20260317-2035-migration-workshop-pick-base.md`
   - 当前为 `reviewed-no-findings`
   - 已记录 `61` 单 / `145` 行 admitted 与 `14` 单排除、`10` 条默认车间 fallback 的当前基线
-- `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+- `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
   - 当前为 `reviewed-no-findings`
   - 已记录 `9` 个 admitted sales-return headers、`13` 个 admitted lines、`1` 个 structural exclusion、`12` 个 nullable-source lines
-- `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
+- `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
   - 当前为 `reviewed-no-findings`
   - 已记录 `3` 个 admitted headers、`4` 个 admitted lines、`0` structural exclusion、`4` 个 nullable-source lines
 - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
@@ -588,9 +588,9 @@
 
 - 当前活跃迁移 task docs：
   - `docs/tasks/archive/retained-completed/task-20260319-1100-migration-return-family-shared-post-admission.md`
-  - `docs/tasks/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
-  - `docs/tasks/task-20260319-1045-migration-workshop-return-formal-admission.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1035-migration-outbound-sales-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260319-1045-migration-workshop-return-formal-admission.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
   - `docs/tasks/archive/retained-completed/task-20260317-1745-migration-outbound-order-type4-reservations.md`
   - `docs/tasks/archive/retained-completed/task-20260317-2035-migration-workshop-pick-base.md`
 - 已 superseded 但仍需要保留历史上下文的 task docs：

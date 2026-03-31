@@ -22,7 +22,7 @@
   - `.cursor/agents/code-reviewer.md`
   - `.cursor/skills/saifute-subagent-orchestration/SKILL.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
 
 ## Requirement Alignment
 
@@ -135,7 +135,7 @@
   - `.cursor/agents/code-reviewer.md`
   - `.cursor/skills/saifute-subagent-orchestration/SKILL.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
 - Owned paths:
   - `docs/00-architecture-overview.md` and `docs/architecture/00-architecture-overview.md`
   - `docs/20-wms-database-tables-and-schema.md` and `docs/architecture/20-wms-database-tables-and-schema.md`
@@ -196,7 +196,7 @@
 ## Review Log
 
 - Validation results:
-  - Reviewer reread the linked requirement doc, this task doc, `docs/architecture/README.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, `.cursor/agents/planner.md`, `.cursor/agents/coder.md`, `.cursor/agents/code-reviewer.md`, `.cursor/skills/saifute-subagent-orchestration/SKILL.md`, and `docs/tasks/task-20260317-1416-migration-outbound-base.md`.
+  - Reviewer reread the linked requirement doc, this task doc, `docs/architecture/README.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, `.cursor/agents/planner.md`, `.cursor/agents/coder.md`, `.cursor/agents/code-reviewer.md`, `.cursor/skills/saifute-subagent-orchestration/SKILL.md`, and `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`.
   - Repo searches for `docs/00-architecture-overview.md`, `docs/20-wms-database-tables-and-schema.md`, and `docs/modules/` now return only `docs/requirements/req-20260320-1400-architecture-doc-relocation.md` and this task doc; no residual old-path matches remain in `.cursor/**`, `docs/tasks/**` outside this task doc, or `docs/fix-checklists/**` (only `README.md` may remain there after checklist cleanup).
   - Repo searches for `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, and `docs/architecture/modules/` confirm the new canonical paths are used from the moved architecture docs, affected task/checklist docs, archived migration baseline docs, `.cursor/agents/*.md`, and `.cursor/skills/saifute-subagent-orchestration/SKILL.md`.
   - Directory and git-state checks confirmed the old top-level live docs are gone and replaced by `docs/architecture/**`; `docs/00-architecture-overview.md`, `docs/20-wms-database-tables-and-schema.md`, and `docs/modules/` no longer exist as live paths.

@@ -38,6 +38,8 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
+| 当前无 | — | 根目录暂无绑定 **`docs/requirements/` 根目录** 且 **`Lifecycle disposition` 为 `active`** 的 requirement 的 task；已收口条目见下方归档表。 |
+
 ## 已完成但保留（归档至 `archive/retained-completed/`）
 
 以下条目按生命周期已归为 `retained-completed`，并保留为稳定真源、执行 provenance 或后续切片依赖基线。

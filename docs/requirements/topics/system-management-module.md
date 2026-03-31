@@ -48,7 +48,7 @@
 ### 邻接能力口径
 
 - 当前建议把 `在线用户 / 登录日志 / 操作日志` 纳入 `system-management` 第一版长期 topic，因为它们天然属于平台治理、排障与审计能力。
-- 当前建议暂不把 `调度任务 / AI 支持` 纳入 `system-management` 第一版长期 topic，避免主题膨胀。
+- 当前建议暂不把 `调度任务 / AI 支持` 纳入 `system-management` 第一版长期 topic，避免主题膨胀；作为非核心平台邻接能力顺延到 Phase 3 规划，当前状态暂不执行。
 - 若后续继续扩展 `system-management`，应优先围绕“组织与授权真源”“平台初始化与持久化方案”“系统运维能力边界”开新切片，而不是把业务域能力混入该 topic。
 
 ## 能力清单
@@ -59,7 +59,7 @@
 | `F2` | 组织与角色矩阵澄清    | 明确真实部门、主角色、预留查看角色与账号维护职责，形成后续 system-management 切片的长期基线                                                   | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260331-0042-system-management-f2-f3-baseline.md` |
 | `F3` | 平台审计与在线治理边界  | 明确 `在线用户 / 登录日志 / 操作日志` 在 system-management topic 下的长期归属与验收口径                                             | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260331-0042-system-management-f2-f3-baseline.md` |
 | `F4` | 平台初始化与持久化方案  | 明确哪些系统管理数据继续允许内存/样例承接，哪些需要正式持久化与初始化流程                                                                     | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260331-0934-system-management-f4-persistence.md` |
-| `F5` | 系统运维邻接能力边界   | 明确 `调度 / AI 支持` 等非核心平台能力是否保持 topic 外邻接管理                                                                  | Phase 2 | `待规划` | `-`                                                                                     |
+| `F5` | 系统运维邻接能力边界   | 明确 `调度 / AI 支持` 等非核心平台能力是否保持 topic 外邻接管理，并在 Phase 3 再决定是否开启独立切片                                                                  | Phase 3 | `未开始` | `-`                                                                                     |
 
 ## 阶段路线图
 
@@ -76,7 +76,8 @@
 - 已确认：当前阶段岗位没有必要单独维护。
 - AI 建议版本 `V1`：四类主角色先按“系统管理兜底 / 主仓作业 / RD 小仓作业 / 采购执行”分工。
 - AI 建议：`老板 / 财务` 当前仅保留预留位，不进入这一轮必交付设计。
-- AI 建议：`system-management` 第一版纳入 `在线用户 / 登录日志 / 操作日志`，暂不纳入 `调度 / AI 支持`。
+- AI 建议：`system-management` 第一版纳入 `在线用户 / 登录日志 / 操作日志`，`调度 / AI 支持` 作为非核心平台能力顺延到 Phase 3 规划，当前状态暂不执行。
+- 已确认：`调度 / AI 支持` 当前继续维持 topic 外邻接关系，不在本阶段执行。
 - 已确认：接受上述 `V1` 角色矩阵与 topic 范围建议，并据此继续对齐架构文档。
 
 ## 文档关系（可选）

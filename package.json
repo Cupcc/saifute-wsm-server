@@ -55,6 +55,7 @@
     "migration:inventory-replay:validate": "cross-env DOTENV_CONFIG_PATH=.env.dev ts-node -r dotenv/config --project tsconfig.migration.json scripts/migration/inventory-replay/validate.ts",
     "migration:stock-scope-phase2:dry-run": "cross-env DOTENV_CONFIG_PATH=.env.dev ts-node -r dotenv/config --project tsconfig.migration.json scripts/migration/stock-scope-phase2/migrate.ts",
     "migration:stock-scope-phase2:execute": "cross-env DOTENV_CONFIG_PATH=.env.dev ts-node -r dotenv/config --project tsconfig.migration.json scripts/migration/stock-scope-phase2/migrate.ts --execute",
+    "migration:stock-scope-phase2:seed-rehearsal": "cross-env DOTENV_CONFIG_PATH=.env.dev ts-node -r dotenv/config --project tsconfig.migration.json scripts/migration/stock-scope-phase2/seed-rehearsal.ts",
     "migration:stock-scope-phase2:validate": "cross-env DOTENV_CONFIG_PATH=.env.dev ts-node -r dotenv/config --project tsconfig.migration.json scripts/migration/stock-scope-phase2/validate.ts",
     "migration:typecheck": "tsc -p tsconfig.migration.json --noEmit",
     "notify:feishu": "node ./scripts/notify-feishu.mjs",
