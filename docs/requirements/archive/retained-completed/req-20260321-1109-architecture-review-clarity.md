@@ -25,7 +25,7 @@
   - 交付物采用“文档澄清 + 当前文档与代码结构的差距清单”。
   - review 以“目标迁移架构 / 理想设计”为主口径。
   - 范围先聚焦业务域与 shared core：`master-data`、`inventory-core`、`workflow`、`customer`、`workshop-material`、`project`、`reporting`。
-  - 本轮只指出问题，不改 `docs/architecture/00-architecture-overview.md` 与 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 的冻结正文。
+  - 本轮只指出问题，不改 `docs/architecture/00-architecture-overview.md` 与 `docs/architecture/20-wms-database-tables-and-schema.md` 的冻结正文。
   - 优先澄清模块职责、模块依赖 / 跨模块访问、shared 与业务层边界、当前实现与目标架构关系、文档组织与阅读路径。
 
 ## 用户已经确定的当前架构存在的问题

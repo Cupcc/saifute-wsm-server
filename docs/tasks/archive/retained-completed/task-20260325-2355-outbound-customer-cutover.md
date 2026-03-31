@@ -18,7 +18,7 @@
   - `src/modules/customer/controllers/customer.controller.ts`
   - `src/swagger-metadata.ts`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/customer.md`
   - `web/src/constants/formSchemas.js`
   - `web/src/components/AiAssistant/index.vue`
@@ -81,14 +81,14 @@
 
 - Updated:
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/customer.md`
 - Compatibility-period wording for `/outbound` and `outbound:*` was removed from active architecture docs.
 
 ## Validation
 
 - `pnpm swagger:metadata` — passed
-- `pnpm exec biome check package.json src/modules/customer/controllers/customer.controller.ts docs/architecture/00-architecture-overview.md docs/architecture/20-wms-business-flow-and-optimized-schema.md docs/architecture/modules/customer.md web/src/constants/formSchemas.js web/src/components/AiAssistant/index.vue web/src/api/ai/chat.js web/docs/AI-DESIGN.md web/docs/ai-assistant-design.md docs/tasks/archive/retained-completed/task-20260325-2355-outbound-customer-cutover.md` — passed with 11 pre-existing warnings only
+- `pnpm exec biome check package.json src/modules/customer/controllers/customer.controller.ts docs/architecture/00-architecture-overview.md docs/architecture/20-wms-database-tables-and-schema.md docs/architecture/modules/customer.md web/src/constants/formSchemas.js web/src/components/AiAssistant/index.vue web/src/api/ai/chat.js web/docs/AI-DESIGN.md web/docs/ai-assistant-design.md docs/tasks/archive/retained-completed/task-20260325-2355-outbound-customer-cutover.md` — passed with 11 pre-existing warnings only
 - `pnpm typecheck` — passed
 - `pnpm --dir web build:prod` — passed after deleting `web/src/views/out/**` and `web/src/api/out/**`
 

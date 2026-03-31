@@ -125,7 +125,7 @@ describe("Batch A acceptance (e2e)", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
     expect(meResponse.body.data.username).toBe("admin");
-    expect(meResponse.body.data.department.departmentName).toBe("系统管理部");
+    expect(meResponse.body.data.department.departmentName).toBe("仓库");
 
     const routesResponse = await request(server)
       .get("/api/auth/routes")
@@ -143,7 +143,7 @@ describe("Batch A acceptance (e2e)", () => {
     expect(onlineResponse.body.data.total).toBe(1);
     expect(onlineResponse.body.data.items[0].sessionId).toBe(sessionId);
     expect(onlineResponse.body.data.items[0].department.departmentName).toBe(
-      "系统管理部",
+      "仓库",
     );
 
     await request(server)

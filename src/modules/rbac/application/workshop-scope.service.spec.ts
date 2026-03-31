@@ -65,4 +65,10 @@ describe("WorkshopScopeService", () => {
       ForbiddenException,
     );
   });
+
+  it("rejects access to another inventory stock scope", async () => {
+    await expect(
+      service.assertInventoryStockScopeAccess(rdUser, 1),
+    ).rejects.toThrow(ForbiddenException);
+  });
 });

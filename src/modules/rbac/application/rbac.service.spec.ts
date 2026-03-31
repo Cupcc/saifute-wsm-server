@@ -37,11 +37,35 @@ describe("RbacService", () => {
     rbacService = moduleRef.get(RbacService);
   });
 
-  it("should filter routes for non-admin user", async () => {
+  it("should return designed routes for warehouse manager", async () => {
     const routes = await rbacService.getRoutesForUser(2);
-    expect(routes).toHaveLength(2);
-    expect(routes[0]?.path).toBe("/dashboard");
-    expect(routes[1]?.name).toBe("RdSubwarehouse");
+    expect(routes.map((route) => route.name)).toEqual([
+      "Dashboard",
+      "MasterData",
+      "InboundBusiness",
+      "WorkshopMaterialBusiness",
+      "InventoryBusiness",
+      "CustomerBusiness",
+      "RdSubwarehouse",
+    ]);
+    const rdRouteNames =
+      routes
+        .find((route) => route.name === "RdSubwarehouse")
+        ?.children?.map((route) => route.name) ?? [];
+    expect(rdRouteNames).toEqual(
+      expect.arrayContaining([
+        "RdProcurementRequests",
+        "RdInventoryLogs",
+        "RdInboundResults",
+      ]),
+    );
+    expect(rdRouteNames).not.toEqual(
+      expect.arrayContaining([
+        "RdWorkbench",
+        "RdProjectConsumption",
+        "RdStocktakeOrders",
+      ]),
+    );
   });
 
   it("should only return rd console routes for rd users", async () => {

@@ -22,6 +22,7 @@ export class InboundRepository {
       handlerName?: string;
       materialId?: number;
       materialName?: string;
+      stockScopeId?: number;
       workshopId?: number;
       limit: number;
       offset: number;
@@ -65,6 +66,9 @@ export class InboundRepository {
             : {}),
         },
       };
+    }
+    if (params.stockScopeId) {
+      where.stockScopeId = params.stockScopeId;
     }
     if (params.workshopId) {
       where.workshopId = params.workshopId;

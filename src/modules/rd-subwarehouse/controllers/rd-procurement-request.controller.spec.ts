@@ -32,8 +32,8 @@ describe("RdProcurementRequestController", () => {
   const mainUser: SessionUserSnapshot = {
     userId: 2,
     username: "operator",
-    displayName: "仓库操作员",
-    roles: ["operator"],
+    displayName: "仓库管理员",
+    roles: ["warehouse-manager"],
     permissions: [
       "rd:procurement-request:list",
       "rd:procurement-request:return-action",

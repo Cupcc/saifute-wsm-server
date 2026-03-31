@@ -1,15 +1,21 @@
-# WMS 业务流程与优化表设计
+# WMS 数据库表与 Schema 说明
 
 ## 1. 文档目标
 
 本文件用于在 `docs/architecture/00-architecture-overview.md` 的模块边界之上，进一步冻结：
 
-- 共享核心与事务单据的业务流程
+- 共享核心与事务单据对应的数据库表与 `Prisma` 模型
 - 优化后的逻辑数据模型
 - 面向 MySQL / Prisma 的物理表设计原则
+- 这些表背后的关键业务流程与状态语义
 - `Prisma` 模型与数据结构映射口径
 
 该文档解决的问题是：原 Java 设计可能把主数据、库存副作用、审核状态、单据字段混杂在一起，导致模块职责和表职责不清。NestJS 版本统一按领域重构，不直接照搬旧表。
+
+范围说明：
+
+- 本文件聚焦 `master-data`、`inventory-core`、`workflow` 与各事务单据家族的运行态数据库表。
+- 不覆盖平台层辅助持久化表，例如 `system-management` 在 `F4` 引入的 `system_management_snapshot`；这类表应在对应模块架构文档中说明，而不是混入业务表基线。
 
 ## 2. 设计原则
 

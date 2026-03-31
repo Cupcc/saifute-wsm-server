@@ -5,6 +5,7 @@ import { AppConfigService } from "../../../shared/config/app-config.service";
 import type {
   CreateSessionInput,
   SessionClaims,
+  SessionUserSnapshot,
   UserSession,
 } from "../domain/user-session";
 import { SessionRepository } from "../infrastructure/session.repository";
@@ -111,6 +112,25 @@ export class SessionService {
     return targets.length;
   }
 
+  async syncSessionUser(
+    session: UserSession,
+    latestUser: SessionUserSnapshot,
+  ): Promise<void> {
+    if (this.isSameSessionUser(session.user, latestUser)) {
+      return;
+    }
+
+    const remainingTtl = await this.sessionRepository.getRemainingTtl(
+      session.sessionId,
+    );
+    if (remainingTtl === null) {
+      throw new UnauthorizedException("登录会话不存在或已失效");
+    }
+
+    session.user = latestUser;
+    await this.sessionRepository.save(session, Math.max(1, remainingTtl));
+  }
+
   private async verifyToken(
     token: string,
     ignoreExpiration = false,
@@ -155,5 +175,12 @@ export class SessionService {
       session,
       Math.max(1, Math.ceil((nextExpiresAt - now) / 1000)),
     );
+  }
+
+  private isSameSessionUser(
+    left: SessionUserSnapshot,
+    right: SessionUserSnapshot,
+  ): boolean {
+    return JSON.stringify(left) === JSON.stringify(right);
   }
 }

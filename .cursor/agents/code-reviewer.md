@@ -16,7 +16,7 @@ Before reviewing substantial changes, anchor your review in the smallest relevan
 
 - The assigned task doc under `docs/tasks/**` when the work is task-driven
 - `docs/architecture/00-architecture-overview.md`
-- `docs/architecture/20-wms-business-flow-and-optimized-schema.md` when inventory, workflow, reporting, or document semantics are involved
+- `docs/architecture/20-wms-database-tables-and-schema.md` when inventory, workflow, reporting, or document semantics are involved
 - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` when migration, backfill, reconciliation, or cutover work is involved
 - The touched module docs under `docs/architecture/modules/`
 - `C:\Users\Administrator\.agents\skills\nestjs-best-practices\SKILL.md` when the changed surface includes NestJS code, module boundaries, validation, auth, performance, or data access

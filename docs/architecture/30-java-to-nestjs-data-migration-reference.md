@@ -12,7 +12,7 @@
 它是迁移参考文档，不是执行日志：
 
 - 模块边界、技术栈、冻结约束以 `docs/architecture/00-architecture-overview.md` 为准
-- 业务流程与优化后 schema 设计以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为准
+- 业务流程与优化后 schema 设计以 `docs/architecture/20-wms-database-tables-and-schema.md` 为准
 - 迁移批次、历史证据、阶段性结论以 `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` 和各批次 validate report 为准
 
 ### 1.1 当前冻结基线
@@ -20,7 +20,7 @@
 当前迁移工作统一以以下真源作为冻结基线，不再把“当前代码已经实现到哪里”误写成目标边界：
 
 - `docs/architecture/00-architecture-overview.md`：模块边界、跨模块约束、共享核心规则
-- `docs/architecture/20-wms-business-flow-and-optimized-schema.md`：业务流程、目标 schema、表职责与状态语义
+- `docs/architecture/20-wms-database-tables-and-schema.md`：业务流程、目标 schema、表职责与状态语义
 - 本文档：legacy -> target 的迁移映射、`migrated / replayed / archived / excluded` 口径，以及 cutover 术语
 - `docs/architecture/modules/*.md`：仅用于补充模块级 `current vs target` 澄清，不用于下调迁移目标基线
 
@@ -29,7 +29,7 @@
 本轮确认后，目标数据库边界按以下口径理解：
 
 - `prisma/schema.prisma`：NestJS 运行期正式业务表的主真源
-- `docs/architecture/20-wms-business-flow-and-optimized-schema.md`：正式表、只读视图与共享表语义的设计真源
+- `docs/architecture/20-wms-database-tables-and-schema.md`：正式表、只读视图与共享表语义的设计真源
 - `scripts/migration/sql/000-create-migration-staging.sql`：`migration_staging` 下 mapping、archive、pending、excluded 等受控迁移结构真源
 - 新库中存在 `sys_job`、`sys_job_log`、`sys_logininfor`、`sys_oper_log`，表示 NestJS 新系统保留运行期日志与调度表，不表示旧平台历史要导入这些表
 - 旧平台账号 / 权限 / 菜单 / 组织 / 配置 / 公告 / Quartz / 代码生成器历史不属于本次正式业务导入边界
@@ -472,7 +472,7 @@
 阅读边界：
 
 - 想看目标边界与模块职责，读 `00-architecture-overview.md`
-- 想看业务流程与优化后表设计，读 `20-wms-business-flow-and-optimized-schema.md`
+- 想看业务流程与优化后表设计，读 `20-wms-database-tables-and-schema.md`
 - 想看迁移运行时证据、批次状态、validate 细节，读 `docs/tasks/**` 与 `scripts/migration/reports/*.json`
 
 ## 11. 本地迁移经验总结：给后续线上迁移

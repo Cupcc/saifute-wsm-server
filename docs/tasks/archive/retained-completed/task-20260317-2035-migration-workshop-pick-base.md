@@ -11,7 +11,7 @@
 - Last updated: `2026-03-18`
 - Related files:
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/workshop-material.md`
   - `prisma/schema.prisma`
@@ -87,7 +87,7 @@
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `scripts/migration/stock-in/**`
   - `scripts/migration/customer/**`
   - `scripts/migration/customer-reservation/**`
@@ -177,7 +177,7 @@
 - Execution brief: implement `batch3b-workshop-pick-base` as a pick-only workshop-material business-table migration that intentionally excludes return, scrap, relation reconstruction, workflow projection, inventory replay, and `inventory_source_usage`.
 - Required source docs or files:
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/workshop-material.md`
   - `prisma/schema.prisma`
@@ -199,7 +199,7 @@
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `scripts/migration/shared/deterministic.ts`
   - `scripts/migration/stock-in/**`
   - `scripts/migration/customer/**`

@@ -15,14 +15,14 @@
 - Related files:
   - `docs/requirements/req-20260320-1400-architecture-doc-relocation.md`
   - `docs/00-architecture-overview.md`
-  - `docs/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/20-wms-database-tables-and-schema.md`
   - `docs/modules/**`
   - `.cursor/agents/planner.md`
   - `.cursor/agents/coder.md`
   - `.cursor/agents/code-reviewer.md`
   - `.cursor/skills/saifute-subagent-orchestration/SKILL.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
 
 ## Requirement Alignment
 
@@ -30,7 +30,7 @@
 - Requirement status: `confirmed`; the requested scope is clear enough for planning and does not require additional user confirmation.
 - User intent summary:
   - move `docs/00-architecture-overview.md` into `docs/architecture/00-architecture-overview.md`
-  - move `docs/20-wms-business-flow-and-optimized-schema.md` into `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - move `docs/20-wms-database-tables-and-schema.md` into `docs/architecture/20-wms-database-tables-and-schema.md`
   - move the full `docs/modules/` subtree into `docs/architecture/modules/`
   - add one explanatory doc for the new architecture-doc layout
   - update repo docs and prompt/skill references that still point at the old locations
@@ -56,19 +56,19 @@
 - Goal: make `docs/architecture/**` the single canonical home for repository architecture documentation, while preserving the current content semantics and cleaning up repo-wide stale references to the old locations.
 - Acceptance criteria:
   - `docs/00-architecture-overview.md` is moved to `docs/architecture/00-architecture-overview.md`.
-  - `docs/20-wms-business-flow-and-optimized-schema.md` is moved to `docs/architecture/20-wms-business-flow-and-optimized-schema.md`.
+  - `docs/20-wms-database-tables-and-schema.md` is moved to `docs/architecture/20-wms-database-tables-and-schema.md`.
   - `docs/modules/**` is moved to `docs/architecture/modules/**` with no duplicate legacy copies left behind.
   - internal references among the moved architecture docs are updated, including the overview doc, the flow/schema doc, and module docs that currently point at the old top-level files.
   - a new explanatory doc, preferably `docs/architecture/README.md`, explains the subtree layout, which doc answers which question, and the recommended reading order.
   - repo-wide stale references found in the current baseline are updated, including the known `.cursor/agents/*.md`, `.cursor/skills/saifute-subagent-orchestration/SKILL.md`, affected `docs/tasks/*.md`, and affected `docs/fix-checklists/*.md`.
-  - after implementation, repo searches for `docs/00-architecture-overview.md`, `docs/20-wms-business-flow-and-optimized-schema.md`, and `docs/modules/` return only the linked requirement doc and this task doc, unless the reviewer explicitly records another intentional historical exception.
+  - after implementation, repo searches for `docs/00-architecture-overview.md`, `docs/20-wms-database-tables-and-schema.md`, and `docs/modules/` return only the linked requirement doc and this task doc, unless the reviewer explicitly records another intentional historical exception.
   - no `src/**`, `scripts/**`, `prisma/**`, `test/**`, or runtime/tooling behavior files are changed for this scope.
 
 ## Scope And Ownership
 
 - Allowed code paths:
   - `docs/00-architecture-overview.md` and `docs/architecture/00-architecture-overview.md`
-  - `docs/20-wms-business-flow-and-optimized-schema.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/20-wms-database-tables-and-schema.md` and `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/modules/**` and `docs/architecture/modules/**`
   - `docs/architecture/README.md`
   - stale-reference files found by repo search under `docs/tasks/**`
@@ -87,24 +87,24 @@
   - `docs/architecture/**` becomes the new canonical architecture-doc home, but the moved architecture content should keep its current meaning unless a wording change is strictly required to explain the new layout
   - module docs remain module-scoped architecture references; the reorganization changes where they live, not their business ownership model
   - prompt and skill docs must preserve their existing orchestration intent while retargeting the source-of-truth paths they cite
-  - use the current working-copy content as the move source; do not recreate moved docs from stale snapshots, especially because `docs/20-wms-business-flow-and-optimized-schema.md` already has local modifications in the worktree
+  - use the current working-copy content as the move source; do not recreate moved docs from stale snapshots, especially because `docs/20-wms-database-tables-and-schema.md` already has local modifications in the worktree
 
 ## Implementation Plan
 
 - [ ] Step 1: capture the exact stale-reference baseline before any move.
-  - run repo searches for `docs/00-architecture-overview.md`, `docs/20-wms-business-flow-and-optimized-schema.md`, and `docs/modules/`
+  - run repo searches for `docs/00-architecture-overview.md`, `docs/20-wms-database-tables-and-schema.md`, and `docs/modules/`
   - turn that search result into the explicit edit set for docs, prompts, skills, tasks, and checklists
   - if an additional shared file appears outside the planned docs/prompt scope, stop and ask the parent whether to widen the writable set
 - [ ] Step 2: create the new architecture subtree and move the current files into it.
   - create `docs/architecture/`
   - move `docs/00-architecture-overview.md` to `docs/architecture/00-architecture-overview.md`
-  - move `docs/20-wms-business-flow-and-optimized-schema.md` to `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - move `docs/20-wms-database-tables-and-schema.md` to `docs/architecture/20-wms-database-tables-and-schema.md`
   - move the entire `docs/modules/` subtree to `docs/architecture/modules/`
   - prefer a move or rename operation that preserves git history rather than copy-plus-delete
 - [ ] Step 3: repair internal architecture-doc links after the move.
-  - update the moved overview doc to reference `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - update the moved overview doc to reference `docs/architecture/20-wms-database-tables-and-schema.md`
   - update the moved flow/schema doc to reference `docs/architecture/00-architecture-overview.md`
-  - update moved module docs that currently point at `docs/20-wms-business-flow-and-optimized-schema.md` so they now point at `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - update moved module docs that currently point at `docs/20-wms-database-tables-and-schema.md` so they now point at `docs/architecture/20-wms-database-tables-and-schema.md`
 - [ ] Step 4: add one explainer doc for the new layout.
   - add `docs/architecture/README.md` unless execution reveals a clearly better name inside the same subtree
   - document the purpose split between the overview doc, the flow/schema doc, and `modules/**`
@@ -128,17 +128,17 @@
   - `docs/requirements/req-20260320-1400-architecture-doc-relocation.md`
   - `docs/tasks/archive/retained-completed/task-20260320-1400-architecture-doc-relocation.md`
   - `docs/00-architecture-overview.md`
-  - `docs/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/20-wms-database-tables-and-schema.md`
   - `docs/modules/**`
   - `.cursor/agents/planner.md`
   - `.cursor/agents/coder.md`
   - `.cursor/agents/code-reviewer.md`
   - `.cursor/skills/saifute-subagent-orchestration/SKILL.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/tasks/task-20260317-1416-migration-outbound-base.md`
+  - `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`
 - Owned paths:
   - `docs/00-architecture-overview.md` and `docs/architecture/00-architecture-overview.md`
-  - `docs/20-wms-business-flow-and-optimized-schema.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/20-wms-database-tables-and-schema.md` and `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/modules/**` and `docs/architecture/modules/**`
   - `docs/architecture/README.md`
   - the stale-reference docs found by repo search under `docs/tasks/**` and `docs/fix-checklists/**`
@@ -157,8 +157,8 @@
   - do not edit the requirement doc just to remove historical mentions of old paths
   - if execution discovers stale references in additional shared files that are clearly outside the planned docs/prompt scope, stop and ask the parent before widening
 - Validation command for this scope:
-  - `rg -n "docs/00-architecture-overview\\.md|docs/20-wms-business-flow-and-optimized-schema\\.md|docs/modules/" docs .cursor`
-  - `rg -n "docs/architecture/(00-architecture-overview\\.md|20-wms-business-flow-and-optimized-schema\\.md|modules/)" docs .cursor`
+  - `rg -n "docs/00-architecture-overview\\.md|docs/20-wms-database-tables-and-schema\\.md|docs/modules/" docs .cursor`
+  - `rg -n "docs/architecture/(00-architecture-overview\\.md|20-wms-database-tables-and-schema\\.md|modules/)" docs .cursor`
   - `git diff --name-status -- docs .cursor`
   - `git status --short -- docs .cursor`
   - validation expectation: the first search should report only the linked requirement doc and this task doc after the cleanup, while the second search and changed-path review should show the new canonical layout and only docs/prompt-scope edits
@@ -196,11 +196,11 @@
 ## Review Log
 
 - Validation results:
-  - Reviewer reread the linked requirement doc, this task doc, `docs/architecture/README.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `.cursor/agents/planner.md`, `.cursor/agents/coder.md`, `.cursor/agents/code-reviewer.md`, `.cursor/skills/saifute-subagent-orchestration/SKILL.md`, and `docs/tasks/task-20260317-1416-migration-outbound-base.md`.
-  - Repo searches for `docs/00-architecture-overview.md`, `docs/20-wms-business-flow-and-optimized-schema.md`, and `docs/modules/` now return only `docs/requirements/req-20260320-1400-architecture-doc-relocation.md` and this task doc; no residual old-path matches remain in `.cursor/**`, `docs/tasks/**` outside this task doc, or `docs/fix-checklists/**` (only `README.md` may remain there after checklist cleanup).
-  - Repo searches for `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, and `docs/architecture/modules/` confirm the new canonical paths are used from the moved architecture docs, affected task/checklist docs, archived migration baseline docs, `.cursor/agents/*.md`, and `.cursor/skills/saifute-subagent-orchestration/SKILL.md`.
-  - Directory and git-state checks confirmed the old top-level live docs are gone and replaced by `docs/architecture/**`; `docs/00-architecture-overview.md`, `docs/20-wms-business-flow-and-optimized-schema.md`, and `docs/modules/` no longer exist as live paths.
-  - Scoped diff review confirmed the prompt and skill updates retarget canonical paths without changing their orchestration meaning. The moved `docs/architecture/20-wms-business-flow-and-optimized-schema.md` diff also carries forward pre-existing working-copy content, which matches this task doc's explicit preserve-latest-content rule rather than a relocation regression.
+  - Reviewer reread the linked requirement doc, this task doc, `docs/architecture/README.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, `.cursor/agents/planner.md`, `.cursor/agents/coder.md`, `.cursor/agents/code-reviewer.md`, `.cursor/skills/saifute-subagent-orchestration/SKILL.md`, and `docs/tasks/archive/retained-completed/task-20260317-1416-migration-outbound-base.md`.
+  - Repo searches for `docs/00-architecture-overview.md`, `docs/20-wms-database-tables-and-schema.md`, and `docs/modules/` now return only `docs/requirements/req-20260320-1400-architecture-doc-relocation.md` and this task doc; no residual old-path matches remain in `.cursor/**`, `docs/tasks/**` outside this task doc, or `docs/fix-checklists/**` (only `README.md` may remain there after checklist cleanup).
+  - Repo searches for `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, and `docs/architecture/modules/` confirm the new canonical paths are used from the moved architecture docs, affected task/checklist docs, archived migration baseline docs, `.cursor/agents/*.md`, and `.cursor/skills/saifute-subagent-orchestration/SKILL.md`.
+  - Directory and git-state checks confirmed the old top-level live docs are gone and replaced by `docs/architecture/**`; `docs/00-architecture-overview.md`, `docs/20-wms-database-tables-and-schema.md`, and `docs/modules/` no longer exist as live paths.
+  - Scoped diff review confirmed the prompt and skill updates retarget canonical paths without changing their orchestration meaning. The moved `docs/architecture/20-wms-database-tables-and-schema.md` diff also carries forward pre-existing working-copy content, which matches this task doc's explicit preserve-latest-content rule rather than a relocation regression.
   - Current repo state still contains unrelated non-scope worktree changes outside this relocation task, including `package.json`, `scripts/notify-feishu.mjs`, and `.cursor/hooks/**`; those broader edits do not indicate relocation drift, but they mean the overall worktree is not a docs-only branch snapshot.
 - Findings:
   - No `[blocking]` or `[important]` findings for the scoped docs-only architecture-relocation review.

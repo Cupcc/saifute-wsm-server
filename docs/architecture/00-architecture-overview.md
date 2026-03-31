@@ -15,7 +15,7 @@
 
 ### 业务域模块
 
-业务域按职责分层，避免把「主数据 / 营运单据闭环 / 读模型与辅助」混在同一级列表里。详细流程与表口径以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为准。
+业务域按职责分层，避免把「主数据 / 营运单据闭环 / 读模型与辅助」混在同一级列表里。详细流程与表口径以 `docs/architecture/20-wms-database-tables-and-schema.md` 为准。
 
 #### 主数据域（主档与快照，不直接承担库存事务写）
 
@@ -44,8 +44,9 @@
 
 - `auth`：登录、验证码、认证入口、登录前置校验
 - `session`：Redis 会话、在线用户、强退、滑动续期
-- `rbac`：用户、角色、菜单、权限码、数据权限
+- `rbac`：用户、角色、部门、菜单、权限码、数据权限
 - `audit-log`：登录日志、操作日志、审计字段
+- `system-management`：平台治理主题，收口 `用户 / 角色 / 部门 / 菜单 / 岗位 / 字典 / 参数 / 通知` 以及 `在线用户 / 登录日志 / 操作日志` 的管理面；运行态真源仍分别落在 `rbac`、`session`、`audit-log`
 - `file-storage`：本地上传下载、头像、资源映射
 - `scheduler`：数据库驱动的任务定义、调度、执行日志
 
@@ -214,6 +215,7 @@ flowchart TD
     ApiLayer --> session
     ApiLayer --> rbac
     ApiLayer --> auditLog
+    ApiLayer --> systemManagement
     ApiLayer --> fileStorage
     ApiLayer --> scheduler
     ApiLayer --> masterData
@@ -232,6 +234,9 @@ flowchart TD
     auth --> configLayer
     session --> redisLayer
     session --> configLayer
+    systemManagement --> session
+    systemManagement --> rbac
+    systemManagement --> auditLog
     redisLayer --> configLayer
     inbound --> masterData
     inbound --> inventoryCore
@@ -262,23 +267,24 @@ flowchart TD
 - 每个模块只根据对应文档实现，不擅自新增领域边界
 - 若发现源系统语义与文档冲突，应先补文档再编码
 - 单据模块的库存、副作用、审核重置必须写进集成测试
-- 涉及业务流程、状态机和优化表设计时，以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为冻结基线
+- 涉及业务流程、状态机和优化表设计时，以 `docs/architecture/20-wms-database-tables-and-schema.md` 为冻结基线
 
 ## 10. 推荐阅读顺序
 
-0. `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+0. `docs/architecture/20-wms-database-tables-and-schema.md`
 1. `auth`
 2. `session`
 3. `rbac`
-4. `master-data`
-5. `inventory-core`
-6. `workflow`
-7. `inbound`
-8. `customer`
-9. `workshop-material`
-10. `project`
-11. `audit-log`
-12. `reporting`
-13. `file-storage`
-14. `scheduler`
-15. `ai-assistant`
+4. `audit-log`
+5. `system-management`
+6. `master-data`
+7. `inventory-core`
+8. `workflow`
+9. `inbound`
+10. `customer`
+11. `workshop-material`
+12. `project`
+13. `reporting`
+14. `file-storage`
+15. `scheduler`
+16. `ai-assistant`

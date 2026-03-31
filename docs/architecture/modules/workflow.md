@@ -84,7 +84,7 @@
 - 审核表保存当前有效审核投影，不替代业务单据主状态
 - 单据表仅保留 `auditStatusSnapshot` 方便列表查询，真实审核状态以 `workflow` 为准
 - `workflow` 不直接建立指向各单据表的多态外键，避免共享核心反向耦合业务模块
-- 详细业务流程与字段建议见 `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+- 详细业务流程与字段建议见 `docs/architecture/20-wms-database-tables-and-schema.md`
 
 ## 待补测试清单
 

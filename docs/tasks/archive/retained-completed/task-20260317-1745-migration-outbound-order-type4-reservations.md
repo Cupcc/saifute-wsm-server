@@ -11,7 +11,7 @@
 - Last updated: `2026-03-18`
 - Related files:
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/customer.md`
@@ -64,7 +64,7 @@
   - `scripts/migration/customer/**`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `document_relation`
   - `document_line_relation`
   - `workflow_audit_document`
@@ -146,7 +146,7 @@
 - Execution brief: implement `batch3a-outbound-order-type4-reservation` as a reservation-only continuation of `batch2c-outbound-base`, using legacy `saifute_interval` as input, current outbound maps as the live eligibility boundary, and `archived_intervals` as the sink for all unsupported or unresolved rows.
 - Required source docs or files:
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/customer.md`
@@ -167,7 +167,7 @@
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
 - Constraints and non-goals:
   - do not write `document_relation` or `document_line_relation`
   - do not admit `saifute_sales_return_*` into live business tables
