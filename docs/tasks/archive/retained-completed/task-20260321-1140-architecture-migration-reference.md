@@ -16,7 +16,7 @@
   - `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `prisma/schema.prisma`
   - `scripts/migration/bootstrap-staging.ts`
@@ -70,7 +70,7 @@
 - Goal: create an execution-ready brief for a parent-owned docs implementation that adds one canonical architecture reference explaining the full legacy Java -> NestJS migration in domain-organized form without widening scope into code or broad architecture review.
 - Acceptance criteria:
   - 推荐主文档路径为 `docs/architecture/30-java-to-nestjs-data-migration-reference.md`，并仅做最小必要的 `docs/architecture/README.md` 导航补充。
-  - 不把这份迁移总览塞进 `docs/architecture/00-architecture-overview.md` 或 `docs/architecture/20-wms-business-flow-and-optimized-schema.md`，避免污染模块总览和冻结 schema baseline。
+  - 不把这份迁移总览塞进 `docs/architecture/00-architecture-overview.md` 或 `docs/architecture/20-wms-database-tables-and-schema.md`，避免污染模块总览和冻结 schema baseline。
   - 新文档必须包含以下章节：
     - `1. 迁移范围与适用对象`
     - `2. 如何阅读这份映射（迁入 / 重放 / 归档 / 排除 / 后移 / 无落点）`
@@ -94,7 +94,7 @@
 - Frozen or shared paths:
   - `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/*.md`
   - `prisma/schema.prisma`
   - `scripts/migration/**`
@@ -122,7 +122,7 @@
   - This is a parent-owned docs-only implementation.
   - Create `docs/architecture/30-java-to-nestjs-data-migration-reference.md` as the canonical migration reference.
   - Update `docs/architecture/README.md` only enough to list the new doc and reading order.
-  - Keep `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` unchanged unless the parent finds a real contradiction that requires separate user confirmation.
+  - Keep `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-database-tables-and-schema.md` unchanged unless the parent finds a real contradiction that requires separate user confirmation.
   - Use the following section skeleton in the final architecture doc:
     - `1. 文档目标、适用对象、与现有 architecture 文档的关系`
     - `2. 阅读方法：如何理解 migrated / replayed / archived / excluded / deferred / no-target`
@@ -138,7 +138,7 @@
   - `docs/requirements/archive/retained-completed/req-20260321-1100-java-to-nestjs-data-migration.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `prisma/schema.prisma`
   - `scripts/migration/sql/000-create-migration-staging.sql`
@@ -199,7 +199,7 @@
   - `docs/architecture/README.md`
 - Forbidden shared files:
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `prisma/schema.prisma`
   - `scripts/migration/**`
   - `docs/requirements/**`

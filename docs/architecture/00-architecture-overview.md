@@ -15,7 +15,7 @@
 
 ### 业务域模块
 
-业务域按职责分层，避免把「主数据 / 营运单据闭环 / 读模型与辅助」混在同一级列表里。详细流程与表口径以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为准。
+业务域按职责分层，避免把「主数据 / 营运单据闭环 / 读模型与辅助」混在同一级列表里。详细流程与表口径以 `docs/architecture/20-wms-database-tables-and-schema.md` 为准。
 
 #### 主数据域（主档与快照，不直接承担库存事务写）
 
@@ -267,11 +267,11 @@ flowchart TD
 - 每个模块只根据对应文档实现，不擅自新增领域边界
 - 若发现源系统语义与文档冲突，应先补文档再编码
 - 单据模块的库存、副作用、审核重置必须写进集成测试
-- 涉及业务流程、状态机和优化表设计时，以 `docs/architecture/20-wms-business-flow-and-optimized-schema.md` 为冻结基线
+- 涉及业务流程、状态机和优化表设计时，以 `docs/architecture/20-wms-database-tables-and-schema.md` 为冻结基线
 
 ## 10. 推荐阅读顺序
 
-0. `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+0. `docs/architecture/20-wms-database-tables-and-schema.md`
 1. `auth`
 2. `session`
 3. `rbac`

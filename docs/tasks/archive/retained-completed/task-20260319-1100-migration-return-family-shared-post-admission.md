@@ -14,7 +14,7 @@
 - Related files:
   - `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
@@ -71,7 +71,7 @@
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `scripts/migration/shared/**` unless the parent explicitly expands ownership
   - `scripts/migration/customer-sales-return/**`
@@ -123,7 +123,7 @@
 - Required source docs or files:
   - `docs/requirements/archive/retained-completed/req-20260320-1830-migration-active-slices.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`

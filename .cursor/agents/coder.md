@@ -17,7 +17,7 @@ Before changing files, anchor your work in the smallest relevant set of these pr
 - The assigned task doc under `docs/tasks/**`
 - The linked requirement doc under `docs/requirements/**` when the task doc references one
 - `docs/architecture/00-architecture-overview.md`
-- `docs/architecture/20-wms-business-flow-and-optimized-schema.md` when business flow, inventory, workflow, or document semantics are involved
+- `docs/architecture/20-wms-database-tables-and-schema.md` when business flow, inventory, workflow, or document semantics are involved
 - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` when migration, backfill, reconciliation, or cutover work is involved
 - The touched module docs under `docs/architecture/modules/`
 - `C:\Users\Administrator\.agents\skills\nestjs-best-practices\SKILL.md` when implementing, refactoring, or reviewing NestJS code

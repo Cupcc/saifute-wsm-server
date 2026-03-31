@@ -14,7 +14,7 @@
 - Related checklist:
 - Related files:
   - `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
   - `src/modules/customer/application/customer.service.ts`
@@ -92,7 +92,7 @@
 
 ## Implementation Plan
 
-- [ ] Step 1: re-anchor the fix in the completed review finding, the module docs, the relevant frozen schema-flow clauses in `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, and the current service/spec files.
+- [ ] Step 1: re-anchor the fix in the completed review finding, the module docs, the relevant frozen schema-flow clauses in `docs/architecture/20-wms-database-tables-and-schema.md`, and the current service/spec files.
   - confirm the frozen rules: sales return must respect source outbound `可退数量`; workshop return must preserve `inventory_source_usage` accuracy and relation-table semantics
 - [ ] Step 2: tighten `customer` sales-return validation in `src/modules/customer/application/customer.service.ts`.
   - compute active returned quantity per source outbound line from currently active downstream relations before insert
@@ -118,7 +118,7 @@
   - preserve existing transaction boundaries inside the application services
 - Required source docs or files:
   - `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
   - `src/modules/customer/application/customer.service.ts`

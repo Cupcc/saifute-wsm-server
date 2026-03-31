@@ -18,7 +18,7 @@
   - `docs/tasks/archive/retained-completed/task-20260330-1419-stock-scope-alignment.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/rd-subwarehouse.md`
   - `prisma/schema.prisma`
@@ -95,7 +95,7 @@
   - `InventoryLog` 的库存维度字段、外键、索引、`businessDocument*` 关联核验需要迁到 `stockScopeId` 轴。
   - `InventorySourceUsage` 与 `InventoryLog` / `InventoryBalance` 的链路在同一事务内提交；scope 轴切换时必须与日志、余额、分配/释放口径一起验证，避免成本层与数量层脱节。
   - `FactoryNumberReservation` 当前仍挂 `workshopId`，需要确认是否同样迁到 `stockScopeId`。
-  - 单据主表与行表：`StockInOrder` / `StockInOrderLine`、`CustomerStockOrder` / `CustomerStockOrderLine`、`WorkshopMaterialOrder` / `WorkshopMaterialOrderLine`、`Project` / `ProjectMaterialLine`、`RdHandoffOrder` / `RdHandoffOrderLine`、`RdProcurementRequest` / `RdProcurementRequestLine`、`RdStocktakeOrder` / `RdStocktakeOrderLine` 等（以 `prisma/schema.prisma` 与 `20-wms-business-flow-and-optimized-schema.md` 为准）在架构真源中多已指向 `stockScopeId` 语义，schema 真源需与运行时 Phase 1 对齐。
+  - 单据主表与行表：`StockInOrder` / `StockInOrderLine`、`CustomerStockOrder` / `CustomerStockOrderLine`、`WorkshopMaterialOrder` / `WorkshopMaterialOrderLine`、`Project` / `ProjectMaterialLine`、`RdHandoffOrder` / `RdHandoffOrderLine`、`RdProcurementRequest` / `RdProcurementRequestLine`、`RdStocktakeOrder` / `RdStocktakeOrderLine` 等（以 `prisma/schema.prisma` 与 `20-wms-database-tables-and-schema.md` 为准）在架构真源中多已指向 `stockScopeId` 语义，schema 真源需与运行时 Phase 1 对齐。
 - Schema / Prisma / DB 待决策面:
   - `Project` 表头是否继续保留 `workshopId` 纯归集语义，还是补显式 `stockScopeId` 到表头 / 行级边界，以架构表设计为准。
   - `RdHandoffOrder`、`RdStocktakeOrder`、`RdProcurementRequest` 当前仍是 workshop-shaped 持久化，是否在 Phase 2 首波同步切到 `stockScopeId`，需要用户确认。
@@ -305,7 +305,7 @@
   - `docs/tasks/archive/retained-completed/task-20260330-1419-stock-scope-alignment.md`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/rd-subwarehouse.md`
   - `prisma/schema.prisma`

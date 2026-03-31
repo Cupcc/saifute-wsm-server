@@ -17,7 +17,7 @@
   - `docs/tasks/TASK_CENTER.md`
   - `docs/workspace/archive/retained-completed/rd-subwarehouse/README.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/project.md`
   - `docs/architecture/modules/workshop-material.md`
@@ -119,7 +119,7 @@
   - `docs/requirements/archive/retained-completed/req-20260326-0048-rd-subwarehouse.md`
   - `docs/workspace/archive/retained-completed/rd-subwarehouse/README.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/project.md`
   - `docs/architecture/modules/workshop-material.md`

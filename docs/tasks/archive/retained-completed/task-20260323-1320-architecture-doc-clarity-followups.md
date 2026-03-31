@@ -2,7 +2,7 @@
 
 ## Metadata
 
-- Scope: clarify only the review-confirmed current-vs-target gaps and reading-path ambiguity in the scoped architecture docs, while keeping `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` frozen and read-only
+- Scope: clarify only the review-confirmed current-vs-target gaps and reading-path ambiguity in the scoped architecture docs, while keeping `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-database-tables-and-schema.md` frozen and read-only
 - Related requirement: `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md`
 - Status: `completed`
 - Review status: `reviewed-clean`
@@ -17,7 +17,7 @@
   - `docs/requirements/PROJECT_REQUIREMENTS.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/project.md`
   - `docs/architecture/modules/reporting.md`
   - `docs/architecture/modules/master-data.md`
@@ -29,7 +29,7 @@
 - User intent summary:
   - continue from the completed architecture review instead of reopening the original review
   - isolate the docs clarification work for `project`, `reporting`, `master-data`, and architecture reading-path clarity into one execution-ready brief
-  - keep `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` frozen; clarify surrounding docs rather than rewriting the frozen baseline
+  - keep `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-database-tables-and-schema.md` frozen; clarify surrounding docs rather than rewriting the frozen baseline
 - Acceptance criteria carried into this task:
   - `docs/architecture/modules/project.md` must clearly distinguish current implementation from target project-domain scope already stated in `docs/requirements/PROJECT_REQUIREMENTS.md`
   - `docs/architecture/modules/reporting.md` must clearly distinguish current reporting coverage from target monthly and project-oriented reporting scope
@@ -69,7 +69,7 @@
   - `docs/tasks/TASK_CENTER.md`
   - `docs/requirements/**`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - all other files under `docs/architecture/**`
   - all code, schema, script, and test paths under `src/**`, `prisma/**`, and `scripts/**`
 - Task doc owner: `planner` during planning; `coder` owns execution updates for this task doc; `code-reviewer` owns review-phase updates in this same task doc
@@ -77,7 +77,7 @@
   - `project` remains a transaction domain that uses `inventory-core`; this slice may clarify maturity gaps but must not redefine the target boundary downward
   - `reporting` remains a read-only aggregation domain and must not be reframed as a transaction owner
   - `master-data` remains the owner of master records and shared snapshots; this slice may clarify current implementation gaps but must not transfer ownership elsewhere
-  - `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` remain frozen baselines in this slice
+  - `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-database-tables-and-schema.md` remain frozen baselines in this slice
   - project-level requirements in `docs/requirements/PROJECT_REQUIREMENTS.md` remain read-only source of truth here
 
 ## Implementation Plan
@@ -108,7 +108,7 @@
   - `docs/requirements/PROJECT_REQUIREMENTS.md`
   - `docs/architecture/README.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/project.md`
   - `docs/architecture/modules/reporting.md`
   - `docs/architecture/modules/master-data.md`
@@ -122,7 +122,7 @@
   - `docs/tasks/TASK_CENTER.md`
   - `docs/requirements/**`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - all non-scoped files under `docs/architecture/**`
   - all `src/**`, `prisma/**`, and `scripts/**`
 - Constraints and non-goals:
@@ -138,7 +138,7 @@
     - `git diff --name-only -- "docs/tasks/archive/retained-completed/task-20260323-1320-architecture-doc-clarity-followups.md" "docs/architecture/README.md" "docs/architecture/modules/project.md" "docs/architecture/modules/reporting.md" "docs/architecture/modules/master-data.md"`
     - `pnpm exec biome check docs/tasks/archive/retained-completed/task-20260323-1320-architecture-doc-clarity-followups.md docs/architecture/README.md docs/architecture/modules/project.md docs/architecture/modules/reporting.md docs/architecture/modules/master-data.md`
   - semantic gate:
-    - reread the changed docs against `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md`, `docs/requirements/PROJECT_REQUIREMENTS.md`, `docs/architecture/00-architecture-overview.md`, and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` to ensure the wording clarifies current-vs-target gaps without mutating frozen truth
+    - reread the changed docs against `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md`, `docs/requirements/PROJECT_REQUIREMENTS.md`, `docs/architecture/00-architecture-overview.md`, and `docs/architecture/20-wms-database-tables-and-schema.md` to ensure the wording clarifies current-vs-target gaps without mutating frozen truth
 
 ## Reviewer Handoff
 
@@ -148,7 +148,7 @@
   - verify `reporting.md` now acknowledges the open monthly and project-oriented reporting scope while keeping `reporting` read-only
   - verify `master-data.md` now acknowledges current implementation maturity gaps without shrinking module ownership
   - verify `README.md` improves the reading path and does not contradict the frozen baseline or the review findings
-  - verify no forbidden files changed, especially `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - verify no forbidden files changed, especially `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-database-tables-and-schema.md`
 - Requirement alignment check:
   - confirm this slice addresses only follow-up track `2` from the completed review task
   - confirm the final wording stays aligned with `docs/requirements/archive/retained-completed/req-20260321-1109-architecture-review-clarity.md` and `docs/requirements/PROJECT_REQUIREMENTS.md`
@@ -173,16 +173,16 @@
 ## Review Log
 
 - Validation results:
-  - Re-read `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md` for the confirmed gap list; re-read `docs/requirements/PROJECT_REQUIREMENTS.md` sections `4.1.7`, `4.2.1`, and section `5` for the target project-family and monthly/project-reporting scope; re-read `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` for frozen-baseline alignment (read-only).
+  - Re-read `docs/tasks/archive/retained-completed/task-20260323-1100-architecture-review-clarity.md` for the confirmed gap list; re-read `docs/requirements/PROJECT_REQUIREMENTS.md` sections `4.1.7`, `4.2.1`, and section `5` for the target project-family and monthly/project-reporting scope; re-read `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-database-tables-and-schema.md` for frozen-baseline alignment (read-only).
   - Re-read the changed docs `docs/architecture/README.md`, `docs/architecture/modules/project.md`, `docs/architecture/modules/reporting.md`, and `docs/architecture/modules/master-data.md` against the acceptance criteria in this task.
   - Spot-checked `docs/architecture/modules/customer.md`, `docs/architecture/modules/workflow.md`, and `docs/architecture/modules/inventory-core.md` after the updated `README.md` note to confirm the revised wording is scoped to this slice rather than making a repo-wide factual claim.
-  - Ran `git status --short -- "docs/architecture/00-architecture-overview.md" "docs/architecture/20-wms-business-flow-and-optimized-schema.md" "docs/architecture/README.md" "docs/architecture/modules/project.md" "docs/architecture/modules/reporting.md" "docs/architecture/modules/master-data.md"`; both frozen baseline files show as modified from HEAD. Parent confirmed those modifications are pre-existing parent-owned working-tree changes that predate this docs slice and were not introduced by this coder. The diff for those two files contains unrelated parent-tracked content, and this slice made no edits to them.
-  - Ran `git diff --name-only HEAD -- "docs/architecture/00-architecture-overview.md" "docs/architecture/20-wms-business-flow-and-optimized-schema.md"` to record the pre-existing state; both appear, confirming they were already modified before this slice.
+  - Ran `git status --short -- "docs/architecture/00-architecture-overview.md" "docs/architecture/20-wms-database-tables-and-schema.md" "docs/architecture/README.md" "docs/architecture/modules/project.md" "docs/architecture/modules/reporting.md" "docs/architecture/modules/master-data.md"`; both frozen baseline files show as modified from HEAD. Parent confirmed those modifications are pre-existing parent-owned working-tree changes that predate this docs slice and were not introduced by this coder. The diff for those two files contains unrelated parent-tracked content, and this slice made no edits to them.
+  - Ran `git diff --name-only HEAD -- "docs/architecture/00-architecture-overview.md" "docs/architecture/20-wms-database-tables-and-schema.md"` to record the pre-existing state; both appear, confirming they were already modified before this slice.
   - Ran `pnpm exec biome check docs/tasks/archive/retained-completed/task-20260323-1320-architecture-doc-clarity-followups.md docs/architecture/README.md docs/architecture/modules/project.md docs/architecture/modules/reporting.md docs/architecture/modules/master-data.md`; biome reported `0 files processed` because markdown is excluded by `biome.json` — expected behavior, no actionable lint finding.
   - Confirmed the slice's own diff is limited to `docs/architecture/README.md`, `docs/architecture/modules/master-data.md`, `docs/architecture/modules/project.md`, `docs/architecture/modules/reporting.md`, and this task doc.
 - Findings (post-fix re-review):
   - `[closed]` `docs/architecture/README.md` current-vs-target claim: tightened from a repo-wide factual claim to an explicit review lens with a scoped note naming the three clarified module docs. Future readers are no longer misled into treating other module docs' silence as evidence of target completeness.
-  - `[closed]` frozen-doc scope gate: parent confirmed `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-business-flow-and-optimized-schema.md` were already modified in the working tree before this slice began; the modifications are parent-owned and unrelated to this slice. The slice validation gate is now accurately scoped to the five owned paths only.
+  - `[closed]` frozen-doc scope gate: parent confirmed `docs/architecture/00-architecture-overview.md` and `docs/architecture/20-wms-database-tables-and-schema.md` were already modified in the working tree before this slice began; the modifications are parent-owned and unrelated to this slice. The slice validation gate is now accurately scoped to the five owned paths only.
   - `project.md`, `reporting.md`, and `master-data.md` remain directionally correct and unchanged from the prior review:
     - `project.md` clearly states that current implementation is narrower than the target project-family scope and preserves `inventory-core` as the stock-write owner.
     - `reporting.md` clearly states that current coverage is narrower than the target monthly/project reporting scope and keeps `reporting` read-only.

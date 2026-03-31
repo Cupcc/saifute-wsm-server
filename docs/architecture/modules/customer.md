@@ -96,7 +96,7 @@
 - 通过 `orderType` 区分出库单和销售退货单，不再维护两套重复结构
 - 出厂编号区间从单据表规则中剥离，统一下沉到 `factory_number_reservation`
 - 退货与出库的上下游关系通过 `document_relation`、`document_line_relation` 表达
-- 详细业务流程与字段建议见 `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+- 详细业务流程与字段建议见 `docs/architecture/20-wms-database-tables-and-schema.md`
 
 ## 待补测试清单
 

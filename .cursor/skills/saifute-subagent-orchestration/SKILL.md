@@ -62,7 +62,7 @@ For any task type with an existing playbook, also read:
 For migration, backfill, reconciliation, or cutover-prep work, also read:
 
 - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-- `docs/architecture/20-wms-business-flow-and-optimized-schema.md` when the work touches inventory, workflow, reporting, document relations, reservation semantics, or business-state semantics
+- `docs/architecture/20-wms-database-tables-and-schema.md` when the work touches inventory, workflow, reporting, document relations, reservation semantics, or business-state semantics
 - the relevant `prisma/**`, `scripts/**`, `docs/**`, or module surfaces that define the current schema and runtime behavior
 
 Treat those docs and files as the source of truth for requirement scope, module boundaries, dependencies, transaction rules, testing scope, runtime semantics, staging expectations, and cutover constraints.

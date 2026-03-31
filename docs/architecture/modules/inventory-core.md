@@ -103,7 +103,7 @@
 - `inventory_warning` 收敛为只读视图 `vw_inventory_warning`，不单独落交易表
 - 单据模块必须通过 `businessDocumentType`、`businessDocumentId`、`businessDocumentLineId` 向库存中心传递来源语义
 - `inventory_log.reversalOfLogId` 应保持唯一，确保同一条原始流水只能被逆操作一次
-- 详细业务流程与字段建议见 `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+- 详细业务流程与字段建议见 `docs/architecture/20-wms-database-tables-and-schema.md`
 
 ## 待补测试清单
 

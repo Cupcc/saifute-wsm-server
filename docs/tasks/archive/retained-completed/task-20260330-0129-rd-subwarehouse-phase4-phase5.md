@@ -12,7 +12,7 @@
 - Reviewer: `code-reviewer`
 - Last updated: `2026-03-30`
 - Related checklist: `None`
-- Related files: `docs/requirements/archive/retained-completed/req-20260330-0127-rd-subwarehouse-phase4-phase5.md`, `docs/requirements/topics/rd-subwarehouse.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `docs/architecture/modules/rd-subwarehouse.md`, `prisma/schema.prisma`, `src/modules/rd-subwarehouse/**`, `src/modules/inbound/application/inbound.service.ts`, `src/modules/workshop-material/application/workshop-material.service.ts`, `src/modules/inventory-core/**`, `src/modules/reporting/**`, `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`, `web/src/store/modules/permission.js`, `web/src/api/rd-subwarehouse.js`, `web/src/views/rd/**`, `web/src/views/entry/order/index.vue`
+- Related files: `docs/requirements/archive/retained-completed/req-20260330-0127-rd-subwarehouse-phase4-phase5.md`, `docs/requirements/topics/rd-subwarehouse.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, `docs/architecture/modules/rd-subwarehouse.md`, `prisma/schema.prisma`, `src/modules/rd-subwarehouse/**`, `src/modules/inbound/application/inbound.service.ts`, `src/modules/workshop-material/application/workshop-material.service.ts`, `src/modules/inventory-core/**`, `src/modules/reporting/**`, `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`, `web/src/store/modules/permission.js`, `web/src/api/rd-subwarehouse.js`, `web/src/views/rd/**`, `web/src/views/entry/order/index.vue`
 
 ## Requirement Alignment
 
@@ -103,7 +103,7 @@
   - `docs/requirements/archive/retained-completed/req-20260330-0127-rd-subwarehouse-phase4-phase5.md`
   - `docs/requirements/topics/rd-subwarehouse.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/rd-subwarehouse.md`
   - `docs/tasks/archive/retained-completed/task-20260328-1640-rd-subwarehouse-main-to-rd-handoff-foundation.md`
   - `docs/tasks/archive/retained-completed/task-20260328-1831-rd-procurement-main-acceptance-linkage.md`
@@ -206,7 +206,7 @@
 ## Review Log
 
 - Validation results:
-  - Re-read the scoped truth and review baseline from `docs/requirements/archive/retained-completed/req-20260330-0127-rd-subwarehouse-phase4-phase5.md`, `docs/requirements/topics/rd-subwarehouse.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `docs/architecture/modules/rd-subwarehouse.md`, and the NestJS review guidance skill.
+  - Re-read the scoped truth and review baseline from `docs/requirements/archive/retained-completed/req-20260330-0127-rd-subwarehouse-phase4-phase5.md`, `docs/requirements/topics/rd-subwarehouse.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, `docs/architecture/modules/rd-subwarehouse.md`, and the NestJS review guidance skill.
   - Re-reviewed the current `F4/F5` code surfaces directly, with special focus on the prior findings and the new focused-validation files: `prisma/schema.prisma`, `src/modules/rd-subwarehouse/**`, `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`, `web/src/api/rd-subwarehouse.js`, `web/src/store/modules/permission.js`, `web/src/views/rd/procurement-requests/index.vue`, and `web/src/views/rd/stocktake-orders/index.vue`.
   - Re-read the new focused specs: `src/modules/rd-subwarehouse/application/rd-stocktake-order.service.spec.ts`, `src/modules/rd-subwarehouse/application/rd-material-status.helper.spec.ts`, `src/modules/rd-subwarehouse/controllers/rd-procurement-request.controller.spec.ts`, and `src/modules/rd-subwarehouse/controllers/rd-stocktake-order.controller.spec.ts`.
   - Parent reported `pnpm prisma:generate && pnpm swagger:metadata && pnpm typecheck` passed on the current workspace; reviewer additionally ran `pnpm prisma:validate`, which passed.

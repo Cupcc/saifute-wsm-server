@@ -13,7 +13,7 @@
 - Last updated: `2026-03-20`
 - Related files:
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/customer.md`
   - `docs/architecture/modules/workshop-material.md`
@@ -62,7 +62,7 @@
   - `prisma/schema.prisma`
   - `src/**`
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `document_relation`
   - `document_line_relation`
   - `factory_number_reservation`
@@ -142,7 +142,7 @@
 - Execution brief: implement `batch2c-outbound-base` as an outbound-only business-table migration that intentionally excludes sales returns, relations, number reservations, workflow projections, and inventory replay.
 - Required source docs or files:
   - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/customer.md`
   - `prisma/schema.prisma`

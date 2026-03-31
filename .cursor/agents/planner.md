@@ -19,7 +19,7 @@ Before planning substantial work, anchor your plan in the smallest relevant set 
 - The linked requirement doc under `docs/requirements/**` when the task comes from a user request
 - `docs/tasks/_template.md`
 - `docs/architecture/00-architecture-overview.md`
-- `docs/architecture/20-wms-business-flow-and-optimized-schema.md` when inventory, workflow, reporting, or document semantics are involved
+- `docs/architecture/20-wms-database-tables-and-schema.md` when inventory, workflow, reporting, or document semantics are involved
 - `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` when migration, backfill, reconciliation, or cutover work is involved
 - Relevant module docs under `docs/architecture/modules/`
 - `C:\Users\Administrator\.agents\skills\nestjs-best-practices\SKILL.md` when the task touches NestJS code, modules, dependency injection, validation, security, performance, testing, or data access

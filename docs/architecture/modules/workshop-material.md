@@ -94,7 +94,7 @@
 - `inventory_used` 语义在新模型中统一落到 `inventory_source_usage`
 - 退料与领料的上下游关系通过关系表表达，避免在业务字段中隐式推断
 - 表结构默认把审核快照起点设为 `PENDING`，若某类单据明确不走审核，由应用层显式写入 `NOT_REQUIRED`
-- 详细业务流程与字段建议见 `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+- 详细业务流程与字段建议见 `docs/architecture/20-wms-database-tables-and-schema.md`
 
 ## 待补测试清单
 

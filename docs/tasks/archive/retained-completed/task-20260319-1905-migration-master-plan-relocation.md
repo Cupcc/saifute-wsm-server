@@ -189,7 +189,7 @@
 - 旧项目代码与 Mapper：`E:/Projects/saifute-wms-server/business/...`
 - 新项目目标 schema：`prisma/schema.prisma`
 - 新项目设计文档：`docs/architecture/00-architecture-overview.md`
-- 新项目优化表设计：`docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+- 新项目优化表设计：`docs/architecture/20-wms-database-tables-and-schema.md`
 - 旧库实时 MySQL：`saifute`
 - 新库实时 MySQL：`saifute-wsm`
 - 原计划分析时间：`2026-03-15`

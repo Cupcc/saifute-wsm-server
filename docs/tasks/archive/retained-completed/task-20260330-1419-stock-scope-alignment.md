@@ -12,7 +12,7 @@
 - Reviewer: `code-reviewer`
 - Last updated: `2026-03-30`
 - Related checklist: `None`
-- Related files: `docs/requirements/archive/retained-completed/req-20260330-1419-stock-scope-alignment.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `docs/architecture/modules/inventory-core.md`, `docs/architecture/modules/rd-subwarehouse.md`, `prisma/schema.prisma`, `src/modules/session/domain/user-session.ts`, `src/modules/session/application/session.service.ts`, `src/modules/session/infrastructure/session.repository.ts`, `src/modules/rbac/application/workshop-scope.service.ts`, `src/modules/rbac/domain/rbac.types.ts`, `src/modules/rbac/application/rbac.service.ts`, `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`, `src/modules/inventory-core/**`, `src/modules/reporting/**`, `src/modules/rd-subwarehouse/**`, `src/modules/inbound/**`, `src/modules/workshop-material/**`, `src/modules/project/**`, `src/swagger-metadata.ts`
+- Related files: `docs/requirements/archive/retained-completed/req-20260330-1419-stock-scope-alignment.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, `docs/architecture/modules/inventory-core.md`, `docs/architecture/modules/rd-subwarehouse.md`, `prisma/schema.prisma`, `src/modules/session/domain/user-session.ts`, `src/modules/session/application/session.service.ts`, `src/modules/session/infrastructure/session.repository.ts`, `src/modules/rbac/application/workshop-scope.service.ts`, `src/modules/rbac/domain/rbac.types.ts`, `src/modules/rbac/application/rbac.service.ts`, `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`, `src/modules/inventory-core/**`, `src/modules/reporting/**`, `src/modules/rd-subwarehouse/**`, `src/modules/inbound/**`, `src/modules/workshop-material/**`, `src/modules/project/**`, `src/swagger-metadata.ts`
 
 ## Requirement Alignment
 
@@ -119,7 +119,7 @@
 - Required source docs or files:
   - `docs/requirements/archive/retained-completed/req-20260330-1419-stock-scope-alignment.md`
   - `docs/architecture/00-architecture-overview.md`
-  - `docs/architecture/20-wms-business-flow-and-optimized-schema.md`
+  - `docs/architecture/20-wms-database-tables-and-schema.md`
   - `docs/architecture/modules/inventory-core.md`
   - `docs/architecture/modules/rd-subwarehouse.md`
   - `src/modules/session/domain/user-session.ts`
@@ -210,7 +210,7 @@
 ## Review Log
 
 - Validation results:
-  - Re-read the scoped truth from `docs/tasks/task-20260330-1419-stock-scope-alignment.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-business-flow-and-optimized-schema.md`, `docs/architecture/modules/inventory-core.md`, `docs/architecture/modules/rd-subwarehouse.md`, `docs/architecture/modules/project.md`, `docs/architecture/modules/workshop-material.md`, and the NestJS review guidance skill.
+  - Re-read the scoped truth from `docs/tasks/task-20260330-1419-stock-scope-alignment.md`, `docs/architecture/00-architecture-overview.md`, `docs/architecture/20-wms-database-tables-and-schema.md`, `docs/architecture/modules/inventory-core.md`, `docs/architecture/modules/rd-subwarehouse.md`, `docs/architecture/modules/project.md`, `docs/architecture/modules/workshop-material.md`, and the NestJS review guidance skill.
   - Re-reviewed the current Phase 1 runtime surfaces directly, with special focus on `src/modules/session/domain/user-session.ts`, `src/modules/rbac/application/workshop-scope.service.ts`, `src/modules/rbac/application/rbac.service.ts`, `src/modules/inventory-core/application/stock-scope-compatibility.service.ts`, `src/modules/inventory-core/application/inventory.service.ts`, `src/modules/inventory-core/controllers/inventory.controller.ts`, `src/modules/reporting/**`, `src/modules/inbound/application/inbound.service.ts`, `src/modules/workshop-material/application/workshop-material.service.ts`, `src/modules/project/application/project.service.ts`, and `src/modules/rd-subwarehouse/application/{rd-handoff.service.ts,rd-stocktake-order.service.ts}`.
   - Re-reviewed the post-commit follow-up diff in `src/modules/inventory-core/application/inventory.service.spec.ts`, `src/modules/project/application/project.service.spec.ts`, `src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`, `src/modules/workshop-material/application/workshop-material.service.spec.ts`, `test/prisma-e2e-stub.ts`, and regenerated `src/swagger-metadata.ts`.
   - Confirmed that, within this task's owned scope, the inventory-affecting business writers now call `inventory-core` with canonical `stockScope` rather than散落传入 `workshopId` 作为真实库存池：`inbound` 固定 `MAIN`、`rd-handoff` 固定 `MAIN -> RD_SUB`、`rd-stocktake` 固定 `RD_SUB`、`workshop-material` 由业务语义收敛到 `MAIN/RD_SUB`、`project` 通过兼容解析收敛到 `MAIN/RD_SUB`；`workshopId` 主要保留在会话 / RBAC / 查询入口兼容层与业务归属语义中。
