@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request } from "express";
+import { RbacService } from "../../modules/rbac/application/rbac.service";
 import { SessionService } from "../../modules/session/application/session.service";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 
@@ -14,6 +15,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly sessionService: SessionService,
+    private readonly rbacService: RbacService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -40,6 +42,10 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const session = await this.sessionService.resolveSessionFromToken(token);
+    const latestUser = await this.rbacService.getCurrentUser(
+      session.user.userId,
+    );
+    await this.sessionService.syncSessionUser(session, latestUser);
     request.user = session.user;
     request.session = session;
     request.accessToken = token;
