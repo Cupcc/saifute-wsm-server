@@ -60,21 +60,25 @@
 
 ## 能力清单
 
-| 编号   | 能力           | 验收口径                                                                                                      | 阶段      | 状态    | 关联需求                                                                                    |
-| ---- | ------------ | --------------------------------------------------------------------------------------------------------- | ------- | ----- | --------------------------------------------------------------------------------------- |
-| `F1` | 系统管理八类核心能力收口 | `用户 / 角色 / 部门 / 菜单 / 岗位 / 字典 / 参数 / 通知` 的前端 `/api/system/*` 与当前 NestJS 承接对齐，且 `admin` / 代表性非 `admin` 冒烟通过 | Phase 1 | `已完成` | `docs/requirements/archive/retained-completed/req-20260327-1604-rbac-implementation.md` |
+
+| 编号   | 能力           | 验收口径                                                                                                      | 阶段      | 状态    | 关联需求                                                                                                 |
+| ---- | ------------ | --------------------------------------------------------------------------------------------------------- | ------- | ----- | ---------------------------------------------------------------------------------------------------- |
+| `F1` | 系统管理八类核心能力收口 | `用户 / 角色 / 部门 / 菜单 / 岗位 / 字典 / 参数 / 通知` 的前端 `/api/system/*` 与当前 NestJS 承接对齐，且 `admin` / 代表性非 `admin` 冒烟通过 | Phase 1 | `已完成` | `docs/requirements/archive/retained-completed/req-20260327-1604-rbac-implementation.md`              |
 | `F2` | 组织与角色矩阵澄清    | 明确真实部门、主角色、预留查看角色与账号维护职责，形成后续 system-management 切片的长期基线                                                   | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260331-0042-system-management-f2-f3-baseline.md` |
 | `F3` | 平台审计与在线治理边界  | 明确 `在线用户 / 登录日志 / 操作日志` 在 system-management topic 下的长期归属与验收口径                                             | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260331-0042-system-management-f2-f3-baseline.md` |
-| `F4` | 平台初始化与持久化方案  | 已完成当前 Prisma snapshot 持久化与菜单/角色数据驱动基线；若后续要继续拆成规范化平台表，应另开新的切片                                                                     | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260331-0934-system-management-f4-persistence.md` |
-| `F5` | 系统运维邻接能力边界   | 明确 `调度 / AI 支持` 等非核心平台能力是否保持 topic 外邻接管理，并在 Phase 3 再决定是否开启独立切片                                                                  | Phase 3 | `未开始` | `-`                                                                                     |
+| `F4` | 平台初始化与持久化方案  | 已完成当前 Prisma snapshot 持久化与菜单/角色数据驱动基线；若后续要继续拆成规范化平台表，应另开新的切片                                              | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260331-0934-system-management-f4-persistence.md` |
+| `F5` | 系统运维邻接能力边界   | 明确 `调度 / AI 支持` 等非核心平台能力是否保持 topic 外邻接管理，并在 Phase 3 再决定是否开启独立切片                                           | Phase 3 | `未开始` | `-`                                                                                                  |
+
 
 ## 阶段路线图
+
 
 | 阶段      | 目标                                | 当前状态  |
 | ------- | --------------------------------- | ----- |
 | Phase 1 | 收口当前系统管理八类核心能力与 RBAC 基础闭环         | `已完成` |
 | Phase 2 | 澄清真实组织矩阵、平台边界与后续实现主轴              | `进行中` |
 | Phase 3 | 基于确认结果继续扩展 system-management 相关切片 | `待规划` |
+
 
 ## 已确认（当前）
 
@@ -102,3 +106,4 @@
 - 已归档 workspace：
   - `docs/workspace/archive/retained-completed/system-management-module/README.md`
 - 后续继续推进时，应从本 topic 新开 `docs/requirements/req-*.md` 切片。
+
