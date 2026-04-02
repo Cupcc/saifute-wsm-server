@@ -213,7 +213,8 @@ export class AppConfigService {
   }
 
   private readNumber(key: string, fallback: number): number {
-    const value = this.configService.get<string>(key);
+    const raw = this.configService.get<string>(key);
+    const value = typeof raw === "string" ? raw.trim() : raw;
     const parsed = value ? Number(value) : Number.NaN;
     return Number.isFinite(parsed) ? parsed : fallback;
   }
@@ -227,7 +228,11 @@ export class AppConfigService {
   }
 
   private readString(key: string, fallback: string): string {
-    return this.configService.get<string>(key) ?? fallback;
+    const raw = this.configService.get<string>(key);
+    if (raw === undefined || raw === null) {
+      return fallback.trim();
+    }
+    return raw.trim();
   }
 
   private parseBooleanValue(value: string | undefined): boolean | null {

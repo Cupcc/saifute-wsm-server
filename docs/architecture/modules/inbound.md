@@ -4,6 +4,8 @@
 
 负责验收单、生产入库单及其明细的创建、修改、作废、查询和导出。该模块是库存增加型单据域，所有库存副作用必须走 `inventory-core`。
 
+**口径**：成品入库（生产完工入库）统一由本模块承接（`/inbound/into-orders`），与验收单（`/inbound/orders`）同属入库家族、共用 `stock_in_order` 主从表。
+
 ## 原 Java 来源与映射范围
 
 - `business/src/main/java/com/saifute/entry`

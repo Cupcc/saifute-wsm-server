@@ -47,23 +47,6 @@ function mapOperationTypeToLegacyType(operationType) {
   }
 }
 
-function buildInventorySummaryParams(query = {}, limit, offset) {
-  const singleCategoryId =
-    Array.isArray(query.category) && query.category.length === 1
-      ? Number(query.category[0])
-      : undefined;
-
-  return {
-    keyword: query.materialCode2 || query.materialName || undefined,
-    categoryId: Number.isInteger(singleCategoryId)
-      ? singleCategoryId
-      : undefined,
-    workshopId: query.workshopId,
-    limit,
-    offset,
-  };
-}
-
 async function fetchAllInventorySummaryItems(query = {}) {
   let offset = 0;
   let total = 0;
@@ -71,9 +54,14 @@ async function fetchAllInventorySummaryItems(query = {}) {
 
   do {
     const response = await request({
-      url: "/api/reporting/inventory-summary",
+      url: "/api/inventory/balances",
       method: "get",
-      params: buildInventorySummaryParams(query, REPORTING_PAGE_LIMIT, offset),
+      params: {
+        materialId: query.materialId,
+        workshopId: query.workshopId,
+        limit: REPORTING_PAGE_LIMIT,
+        offset,
+      },
     });
     const batch = Array.isArray(response.data?.items)
       ? response.data.items
@@ -93,18 +81,24 @@ function buildInventoryRows(items, query = {}) {
   const grouped = new Map();
 
   for (const item of items) {
+    const material = item.material ?? {};
     const current = grouped.get(item.materialId) ?? {
       inventoryId: item.materialId,
       materialId: item.materialId,
-      materialCode: item.materialCode,
-      materialName: item.materialName,
-      specification: item.specModel ?? "",
-      category: item.categoryId ? String(item.categoryId) : null,
+      materialCode: material.materialCode ?? item.materialCode,
+      materialName: material.materialName ?? item.materialName,
+      specification: material.specModel ?? item.specModel ?? "",
+      category:
+        material.categoryId !== undefined && material.categoryId !== null
+          ? String(material.categoryId)
+          : item.categoryId
+            ? String(item.categoryId)
+            : null,
       currentQty: 0,
-      warningMinQty: item.warningMinQty,
-      warningMaxQty: item.warningMaxQty,
+      warningMinQty: material.warningMinQty ?? item.warningMinQty,
+      warningMaxQty: material.warningMaxQty ?? item.warningMaxQty,
     };
-    current.currentQty += Number(item.quantityOnHand || 0);
+    current.currentQty += Number(item.quantityOnHand ?? 0);
     grouped.set(item.materialId, current);
   }
 

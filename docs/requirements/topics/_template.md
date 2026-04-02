@@ -1,8 +1,10 @@
 # [主题需求标题]
 
-> 本模板仅用于 `docs/requirements/topics/*.md` 主题级需求文档，不用于固定项目需求文档 `docs/requirements/PROJECT_REQUIREMENTS.md` 或切片需求文档 `docs/requirements/req-*.md`。
+> 本模板仅用于 `docs/requirements/topics/*.md` 主题级需求文档。
 >
 > 这里只写长期约束、能力清单、阶段路线图和文档关系；不要写单次切片进展、执行日志或 review 记录。
+>
+> 能力合同信息供 AI 直接创建 `task-*.md`，不再需要中间切片 `req-*.md`。
 
 ## Metadata
 
@@ -21,9 +23,25 @@
 
 ## 能力清单
 
-| 编号 | 能力 | 验收口径 | 阶段 | 状态 | 关联需求 |
+| 编号 | 能力 | 验收口径 | 阶段 | 状态 | 关联任务 |
 | --- | --- | --- | --- | --- | --- |
 | `F1` | [能力名称] | [一句话验收口径] | Phase 1 | `未开始` | `-` |
+
+## 能力合同（推荐）
+
+> 若 topic 要作为 AI 自动派生切片的长期锚点，请至少为每个未完成能力补齐以下合同信息。
+
+### `F1` [能力名称]
+
+- In scope:
+- Out of scope / non-goals:
+- Completion criteria:
+  - `[TC-1]`
+  - `[TC-2]`
+- Evidence expectation:
+- Default derived slice acceptance mode: `none` | `light` | `full`
+- AI derivation note:
+  - 说明 AI 后续直接创建 `task-*.md` 时默认应选哪一块、哪些边界不能重写。
 
 ## 阶段路线图
 
@@ -39,9 +57,9 @@
 ## 文档关系（可选）
 
 - 项目级长期背景：`docs/requirements/PROJECT_REQUIREMENTS.md`
-- 阶段切片需求：`docs/requirements/req-*.md` 或 `docs/requirements/archive/**/req-*.md`
+- 执行任务：`docs/tasks/*.md` 或 `docs/tasks/archive/**/task-*.md`（Metadata 中 `Related requirement` 指向本 topic `Fx`）
 - 执行与验证：`docs/tasks/*.md` 或 `docs/tasks/archive/**/task-*.md`
 
-主题文档负责“长期分类”，不负责“当前进展”。
-新开切片时，应从能力清单中挑出本次要交付的 1-2 项，写入新的 `req-*.md`。
-如果某份已归档切片仍是后续工作的关键基线，可在主题文档的 `文档关系` 中明确指出，不必为了统一格式强行删除。
+主题文档负责”长期分类”和”长期合同锚点”，不负责”当前进展”。
+新开能力时，从能力清单中挑出本次要交付的 1-2 项，直接创建 `docs/tasks/task-*.md`（在 Metadata 中填 `Related requirement: docs/requirements/topics/*.md (Fx)`）。
+能力交付完成后，更新能力清单中对应行的状态与 task 链接。

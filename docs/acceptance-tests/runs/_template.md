@@ -1,82 +1,62 @@
-# [acceptance-run-title]
+# [验收执行报告标题]
 
-## Metadata
+## 元数据
 
-- Related requirement:
-- Related task:
-- Related acceptance spec:
-- Delivery mode: `standard` | `autonomous`
-- Report type: `complete-delivery-report`
-- Spec baseline type: `inline-case-snapshot`
-- Status: `planned` | `running` | `passed` | `failed` | `blocked`
-- Acceptance QA: `acceptance-qa`
-- Environment:
-- Build / commit under test:
-- Last updated:
+- 关联需求：
+- 关联任务：
+- 关联验收规格：
+- 需要单独 `run` 的原因：
+- 状态：`planned`（计划中） | `running`（执行中） | `passed`（通过） | `failed`（失败） | `blocked`（阻塞）
+- 验收 QA：`acceptance-qa`
+- 环境：（本地 QA 优先使用 `.env.dev`，与 `pnpm dev` 保持一致；见 `docs/acceptance-tests/README.md`）
+- 被测构建 / 提交：
+- 最近更新：
 
-## Report Scope
+## 报告范围
 
-- Business goal summary:
-- In-scope criteria:
-- Out-of-scope checks:
-- Summary of evidence sources:
+- 业务目标摘要：
+- 本次覆盖的验收标准：
+- 本次不覆盖的检查项：
+- 证据来源摘要：
 
-## Selected Case Snapshot
+## 环境就绪情况
 
-- `[AC-CASE-1]` Case name
-  - Maps to criterion: `[AC-1]`
-  - Coverage tags:
-  - Preconditions snapshot:
-  - Expected result snapshot:
+- 实际执行面 / 命令：
+- 实际使用的 env 文件或注入路径：
+- 账号 / 角色：
+- 测试数据 / 初始化方式：
+- 所需浏览器 / 设备：
+- 入口 URL / 环境端点：
+- 外部依赖 / 功能开关：
+- 已核对的运行时解析值或实际生效端点：
+- 失败模式直接复现证据：
+- 对照路径证据：
+- 环境结论：`ready`（就绪） | `blocked`（阻塞）
+- 若阻塞，责任人和准确缺口：
 
-## Environment Readiness
+## 执行结果
 
-- Accounts / roles:
-- Test data / setup:
-- Required browser / device:
-- Entry URL / environment endpoint:
-- External dependencies / feature flags:
-- Environment verdict: `ready` | `blocked`
-- If blocked, owner and exact gap:
+- `[AC-CASE-1]` 用例名称
+  - 验收标准：
+  - 预期结果：
+  - 实际结果：
+  - 证据：
+  - 结果：`pass`（通过） | `fail`（失败） | `blocked`（阻塞）
 
-## Requirement Coverage Matrix
+## 验收矩阵
 
-| Criterion | Selected case(s) | Evidence type | Result |
+| 验收标准 | 覆盖用例 | 执行面 | 关键证据 | 结论 | 备注 |
+| --- | --- | --- | --- | --- | --- |
+| `[AC-1]` | `[AC-CASE-1]` | `unit` |  | `满足（met）` |  |
+
+## 证据摘要
+
+| 执行面 | 证据 | 结果 | 备注 |
 | --- | --- | --- | --- |
-| `[AC-1]` | `[AC-CASE-1]` |  | `pass / fail / blocked / partial` |
+| `unit` |  | `通过（pass）` |  |
 
-## Execution Results
+## 总结
 
-- [ ] `[AC-1]` Case name
-  - Criterion:
-  - Steps executed:
-  - Expected result:
-  - Actual result:
-  - Evidence:
-  - Result: `pass` | `fail` | `blocked`
-
-## Regression And Supporting Checks
-
-- Static / type / lint checks:
-- Automated tests:
-- Browser / manual checks:
-- Data / DB verification:
-- Other supporting evidence:
-
-## Defects And Blocks
-
-- Open defects / follow-up:
-- Blockers or environment gaps:
-- Follow-up owner:
-
-## Requirement Verdict
-
-- `[AC-1]` Final verdict: `met` | `not met` | `partially met` | `blocked`
-  - Supporting evidence:
-  - Notes:
-
-## Summary
-
-- Final recommendation: `accept` | `reject` | `conditional` | `block`
-- Completion judgment:
-- Residual risks:
+- 最终建议：`accept`（接受） | `reject`（拒绝） | `conditional`（条件接受） | `block`（阻塞）
+- 完成度判断：
+- 残余风险：

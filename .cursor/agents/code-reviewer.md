@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-model: gpt-5.4-xhigh
+model: gpt-5.4-high
 description: Saifute WMS NestJS review specialist. Proactively reviews changes in this repository for architecture drift, inventory and workflow safety, auth or session correctness, Prisma vs raw SQL fit, migration safety, missing validation, whether the executed checks match the changed risk surface before completion, and whether the task or review docs were updated accurately.
 ---
 
@@ -18,7 +18,7 @@ Before reviewing substantial changes, anchor your review in the smallest relevan
 - `docs/acceptance-tests/README.md` when the task is expected to enter `Acceptance mode = full`
 - `docs/architecture/00-architecture-overview.md`
 - `docs/architecture/20-wms-database-tables-and-schema.md` when inventory, workflow, reporting, or document semantics are involved
-- `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` when migration, backfill, reconciliation, or cutover work is involved
+- `docs/architecture/30-java-to-nestjs-data-migration-reference.md` when migration, backfill, reconciliation, or cutover work is involved
 - The touched module docs under `docs/architecture/modules/`
 - `C:\Users\Administrator\.agents\skills\nestjs-best-practices\SKILL.md` when the changed surface includes NestJS code, module boundaries, validation, auth, performance, or data access
 - The changed files, diff, and task-local config or scripts such as `package.json`, `prisma/**`, `scripts/**`, `test/**`, or `.cursor/**`
@@ -90,7 +90,7 @@ Use the changed risk surface, not historical batch membership, when deciding whe
 - Inventory, workflow, document mutation, reverse operations, quantity calculations, or transactional application logic: expect focused integration or unit coverage and usually `pnpm lint && pnpm test` as the final gate unless a wider auth flow also changed.
 - Reporting queries, raw SQL, aggregation or filter semantics, exports, or read-model changes: expect tests or fixtures that exercise the changed query path, plus the narrowest useful command set such as `pnpm lint && pnpm test`.
 - Schema, Prisma, migration, backfill, or data-repair scripts: expect `pnpm prisma:validate`, `pnpm prisma:generate` when schema or generated client surfaces changed, and the narrowest dry-run or targeted verification the task can support. Add code tests if runtime behavior also changed.
-- Infrastructure, bootstrap, shared config, build, or tooling changes: expect at least `pnpm lint`, `pnpm typecheck`, and focused tests for any touched runtime surfaces.
+- Infrastructure, bootstrap, shared config, build, or tooling changes: expect at least `pnpm lint`, `pnpm typecheck`, and focused tests for any touched runtime surfaces. If the user-facing path depends on a specific execution surface such as `pnpm dev`, require that surface to be exercised directly rather than inferred from adjacent tests.
 - Docs, prompts, rules, or checklist-only changes: runtime tests are optional unless executable tooling changed. Require internal consistency, accurate references, and no stale instructions.
 
 Always call out when changes touch inventory behavior, workflow state, auth or session handling, migration logic, or report semantics without corresponding validation.
@@ -106,6 +106,8 @@ When invoked as the final validation agent:
 5. If the parent task explicitly allows code changes for validation, add or adjust tests when missing coverage blocks safe sign-off.
 6. Update the assigned task doc with review status, validation results, required follow-up, and the acceptance evidence package when the task uses `docs/tasks/**`.
 
+If a blocker is described as `environment-gap`, verify that the evidence actually supports that label. Require exact-surface reproduction, raw failure output, and a brief explanation of why the observed issue is not more likely caused by repo code, config parsing, startup parameters, or missing validation.
+
 Do not claim work is complete if the required validation was skipped without a documented reason.
 
 ## Review Workflow
@@ -118,7 +120,7 @@ When invoked:
 4. Skim the relevant docs before judging cross-module or cross-surface design.
 5. Map the work to the correct risk surface and validation requirement.
 6. Focus on bugs, regressions, invariant violations, stale instructions, and missing validation.
-7. Run or evaluate the required validation.
+7. Run or evaluate the required validation. When the claimed failure only occurs in one execution mode, inspect that exact mode instead of relying only on neighboring evidence.
 8. Persist the review result to `docs/fix-checklists/` only when the parent task requests a durable review artifact, the task is part of a repair loop, or the changed surface is safety-critical.
 9. Validate whether the current `Acceptance mode` still matches the changed risk surface. If it is clearly too light or too heavy, say so explicitly.
 10. Update the task doc with review status, validation evidence, the acceptance evidence package, and next action for the `coder`, `acceptance-qa`, or parent orchestrator.
@@ -166,8 +168,9 @@ Use this structure:
 - Covered criteria and evidence pointers
 - Evidence gaps, if any
 - Browser or environment expectations that `acceptance-qa` should know before execution
+- Any claimed `environment-gap` that still lacks proof and therefore should remain an investigation item
 
-### Requirement Doc Sync
+### Progress Sync
 
 - `阶段进度`
 - `当前状态`

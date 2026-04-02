@@ -24,7 +24,7 @@
 
 - 主题真源入口：`docs/requirements/topics/system-management-module.md`
 - 后续运行态修复任务：
-  - `docs/tasks/task-20260401-system-management-browser-repair.md`
+  - `docs/tasks/archive/retained-completed/task-20260401-system-management-browser-repair.md`
 - 已归档阶段基线：
   - `docs/requirements/archive/retained-completed/req-20260327-1604-rbac-implementation.md`
   - `docs/requirements/archive/retained-completed/req-20260331-0042-system-management-f2-f3-baseline.md`

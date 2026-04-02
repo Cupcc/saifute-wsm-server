@@ -1,33 +1,59 @@
-# [acceptance-spec-title]
+# [验收规格标题]
 
-## Metadata
+## 元数据
 
-- Module / topic:
-- Owner: `acceptance-qa`
-- Related architecture / topic docs:
-- Last updated:
+- 模块 / 主题：
+- 负责人：`acceptance-qa`
+- 关联架构 / 主题文档：
+- 最近更新：
 
-## Covered Scope
+## 覆盖范围
 
-- Related requirements / task types:
-- Covered criteria families:
-- Default evidence types:
-- Environment or role assumptions:
+- 关联需求 / 任务类型：
+- 覆盖验收标准族：
+- 默认证据类型：
+- 环境或角色假设：
+- 对环境敏感的执行面（如有）：
 
-## Acceptance Cases
+## 验收用例
 
-- `[AC-CASE-1]` Case name
-  - Maps to criteria:
-  - Coverage tags: `main-flow` | `role` | `negative` | `regression-critical` | `high-risk`
-  - Primary evidence type:
-  - Intent:
-  - Preconditions:
-  - Steps:
-  - Expected result:
-  - Evidence expectation:
+- `[AC-CASE-1]` 用例名称
+  - 对应验收标准：
+  - 覆盖标签：`main-flow` | `role` | `negative` | `regression-critical` | `high-risk`
+  - 主要证据类型：
+  - 验证目标：
+  - 前置条件：
+  - 必需执行面：
+  - 操作步骤：
+  - 预期结果：
+  - 证据预期：
 
-## Notes
+## 最近一次验证
 
-- Known exclusions:
-- Reuse guidance:
-- Minimum case subset for a full autonomous-delivery run:
+### 验证摘要
+
+| 最近测试时间 | 关联任务 | 验证范围 | 环境 | 结果 |
+| --- | --- | --- | --- | --- |
+|  |  |  |  | `通过（passed）` |
+
+### 验收矩阵
+
+| 验收标准 | 覆盖用例 | 执行面 | 关键证据 | 结论 | 备注 |
+| --- | --- | --- | --- | --- | --- |
+| `[AC-1]` | `[AC-CASE-1]` | `unit` |  | `满足（met）` |  |
+
+### 证据摘要
+
+| 执行面 | 证据 | 结果 | 备注 |
+| --- | --- | --- | --- |
+| `unit` |  | `通过（pass）` |  |
+
+### 残余风险 / 后续跟进
+
+- 无。
+
+## 备注
+
+- 已知不覆盖项：
+- 复用指引：
+- 完整 autonomous-delivery run 的最小用例子集：

@@ -183,6 +183,36 @@ describe("Batch A acceptance (e2e)", () => {
     expect(routeNames).toContain("Dashboard");
     expect(routeNames).toContain("RdSubwarehouse");
     expect(routeNames).not.toContain("SystemManagement");
+    expect(routeNames).not.toContain("Reporting");
+
+    await request(server)
+      .get("/api/reporting/home")
+      .set("Authorization", `Bearer ${operatorAccessToken}`)
+      .expect(200);
+
+    await request(server)
+      .get("/api/reporting/material-category-summary")
+      .query({ limit: 8, offset: 0 })
+      .set("Authorization", `Bearer ${operatorAccessToken}`)
+      .expect(200);
+
+    await request(server)
+      .get("/api/reporting/trends")
+      .query({ dateFrom: "2026-04-01", dateTo: "2026-04-02" })
+      .set("Authorization", `Bearer ${operatorAccessToken}`)
+      .expect(200);
+
+    await request(server)
+      .get("/api/inventory/balances")
+      .query({ limit: 10, offset: 0 })
+      .set("Authorization", `Bearer ${operatorAccessToken}`)
+      .expect(200);
+
+    await request(server)
+      .get("/api/reporting/inventory-summary")
+      .query({ limit: 10, offset: 0 })
+      .set("Authorization", `Bearer ${operatorAccessToken}`)
+      .expect(403);
 
     await request(server)
       .get("/api/sessions/online")

@@ -1,6 +1,6 @@
 ---
 description: Do not stop at intermediate milestones when user requests full-scope delivery
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Requested Scope Delivery No Mid-Stop

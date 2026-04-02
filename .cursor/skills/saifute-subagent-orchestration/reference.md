@@ -82,7 +82,7 @@ Typical output:
 
 Checks include:
 
-- requirement drift between the linked requirement doc, task doc, and delivered changes
+- requirement drift between the linked topic capability (`docs/requirements/topics/*.md`), task doc, and delivered changes
 - auth and session lifecycle where relevant
 - inventory side effects and reverse operations
 - workflow regressions
@@ -111,8 +111,8 @@ Checks include:
 ## Suggested combinations
 
 - Lightweight direct task: parent reads the smallest relevant files -> edits directly -> runs focused validation -> optional parent self-review -> stop
-- Non-trivial task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines + decision_candidates -> parent syncs concise progress to the requirement doc -> parent writes qualifying decision_candidates to `docs/workspace/<workflow>/decisions.md` and updates dashboard -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs progress to requirement doc and workspace -> parent follows `.cursor/rules/commit-workflow.mdc` for branch-local checkpoint or final semantic commit handling -> parent retrospect: append lessons to `docs/playbooks/{domain}/playbook.md`
-- Requirement-first flow for durable work: create or confirm `docs/requirements/*.md` -> create workspace folder under `docs/workspace/<workflow>/` when scope is non-trivial -> `planner` writes `docs/tasks/*.md` against it -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent keeps requirement doc and workspace updated
+- Non-trivial task flow: confirm topic capability in `docs/requirements/topics/*.md` (Fx) -> `planner` writes `docs/tasks/*.md` with `Related requirement` pointing to topic -> parent updates topic capability status at key milestones -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent follows `.cursor/rules/commit-workflow.mdc` for branch-local checkpoint or final semantic commit handling -> parent retrospect: append lessons to `docs/playbooks/{domain}/playbook.md`
+- Requirement-first flow for durable work: confirm topic capability in `docs/requirements/topics/*.md` -> create workspace folder under `docs/workspace/<workflow>/` when scope is non-trivial -> `planner` writes `docs/tasks/*.md` against the topic capability -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent updates topic capability status when done
 - Multi-module task with safe disjoint scopes: `planner` writes task docs or explicit scoped sections -> parallel `coder` workers with explicit boundaries -> `code-reviewer` -> fix loop as needed
 - Review-heavy task: `planner` writes `docs/tasks/*.md` -> `code-reviewer`
 - Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> parent follows `.cursor/rules/commit-workflow.mdc` for commit handling
@@ -174,7 +174,7 @@ Tests run or still needed:
 Risks, blockers, sign-off needs, or follow-up work:
 - ...
 
-Requirement doc sync:
+Progress sync (task doc):
 - 阶段进度: ...
 - 当前状态: ...
 - 阻塞项: ...

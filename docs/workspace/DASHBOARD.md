@@ -4,11 +4,12 @@
 
 ## 当前状态
 
-**活跃工作流** 当前主要剩余 `fifo-costing-default-fifo`、`rd-subwarehouse-frontend-display-dual-primary`、`migration-stage-planning` 与 `monthly-reporting` 四条线；其中 `fifo-costing-default-fifo` 已形成默认 FIFO 成本核算草案，主张保留汇总库存并以入库 `inventory_log` 作为 FIFO 成本层、`inventory_source_usage` 记录来源消耗，从而避免当前就扩到完整批次模型。`system-management-module` 已完成 `F2/F3` 基线收口并归档，后续若继续推进持久化方案或邻接能力边界，应另开新的切片 requirement / task / workspace。`stock-scope-phase2-cutover` 也已在空库与最小非空样本两条路径上完成验证并归档，若后续要验证更大规模真实历史数据，应另开新的 rehearsal scope。
+**活跃工作流** 当前主要剩余 `fifo-costing-default-fifo`、`rd-subwarehouse-frontend-display-dual-primary`、`migration-stage-planning`、`monthly-reporting` 与 `acceptance-mechanism` 五条线。新增 `acceptance-mechanism` 工作流用于设计 AI 团队的需求验收环节（V&V 分离），draft v1 已完成，等待用户审阅确认后落地。
 
 ## 需要你确认的
 
-- `rd-subwarehouse-frontend-display-dual-primary`: 请继续确认 `研发协同` 一级界面内部应如何组织，才能同时满足“大仓管理员查看小仓全部物料状态 / 库存状态”和“顺手完成验收、发放 / 交接、退回处理”等大仓侧动作；详见 [draft.md](rd-subwarehouse-frontend-display-dual-primary/draft.md)。
+- `acceptance-mechanism`: draft v1.3 已收敛（10 项决策 + 9 个文件落地清单）。请确认是否立即落地。
+- `rd-subwarehouse-frontend-display-dual-primary`: 请继续确认 `研发协同` 一级界面内部应如何组织，才能同时满足”大仓管理员查看小仓全部物料状态 / 库存状态”和”顺手完成验收、发放 / 交接、退回处理”等大仓侧动作；详见 [draft.md](rd-subwarehouse-frontend-display-dual-primary/draft.md)。
 - `migration-stage-planning`: 请确认阶段划分更偏 `业务价值可见性` / `技术底座先行` / `需求确认→实现→验收` / `混合口径`。
 
 ## AI 待办
@@ -18,7 +19,8 @@
 | 1   | fifo-costing-default-fifo      | 方案已成稿，待细化 | 已沉淀默认 FIFO 成本核算草案；下一步适合进入 schema 变更清单与库存核心改造拆解；[详情](fifo-costing-default-fifo/README.md) |
 | 2   | rd-subwarehouse-frontend-display-dual-primary | 探索中 / 等待用户输入 | 已确认一级菜单命名与退回闭环；当前待收敛 `研发协同` 的信息组织与操作分区，阻塞于上方确认项；[详情](rd-subwarehouse-frontend-display-dual-primary/README.md) |
 | 3   | migration-stage-planning       | 等待用户输入 | 新工作流已创建并启用 `draft.md`；迁移范围与成功展示主受众已澄清，当前待确认阶段拆分主轴；确认后即可进入阶段拆解与展示模板头脑风暴；[详情](migration-stage-planning/README.md) |
-| 4   | monthly-reporting              | 需求已确认，待设计 | 已确认“全包含”指标与销售域口径、固定正式月报 + 人工重算 + 日期范围报表、系统查看 + Excel 导出，以及补录后重算且需保证追溯；[详情](monthly-reporting/README.md) |
+| 4   | monthly-reporting              | 需求已确认，待设计 | 已确认”全包含”指标与销售域口径、固定正式月报 + 人工重算 + 日期范围报表、系统查看 + Excel 导出，以及补录后重算且需保证追溯；[详情](monthly-reporting/README.md) |
+| 5   | acceptance-mechanism           | v1.3 已收敛，待落地 | AI 团队验收机制设计：10 项决策已确认，9 个文件待创建/修改；[详情](acceptance-mechanism/README.md) |
 
 ## 活跃工作流
 
@@ -28,6 +30,7 @@
 | [rd-subwarehouse-frontend-display-dual-primary](rd-subwarehouse-frontend-display-dual-primary/README.md) | 需求确认 | ○ 等待输入 | 澄清 RD 小仓前端应为「大仓 / 小仓两个一级操作面」及系统管理员双侧可见；业务层功能清单见 `draft.md` |
 | [migration-stage-planning](migration-stage-planning/README.md) | 需求确认 | ○ 等待输入 | 目标是明确迁移开发阶段、每阶段的成功展示口径与后续沉淀方式；已启用 `draft.md` 沉淀脑暴与意图挖掘，当前等待用户确认阶段拆分主轴 |
 | [monthly-reporting](monthly-reporting/README.md)               | 需求已确认 | ● 稳定   | 5 项核心口径已确认，下一步进入详细设计与实施规划 |
+| [acceptance-mechanism](acceptance-mechanism/README.md)         | 待落地 | ● 就绪 | draft v1.3 已收敛，10 项决策已确认，9 个文件待创建/修改 |
 
 ## 已归档
 

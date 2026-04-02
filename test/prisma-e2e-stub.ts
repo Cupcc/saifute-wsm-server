@@ -366,6 +366,21 @@ export class PrismaE2eStub {
     createdAt: Date;
   }>();
 
+  sysDept = createModelStub();
+  sysPost = createModelStub();
+  sysMenu = createModelStub();
+  sysRole = createModelStub();
+  sysUser = createModelStub();
+  sysDictType = createModelStub();
+  sysDictData = createModelStub();
+  sysConfig = createModelStub();
+  sysNotice = createModelStub();
+  sysUserRole = createModelStub();
+  sysUserPost = createModelStub();
+  sysRoleMenu = createModelStub();
+  sysRoleDept = createModelStub();
+  systemManagementSnapshot = createModelStub();
+
   async $connect(): Promise<void> {}
   async $disconnect(): Promise<void> {}
   async $transaction<R>(handler: (tx: unknown) => Promise<R>): Promise<R> {

@@ -27,7 +27,8 @@ Accumulated execution experience for subagent coordination, parallel writer mana
 ## Full-Mode Closure
 
 - Prepare or reuse an acceptance spec before full-mode execution when possible.
-- Freeze a selected-case snapshot inside each acceptance run.
-- Do not archive while any linked acceptance run remains `blocked`.
+- Update the spec's `Latest Verification` as the default current acceptance record.
+- Only create a separate acceptance run when a standalone or frozen report is justified.
+- Do not archive while the current acceptance record remains `blocked`.
 
 <!-- Append new entries below in reverse chronological order. -->

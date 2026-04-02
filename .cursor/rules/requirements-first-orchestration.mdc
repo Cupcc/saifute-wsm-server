@@ -13,7 +13,7 @@ If hidden complexity surfaces or shared files / frozen contracts are touched, es
 
 ## Non-Trivial Work
 
-- Before planning, create or locate a requirement: project-level → `PROJECT_REQUIREMENTS.md`; task-level → `req-*.md`; closed → `archive/`.
+- Before planning, create or locate a requirement: project-level → `PROJECT_REQUIREMENTS.md`; topic-level → `docs/requirements/topics/*.md`; no intermediate slice `req-*.md` needed. If continuing a topic capability, the task doc's `Related requirement` points to the topic (e.g., `docs/requirements/topics/system-management-module.md (F4)`).
 - Active index: `REQUIREMENT_CENTER.md` (paired with `TASK_CENTER.md`).
 - Requirements must be concise, in Chinese, aligned with user intent. Structure: `用户需求`, `当前进展` (progress/status/blockers/next), `待确认` (None if empty).
 - `当前进展` may legitimately say `阻塞项: None` and `下一步: None / 归档 / 等待新需求`; do not invent fake blockers, fake confirmations, or placeholder next steps just to satisfy the template.

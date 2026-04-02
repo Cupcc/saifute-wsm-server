@@ -103,7 +103,7 @@
   - `master-data` 启动时会幂等补齐 `stock_scope(MAIN / RD_SUB)` 与 `workshop(MAIN / RD)`。
   - 前端 `userStore` 已承接 `department`，`operator / procurement` 首页“所属部门”会显示真实部门。
   - `admin / operator / rd-operator / procurement` 四类账号再次验证通过，`system/*` 对非管理员仍保持 404 收口。
-- 这轮修复对应的执行记录见：`docs/tasks/task-20260401-system-management-browser-repair.md`
+- 这轮修复对应的执行记录见：`docs/tasks/archive/retained-completed/task-20260401-system-management-browser-repair.md`
 
 ## 对话留痕
 
@@ -120,5 +120,4 @@
 | 2026-03-31 | 文档说明      | `F2 / F3` 已被正式收口到归档 requirement / task、topic、架构文档与归档 workspace                                 |
 | 2026-04-01 | Chrome 实测 | 暴露 `system_management_snapshot` 缺表、首页部门展示漂移、以及 canonical `stock_scope / workshop` 缺失导致的启动与页面告警 |
 | 2026-04-01 | 修复结果      | 已补齐启动自愈、基础数据 bootstrap 与首页 `department` 映射，四类主账号真实浏览器回归通过                                      |
-
 

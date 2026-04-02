@@ -49,7 +49,7 @@ On the lightweight direct lane:
 
 Read the smallest relevant source of truth before assigning work:
 
-- the linked requirement doc under `docs/requirements/**` when the task is driven by a user request
+- the relevant topic capability in `docs/requirements/topics/*.md` when the task is driven by a user request
 - the workspace folder under `docs/workspace/<workflow>/` when the workflow has one — check `docs/workspace/DASHBOARD.md` for the index
 - `docs/architecture/00-architecture-overview.md`
 - the specific module docs in `docs/architecture/modules/`
@@ -61,7 +61,7 @@ For any task type with an existing playbook, also read:
 
 For migration, backfill, reconciliation, or cutover-prep work, also read:
 
-- `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
+- `docs/architecture/30-java-to-nestjs-data-migration-reference.md`
 - `docs/architecture/20-wms-database-tables-and-schema.md` when the work touches inventory, workflow, reporting, document relations, reservation semantics, or business-state semantics
 - the relevant `prisma/**`, `scripts/**`, `docs/**`, or module surfaces that define the current schema and runtime behavior
 
@@ -71,28 +71,21 @@ If legacy data and the current runtime disagree, adapt the legacy data to the cu
 
 ## Requirement-first orchestration
 
-For non-trivial work, create or locate one concise requirement doc under `docs/requirements/**` before planning.
+For non-trivial work, locate the relevant topic capability in `docs/requirements/topics/*.md` before planning. Requirements are maintained as long-term capability contracts in topic files — no intermediate slice `req-*.md` needed.
 
-- requirement doc: a concise Chinese user-and-AI interaction layer that records the user's requirement plus concise user-facing orchestration status
+- topic capability (`docs/requirements/topics/*.md`, `Fx` entry): the confirmed requirement contract with `In scope / Out of scope / Completion criteria / Evidence expectation`
 - workspace under `docs/workspace/<workflow>/`: human decision workspace — progress narrative, pending decisions with trade-offs, decision log, rich media assets; write access restricted to parent orchestrator
-- task doc in `docs/tasks/**`: detailed execution scope, validation state, review loop, handoff
+- task doc in `docs/tasks/**`: detailed execution scope, validation state, review loop, handoff; Metadata must include `Related requirement: docs/requirements/topics/*.md (Fx)`
 
-The requirement doc should stay concise. Use it for user-facing status only:
+If the topic capability is not confirmed or lacks contract information, stop and ask the user to update the topic before planning.
 
-- `阶段进度`
-- `当前状态`
-- `阻塞项`
-- `下一步`
-
-Completed-state requirement docs may explicitly say `阻塞项: None` and `下一步: None / 归档 / 等待新需求`. Do not manufacture pending confirmations, blockers, or faux follow-up steps after the scoped work is objectively complete.
-
-The task doc must link back to the requirement doc and carry forward the confirmed understanding.
+The task doc must link back to the topic capability and carry forward the confirmed understanding.
 
 When the workflow warrants a workspace (non-trivial scope, pending human decisions, or multiple decision points), the parent orchestrator should create or update `docs/workspace/<workflow>/` and keep the `DASHBOARD.md` index current. Workspace content is optimized for human reading — trade-off tables, option analysis, decision rationale — not agent metadata.
 
-New or materially changed requirement docs default to `needs-confirmation`. Do not treat them as accepted scope until the user explicitly confirms and the doc can be marked `confirmed`.
+New or materially changed topic capability docs default to `needs-confirmation`. Do not treat them as accepted scope until the user explicitly confirms and the doc can be marked `confirmed`.
 
-If you only sync current progress into an already confirmed requirement doc without changing the requirement understanding, keep it `confirmed`.
+If you only sync current progress into an already confirmed topic capability doc without changing the requirement understanding, keep it `confirmed`.
 
 If the requirement is unclear, has unresolved questions, or the planned execution would widen or rewrite it, stop and ask the user before planning, coding, or review sign-off.
 
@@ -125,7 +118,7 @@ When the user says `continue`, `resume`, `pick this up`, or asks to continue in 
 1. Check lifecycle truth first: `docs/tasks/TASK_CENTER.md`, `docs/requirements/REQUIREMENT_CENTER.md`, and `docs/workspace/DASHBOARD.md` / archive placement decide whether a scope is still active.
 2. Look for an existing root-level `docs/tasks/*.md` execution brief only for the still-active scope before starting fresh exploration.
 3. If an active task doc exists, treat it as the primary runtime handoff source and also read:
-   - the linked requirement doc under `docs/requirements/**`, if the task doc names one
+   - the linked topic capability in `docs/requirements/topics/*.md`, if the task doc names one
    - the related `docs/fix-checklists/*.md`
    - any report files, validation artifacts, or generated outputs referenced by the task doc
 4. If only archived docs exist, treat them as provenance only. Do not revive that scope unless the user explicitly asks to reopen it or a new requirement/task is created for a real follow-up.
@@ -229,7 +222,7 @@ For lightweight direct-lane requests such as low-risk docs, rules, wording, or t
 The reviewer should focus on:
 
 - bugs and behavioral regressions
-- requirement drift between `docs/requirements/**`, `docs/tasks/**`, and delivered changes
+- requirement drift between the linked topic capability in `docs/requirements/topics/*.md`, the task doc, and delivered changes
 - missing or weak tests
 - contract drift
 - auth, workflow, inventory, and transaction safety where relevant
@@ -297,7 +290,7 @@ The parent orchestrator owns the distinction between durable rules and runtime c
 - put stable, reusable facts in `.cursor/rules/*.mdc`
 - do not write temporary runtime observations into rules
 - put detailed task-scoped runtime context in `docs/tasks/**`, the parent handoff, or another clearly temporary shared context artifact when multiple subagents need the same live status
-- keep the linked `docs/requirements/**` updated with concise user-facing progress instead of leaving orchestration status only in chat memory
+- keep the task doc `docs/tasks/*.md` updated with concise user-facing progress; update the topic capability status in `docs/requirements/topics/*.md` only when an ability completes or its status changes
 - put decision-relevant findings (trade-offs, option analysis, decision rationale, human-intervention needs) in `docs/workspace/<workflow>/` instead of leaving them only in task docs or chat history; parent orchestrator owns all workspace writes
 - before promoting a new observation into rules, confirm that it is likely to remain valid across future tasks and does not contain secrets
 
@@ -305,7 +298,7 @@ The parent orchestrator owns the distinction between durable rules and runtime c
 
 Before stopping and returning control to the user on any non-trivial task, make sure the continuation-critical runtime state is written to durable docs instead of relying on chat memory alone.
 
-Prefer the active `docs/tasks/*.md` as the detailed handoff source, and sync concise user-facing progress into the linked `docs/requirements/*.md`. If task-doc ownership belongs to `planner` or `code-reviewer`, route the detailed update through the appropriate owner before stopping instead of leaving the latest state only in the conversation.
+Prefer the active `docs/tasks/*.md` as the detailed handoff source. If task-doc ownership belongs to `planner` or `code-reviewer`, route the detailed update through the appropriate owner before stopping instead of leaving the latest state only in the conversation.
 
 The durable handoff should capture:
 
@@ -317,7 +310,7 @@ The durable handoff should capture:
 - exact commands, report paths, or artifacts the next chat should read or run first
 - any required environment or credential prerequisites still missing
 
-The requirement doc should capture the same turn in concise user-facing form:
+The task doc should capture the same turn in concise user-facing form:
 
 - `阶段进度`
 - `当前状态`

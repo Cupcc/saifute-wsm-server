@@ -38,13 +38,13 @@
 
 ## 能力清单
 
-| 编号 | 能力 | 验收口径 | 阶段 | 状态 | 关联需求 |
+| 编号 | 能力 | 验收口径 | 阶段 | 状态 | 关联任务 |
 | --- | --- | --- | --- | --- | --- |
-| `F1` | 月报指标口径模型 | 明确数量、金额、成本、结存、损耗、回补等核心指标定义，并能支撑管理核对与经营分析 | Phase 1 | `未开始` | `docs/requirements/archive/retained-completed/req-20260323-0910-monthly-reporting.md` |
-| `F2` | 正式月报生成与重算 | 支持系统自动生成固定正式月报和人工重算，并能区分结果来源 | Phase 1 | `未开始` | `docs/requirements/archive/retained-completed/req-20260323-0910-monthly-reporting.md` |
-| `F3` | 多维月报视图 | 支持公司整体、车间、销售域、研发项目四类月报的汇总与明细查看 | Phase 2 | `未开始` | `docs/requirements/archive/retained-completed/req-20260323-0910-monthly-reporting.md` |
-| `F4` | 系统查看与导出 | 支持系统内查看与 `Excel` 导出，便于管理核对与经营分析复用 | Phase 3 | `未开始` | `docs/requirements/archive/retained-completed/req-20260323-0910-monthly-reporting.md` |
-| `F5` | 日期范围报表与追溯区分 | 支持按用户选择日期范围生成报表，并与正式月报 / 重算结果明确区分且可追溯 | Phase 3 | `未开始` | `docs/requirements/archive/retained-completed/req-20260323-0910-monthly-reporting.md` |
+| `F1` | 月报指标口径模型 | 明确数量、金额、成本、结存、损耗、回补等核心指标定义，并能支撑管理核对与经营分析 | Phase 1 | `未开始` | `-` |
+| `F2` | 正式月报生成与重算 | 支持系统自动生成固定正式月报和人工重算，并能区分结果来源 | Phase 1 | `未开始` | `-` |
+| `F3` | 多维月报视图 | 支持公司整体、车间、销售域、研发项目四类月报的汇总与明细查看 | Phase 2 | `未开始` | `-` |
+| `F4` | 系统查看与导出 | 支持系统内查看与 `Excel` 导出，便于管理核对与经营分析复用 | Phase 3 | `未开始` | `-` |
+| `F5` | 日期范围报表与追溯区分 | 支持按用户选择日期范围生成报表，并与正式月报 / 重算结果明确区分且可追溯 | Phase 3 | `未开始` | `-` |
 
 ## 阶段路线图
 
@@ -61,6 +61,6 @@
 ## 文档关系（可选）
 
 - 项目级长期背景：`docs/requirements/PROJECT_REQUIREMENTS.md`
-- 已归档口径确认：`docs/requirements/archive/retained-completed/req-20260323-0910-monthly-reporting.md`
+- 已归档口径确认：req 文档已归档，历史见 git log。
 - 归档 workspace：`docs/workspace/archive/retained-completed/monthly-reporting/README.md`
 - 执行与验证：后续新增 `docs/tasks/*.md`
