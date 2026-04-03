@@ -154,9 +154,9 @@ describe("Master-data supplier CRUD (e2e)", () => {
     expect(detailResponse.body.data.status).toBe("DISABLED");
   });
 
-  it("forbids supplier creation for operator accounts without the create permission", async () => {
+  it("forbids supplier creation for rd-operator accounts that do not hold the create permission", async () => {
     const server = app.getHttpServer();
-    const loginResponse = await login(server, "operator", "operator123");
+    const loginResponse = await login(server, "rd-operator", "rd123456");
     const accessToken = loginResponse.body.data.accessToken as string;
 
     await request(server)

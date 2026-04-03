@@ -5,7 +5,6 @@ import {
   buildRowsResponse,
   mapWorkshop,
   pickKeyword,
-  unsupportedBaseAction,
 } from "./compat";
 
 // 查询部门列表
@@ -20,6 +19,7 @@ export function listWorkshop(query = {}) {
         "contactPerson",
         "chargeBy",
       ]),
+      includeDisabled: query.includeDisabled || undefined,
       limit,
       offset,
     },
@@ -39,16 +39,35 @@ export async function getWorkshop(workshopId) {
 }
 
 // 新增部门
-export function addWorkshop() {
-  return unsupportedBaseAction("当前 NestJS 后端未提供车间新增接口");
+export function addWorkshop(data) {
+  return request({
+    url: "/api/master-data/workshops",
+    method: "post",
+    data: {
+      workshopCode: data.workshopCode,
+      workshopName: data.workshopName,
+    },
+  });
 }
 
 // 修改部门
-export function updateWorkshop() {
-  return unsupportedBaseAction("当前 NestJS 后端未提供车间修改接口");
+export function updateWorkshop(data) {
+  const workshopId = data.workshopId ?? data.id;
+  return request({
+    url: `/api/master-data/workshops/${workshopId}`,
+    method: "patch",
+    data: {
+      workshopName: data.workshopName,
+    },
+  });
 }
 
-// 删除部门
-export function delWorkshop() {
-  return unsupportedBaseAction("当前 NestJS 后端未提供车间作废接口");
+// 删除部门（逻辑停用）
+export function delWorkshop(data) {
+  const workshopId =
+    typeof data === "number" ? data : (data?.workshopId ?? data?.id);
+  return request({
+    url: `/api/master-data/workshops/${workshopId}/deactivate`,
+    method: "patch",
+  });
 }

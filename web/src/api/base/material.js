@@ -6,7 +6,6 @@ import {
   fetchMaterialInventoryMap,
   mapMaterial,
   pickKeyword,
-  unsupportedBaseAction,
 } from "./compat";
 
 // 查询物料列表
@@ -17,6 +16,7 @@ export function listMaterial(query = {}) {
     method: "get",
     params: {
       keyword: pickKeyword(query, ["materialCode", "materialName"]),
+      includeDisabled: query.includeDisabled || undefined,
       limit,
       offset,
     },
@@ -86,7 +86,12 @@ export function updateMaterial(data) {
   });
 }
 
-// 删除物料
-export function delMaterial() {
-  return unsupportedBaseAction("当前 NestJS 后端未提供物料作废接口");
+// 删除物料（逻辑停用）
+export function delMaterial(data) {
+  const materialId =
+    typeof data === "number" ? data : (data?.materialId ?? data?.id);
+  return request({
+    url: `/api/master-data/materials/${materialId}/deactivate`,
+    method: "patch",
+  });
 }

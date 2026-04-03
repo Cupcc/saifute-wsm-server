@@ -6,11 +6,21 @@ import {
   type OnModuleInit,
 } from "@nestjs/common";
 import { Prisma } from "../../../generated/prisma/client";
+import type { CreateCustomerDto } from "../dto/create-customer.dto";
 import type { CreateMaterialDto } from "../dto/create-material.dto";
+import type { CreateMaterialCategoryDto } from "../dto/create-material-category.dto";
+import type { CreatePersonnelDto } from "../dto/create-personnel.dto";
+import type { CreateStockScopeDto } from "../dto/create-stock-scope.dto";
 import type { CreateSupplierDto } from "../dto/create-supplier.dto";
+import type { CreateWorkshopDto } from "../dto/create-workshop.dto";
 import type { QueryMasterDataDto } from "../dto/query-master-data.dto";
+import type { UpdateCustomerDto } from "../dto/update-customer.dto";
 import type { UpdateMaterialDto } from "../dto/update-material.dto";
+import type { UpdateMaterialCategoryDto } from "../dto/update-material-category.dto";
+import type { UpdatePersonnelDto } from "../dto/update-personnel.dto";
+import type { UpdateStockScopeDto } from "../dto/update-stock-scope.dto";
 import type { UpdateSupplierDto } from "../dto/update-supplier.dto";
+import type { UpdateWorkshopDto } from "../dto/update-workshop.dto";
 import { MasterDataRepository } from "../infrastructure/master-data.repository";
 
 @Injectable()
@@ -22,6 +32,119 @@ export class MasterDataService implements OnModuleInit {
     await this.repository.ensureCanonicalStockScopes();
   }
 
+  // ─── MaterialCategory (F1) ──────────────────────────────────────────────────
+
+  async listMaterialCategories(query: QueryMasterDataDto) {
+    const limit = Math.min(query.limit ?? 50, 100);
+    const offset = query.offset ?? 0;
+    return this.repository.findMaterialCategories({
+      keyword: query.keyword,
+      limit,
+      offset,
+      status: query.includeDisabled ? undefined : "ACTIVE",
+    });
+  }
+
+  async getMaterialCategoryById(id: number) {
+    const category = await this.repository.findMaterialCategoryById(id);
+    if (!category) {
+      throw new NotFoundException(`物料分类不存在: ${id}`);
+    }
+    return category;
+  }
+
+  async createMaterialCategory(
+    dto: CreateMaterialCategoryDto,
+    createdBy?: string,
+  ) {
+    const existing = await this.repository.findMaterialCategoryByCode(
+      dto.categoryCode,
+    );
+    if (existing) {
+      throw new ConflictException(`物料分类编码已存在: ${dto.categoryCode}`);
+    }
+
+    return this.repository.createMaterialCategory(
+      {
+        categoryCode: dto.categoryCode,
+        categoryName: dto.categoryName,
+        parentId: dto.parentId,
+        sortOrder: dto.sortOrder ?? 0,
+      },
+      createdBy,
+    );
+  }
+
+  async updateMaterialCategory(
+    id: number,
+    dto: UpdateMaterialCategoryDto,
+    updatedBy?: string,
+  ) {
+    const existing = await this.repository.findMaterialCategoryById(id);
+    if (!existing) {
+      throw new NotFoundException(`物料分类不存在: ${id}`);
+    }
+
+    if (dto.parentId !== undefined && dto.parentId !== null) {
+      if (dto.parentId === id) {
+        throw new BadRequestException("物料分类不能将自身设为父分类");
+      }
+      const hasCycle = await this.wouldCreateMaterialCategoryCycle(
+        id,
+        dto.parentId,
+      );
+      if (hasCycle) {
+        throw new BadRequestException(
+          "不能将物料分类挂到其自身的后代节点下，否则会形成循环",
+        );
+      }
+    }
+
+    return this.repository.updateMaterialCategory(
+      id,
+      {
+        categoryName: dto.categoryName,
+        parentId: dto.parentId,
+        sortOrder: dto.sortOrder,
+      },
+      updatedBy,
+    );
+  }
+
+  async deactivateMaterialCategory(id: number, updatedBy?: string) {
+    const existing = await this.repository.findMaterialCategoryById(id);
+    if (!existing) {
+      throw new NotFoundException(`物料分类不存在: ${id}`);
+    }
+    if (existing.status === "DISABLED") {
+      return existing;
+    }
+
+    const activeChildCount =
+      await this.repository.countActiveChildCategories(id);
+    if (activeChildCount > 0) {
+      throw new BadRequestException(
+        `该分类下存在 ${activeChildCount} 个启用中的子分类，请先停用子分类`,
+      );
+    }
+
+    const activeMaterialCount =
+      await this.repository.countActiveMaterialsByCategory(id);
+    if (activeMaterialCount > 0) {
+      throw new BadRequestException(
+        `该分类下存在 ${activeMaterialCount} 个启用中的物料，请先停用相关物料`,
+      );
+    }
+
+    return this.repository.updateMaterialCategory(
+      id,
+      { status: "DISABLED" },
+      updatedBy,
+    );
+  }
+
+  // ─── Material (F2) ──────────────────────────────────────────────────────────
+
   async listMaterials(query: QueryMasterDataDto) {
     const limit = Math.min(query.limit ?? 50, 100);
     const offset = query.offset ?? 0;
@@ -29,6 +152,7 @@ export class MasterDataService implements OnModuleInit {
       keyword: query.keyword,
       limit,
       offset,
+      status: query.includeDisabled ? undefined : "ACTIVE",
     });
   }
 
@@ -40,45 +164,246 @@ export class MasterDataService implements OnModuleInit {
     return material;
   }
 
-  async getWorkshopById(id: number) {
-    const workshop = await this.repository.findWorkshopById(id);
-    if (!workshop) {
-      throw new NotFoundException(`车间不存在: ${id}`);
+  async createMaterial(dto: CreateMaterialDto, createdBy?: string) {
+    const existing = await this.repository.findMaterialByCode(dto.materialCode);
+    if (existing) {
+      throw new ConflictException(`物料编码已存在: ${dto.materialCode}`);
     }
-    return workshop;
+
+    return this.repository.createMaterial(
+      {
+        materialCode: dto.materialCode,
+        materialName: dto.materialName,
+        specModel: dto.specModel,
+        categoryId: dto.categoryId,
+        unitCode: dto.unitCode,
+        warningMinQty: dto.warningMinQty,
+        warningMaxQty: dto.warningMaxQty,
+      },
+      createdBy,
+    );
   }
 
-  async getWorkshopByCode(workshopCode: string) {
-    const workshop = await this.repository.findWorkshopByCode(workshopCode);
-    if (!workshop) {
-      throw new NotFoundException(`车间不存在: ${workshopCode}`);
+  async updateMaterial(id: number, dto: UpdateMaterialDto, updatedBy?: string) {
+    const existing = await this.repository.findMaterialById(id);
+    if (!existing) {
+      throw new NotFoundException(`物料不存在: ${id}`);
     }
-    return workshop;
+
+    return this.repository.updateMaterial(
+      id,
+      {
+        materialName: dto.materialName,
+        specModel: dto.specModel,
+        categoryId: dto.categoryId,
+        unitCode: dto.unitCode,
+        warningMinQty: dto.warningMinQty,
+        warningMaxQty: dto.warningMaxQty,
+      },
+      updatedBy,
+    );
   }
 
-  async getWorkshopByName(workshopName: string) {
-    const workshop = await this.repository.findWorkshopByName(workshopName);
-    if (!workshop) {
-      throw new NotFoundException(`车间不存在: ${workshopName}`);
+  async deactivateMaterial(id: number, updatedBy?: string) {
+    const existing = await this.repository.findMaterialById(id);
+    if (!existing) {
+      throw new NotFoundException(`物料不存在: ${id}`);
     }
-    return workshop;
+    if (existing.status === "DISABLED") {
+      return existing;
+    }
+
+    const positiveBalanceRows =
+      await this.repository.countPositiveInventoryBalanceRows(id);
+    if (positiveBalanceRows > 0) {
+      throw new BadRequestException(
+        `该物料在 ${positiveBalanceRows} 个库存范围内有正余额，无法停用`,
+      );
+    }
+
+    const effectiveDocCount =
+      await this.repository.countEffectiveDocumentReferences(id);
+    if (effectiveDocCount > 0) {
+      throw new BadRequestException(
+        `该物料存在 ${effectiveDocCount} 条生效中的单据引用，无法停用`,
+      );
+    }
+
+    return this.repository.updateMaterial(
+      id,
+      { status: "DISABLED" },
+      updatedBy,
+    );
   }
 
-  async getStockScopeById(id: number) {
-    const stockScope = await this.repository.findStockScopeById(id);
-    if (!stockScope) {
-      throw new NotFoundException(`库存范围不存在: ${id}`);
+  async ensureMaterial(
+    params: {
+      materialCode: string;
+      materialName: string;
+      unitCode: string;
+      specModel?: string;
+      categoryId?: number;
+      sourceDocumentType?: string;
+      sourceDocumentId?: number;
+    },
+    createdBy?: string,
+  ) {
+    const existing = await this.repository.findMaterialByCode(
+      params.materialCode,
+    );
+    if (existing) {
+      return existing;
     }
-    return stockScope;
+
+    if (!params.sourceDocumentType || !params.sourceDocumentId) {
+      throw new BadRequestException(
+        "自动补建物料必须提供来源单据类型和来源单据 ID",
+      );
+    }
+
+    return this.repository.createAutoMaterial(
+      {
+        materialCode: params.materialCode,
+        materialName: params.materialName,
+        unitCode: params.unitCode,
+        specModel: params.specModel,
+        categoryId: params.categoryId,
+        sourceDocumentType: params.sourceDocumentType,
+        sourceDocumentId: params.sourceDocumentId,
+      },
+      createdBy,
+    );
   }
 
-  async getStockScopeByCode(scopeCode: string) {
-    const stockScope = await this.repository.findStockScopeByCode(scopeCode);
-    if (!stockScope) {
-      throw new NotFoundException(`库存范围不存在: ${scopeCode}`);
-    }
-    return stockScope;
+  // ─── Customer (F3) ──────────────────────────────────────────────────────────
+
+  async listCustomers(query: QueryMasterDataDto) {
+    const limit = Math.min(query.limit ?? 50, 100);
+    const offset = query.offset ?? 0;
+    return this.repository.findCustomers({
+      keyword: query.keyword,
+      limit,
+      offset,
+      status: query.includeDisabled ? undefined : "ACTIVE",
+    });
   }
+
+  async getCustomerById(id: number) {
+    const customer = await this.repository.findCustomerById(id);
+    if (!customer) {
+      throw new NotFoundException(`客户不存在: ${id}`);
+    }
+    return customer;
+  }
+
+  async createCustomer(dto: CreateCustomerDto, createdBy?: string) {
+    const existing = await this.repository.findCustomerByCode(dto.customerCode);
+    if (existing) {
+      throw new ConflictException(`客户编码已存在: ${dto.customerCode}`);
+    }
+
+    try {
+      return await this.repository.createCustomer(
+        {
+          customerCode: dto.customerCode,
+          customerName: dto.customerName,
+          parentId: dto.parentId,
+        },
+        createdBy,
+      );
+    } catch (error) {
+      this.throwCodeConflict(error, "customer", dto.customerCode);
+    }
+  }
+
+  async updateCustomer(id: number, dto: UpdateCustomerDto, updatedBy?: string) {
+    const existing = await this.repository.findCustomerById(id);
+    if (!existing) {
+      throw new NotFoundException(`客户不存在: ${id}`);
+    }
+
+    if (dto.parentId !== undefined && dto.parentId !== null) {
+      if (dto.parentId === id) {
+        throw new BadRequestException("客户不能将自身设为父客户");
+      }
+      const hasCycle = await this.wouldCreateCustomerCycle(id, dto.parentId);
+      if (hasCycle) {
+        throw new BadRequestException(
+          "不能将客户挂到其自身的子客户下，否则会形成循环",
+        );
+      }
+    }
+
+    return this.repository.updateCustomer(
+      id,
+      {
+        customerName: dto.customerName,
+        parentId: dto.parentId,
+      },
+      updatedBy,
+    );
+  }
+
+  async deactivateCustomer(id: number, updatedBy?: string) {
+    const existing = await this.repository.findCustomerById(id);
+    if (!existing) {
+      throw new NotFoundException(`客户不存在: ${id}`);
+    }
+    if (existing.status === "DISABLED") {
+      return existing;
+    }
+
+    const activeChildCount =
+      await this.repository.countActiveChildCustomers(id);
+    if (activeChildCount > 0) {
+      throw new BadRequestException(
+        `该客户下存在 ${activeChildCount} 个启用中的子客户，请先停用子客户`,
+      );
+    }
+
+    return this.repository.updateCustomer(
+      id,
+      { status: "DISABLED" },
+      updatedBy,
+    );
+  }
+
+  async ensureCustomer(
+    params: {
+      customerCode: string;
+      customerName: string;
+      parentId?: number;
+      sourceDocumentType?: string;
+      sourceDocumentId?: number;
+    },
+    createdBy?: string,
+  ) {
+    const existing = await this.repository.findCustomerByCode(
+      params.customerCode,
+    );
+    if (existing) {
+      return existing;
+    }
+
+    if (!params.sourceDocumentType || !params.sourceDocumentId) {
+      throw new BadRequestException(
+        "自动补建客户必须提供来源单据类型和来源单据 ID",
+      );
+    }
+
+    return this.repository.createAutoCustomer(
+      {
+        customerCode: params.customerCode,
+        customerName: params.customerName,
+        parentId: params.parentId,
+        sourceDocumentType: params.sourceDocumentType,
+        sourceDocumentId: params.sourceDocumentId,
+      },
+      createdBy,
+    );
+  }
+
+  // ─── Supplier (F4) ──────────────────────────────────────────────────────────
 
   async getSupplierById(id: number) {
     const supplier = await this.repository.findSupplierById(id);
@@ -191,72 +516,6 @@ export class MasterDataService implements OnModuleInit {
     }
   }
 
-  async getCustomerById(id: number) {
-    const customer = await this.repository.findCustomerById(id);
-    if (!customer) {
-      throw new NotFoundException(`客户不存在: ${id}`);
-    }
-    return customer;
-  }
-
-  async getPersonnelById(id: number) {
-    const personnel = await this.repository.findPersonnelById(id);
-    if (!personnel) {
-      throw new NotFoundException(`人员不存在: ${id}`);
-    }
-    return personnel;
-  }
-
-  async createMaterial(dto: CreateMaterialDto, createdBy?: string) {
-    const existing = await this.repository.findMaterialByCode(dto.materialCode);
-    if (existing) {
-      throw new ConflictException(`物料编码已存在: ${dto.materialCode}`);
-    }
-
-    return this.repository.createMaterial(
-      {
-        materialCode: dto.materialCode,
-        materialName: dto.materialName,
-        specModel: dto.specModel,
-        categoryId: dto.categoryId,
-        unitCode: dto.unitCode,
-        warningMinQty: dto.warningMinQty,
-        warningMaxQty: dto.warningMaxQty,
-      },
-      createdBy,
-    );
-  }
-
-  async updateMaterial(id: number, dto: UpdateMaterialDto, updatedBy?: string) {
-    const existing = await this.repository.findMaterialById(id);
-    if (!existing) {
-      throw new NotFoundException(`物料不存在: ${id}`);
-    }
-
-    return this.repository.updateMaterial(
-      id,
-      {
-        materialName: dto.materialName,
-        specModel: dto.specModel,
-        categoryId: dto.categoryId,
-        unitCode: dto.unitCode,
-        warningMinQty: dto.warningMinQty,
-        warningMaxQty: dto.warningMaxQty,
-      },
-      updatedBy,
-    );
-  }
-
-  async listCustomers(query: QueryMasterDataDto) {
-    const limit = Math.min(query.limit ?? 50, 100);
-    const offset = query.offset ?? 0;
-    return this.repository.findCustomers({
-      keyword: query.keyword,
-      limit,
-      offset,
-    });
-  }
-
   async listSuppliers(query: QueryMasterDataDto) {
     const limit = Math.min(query.limit ?? 50, 100);
     const offset = query.offset ?? 0;
@@ -268,6 +527,8 @@ export class MasterDataService implements OnModuleInit {
     });
   }
 
+  // ─── Personnel (F5) ─────────────────────────────────────────────────────────
+
   async listPersonnel(query: QueryMasterDataDto) {
     const limit = Math.min(query.limit ?? 50, 100);
     const offset = query.offset ?? 0;
@@ -275,8 +536,106 @@ export class MasterDataService implements OnModuleInit {
       keyword: query.keyword,
       limit,
       offset,
+      status: query.includeDisabled ? undefined : "ACTIVE",
     });
   }
+
+  async getPersonnelById(id: number) {
+    const personnel = await this.repository.findPersonnelById(id);
+    if (!personnel) {
+      throw new NotFoundException(`人员不存在: ${id}`);
+    }
+    return personnel;
+  }
+
+  async createPersonnel(dto: CreatePersonnelDto, createdBy?: string) {
+    const existing = await this.repository.findPersonnelByCode(
+      dto.personnelCode,
+    );
+    if (existing) {
+      throw new ConflictException(`人员编码已存在: ${dto.personnelCode}`);
+    }
+
+    try {
+      return await this.repository.createPersonnel(
+        {
+          personnelCode: dto.personnelCode,
+          personnelName: dto.personnelName,
+        },
+        createdBy,
+      );
+    } catch (error) {
+      this.throwCodeConflict(error, "personnel", dto.personnelCode);
+    }
+  }
+
+  async updatePersonnel(
+    id: number,
+    dto: UpdatePersonnelDto,
+    updatedBy?: string,
+  ) {
+    const existing = await this.repository.findPersonnelById(id);
+    if (!existing) {
+      throw new NotFoundException(`人员不存在: ${id}`);
+    }
+
+    return this.repository.updatePersonnel(
+      id,
+      { personnelName: dto.personnelName },
+      updatedBy,
+    );
+  }
+
+  async deactivatePersonnel(id: number, updatedBy?: string) {
+    const existing = await this.repository.findPersonnelById(id);
+    if (!existing) {
+      throw new NotFoundException(`人员不存在: ${id}`);
+    }
+    if (existing.status === "DISABLED") {
+      return existing;
+    }
+
+    return this.repository.updatePersonnel(
+      id,
+      { status: "DISABLED" },
+      updatedBy,
+    );
+  }
+
+  async ensurePersonnel(
+    params: {
+      personnelCode: string;
+      personnelName: string;
+      sourceDocumentType?: string;
+      sourceDocumentId?: number;
+    },
+    createdBy?: string,
+  ) {
+    const existing = await this.repository.findPersonnelByCode(
+      params.personnelCode,
+    );
+    if (existing) {
+      return existing;
+    }
+
+    if (!params.sourceDocumentType || !params.sourceDocumentId) {
+      throw new BadRequestException(
+        "自动补建人员必须提供来源单据类型和来源单据 ID",
+      );
+    }
+
+    return this.repository.createAutoPersonnel(
+      {
+        personnelCode: params.personnelCode,
+        personnelName: params.personnelName,
+        sourceDocumentType: params.sourceDocumentType,
+        sourceDocumentId: params.sourceDocumentId,
+      },
+      createdBy,
+    );
+  }
+
+  // ─── Workshop (F6) ──────────────────────────────────────────────────────────
 
   async listWorkshops(query: QueryMasterDataDto) {
     const limit = Math.min(query.limit ?? 50, 100);
@@ -285,8 +644,187 @@ export class MasterDataService implements OnModuleInit {
       keyword: query.keyword,
       limit,
       offset,
+      status: query.includeDisabled ? undefined : "ACTIVE",
     });
   }
+
+  async getWorkshopById(id: number) {
+    const workshop = await this.repository.findWorkshopById(id);
+    if (!workshop) {
+      throw new NotFoundException(`车间不存在: ${id}`);
+    }
+    return workshop;
+  }
+
+  async getWorkshopByCode(workshopCode: string) {
+    const workshop = await this.repository.findWorkshopByCode(workshopCode);
+    if (!workshop) {
+      throw new NotFoundException(`车间不存在: ${workshopCode}`);
+    }
+    if (workshop.status === "DISABLED") {
+      throw new BadRequestException(
+        `车间已停用，无法用于新单据: ${workshopCode}`,
+      );
+    }
+    return workshop;
+  }
+
+  async getWorkshopByName(workshopName: string) {
+    const workshop = await this.repository.findWorkshopByName(workshopName);
+    if (!workshop) {
+      throw new NotFoundException(`车间不存在: ${workshopName}`);
+    }
+    if (workshop.status === "DISABLED") {
+      throw new BadRequestException(
+        `车间已停用，无法用于新单据: ${workshopName}`,
+      );
+    }
+    return workshop;
+  }
+
+  async createWorkshop(dto: CreateWorkshopDto, createdBy?: string) {
+    const existing = await this.repository.findWorkshopByCode(dto.workshopCode);
+    if (existing) {
+      throw new ConflictException(`车间编码已存在: ${dto.workshopCode}`);
+    }
+
+    try {
+      return await this.repository.createWorkshop(
+        {
+          workshopCode: dto.workshopCode,
+          workshopName: dto.workshopName,
+        },
+        createdBy,
+      );
+    } catch (error) {
+      this.throwCodeConflict(error, "workshop", dto.workshopCode);
+    }
+  }
+
+  async updateWorkshop(id: number, dto: UpdateWorkshopDto, updatedBy?: string) {
+    const existing = await this.repository.findWorkshopById(id);
+    if (!existing) {
+      throw new NotFoundException(`车间不存在: ${id}`);
+    }
+
+    return this.repository.updateWorkshop(
+      id,
+      { workshopName: dto.workshopName },
+      updatedBy,
+    );
+  }
+
+  async deactivateWorkshop(id: number, updatedBy?: string) {
+    const existing = await this.repository.findWorkshopById(id);
+    if (!existing) {
+      throw new NotFoundException(`车间不存在: ${id}`);
+    }
+    if (existing.status === "DISABLED") {
+      return existing;
+    }
+
+    return this.repository.updateWorkshop(
+      id,
+      { status: "DISABLED" },
+      updatedBy,
+    );
+  }
+
+  // ─── StockScope (F7) ────────────────────────────────────────────────────────
+
+  async listStockScopes(query: QueryMasterDataDto) {
+    const limit = Math.min(query.limit ?? 50, 100);
+    const offset = query.offset ?? 0;
+    return this.repository.findStockScopes({
+      keyword: query.keyword,
+      limit,
+      offset,
+      status: query.includeDisabled ? undefined : "ACTIVE",
+    });
+  }
+
+  async getStockScopeById(id: number) {
+    const stockScope = await this.repository.findStockScopeById(id);
+    if (!stockScope) {
+      throw new NotFoundException(`库存范围不存在: ${id}`);
+    }
+    return stockScope;
+  }
+
+  async getStockScopeByCode(scopeCode: string) {
+    const stockScope = await this.repository.findStockScopeByCode(scopeCode);
+    if (!stockScope) {
+      throw new NotFoundException(`库存范围不存在: ${scopeCode}`);
+    }
+    if (stockScope.status === "DISABLED") {
+      throw new BadRequestException(
+        `库存范围已停用，无法用于新单据: ${scopeCode}`,
+      );
+    }
+    return stockScope;
+  }
+
+  async createStockScope(dto: CreateStockScopeDto, createdBy?: string) {
+    const existing = await this.repository.findStockScopeByCode(dto.scopeCode);
+    if (existing) {
+      throw new ConflictException(`库存范围编码已存在: ${dto.scopeCode}`);
+    }
+
+    try {
+      return await this.repository.createStockScope(
+        {
+          scopeCode: dto.scopeCode,
+          scopeName: dto.scopeName,
+        },
+        createdBy,
+      );
+    } catch (error) {
+      this.throwCodeConflict(error, "stockScope", dto.scopeCode);
+    }
+  }
+
+  async updateStockScope(
+    id: number,
+    dto: UpdateStockScopeDto,
+    updatedBy?: string,
+  ) {
+    const existing = await this.repository.findStockScopeById(id);
+    if (!existing) {
+      throw new NotFoundException(`库存范围不存在: ${id}`);
+    }
+
+    return this.repository.updateStockScope(
+      id,
+      { scopeName: dto.scopeName },
+      updatedBy,
+    );
+  }
+
+  async deactivateStockScope(id: number, updatedBy?: string) {
+    const existing = await this.repository.findStockScopeById(id);
+    if (!existing) {
+      throw new NotFoundException(`库存范围不存在: ${id}`);
+    }
+    if (existing.status === "DISABLED") {
+      return existing;
+    }
+
+    const positiveBalanceRows =
+      await this.repository.countPositiveStockScopeBalanceRows(id);
+    if (positiveBalanceRows > 0) {
+      throw new BadRequestException(
+        `该库存范围内有 ${positiveBalanceRows} 条正余额记录，停用前请先清空库存`,
+      );
+    }
+
+    return this.repository.updateStockScope(
+      id,
+      { status: "DISABLED" },
+      updatedBy,
+    );
+  }
+
+  // ─── Private helpers ─────────────────────────────────────────────────────────
 
   private throwSupplierCodeConflict(
     error: unknown,
@@ -300,5 +838,52 @@ export class MasterDataService implements OnModuleInit {
     }
 
     throw error;
+  }
+
+  private throwCodeConflict(
+    error: unknown,
+    entity: string,
+    code: string | undefined,
+  ): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new ConflictException(`${entity} 编码已存在: ${code ?? ""}`);
+    }
+
+    throw error;
+  }
+
+  private async wouldCreateMaterialCategoryCycle(
+    nodeId: number,
+    candidateParentId: number,
+  ): Promise<boolean> {
+    const visited = new Set<number>();
+    let currentId: number | null | undefined = candidateParentId;
+    while (currentId) {
+      if (currentId === nodeId) return true;
+      if (visited.has(currentId)) return false;
+      visited.add(currentId);
+      const record = await this.repository.findMaterialCategoryById(currentId);
+      currentId = record?.parentId ?? null;
+    }
+    return false;
+  }
+
+  private async wouldCreateCustomerCycle(
+    nodeId: number,
+    candidateParentId: number,
+  ): Promise<boolean> {
+    const visited = new Set<number>();
+    let currentId: number | null | undefined = candidateParentId;
+    while (currentId) {
+      if (currentId === nodeId) return true;
+      if (visited.has(currentId)) return false;
+      visited.add(currentId);
+      const record = await this.repository.findCustomerById(currentId);
+      currentId = record?.parentId ?? null;
+    }
+    return false;
   }
 }
