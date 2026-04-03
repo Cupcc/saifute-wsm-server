@@ -21,6 +21,7 @@ const {
   mkdirSync,
   readFileSync,
 } = require("node:fs");
+const { execSync } = require("node:child_process");
 const path = require("node:path");
 
 const DEFAULT_WEBHOOK_URL =
@@ -105,6 +106,26 @@ const STATUS_LABELS = {
   error: { event: "task_error", type: "warning", label: "任务出错" },
 };
 
+function getGitChangeSummary(projectDir) {
+  try {
+    const output = execSync("git diff --name-only HEAD 2>/dev/null", {
+      cwd: projectDir,
+      encoding: "utf8",
+      timeout: 3000,
+    }).trim();
+    if (!output) return "";
+    const files = output
+      .split("\n")
+      .filter(Boolean)
+      .map((f) => f.split("/").pop());
+    if (files.length === 0) return "";
+    if (files.length <= 3) return `变更文件：${files.join("、")}`;
+    return `变更 ${files.length} 个文件：${files.slice(0, 2).join("、")}等`;
+  } catch {
+    return "";
+  }
+}
+
 async function main() {
   const raw = readStdin();
   if (!raw.trim()) return;
@@ -151,6 +172,11 @@ async function main() {
 
   if (taskState?.promptSummary) {
     msg += `：${taskState.promptSummary}`;
+  }
+
+  const gitChanges = getGitChangeSummary(projectDir);
+  if (gitChanges) {
+    msg += `；${gitChanges}`;
   }
 
   if (timingParts.length > 0) {

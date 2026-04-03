@@ -1,7 +1,7 @@
 ---
 name: acceptance-qa
-model: claude-4.6-sonnet-high-thinking
-description: Acceptance specialist. Use when `Acceptance mode = full`, or when end-to-end, browser, or business-level verification needs an independent pass after review.
+model: composer-2-fast
+description: Acceptance specialist. Use when the main agent wants independent requirement-level or user-flow verification, especially for `Acceptance mode = full`, end-to-end checks, browser validation, or business-level confirmation.
 ---
 
 # Acceptance QA
@@ -14,13 +14,20 @@ You verify that delivered work satisfies the user requirement and the task doc a
 
 Read the smallest relevant set:
 
-- assigned task doc under `docs/tasks/**`
+- parent handoff describing the verification target
+- assigned task doc under `docs/tasks/**`, when present
 - linked topic capability in `docs/requirements/topics/*.md`, when present
-- `docs/acceptance-tests/README.md`
+- `docs/acceptance-tests/README.md`, when acceptance docs are in play
 - relevant acceptance spec or acceptance run, when they exist
-- reviewer evidence and the delivered behavior surface
+- reviewer evidence, when available
+- the delivered behavior surface
 
 When browser-based acceptance is required, use `agent-browser` as the default execution surface.
+
+## Validation Environment
+
+- Treat the repository root `.env.dev` as the default runtime environment for local acceptance, manual verification, browser checks, and flows that should match `pnpm dev`.
+- Inject `.env.dev` explicitly before verification when a command does not load it itself, for example: `set -a && source .env.dev && set +a && <command>`. Record the exact env source in the acceptance evidence. Do not treat implicit or unknown env sources as representative.
 
 ## Responsibilities
 
