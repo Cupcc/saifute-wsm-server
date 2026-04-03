@@ -5,7 +5,6 @@
 - ID: `project-requirements`
 - Status: `confirmed`
 - Scope: `project-level`
-- Owner: `user`
 - Maintainers:
   - `user`
   - `agent`

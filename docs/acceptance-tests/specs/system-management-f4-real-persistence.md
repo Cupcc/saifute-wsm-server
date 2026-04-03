@@ -19,7 +19,7 @@
 - 环境或角色假设：
   - 后端：本地 `.env.dev` + MySQL 8.0 + Redis 7.x
   - 账号：`admin / operator / rd-operator / procurement`
-  - 浏览器：需要浏览器冒烟时统一使用 `agent-browser`
+  - 浏览器：需要浏览器冒烟时使用 `agent-browser` skill；当前运行面若不可用则直接执行 `agent-browser` CLI；CLI 仍不可用时回退至 Chrome DevTools MCP，并在验收记录中注明通道与原因
 
 ## 验收用例
 

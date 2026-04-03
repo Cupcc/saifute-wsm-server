@@ -26,8 +26,8 @@
   - `docs/requirements/topics/master-data-management.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/master-data.md`
-  - `docs/playbooks/orchestration/playbook.md`
-  - `docs/playbooks/orchestration/agent-browser-reference.md`
+  - `docs/acceptance-tests/README.md`
+  - `agent-browser` skill
   - `prisma/schema.prisma`
   - `src/modules/master-data/**`
   - `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`
@@ -154,8 +154,8 @@
   - `docs/requirements/topics/master-data-management.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/master-data.md`
-  - `docs/playbooks/orchestration/playbook.md`
-  - `docs/playbooks/orchestration/agent-browser-reference.md`
+  - `docs/acceptance-tests/README.md`
+  - `agent-browser` skill
   - 本 task doc
 - Owned paths:
   - `prisma/schema.prisma`
@@ -272,7 +272,7 @@
   - browser accounts: `admin` 为主；必要时补 `operator / rd-operator` 验证下拉与权限边界
 - Environment owner / setup source:
   - `docs/acceptance-tests/README.md`
-  - `docs/playbooks/orchestration/agent-browser-reference.md`
+  - `agent-browser` skill
 
 ## Parallelization Safety
 

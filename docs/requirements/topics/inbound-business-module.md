@@ -5,7 +5,6 @@
 - ID: `topic-inbound-business-module`
 - Status: `needs-confirmation`
 - Scope: `topic-level`
-- Owner: `user`
 
 ## 主题定义
 
@@ -129,4 +128,3 @@
 - 架构设计：`docs/architecture/20-wms-database-tables-and-schema.md`
 - 方案草案：`docs/workspace/fifo-costing-default-fifo/README.md`
 - 后续继续推进时，直接从本 topic 能力合同创建 `docs/tasks/task-*.md`（`Related requirement` 指向本 topic 对应 `Fx`）。
-

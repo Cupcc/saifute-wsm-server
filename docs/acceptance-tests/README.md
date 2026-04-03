@@ -80,8 +80,8 @@ docs/acceptance-tests/
 - 如果创建了 `run`，`spec` 仍应同步最新结论，至少在“最近一次验证”中写明当前结果与 `run` 路径。
 - 环境不就绪时，将当前验收记录标记为 `blocked`，并记录证据；只有满足上面的判定口径后，才可正式标记为 `environment-gap`，不要误判成实现缺陷或过早把仓库内问题推出边界。
 - case 选择必须满足最小覆盖基线，不能随意挑顺手的 case。
-- 只要 agent 验收或测试需要真实浏览器操作，统一使用 `agent-browser`；不要混用其他临时浏览器通道，避免执行证据与操作口径漂移。
-- 需要实际操作步骤、证据写法或故障排查时，优先参考 `docs/playbooks/orchestration/agent-browser-reference.md`。
+- 只要 agent 验收或测试需要真实浏览器操作，使用 `agent-browser` skill 作为默认执行面。若当前运行面 skill 不可用，则直接执行 `agent-browser` CLI；若 CLI 仍不可用或受阻，再回退到 **Chrome DevTools MCP** 浏览器能力，并在 task / spec 中写明所用通道与回退原因。避免未说明的临时混用，以免执行证据与操作口径漂移。
+- 需要实际操作步骤、证据写法或故障排查时，优先参考上述两个 skill 的注入内容；不要再引用已删除的 repo-local browser playbook。
 - 如果用户要求“完整测试报告”，可直接写进 `spec` 的“最近一次验证”；只有当报告明显过长、需要冻结快照或需要单独留档时，才拆成 `run`。
 
 ## 最小覆盖基线
@@ -131,4 +131,4 @@ docs/acceptance-tests/
 - 最终建议：`accept` | `reject` | `conditional` | `block`
 - 残余风险
 
-参考 SOP：`docs/playbooks/orchestration/ai-autonomous-delivery-sop.md`
+权威来源：`.cursor/agents/acceptance-qa.md`（验收判定语义与报告格式）、`.cursor/skills/saifute-subagent-orchestration/SKILL.md`（交付流程与完成协议）。

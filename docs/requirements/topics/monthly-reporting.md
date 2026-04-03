@@ -5,7 +5,6 @@
 - ID: `topic-monthly-reporting`
 - Status: `confirmed`
 - Scope: `topic-level`
-- Owner: `user`
 
 ## 主题定义
 

@@ -1,8 +1,7 @@
 ---
 description: Do not stop at intermediate milestones when user requests full-scope delivery
-alwaysApply: true
+alwaysApply: false
 ---
-
 # Requested Scope Delivery No Mid-Stop
 
 - When user asks to continue / finish / deliver / complete, treat as full requested-scope delivery; intermediate milestones are not stopping points.

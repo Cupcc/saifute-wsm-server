@@ -117,7 +117,7 @@ Rules:
 5. `acceptance-qa` must update the acceptance spec with `Latest Verification` as the default complete test report for sign-off. A separate acceptance run is optional when a standalone report is justified.
 6. A task is not complete until every in-scope `[AC-*]` has one of: `met`, `not met`, `partially met`, or an explicit `blocked` explanation in the acceptance report.
 
-Reference SOP: `docs/playbooks/orchestration/ai-autonomous-delivery-sop.md`
+Authoritative sources: `.cursor/skills/saifute-subagent-orchestration/SKILL.md` (orchestration workflow and completion protocol) and `.cursor/agents/acceptance-qa.md` (acceptance judgment semantics and report format).
 
 ## Topic-First Derivation
 

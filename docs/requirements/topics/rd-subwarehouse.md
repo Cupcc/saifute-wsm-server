@@ -5,7 +5,6 @@
 - ID: `topic-rd-subwarehouse`
 - Status: `confirmed`
 - Scope: `topic-level`
-- Owner: `user`
 
 ## 主题定义
 

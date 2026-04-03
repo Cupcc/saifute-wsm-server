@@ -5,7 +5,6 @@
 - ID: `topic-frontend-old-style-adaptation`
 - Status: `confirmed`
 - Scope: `topic-level`
-- Owner: `user`
 
 ## 主题定义
 

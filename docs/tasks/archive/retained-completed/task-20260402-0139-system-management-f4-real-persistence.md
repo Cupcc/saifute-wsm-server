@@ -23,7 +23,6 @@
   - `docs/requirements/topics/system-management-module.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/system-management.md`
-  - `docs/playbooks/orchestration/playbook.md`
   - `docs/acceptance-tests/README.md`
   - `task-20260331-0934-system-management-f4-persistence`（历史 F4 先行任务，已归档，见 git log）
   - `prisma/schema.prisma`
@@ -164,7 +163,6 @@
   - `docs/requirements/topics/system-management-module.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/system-management.md`
-  - `docs/playbooks/orchestration/playbook.md`
   - `docs/acceptance-tests/README.md`
   - `task-20260331-0934-system-management-f4-persistence`（历史 F4 先行任务，已归档，见 git log）
   - 本 task doc
@@ -267,10 +265,10 @@
 - Suggested environment / accounts:
   - backend: local `.env.dev` + MySQL + Redis
   - accounts: `admin / operator / rd-operator / procurement`
-  - browser: `agent-browser` based smoke / acceptance flow
+  - browser: use the `agent-browser` skill; if unavailable in the current runtime, run `agent-browser` CLI for smoke / acceptance flow
 - Environment owner / setup source:
   - `docs/acceptance-tests/README.md`
-  - `docs/playbooks/orchestration/agent-browser-reference.md`
+  - `agent-browser` skill
 
 ## Architecture And Repository Considerations
 
@@ -304,7 +302,7 @@
   - `acceptance-qa` 创建 / 更新 `docs/acceptance-tests/specs/system-management-f4-real-persistence.md`
   - `acceptance-qa` 更新 spec 中的 `Latest Verification`
   - 如需独立冻结报告，再额外创建 `docs/acceptance-tests/runs/run-*.md`
-  - 浏览器验收统一使用 `agent-browser`，覆盖 `admin / operator / rd-operator / procurement` 的登录、菜单、`/api/auth/me`、`/api/auth/routes` 与系统管理页面 reachability 证据。
+  - 浏览器验收优先使用 Agent Browser skill；当前运行面若不可用则直接执行 `agent-browser` CLI，覆盖 `admin / operator / rd-operator / procurement` 的登录、菜单、`/api/auth/me`、`/api/auth/routes` 与系统管理页面 reachability 证据。
 
 ## Parallelization Safety
 

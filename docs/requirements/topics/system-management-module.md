@@ -5,7 +5,6 @@
 - ID: `topic-system-management-module`
 - Status: `confirmed`
 - Scope: `topic-level`
-- Owner: `user`
 
 ## 主题定义
 

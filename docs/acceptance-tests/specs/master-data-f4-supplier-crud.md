@@ -14,7 +14,7 @@
 - 覆盖验收标准族：`[AC-1]` ~ `[AC-6]`（最终交付合同）；另有浏览器面用例 `[AC-CASE-7]`
 - 默认证据类型：`unit` / `e2e` / `build`（自动化）；`browser`（full 模式完整性）
 - 环境或角色假设：`admin` 账号；`.env.dev` 对齐；`pnpm dev` + `pnpm --dir web dev`
-- 对环境敏感的执行面（如有）：浏览器面需 Chrome 可访问的本地环境，通过 `agent-browser` 执行
+- 对环境敏感的执行面（如有）：浏览器面需 Chrome 可访问的本地环境，使用 `agent-browser` skill；当前运行面若不可用则直接执行 `agent-browser` CLI
 
 ## 验收用例
 
@@ -90,7 +90,7 @@
   - 主要证据类型：`browser`
   - 验证目标：供应商管理页可正常完成新增、修改、停用；入库单新建页面的供应商下拉不显示已停用供应商
   - 前置条件：`pnpm dev` + `pnpm --dir web dev` 均运行；admin 登录；有 ACTIVE 供应商测试数据
-  - 必需执行面：`browser`（`agent-browser`）
+  - 必需执行面：`browser`（使用 `agent-browser` skill；当前运行面若不可用则 `agent-browser` CLI）
   - 操作步骤：
     1. 登录 admin
     2. 访问供应商管理页（`/base/supplier` 或等价路由）

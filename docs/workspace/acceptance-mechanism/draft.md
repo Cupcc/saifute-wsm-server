@@ -969,7 +969,7 @@ if (review_passed) {
 | `.cursor/agents/coder.md` | 增加“Acceptance QA rejection 修复指引可作为执行输入” |
 | `.cursor/rules/requirements-first-orchestration.mdc` | Non-Trivial Work 流程增加 spec 前置、acceptance 步骤和 skip 判断 |
 | `.cursor/rules/subagent-writer-coordination.mdc` | Ownership sequence 增加 `acceptance-qa` 文档写回阶段 |
-| `docs/playbooks/orchestration/playbook.md` | 写入 acceptance 状态机、spec/run 规则、环境阻塞路由与归档口径 |
+| `docs/acceptance-tests/README.md` | 写入 acceptance 状态机、spec/run 规则、环境阻塞路由与归档口径 |
 
 ## 12. Claude Code 适用性
 
