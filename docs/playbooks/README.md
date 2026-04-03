@@ -36,12 +36,16 @@ Each domain gets its own folder. Start with a `playbook.md`; add scripts when a 
 ```
 docs/playbooks/
 ├── README.md                          # this file
+├── browser/
+│   ├── playbook.md
+│   └── ...
 ├── migration/
 │   ├── playbook.md                    # text experience entries
 │   ├── check-idempotency.ts           # reusable helper (example)
 │   └── ...
-├── orchestration/
-│   ├── playbook.md
+├── ralph/
+│   ├── project-instructions.md
+│   ├── cli-project-bootstrap.md
 │   └── ...
 └── <domain>/
     ├── playbook.md

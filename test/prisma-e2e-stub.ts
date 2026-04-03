@@ -32,16 +32,24 @@ function matchesWhere(
     return true;
   }
 
-  if (Array.isArray(where.OR) && where.OR.length > 0) {
-    return where.OR.some((entry) =>
+  if (
+    Array.isArray(where.OR) &&
+    where.OR.length > 0 &&
+    !where.OR.some((entry) =>
       matchesWhere(item, entry as Record<string, unknown>),
-    );
+    )
+  ) {
+    return false;
   }
 
-  if (Array.isArray(where.AND) && where.AND.length > 0) {
-    return where.AND.every((entry) =>
+  if (
+    Array.isArray(where.AND) &&
+    where.AND.length > 0 &&
+    !where.AND.every((entry) =>
       matchesWhere(item, entry as Record<string, unknown>),
-    );
+    )
+  ) {
+    return false;
   }
 
   return Object.entries(where).every(([key, expected]) => {
@@ -282,12 +290,28 @@ function createSeededStockScopeModel() {
   return model;
 }
 
+function createSupplierModel() {
+  return createMemoryModel<{
+    id: number;
+    supplierCode: string;
+    supplierName: string;
+    status: string;
+    creationMode?: string;
+    sourceDocumentType?: string | null;
+    sourceDocumentId?: number | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }>();
+}
+
 @Injectable()
 export class PrismaE2eStub {
   material = createModelStub();
   materialCategory = createModelStub();
   customer = createModelStub();
-  supplier = createModelStub();
+  supplier = createSupplierModel();
   personnel = createModelStub();
   workshop = createSeededWorkshopModel();
   stockScope = createSeededStockScopeModel();
@@ -365,6 +389,21 @@ export class PrismaE2eStub {
     finishedAt: Date;
     createdAt: Date;
   }>();
+
+  sysDept = createModelStub();
+  sysPost = createModelStub();
+  sysMenu = createModelStub();
+  sysRole = createModelStub();
+  sysUser = createModelStub();
+  sysDictType = createModelStub();
+  sysDictData = createModelStub();
+  sysConfig = createModelStub();
+  sysNotice = createModelStub();
+  sysUserRole = createModelStub();
+  sysUserPost = createModelStub();
+  sysRoleMenu = createModelStub();
+  sysRoleDept = createModelStub();
+  systemManagementSnapshot = createModelStub();
 
   async $connect(): Promise<void> {}
   async $disconnect(): Promise<void> {}

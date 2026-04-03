@@ -89,6 +89,19 @@ export const ModelName = {
   SchedulerJob: "SchedulerJob",
   SchedulerJobLog: "SchedulerJobLog",
   SystemManagementSnapshot: "SystemManagementSnapshot",
+  SysDept: "SysDept",
+  SysPost: "SysPost",
+  SysMenu: "SysMenu",
+  SysRole: "SysRole",
+  SysUser: "SysUser",
+  SysDictType: "SysDictType",
+  SysDictData: "SysDictData",
+  SysConfig: "SysConfig",
+  SysNotice: "SysNotice",
+  SysUserRole: "SysUserRole",
+  SysUserPost: "SysUserPost",
+  SysRoleMenu: "SysRoleMenu",
+  SysRoleDept: "SysRoleDept",
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -892,6 +905,195 @@ export const SystemManagementSnapshotScalarFieldEnum = {
 export type SystemManagementSnapshotScalarFieldEnum =
   (typeof SystemManagementSnapshotScalarFieldEnum)[keyof typeof SystemManagementSnapshotScalarFieldEnum];
 
+export const SysDeptScalarFieldEnum = {
+  deptId: "deptId",
+  parentId: "parentId",
+  ancestors: "ancestors",
+  deptName: "deptName",
+  orderNum: "orderNum",
+  leader: "leader",
+  phone: "phone",
+  email: "email",
+  status: "status",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysDeptScalarFieldEnum =
+  (typeof SysDeptScalarFieldEnum)[keyof typeof SysDeptScalarFieldEnum];
+
+export const SysPostScalarFieldEnum = {
+  postId: "postId",
+  postCode: "postCode",
+  postName: "postName",
+  postSort: "postSort",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysPostScalarFieldEnum =
+  (typeof SysPostScalarFieldEnum)[keyof typeof SysPostScalarFieldEnum];
+
+export const SysMenuScalarFieldEnum = {
+  menuId: "menuId",
+  parentId: "parentId",
+  menuName: "menuName",
+  orderNum: "orderNum",
+  path: "path",
+  component: "component",
+  routeName: "routeName",
+  menuType: "menuType",
+  visible: "visible",
+  status: "status",
+  perms: "perms",
+  icon: "icon",
+  query: "query",
+  isFrame: "isFrame",
+  isCache: "isCache",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysMenuScalarFieldEnum =
+  (typeof SysMenuScalarFieldEnum)[keyof typeof SysMenuScalarFieldEnum];
+
+export const SysRoleScalarFieldEnum = {
+  roleId: "roleId",
+  roleName: "roleName",
+  roleKey: "roleKey",
+  roleSort: "roleSort",
+  status: "status",
+  dataScope: "dataScope",
+  menuCheckStrictly: "menuCheckStrictly",
+  deptCheckStrictly: "deptCheckStrictly",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysRoleScalarFieldEnum =
+  (typeof SysRoleScalarFieldEnum)[keyof typeof SysRoleScalarFieldEnum];
+
+export const SysUserScalarFieldEnum = {
+  userId: "userId",
+  deptId: "deptId",
+  userName: "userName",
+  nickName: "nickName",
+  avatarUrl: "avatarUrl",
+  email: "email",
+  phonenumber: "phonenumber",
+  sex: "sex",
+  status: "status",
+  deleted: "deleted",
+  remark: "remark",
+  passwordHash: "passwordHash",
+  consoleMode: "consoleMode",
+  workshopScope: "workshopScope",
+  extraPermissions: "extraPermissions",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysUserScalarFieldEnum =
+  (typeof SysUserScalarFieldEnum)[keyof typeof SysUserScalarFieldEnum];
+
+export const SysDictTypeScalarFieldEnum = {
+  dictId: "dictId",
+  dictName: "dictName",
+  dictType: "dictType",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysDictTypeScalarFieldEnum =
+  (typeof SysDictTypeScalarFieldEnum)[keyof typeof SysDictTypeScalarFieldEnum];
+
+export const SysDictDataScalarFieldEnum = {
+  dictCode: "dictCode",
+  dictSort: "dictSort",
+  dictLabel: "dictLabel",
+  dictValue: "dictValue",
+  dictType: "dictType",
+  cssClass: "cssClass",
+  listClass: "listClass",
+  isDefault: "isDefault",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysDictDataScalarFieldEnum =
+  (typeof SysDictDataScalarFieldEnum)[keyof typeof SysDictDataScalarFieldEnum];
+
+export const SysConfigScalarFieldEnum = {
+  configId: "configId",
+  configName: "configName",
+  configKey: "configKey",
+  configValue: "configValue",
+  configType: "configType",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysConfigScalarFieldEnum =
+  (typeof SysConfigScalarFieldEnum)[keyof typeof SysConfigScalarFieldEnum];
+
+export const SysNoticeScalarFieldEnum = {
+  noticeId: "noticeId",
+  noticeTitle: "noticeTitle",
+  noticeType: "noticeType",
+  noticeContent: "noticeContent",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysNoticeScalarFieldEnum =
+  (typeof SysNoticeScalarFieldEnum)[keyof typeof SysNoticeScalarFieldEnum];
+
+export const SysUserRoleScalarFieldEnum = {
+  id: "id",
+  userId: "userId",
+  roleId: "roleId",
+} as const;
+
+export type SysUserRoleScalarFieldEnum =
+  (typeof SysUserRoleScalarFieldEnum)[keyof typeof SysUserRoleScalarFieldEnum];
+
+export const SysUserPostScalarFieldEnum = {
+  id: "id",
+  userId: "userId",
+  postId: "postId",
+} as const;
+
+export type SysUserPostScalarFieldEnum =
+  (typeof SysUserPostScalarFieldEnum)[keyof typeof SysUserPostScalarFieldEnum];
+
+export const SysRoleMenuScalarFieldEnum = {
+  id: "id",
+  roleId: "roleId",
+  menuId: "menuId",
+} as const;
+
+export type SysRoleMenuScalarFieldEnum =
+  (typeof SysRoleMenuScalarFieldEnum)[keyof typeof SysRoleMenuScalarFieldEnum];
+
+export const SysRoleDeptScalarFieldEnum = {
+  id: "id",
+  roleId: "roleId",
+  deptId: "deptId",
+} as const;
+
+export type SysRoleDeptScalarFieldEnum =
+  (typeof SysRoleDeptScalarFieldEnum)[keyof typeof SysRoleDeptScalarFieldEnum];
+
 export const SortOrder = {
   asc: "asc",
   desc: "desc",
@@ -905,6 +1107,14 @@ export const JsonNullValueInput = {
 
 export type JsonNullValueInput =
   (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput];
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+} as const;
+
+export type NullableJsonNullValueInput =
+  (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput];
 
 export const NullsOrder = {
   first: "first",
@@ -1366,3 +1576,116 @@ export const SystemManagementSnapshotOrderByRelevanceFieldEnum = {
 
 export type SystemManagementSnapshotOrderByRelevanceFieldEnum =
   (typeof SystemManagementSnapshotOrderByRelevanceFieldEnum)[keyof typeof SystemManagementSnapshotOrderByRelevanceFieldEnum];
+
+export const SysDeptOrderByRelevanceFieldEnum = {
+  ancestors: "ancestors",
+  deptName: "deptName",
+  leader: "leader",
+  phone: "phone",
+  email: "email",
+  status: "status",
+} as const;
+
+export type SysDeptOrderByRelevanceFieldEnum =
+  (typeof SysDeptOrderByRelevanceFieldEnum)[keyof typeof SysDeptOrderByRelevanceFieldEnum];
+
+export const SysPostOrderByRelevanceFieldEnum = {
+  postCode: "postCode",
+  postName: "postName",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysPostOrderByRelevanceFieldEnum =
+  (typeof SysPostOrderByRelevanceFieldEnum)[keyof typeof SysPostOrderByRelevanceFieldEnum];
+
+export const SysMenuOrderByRelevanceFieldEnum = {
+  menuName: "menuName",
+  path: "path",
+  component: "component",
+  routeName: "routeName",
+  menuType: "menuType",
+  visible: "visible",
+  status: "status",
+  perms: "perms",
+  icon: "icon",
+  query: "query",
+  isFrame: "isFrame",
+  isCache: "isCache",
+} as const;
+
+export type SysMenuOrderByRelevanceFieldEnum =
+  (typeof SysMenuOrderByRelevanceFieldEnum)[keyof typeof SysMenuOrderByRelevanceFieldEnum];
+
+export const SysRoleOrderByRelevanceFieldEnum = {
+  roleName: "roleName",
+  roleKey: "roleKey",
+  status: "status",
+  dataScope: "dataScope",
+  remark: "remark",
+} as const;
+
+export type SysRoleOrderByRelevanceFieldEnum =
+  (typeof SysRoleOrderByRelevanceFieldEnum)[keyof typeof SysRoleOrderByRelevanceFieldEnum];
+
+export const SysUserOrderByRelevanceFieldEnum = {
+  userName: "userName",
+  nickName: "nickName",
+  avatarUrl: "avatarUrl",
+  email: "email",
+  phonenumber: "phonenumber",
+  sex: "sex",
+  status: "status",
+  remark: "remark",
+  passwordHash: "passwordHash",
+  consoleMode: "consoleMode",
+} as const;
+
+export type SysUserOrderByRelevanceFieldEnum =
+  (typeof SysUserOrderByRelevanceFieldEnum)[keyof typeof SysUserOrderByRelevanceFieldEnum];
+
+export const SysDictTypeOrderByRelevanceFieldEnum = {
+  dictName: "dictName",
+  dictType: "dictType",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysDictTypeOrderByRelevanceFieldEnum =
+  (typeof SysDictTypeOrderByRelevanceFieldEnum)[keyof typeof SysDictTypeOrderByRelevanceFieldEnum];
+
+export const SysDictDataOrderByRelevanceFieldEnum = {
+  dictLabel: "dictLabel",
+  dictValue: "dictValue",
+  dictType: "dictType",
+  cssClass: "cssClass",
+  listClass: "listClass",
+  isDefault: "isDefault",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysDictDataOrderByRelevanceFieldEnum =
+  (typeof SysDictDataOrderByRelevanceFieldEnum)[keyof typeof SysDictDataOrderByRelevanceFieldEnum];
+
+export const SysConfigOrderByRelevanceFieldEnum = {
+  configName: "configName",
+  configKey: "configKey",
+  configValue: "configValue",
+  configType: "configType",
+  remark: "remark",
+} as const;
+
+export type SysConfigOrderByRelevanceFieldEnum =
+  (typeof SysConfigOrderByRelevanceFieldEnum)[keyof typeof SysConfigOrderByRelevanceFieldEnum];
+
+export const SysNoticeOrderByRelevanceFieldEnum = {
+  noticeTitle: "noticeTitle",
+  noticeType: "noticeType",
+  noticeContent: "noticeContent",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysNoticeOrderByRelevanceFieldEnum =
+  (typeof SysNoticeOrderByRelevanceFieldEnum)[keyof typeof SysNoticeOrderByRelevanceFieldEnum];

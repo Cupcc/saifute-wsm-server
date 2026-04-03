@@ -542,7 +542,11 @@
 import { auditDocument } from "@/api/audit/audit.js";
 import { listMaterialByCodeOrName } from "@/api/base/material";
 import { listPersonnel } from "@/api/base/personnel";
-import { getSupplier, listSupplierByKeyword } from "@/api/base/supplier";
+import {
+  getSupplier,
+  listSupplierByKeyword,
+  listSupplierByKeywordIncludingDisabled,
+} from "@/api/base/supplier";
 import { listByNameOrContact } from "@/api/base/workshop.js";
 import { getLatestDetailByMaterialId, listDetail } from "@/api/entry/detail";
 import {
@@ -1254,7 +1258,9 @@ async function handleAiPrefill(formData) {
   // 4. 供应商 — 远程搜索并选中
   if (formData.supplierName) {
     try {
-      const res = await listSupplierByKeyword(formData.supplierName);
+      const res = await listSupplierByKeywordIncludingDisabled(
+        formData.supplierName,
+      );
       supplierOptionsForForm.value = res.rows || [];
       if (res.rows && res.rows.length > 0) {
         form.value.supplierId = res.rows[0].supplierId;

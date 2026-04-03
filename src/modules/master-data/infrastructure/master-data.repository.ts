@@ -2,9 +2,57 @@ import { Injectable } from "@nestjs/common";
 import type { Prisma } from "../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
+const CANONICAL_WORKSHOPS: Prisma.WorkshopCreateManyInput[] = [
+  {
+    workshopCode: "MAIN",
+    workshopName: "主仓",
+    status: "ACTIVE",
+    createdBy: "system-bootstrap",
+    updatedBy: "system-bootstrap",
+  },
+  {
+    workshopCode: "RD",
+    workshopName: "研发小仓",
+    status: "ACTIVE",
+    createdBy: "system-bootstrap",
+    updatedBy: "system-bootstrap",
+  },
+];
+
+const CANONICAL_STOCK_SCOPES: Prisma.StockScopeCreateManyInput[] = [
+  {
+    scopeCode: "MAIN",
+    scopeName: "主仓",
+    status: "ACTIVE",
+    createdBy: "system-bootstrap",
+    updatedBy: "system-bootstrap",
+  },
+  {
+    scopeCode: "RD_SUB",
+    scopeName: "研发小仓",
+    status: "ACTIVE",
+    createdBy: "system-bootstrap",
+    updatedBy: "system-bootstrap",
+  },
+];
+
 @Injectable()
 export class MasterDataRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async ensureCanonicalWorkshops() {
+    await this.prisma.workshop.createMany({
+      data: CANONICAL_WORKSHOPS,
+      skipDuplicates: true,
+    });
+  }
+
+  async ensureCanonicalStockScopes() {
+    await this.prisma.stockScope.createMany({
+      data: CANONICAL_STOCK_SCOPES,
+      skipDuplicates: true,
+    });
+  }
 
   async findMaterials(params: {
     keyword?: string;
@@ -87,6 +135,12 @@ export class MasterDataRepository {
     });
   }
 
+  async findSupplierByCode(supplierCode: string) {
+    return this.prisma.supplier.findUnique({
+      where: { supplierCode },
+    });
+  }
+
   async findCustomerById(id: number) {
     return this.prisma.customer.findUnique({
       where: { id },
@@ -126,6 +180,59 @@ export class MasterDataRepository {
     return this.prisma.material.update({
       where: { id },
       data: { ...data, updatedBy },
+    });
+  }
+
+  async createSupplier(
+    data: Pick<
+      Prisma.SupplierUncheckedCreateInput,
+      "supplierCode" | "supplierName"
+    >,
+    createdBy?: string,
+  ) {
+    return this.prisma.supplier.create({
+      data: {
+        ...data,
+        status: "ACTIVE",
+        creationMode: "MANUAL",
+        createdBy,
+        updatedBy: createdBy,
+      },
+    });
+  }
+
+  async createAutoSupplier(
+    data: Pick<
+      Prisma.SupplierUncheckedCreateInput,
+      | "supplierCode"
+      | "supplierName"
+      | "sourceDocumentType"
+      | "sourceDocumentId"
+    >,
+    createdBy?: string,
+  ) {
+    return this.prisma.supplier.create({
+      data: {
+        ...data,
+        status: "ACTIVE",
+        creationMode: "AUTO_CREATED",
+        createdBy,
+        updatedBy: createdBy,
+      },
+    });
+  }
+
+  async updateSupplier(
+    id: number,
+    data: Prisma.SupplierUncheckedUpdateInput,
+    updatedBy?: string,
+  ) {
+    return this.prisma.supplier.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedBy,
+      },
     });
   }
 

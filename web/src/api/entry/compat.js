@@ -1,5 +1,5 @@
 import { listPersonnel } from "@/api/base/personnel";
-import { listSupplierByKeyword } from "@/api/base/supplier";
+import { listSupplierByKeywordIncludingDisabled } from "@/api/base/supplier";
 import request from "@/utils/request";
 
 const MODE_CONFIG = {
@@ -149,7 +149,9 @@ async function resolveSupplierId(data) {
     return undefined;
   }
 
-  const response = await listSupplierByKeyword(data.supplierName);
+  const response = await listSupplierByKeywordIncludingDisabled(
+    data.supplierName,
+  );
   return response.rows?.[0]?.supplierId;
 }
 

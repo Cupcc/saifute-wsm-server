@@ -449,6 +449,19 @@ export const ModelName = {
   SchedulerJob: "SchedulerJob",
   SchedulerJobLog: "SchedulerJobLog",
   SystemManagementSnapshot: "SystemManagementSnapshot",
+  SysDept: "SysDept",
+  SysPost: "SysPost",
+  SysMenu: "SysMenu",
+  SysRole: "SysRole",
+  SysUser: "SysUser",
+  SysDictType: "SysDictType",
+  SysDictData: "SysDictData",
+  SysConfig: "SysConfig",
+  SysNotice: "SysNotice",
+  SysUserRole: "SysUserRole",
+  SysUserPost: "SysUserPost",
+  SysRoleMenu: "SysRoleMenu",
+  SysRoleDept: "SysRoleDept",
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -505,7 +518,20 @@ export type TypeMap<
       | "operLog"
       | "schedulerJob"
       | "schedulerJobLog"
-      | "systemManagementSnapshot";
+      | "systemManagementSnapshot"
+      | "sysDept"
+      | "sysPost"
+      | "sysMenu"
+      | "sysRole"
+      | "sysUser"
+      | "sysDictType"
+      | "sysDictData"
+      | "sysConfig"
+      | "sysNotice"
+      | "sysUserRole"
+      | "sysUserPost"
+      | "sysRoleMenu"
+      | "sysRoleDept";
     txIsolationLevel: TransactionIsolationLevel;
   };
   model: {
@@ -2889,6 +2915,890 @@ export type TypeMap<
         };
       };
     };
+    SysDept: {
+      payload: Prisma.$SysDeptPayload<ExtArgs>;
+      fields: Prisma.SysDeptFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysDeptFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysDeptFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysDeptFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysDeptFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload>;
+        };
+        findMany: {
+          args: Prisma.SysDeptFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload>[];
+        };
+        create: {
+          args: Prisma.SysDeptCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload>;
+        };
+        createMany: {
+          args: Prisma.SysDeptCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysDeptDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload>;
+        };
+        update: {
+          args: Prisma.SysDeptUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysDeptDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysDeptUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysDeptUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDeptPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysDeptAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysDept>;
+        };
+        groupBy: {
+          args: Prisma.SysDeptGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysDeptGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysDeptCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysDeptCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysPost: {
+      payload: Prisma.$SysPostPayload<ExtArgs>;
+      fields: Prisma.SysPostFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysPostFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysPostFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysPostFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysPostFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload>;
+        };
+        findMany: {
+          args: Prisma.SysPostFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload>[];
+        };
+        create: {
+          args: Prisma.SysPostCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload>;
+        };
+        createMany: {
+          args: Prisma.SysPostCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysPostDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload>;
+        };
+        update: {
+          args: Prisma.SysPostUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysPostDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysPostUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysPostUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysPostPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysPostAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysPost>;
+        };
+        groupBy: {
+          args: Prisma.SysPostGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysPostGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysPostCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysPostCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysMenu: {
+      payload: Prisma.$SysMenuPayload<ExtArgs>;
+      fields: Prisma.SysMenuFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysMenuFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysMenuFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysMenuFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysMenuFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload>;
+        };
+        findMany: {
+          args: Prisma.SysMenuFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload>[];
+        };
+        create: {
+          args: Prisma.SysMenuCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload>;
+        };
+        createMany: {
+          args: Prisma.SysMenuCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysMenuDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload>;
+        };
+        update: {
+          args: Prisma.SysMenuUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysMenuDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysMenuUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysMenuUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysMenuPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysMenuAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysMenu>;
+        };
+        groupBy: {
+          args: Prisma.SysMenuGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysMenuGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysMenuCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysMenuCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysRole: {
+      payload: Prisma.$SysRolePayload<ExtArgs>;
+      fields: Prisma.SysRoleFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysRoleFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysRoleFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload>;
+        };
+        findFirst: {
+          args: Prisma.SysRoleFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysRoleFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload>;
+        };
+        findMany: {
+          args: Prisma.SysRoleFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload>[];
+        };
+        create: {
+          args: Prisma.SysRoleCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload>;
+        };
+        createMany: {
+          args: Prisma.SysRoleCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysRoleDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload>;
+        };
+        update: {
+          args: Prisma.SysRoleUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysRoleDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysRoleUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysRoleUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRolePayload>;
+        };
+        aggregate: {
+          args: Prisma.SysRoleAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysRole>;
+        };
+        groupBy: {
+          args: Prisma.SysRoleGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysRoleGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysRoleCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysRoleCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysUser: {
+      payload: Prisma.$SysUserPayload<ExtArgs>;
+      fields: Prisma.SysUserFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysUserFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysUserFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysUserFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysUserFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload>;
+        };
+        findMany: {
+          args: Prisma.SysUserFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload>[];
+        };
+        create: {
+          args: Prisma.SysUserCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload>;
+        };
+        createMany: {
+          args: Prisma.SysUserCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysUserDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload>;
+        };
+        update: {
+          args: Prisma.SysUserUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysUserDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysUserUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysUserUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysUserAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysUser>;
+        };
+        groupBy: {
+          args: Prisma.SysUserGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysUserGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysUserCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysUserCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysDictType: {
+      payload: Prisma.$SysDictTypePayload<ExtArgs>;
+      fields: Prisma.SysDictTypeFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysDictTypeFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysDictTypeFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload>;
+        };
+        findFirst: {
+          args: Prisma.SysDictTypeFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysDictTypeFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload>;
+        };
+        findMany: {
+          args: Prisma.SysDictTypeFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload>[];
+        };
+        create: {
+          args: Prisma.SysDictTypeCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload>;
+        };
+        createMany: {
+          args: Prisma.SysDictTypeCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysDictTypeDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload>;
+        };
+        update: {
+          args: Prisma.SysDictTypeUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysDictTypeDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysDictTypeUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysDictTypeUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictTypePayload>;
+        };
+        aggregate: {
+          args: Prisma.SysDictTypeAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysDictType>;
+        };
+        groupBy: {
+          args: Prisma.SysDictTypeGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysDictTypeGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysDictTypeCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysDictTypeCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysDictData: {
+      payload: Prisma.$SysDictDataPayload<ExtArgs>;
+      fields: Prisma.SysDictDataFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysDictDataFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysDictDataFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysDictDataFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysDictDataFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload>;
+        };
+        findMany: {
+          args: Prisma.SysDictDataFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload>[];
+        };
+        create: {
+          args: Prisma.SysDictDataCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload>;
+        };
+        createMany: {
+          args: Prisma.SysDictDataCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysDictDataDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload>;
+        };
+        update: {
+          args: Prisma.SysDictDataUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysDictDataDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysDictDataUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysDictDataUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysDictDataPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysDictDataAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysDictData>;
+        };
+        groupBy: {
+          args: Prisma.SysDictDataGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysDictDataGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysDictDataCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysDictDataCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysConfig: {
+      payload: Prisma.$SysConfigPayload<ExtArgs>;
+      fields: Prisma.SysConfigFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysConfigFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysConfigFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysConfigFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysConfigFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload>;
+        };
+        findMany: {
+          args: Prisma.SysConfigFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload>[];
+        };
+        create: {
+          args: Prisma.SysConfigCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload>;
+        };
+        createMany: {
+          args: Prisma.SysConfigCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysConfigDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload>;
+        };
+        update: {
+          args: Prisma.SysConfigUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysConfigDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysConfigUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysConfigUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysConfigPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysConfigAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysConfig>;
+        };
+        groupBy: {
+          args: Prisma.SysConfigGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysConfigGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysConfigCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysConfigCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysNotice: {
+      payload: Prisma.$SysNoticePayload<ExtArgs>;
+      fields: Prisma.SysNoticeFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysNoticeFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysNoticeFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload>;
+        };
+        findFirst: {
+          args: Prisma.SysNoticeFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysNoticeFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload>;
+        };
+        findMany: {
+          args: Prisma.SysNoticeFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload>[];
+        };
+        create: {
+          args: Prisma.SysNoticeCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload>;
+        };
+        createMany: {
+          args: Prisma.SysNoticeCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysNoticeDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload>;
+        };
+        update: {
+          args: Prisma.SysNoticeUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysNoticeDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysNoticeUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysNoticeUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysNoticePayload>;
+        };
+        aggregate: {
+          args: Prisma.SysNoticeAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysNotice>;
+        };
+        groupBy: {
+          args: Prisma.SysNoticeGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysNoticeGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysNoticeCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysNoticeCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysUserRole: {
+      payload: Prisma.$SysUserRolePayload<ExtArgs>;
+      fields: Prisma.SysUserRoleFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysUserRoleFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysUserRoleFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload>;
+        };
+        findFirst: {
+          args: Prisma.SysUserRoleFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysUserRoleFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload>;
+        };
+        findMany: {
+          args: Prisma.SysUserRoleFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload>[];
+        };
+        create: {
+          args: Prisma.SysUserRoleCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload>;
+        };
+        createMany: {
+          args: Prisma.SysUserRoleCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysUserRoleDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload>;
+        };
+        update: {
+          args: Prisma.SysUserRoleUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysUserRoleDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysUserRoleUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysUserRoleUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserRolePayload>;
+        };
+        aggregate: {
+          args: Prisma.SysUserRoleAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysUserRole>;
+        };
+        groupBy: {
+          args: Prisma.SysUserRoleGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysUserRoleGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysUserRoleCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysUserRoleCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysUserPost: {
+      payload: Prisma.$SysUserPostPayload<ExtArgs>;
+      fields: Prisma.SysUserPostFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysUserPostFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysUserPostFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysUserPostFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysUserPostFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload>;
+        };
+        findMany: {
+          args: Prisma.SysUserPostFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload>[];
+        };
+        create: {
+          args: Prisma.SysUserPostCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload>;
+        };
+        createMany: {
+          args: Prisma.SysUserPostCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysUserPostDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload>;
+        };
+        update: {
+          args: Prisma.SysUserPostUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysUserPostDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysUserPostUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysUserPostUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysUserPostPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysUserPostAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysUserPost>;
+        };
+        groupBy: {
+          args: Prisma.SysUserPostGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysUserPostGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysUserPostCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysUserPostCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysRoleMenu: {
+      payload: Prisma.$SysRoleMenuPayload<ExtArgs>;
+      fields: Prisma.SysRoleMenuFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysRoleMenuFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysRoleMenuFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysRoleMenuFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysRoleMenuFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload>;
+        };
+        findMany: {
+          args: Prisma.SysRoleMenuFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload>[];
+        };
+        create: {
+          args: Prisma.SysRoleMenuCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload>;
+        };
+        createMany: {
+          args: Prisma.SysRoleMenuCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysRoleMenuDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload>;
+        };
+        update: {
+          args: Prisma.SysRoleMenuUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysRoleMenuDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysRoleMenuUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysRoleMenuUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleMenuPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysRoleMenuAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysRoleMenu>;
+        };
+        groupBy: {
+          args: Prisma.SysRoleMenuGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysRoleMenuGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysRoleMenuCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysRoleMenuCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    SysRoleDept: {
+      payload: Prisma.$SysRoleDeptPayload<ExtArgs>;
+      fields: Prisma.SysRoleDeptFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.SysRoleDeptFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.SysRoleDeptFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload>;
+        };
+        findFirst: {
+          args: Prisma.SysRoleDeptFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.SysRoleDeptFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload>;
+        };
+        findMany: {
+          args: Prisma.SysRoleDeptFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload>[];
+        };
+        create: {
+          args: Prisma.SysRoleDeptCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload>;
+        };
+        createMany: {
+          args: Prisma.SysRoleDeptCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.SysRoleDeptDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload>;
+        };
+        update: {
+          args: Prisma.SysRoleDeptUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload>;
+        };
+        deleteMany: {
+          args: Prisma.SysRoleDeptDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.SysRoleDeptUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.SysRoleDeptUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SysRoleDeptPayload>;
+        };
+        aggregate: {
+          args: Prisma.SysRoleDeptAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSysRoleDept>;
+        };
+        groupBy: {
+          args: Prisma.SysRoleDeptGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.SysRoleDeptGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.SysRoleDeptCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.SysRoleDeptCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
   };
 } & {
   other: {
@@ -3713,6 +4623,195 @@ export const SystemManagementSnapshotScalarFieldEnum = {
 export type SystemManagementSnapshotScalarFieldEnum =
   (typeof SystemManagementSnapshotScalarFieldEnum)[keyof typeof SystemManagementSnapshotScalarFieldEnum];
 
+export const SysDeptScalarFieldEnum = {
+  deptId: "deptId",
+  parentId: "parentId",
+  ancestors: "ancestors",
+  deptName: "deptName",
+  orderNum: "orderNum",
+  leader: "leader",
+  phone: "phone",
+  email: "email",
+  status: "status",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysDeptScalarFieldEnum =
+  (typeof SysDeptScalarFieldEnum)[keyof typeof SysDeptScalarFieldEnum];
+
+export const SysPostScalarFieldEnum = {
+  postId: "postId",
+  postCode: "postCode",
+  postName: "postName",
+  postSort: "postSort",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysPostScalarFieldEnum =
+  (typeof SysPostScalarFieldEnum)[keyof typeof SysPostScalarFieldEnum];
+
+export const SysMenuScalarFieldEnum = {
+  menuId: "menuId",
+  parentId: "parentId",
+  menuName: "menuName",
+  orderNum: "orderNum",
+  path: "path",
+  component: "component",
+  routeName: "routeName",
+  menuType: "menuType",
+  visible: "visible",
+  status: "status",
+  perms: "perms",
+  icon: "icon",
+  query: "query",
+  isFrame: "isFrame",
+  isCache: "isCache",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysMenuScalarFieldEnum =
+  (typeof SysMenuScalarFieldEnum)[keyof typeof SysMenuScalarFieldEnum];
+
+export const SysRoleScalarFieldEnum = {
+  roleId: "roleId",
+  roleName: "roleName",
+  roleKey: "roleKey",
+  roleSort: "roleSort",
+  status: "status",
+  dataScope: "dataScope",
+  menuCheckStrictly: "menuCheckStrictly",
+  deptCheckStrictly: "deptCheckStrictly",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysRoleScalarFieldEnum =
+  (typeof SysRoleScalarFieldEnum)[keyof typeof SysRoleScalarFieldEnum];
+
+export const SysUserScalarFieldEnum = {
+  userId: "userId",
+  deptId: "deptId",
+  userName: "userName",
+  nickName: "nickName",
+  avatarUrl: "avatarUrl",
+  email: "email",
+  phonenumber: "phonenumber",
+  sex: "sex",
+  status: "status",
+  deleted: "deleted",
+  remark: "remark",
+  passwordHash: "passwordHash",
+  consoleMode: "consoleMode",
+  workshopScope: "workshopScope",
+  extraPermissions: "extraPermissions",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysUserScalarFieldEnum =
+  (typeof SysUserScalarFieldEnum)[keyof typeof SysUserScalarFieldEnum];
+
+export const SysDictTypeScalarFieldEnum = {
+  dictId: "dictId",
+  dictName: "dictName",
+  dictType: "dictType",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysDictTypeScalarFieldEnum =
+  (typeof SysDictTypeScalarFieldEnum)[keyof typeof SysDictTypeScalarFieldEnum];
+
+export const SysDictDataScalarFieldEnum = {
+  dictCode: "dictCode",
+  dictSort: "dictSort",
+  dictLabel: "dictLabel",
+  dictValue: "dictValue",
+  dictType: "dictType",
+  cssClass: "cssClass",
+  listClass: "listClass",
+  isDefault: "isDefault",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysDictDataScalarFieldEnum =
+  (typeof SysDictDataScalarFieldEnum)[keyof typeof SysDictDataScalarFieldEnum];
+
+export const SysConfigScalarFieldEnum = {
+  configId: "configId",
+  configName: "configName",
+  configKey: "configKey",
+  configValue: "configValue",
+  configType: "configType",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysConfigScalarFieldEnum =
+  (typeof SysConfigScalarFieldEnum)[keyof typeof SysConfigScalarFieldEnum];
+
+export const SysNoticeScalarFieldEnum = {
+  noticeId: "noticeId",
+  noticeTitle: "noticeTitle",
+  noticeType: "noticeType",
+  noticeContent: "noticeContent",
+  status: "status",
+  remark: "remark",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+} as const;
+
+export type SysNoticeScalarFieldEnum =
+  (typeof SysNoticeScalarFieldEnum)[keyof typeof SysNoticeScalarFieldEnum];
+
+export const SysUserRoleScalarFieldEnum = {
+  id: "id",
+  userId: "userId",
+  roleId: "roleId",
+} as const;
+
+export type SysUserRoleScalarFieldEnum =
+  (typeof SysUserRoleScalarFieldEnum)[keyof typeof SysUserRoleScalarFieldEnum];
+
+export const SysUserPostScalarFieldEnum = {
+  id: "id",
+  userId: "userId",
+  postId: "postId",
+} as const;
+
+export type SysUserPostScalarFieldEnum =
+  (typeof SysUserPostScalarFieldEnum)[keyof typeof SysUserPostScalarFieldEnum];
+
+export const SysRoleMenuScalarFieldEnum = {
+  id: "id",
+  roleId: "roleId",
+  menuId: "menuId",
+} as const;
+
+export type SysRoleMenuScalarFieldEnum =
+  (typeof SysRoleMenuScalarFieldEnum)[keyof typeof SysRoleMenuScalarFieldEnum];
+
+export const SysRoleDeptScalarFieldEnum = {
+  id: "id",
+  roleId: "roleId",
+  deptId: "deptId",
+} as const;
+
+export type SysRoleDeptScalarFieldEnum =
+  (typeof SysRoleDeptScalarFieldEnum)[keyof typeof SysRoleDeptScalarFieldEnum];
+
 export const SortOrder = {
   asc: "asc",
   desc: "desc",
@@ -3726,6 +4825,14 @@ export const JsonNullValueInput = {
 
 export type JsonNullValueInput =
   (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput];
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+} as const;
+
+export type NullableJsonNullValueInput =
+  (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput];
 
 export const NullsOrder = {
   first: "first",
@@ -4188,6 +5295,119 @@ export const SystemManagementSnapshotOrderByRelevanceFieldEnum = {
 export type SystemManagementSnapshotOrderByRelevanceFieldEnum =
   (typeof SystemManagementSnapshotOrderByRelevanceFieldEnum)[keyof typeof SystemManagementSnapshotOrderByRelevanceFieldEnum];
 
+export const SysDeptOrderByRelevanceFieldEnum = {
+  ancestors: "ancestors",
+  deptName: "deptName",
+  leader: "leader",
+  phone: "phone",
+  email: "email",
+  status: "status",
+} as const;
+
+export type SysDeptOrderByRelevanceFieldEnum =
+  (typeof SysDeptOrderByRelevanceFieldEnum)[keyof typeof SysDeptOrderByRelevanceFieldEnum];
+
+export const SysPostOrderByRelevanceFieldEnum = {
+  postCode: "postCode",
+  postName: "postName",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysPostOrderByRelevanceFieldEnum =
+  (typeof SysPostOrderByRelevanceFieldEnum)[keyof typeof SysPostOrderByRelevanceFieldEnum];
+
+export const SysMenuOrderByRelevanceFieldEnum = {
+  menuName: "menuName",
+  path: "path",
+  component: "component",
+  routeName: "routeName",
+  menuType: "menuType",
+  visible: "visible",
+  status: "status",
+  perms: "perms",
+  icon: "icon",
+  query: "query",
+  isFrame: "isFrame",
+  isCache: "isCache",
+} as const;
+
+export type SysMenuOrderByRelevanceFieldEnum =
+  (typeof SysMenuOrderByRelevanceFieldEnum)[keyof typeof SysMenuOrderByRelevanceFieldEnum];
+
+export const SysRoleOrderByRelevanceFieldEnum = {
+  roleName: "roleName",
+  roleKey: "roleKey",
+  status: "status",
+  dataScope: "dataScope",
+  remark: "remark",
+} as const;
+
+export type SysRoleOrderByRelevanceFieldEnum =
+  (typeof SysRoleOrderByRelevanceFieldEnum)[keyof typeof SysRoleOrderByRelevanceFieldEnum];
+
+export const SysUserOrderByRelevanceFieldEnum = {
+  userName: "userName",
+  nickName: "nickName",
+  avatarUrl: "avatarUrl",
+  email: "email",
+  phonenumber: "phonenumber",
+  sex: "sex",
+  status: "status",
+  remark: "remark",
+  passwordHash: "passwordHash",
+  consoleMode: "consoleMode",
+} as const;
+
+export type SysUserOrderByRelevanceFieldEnum =
+  (typeof SysUserOrderByRelevanceFieldEnum)[keyof typeof SysUserOrderByRelevanceFieldEnum];
+
+export const SysDictTypeOrderByRelevanceFieldEnum = {
+  dictName: "dictName",
+  dictType: "dictType",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysDictTypeOrderByRelevanceFieldEnum =
+  (typeof SysDictTypeOrderByRelevanceFieldEnum)[keyof typeof SysDictTypeOrderByRelevanceFieldEnum];
+
+export const SysDictDataOrderByRelevanceFieldEnum = {
+  dictLabel: "dictLabel",
+  dictValue: "dictValue",
+  dictType: "dictType",
+  cssClass: "cssClass",
+  listClass: "listClass",
+  isDefault: "isDefault",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysDictDataOrderByRelevanceFieldEnum =
+  (typeof SysDictDataOrderByRelevanceFieldEnum)[keyof typeof SysDictDataOrderByRelevanceFieldEnum];
+
+export const SysConfigOrderByRelevanceFieldEnum = {
+  configName: "configName",
+  configKey: "configKey",
+  configValue: "configValue",
+  configType: "configType",
+  remark: "remark",
+} as const;
+
+export type SysConfigOrderByRelevanceFieldEnum =
+  (typeof SysConfigOrderByRelevanceFieldEnum)[keyof typeof SysConfigOrderByRelevanceFieldEnum];
+
+export const SysNoticeOrderByRelevanceFieldEnum = {
+  noticeTitle: "noticeTitle",
+  noticeType: "noticeType",
+  noticeContent: "noticeContent",
+  status: "status",
+  remark: "remark",
+} as const;
+
+export type SysNoticeOrderByRelevanceFieldEnum =
+  (typeof SysNoticeOrderByRelevanceFieldEnum)[keyof typeof SysNoticeOrderByRelevanceFieldEnum];
+
 /**
  * Field references
  */
@@ -4550,6 +5770,19 @@ export type GlobalOmitConfig = {
   schedulerJob?: Prisma.SchedulerJobOmit;
   schedulerJobLog?: Prisma.SchedulerJobLogOmit;
   systemManagementSnapshot?: Prisma.SystemManagementSnapshotOmit;
+  sysDept?: Prisma.SysDeptOmit;
+  sysPost?: Prisma.SysPostOmit;
+  sysMenu?: Prisma.SysMenuOmit;
+  sysRole?: Prisma.SysRoleOmit;
+  sysUser?: Prisma.SysUserOmit;
+  sysDictType?: Prisma.SysDictTypeOmit;
+  sysDictData?: Prisma.SysDictDataOmit;
+  sysConfig?: Prisma.SysConfigOmit;
+  sysNotice?: Prisma.SysNoticeOmit;
+  sysUserRole?: Prisma.SysUserRoleOmit;
+  sysUserPost?: Prisma.SysUserPostOmit;
+  sysRoleMenu?: Prisma.SysRoleMenuOmit;
+  sysRoleDept?: Prisma.SysRoleDeptOmit;
 };
 
 /* Types for Logging */

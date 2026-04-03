@@ -13,7 +13,7 @@
 
 - 模块边界、技术栈、冻结约束以 `docs/architecture/00-architecture-overview.md` 为准
 - 业务流程与优化后 schema 设计以 `docs/architecture/20-wms-database-tables-and-schema.md` 为准
-- 迁移批次、历史证据、阶段性结论以 `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md` 和各批次 validate report 为准
+- 迁移批次、历史证据、阶段性结论以各批次 validate report 为准（task-20260319-1905 迁移主计划已归档，见 git log）
 
 ### 1.1 当前冻结基线
 

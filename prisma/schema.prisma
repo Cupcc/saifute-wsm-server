@@ -1124,3 +1124,213 @@ model SystemManagementSnapshot {
 
   @@map("system_management_snapshot")
 }
+
+// ───── System Management Normalized Tables ─────
+
+model SysDept {
+  deptId    Int      @id @default(autoincrement()) @map("dept_id")
+  parentId  Int      @default(0) @map("parent_id")
+  ancestors String   @default("0") @db.VarChar(256)
+  deptName  String   @db.VarChar(128) @map("dept_name")
+  orderNum  Int      @default(0) @map("order_num")
+  leader    String   @default("") @db.VarChar(64)
+  phone     String   @default("") @db.VarChar(32)
+  email     String   @default("") @db.VarChar(128)
+  status    String   @default("0") @db.VarChar(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  users     SysUser[]
+  roleDepts SysRoleDept[]
+
+  @@index([parentId])
+  @@map("sys_dept")
+}
+
+model SysPost {
+  postId    Int      @id @default(autoincrement()) @map("post_id")
+  postCode  String   @db.VarChar(64) @map("post_code")
+  postName  String   @db.VarChar(128) @map("post_name")
+  postSort  Int      @default(0) @map("post_sort")
+  status    String   @default("0") @db.VarChar(1)
+  remark    String   @default("") @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  userPosts SysUserPost[]
+
+  @@map("sys_post")
+}
+
+model SysMenu {
+  menuId    Int      @id @default(autoincrement()) @map("menu_id")
+  parentId  Int      @default(0) @map("parent_id")
+  menuName  String   @db.VarChar(128) @map("menu_name")
+  orderNum  Int      @default(0) @map("order_num")
+  path      String   @default("") @db.VarChar(256)
+  component String   @default("") @db.VarChar(256)
+  routeName String   @default("") @db.VarChar(128) @map("route_name")
+  menuType  String   @default("M") @db.VarChar(1) @map("menu_type")
+  visible   String   @default("0") @db.VarChar(1)
+  status    String   @default("0") @db.VarChar(1)
+  perms     String   @default("") @db.VarChar(128)
+  icon      String   @default("") @db.VarChar(128)
+  query     String   @default("") @db.VarChar(256)
+  isFrame   String   @default("1") @db.VarChar(1) @map("is_frame")
+  isCache   String   @default("0") @db.VarChar(1) @map("is_cache")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  roleMenus SysRoleMenu[]
+
+  @@index([parentId])
+  @@map("sys_menu")
+}
+
+model SysRole {
+  roleId            Int      @id @default(autoincrement()) @map("role_id")
+  roleName          String   @db.VarChar(128) @map("role_name")
+  roleKey           String   @unique @db.VarChar(64) @map("role_key")
+  roleSort          Int      @default(0) @map("role_sort")
+  status            String   @default("0") @db.VarChar(1)
+  dataScope         String   @default("1") @db.VarChar(1) @map("data_scope")
+  menuCheckStrictly Boolean  @default(true) @map("menu_check_strictly")
+  deptCheckStrictly Boolean  @default(true) @map("dept_check_strictly")
+  remark            String   @default("") @db.VarChar(500)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  userRoles         SysUserRole[]
+  roleMenus         SysRoleMenu[]
+  roleDepts         SysRoleDept[]
+
+  @@map("sys_role")
+}
+
+model SysUser {
+  userId           Int      @id @default(autoincrement()) @map("user_id")
+  deptId           Int?     @map("dept_id")
+  userName         String   @unique @db.VarChar(64) @map("user_name")
+  nickName         String   @db.VarChar(64) @map("nick_name")
+  avatarUrl        String?  @db.VarChar(500) @map("avatar_url")
+  email            String   @default("") @db.VarChar(128)
+  phonenumber      String   @default("") @db.VarChar(32)
+  sex              String   @default("2") @db.VarChar(1)
+  status           String   @default("0") @db.VarChar(1)
+  deleted          Boolean  @default(false)
+  remark           String   @default("") @db.VarChar(500)
+  passwordHash     String   @db.VarChar(256) @map("password_hash")
+  consoleMode      String   @default("default") @db.VarChar(32) @map("console_mode")
+  workshopScope    Json?    @map("workshop_scope")
+  extraPermissions Json?    @map("extra_permissions")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+  dept             SysDept? @relation(fields: [deptId], references: [deptId], onDelete: SetNull, onUpdate: Cascade)
+  userRoles        SysUserRole[]
+  userPosts        SysUserPost[]
+
+  @@index([deptId])
+  @@map("sys_user")
+}
+
+model SysDictType {
+  dictId    Int      @id @default(autoincrement()) @map("dict_id")
+  dictName  String   @db.VarChar(128) @map("dict_name")
+  dictType  String   @unique @db.VarChar(64) @map("dict_type")
+  status    String   @default("0") @db.VarChar(1)
+  remark    String   @default("") @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  dictItems  SysDictData[]
+
+  @@map("sys_dict_type")
+}
+
+model SysDictData {
+  dictCode  Int      @id @default(autoincrement()) @map("dict_code")
+  dictSort  Int      @default(0) @map("dict_sort")
+  dictLabel String   @db.VarChar(128) @map("dict_label")
+  dictValue String   @db.VarChar(128) @map("dict_value")
+  dictType  String   @db.VarChar(64) @map("dict_type")
+  cssClass  String   @default("") @db.VarChar(64) @map("css_class")
+  listClass String   @default("") @db.VarChar(64) @map("list_class")
+  isDefault String   @default("N") @db.VarChar(1) @map("is_default")
+  status    String   @default("0") @db.VarChar(1)
+  remark    String   @default("") @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  dictTypeRef SysDictType @relation(fields: [dictType], references: [dictType], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([dictType])
+  @@map("sys_dict_data")
+}
+
+model SysConfig {
+  configId    Int      @id @default(autoincrement()) @map("config_id")
+  configName  String   @db.VarChar(128) @map("config_name")
+  configKey   String   @unique @db.VarChar(128) @map("config_key")
+  configValue String   @db.VarChar(500) @map("config_value")
+  configType  String   @default("N") @db.VarChar(1) @map("config_type")
+  remark      String   @default("") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("sys_config")
+}
+
+model SysNotice {
+  noticeId      Int      @id @default(autoincrement()) @map("notice_id")
+  noticeTitle   String   @db.VarChar(256) @map("notice_title")
+  noticeType    String   @default("1") @db.VarChar(1) @map("notice_type")
+  noticeContent String   @db.LongText @map("notice_content")
+  status        String   @default("0") @db.VarChar(1)
+  remark        String   @default("") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("sys_notice")
+}
+
+model SysUserRole {
+  id     Int     @id @default(autoincrement())
+  userId Int     @map("user_id")
+  roleId Int     @map("role_id")
+  user   SysUser @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  role   SysRole @relation(fields: [roleId], references: [roleId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+  @@map("sys_user_role")
+}
+
+model SysUserPost {
+  id     Int      @id @default(autoincrement())
+  userId Int      @map("user_id")
+  postId Int      @map("post_id")
+  user   SysUser  @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: Cascade)
+  post   SysPost  @relation(fields: [postId], references: [postId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  @@map("sys_user_post")
+}
+
+model SysRoleMenu {
+  id     Int      @id @default(autoincrement())
+  roleId Int      @map("role_id")
+  menuId Int      @map("menu_id")
+  role   SysRole  @relation(fields: [roleId], references: [roleId], onDelete: Cascade, onUpdate: Cascade)
+  menu   SysMenu  @relation(fields: [menuId], references: [menuId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([roleId, menuId])
+  @@index([menuId])
+  @@map("sys_role_menu")
+}
+
+model SysRoleDept {
+  id     Int      @id @default(autoincrement())
+  roleId Int      @map("role_id")
+  deptId Int      @map("dept_id")
+  role   SysRole  @relation(fields: [roleId], references: [roleId], onDelete: Cascade, onUpdate: Cascade)
+  dept   SysDept  @relation(fields: [deptId], references: [deptId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([roleId, deptId])
+  @@index([deptId])
+  @@map("sys_role_dept")
+}

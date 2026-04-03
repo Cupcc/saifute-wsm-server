@@ -1,6 +1,6 @@
 ---
 name: saifute-subagent-orchestration
-description: Orchestrates planner, execution, review, and commit phases for non-trivial scoped work in the Saifute NestJS WMS repository. Use when work clearly benefits from a `plan -> code -> review -> fix -> commit` flow with durable handoffs; skip this heavy lane for small, clear, low-risk requests.
+description: Orchestrates planner, execution, review, acceptance, and commit phases for non-trivial scoped work in the Saifute NestJS WMS repository. Use when work clearly benefits from a `plan -> code -> review -> fix -> acceptance -> commit` flow with durable handoffs; skip this heavy lane for small, clear, low-risk requests.
 ---
 
 # Saifute Subagent Orchestration
@@ -15,8 +15,9 @@ Default orchestration order:
 2. `code`
 3. `review`
 4. `fix`
-5. `commit`
-6. `retrospect`
+5. `acceptance`
+6. `commit`
+7. `retrospect`
 
 Do not skip forward unless the user explicitly narrows the scope, or the step is not applicable. Migration-style work keeps the same order, but it requires stricter context, staging or exclusion handling, deterministic generation, replay-vs-copy judgment, and blocker-aware validation.
 
@@ -49,7 +50,7 @@ On the lightweight direct lane:
 
 Read the smallest relevant source of truth before assigning work:
 
-- the linked requirement doc under `docs/requirements/**` when the task is driven by a user request
+- the relevant topic capability in `docs/requirements/topics/*.md` when the task is driven by a user request
 - the workspace folder under `docs/workspace/<workflow>/` when the workflow has one — check `docs/workspace/DASHBOARD.md` for the index
 - `docs/architecture/00-architecture-overview.md`
 - the specific module docs in `docs/architecture/modules/`
@@ -61,7 +62,7 @@ For any task type with an existing playbook, also read:
 
 For migration, backfill, reconciliation, or cutover-prep work, also read:
 
-- `docs/tasks/archive/retained-completed/task-20260319-1905-migration-master-plan-relocation.md`
+- `docs/architecture/30-java-to-nestjs-data-migration-reference.md`
 - `docs/architecture/20-wms-database-tables-and-schema.md` when the work touches inventory, workflow, reporting, document relations, reservation semantics, or business-state semantics
 - the relevant `prisma/**`, `scripts/**`, `docs/**`, or module surfaces that define the current schema and runtime behavior
 
@@ -71,28 +72,21 @@ If legacy data and the current runtime disagree, adapt the legacy data to the cu
 
 ## Requirement-first orchestration
 
-For non-trivial work, create or locate one concise requirement doc under `docs/requirements/**` before planning.
+For non-trivial work, locate the relevant topic capability in `docs/requirements/topics/*.md` before planning. Requirements are maintained as long-term capability contracts in topic files — no intermediate slice `req-*.md` needed.
 
-- requirement doc: a concise Chinese user-and-AI interaction layer that records the user's requirement plus concise user-facing orchestration status
+- topic capability (`docs/requirements/topics/*.md`, `Fx` entry): the confirmed requirement contract with `In scope / Out of scope / Completion criteria / Evidence expectation`
 - workspace under `docs/workspace/<workflow>/`: human decision workspace — progress narrative, pending decisions with trade-offs, decision log, rich media assets; write access restricted to parent orchestrator
-- task doc in `docs/tasks/**`: detailed execution scope, validation state, review loop, handoff
+- task doc in `docs/tasks/**`: detailed execution scope, validation state, review loop, handoff; Metadata must include `Related requirement: docs/requirements/topics/*.md (Fx)`
 
-The requirement doc should stay concise. Use it for user-facing status only:
+If the topic capability is not confirmed or lacks contract information, stop and ask the user to update the topic before planning.
 
-- `阶段进度`
-- `当前状态`
-- `阻塞项`
-- `下一步`
-
-Completed-state requirement docs may explicitly say `阻塞项: None` and `下一步: None / 归档 / 等待新需求`. Do not manufacture pending confirmations, blockers, or faux follow-up steps after the scoped work is objectively complete.
-
-The task doc must link back to the requirement doc and carry forward the confirmed understanding.
+The task doc must link back to the topic capability and carry forward the confirmed understanding.
 
 When the workflow warrants a workspace (non-trivial scope, pending human decisions, or multiple decision points), the parent orchestrator should create or update `docs/workspace/<workflow>/` and keep the `DASHBOARD.md` index current. Workspace content is optimized for human reading — trade-off tables, option analysis, decision rationale — not agent metadata.
 
-New or materially changed requirement docs default to `needs-confirmation`. Do not treat them as accepted scope until the user explicitly confirms and the doc can be marked `confirmed`.
+New or materially changed topic capability docs default to `needs-confirmation`. Do not treat them as accepted scope until the user explicitly confirms and the doc can be marked `confirmed`.
 
-If you only sync current progress into an already confirmed requirement doc without changing the requirement understanding, keep it `confirmed`.
+If you only sync current progress into an already confirmed topic capability doc without changing the requirement understanding, keep it `confirmed`.
 
 If the requirement is unclear, has unresolved questions, or the planned execution would widen or rewrite it, stop and ask the user before planning, coding, or review sign-off.
 
@@ -116,7 +110,7 @@ Interpret these requests as delivery requests unless the user explicitly narrows
 - `make this cutover-ready`
 - `finish the migration script`
 
-For delivery requests, do not stop after only planning, one implementation pass, one review pass, or one targeted validation run. Keep the `review -> fix` loop moving until the scoped work is ready for handoff or a real blocker requires user direction.
+For delivery requests, do not stop after only planning, one implementation pass, one review pass, one acceptance pass, or one targeted validation run. Keep the `review -> fix` loop moving, and run acceptance when the selected mode or user request requires it, until the scoped work is ready for handoff or a real blocker requires user direction.
 
 ## Resume and new-chat continuation
 
@@ -125,7 +119,7 @@ When the user says `continue`, `resume`, `pick this up`, or asks to continue in 
 1. Check lifecycle truth first: `docs/tasks/TASK_CENTER.md`, `docs/requirements/REQUIREMENT_CENTER.md`, and `docs/workspace/DASHBOARD.md` / archive placement decide whether a scope is still active.
 2. Look for an existing root-level `docs/tasks/*.md` execution brief only for the still-active scope before starting fresh exploration.
 3. If an active task doc exists, treat it as the primary runtime handoff source and also read:
-   - the linked requirement doc under `docs/requirements/**`, if the task doc names one
+   - the linked topic capability in `docs/requirements/topics/*.md`, if the task doc names one
    - the related `docs/fix-checklists/*.md`
    - any report files, validation artifacts, or generated outputs referenced by the task doc
 4. If only archived docs exist, treat them as provenance only. Do not revive that scope unless the user explicitly asks to reopen it or a new requirement/task is created for a real follow-up.
@@ -154,6 +148,7 @@ Choose the smallest useful set:
 - `planner`: use the repo's dedicated `planner` subagent to scope the task, identify impacted files, surface risks, propose validation, decide whether parallel writers are safe, and write or update the task doc under `docs/tasks/**`
 - `coder`: implementation and refactor worker for explicitly assigned files, modules, scripts, schema surfaces, or docs, using the assigned task doc as the execution brief
 - `code-reviewer`: review worker for correctness, regressions, missing tests, contract drift, validation sufficiency, and review-phase task-doc or checklist updates
+- `acceptance-qa`: requirement and user-flow verifier for scoped acceptance work when the chosen `Acceptance mode` needs an independent acceptance pass or the user explicitly asks for end-to-end verification
 
 Use `explore` only as a supporting readonly discovery worker when the planner needs fast codebase search.
 
@@ -229,7 +224,7 @@ For lightweight direct-lane requests such as low-risk docs, rules, wording, or t
 The reviewer should focus on:
 
 - bugs and behavioral regressions
-- requirement drift between `docs/requirements/**`, `docs/tasks/**`, and delivered changes
+- requirement drift between the linked topic capability in `docs/requirements/topics/*.md`, the task doc, and delivered changes
 - missing or weak tests
 - contract drift
 - auth, workflow, inventory, and transaction safety where relevant
@@ -245,7 +240,33 @@ If `code-reviewer` reports any open `[blocking]` or `[important]` finding, route
 
 Treat review as a repair loop, not a stopping point.
 
-### 5. Commit
+### 5. Acceptance
+
+Run `acceptance-qa` after the review loop is clear when any of these are true:
+
+- the task doc selected `Acceptance mode = full`
+- the task has real user-flow, browser, or business-verification requirements that benefit from an independent acceptance pass
+- the user explicitly asks for acceptance, end-to-end verification, or business-level confirmation
+
+For `Acceptance mode = light`, use `acceptance-qa` only when the risk surface or user request justifies a separate acceptance pass; otherwise parent handoff plus reviewer evidence is enough.
+
+Ask `acceptance-qa` to return:
+
+- the exact `Acceptance mode` used
+- whether the mode still looks proportionate
+- acceptance judgment: `accepted` | `rejected` | `conditionally-accepted` | `skipped` | `blocked`
+- criteria coverage and evidence pointers
+- environment or browser execution details when relevant
+- any route-back classification: `requirement-misunderstanding` | `implementation-gap` | `evidence-gap` | `environment-gap`
+
+If `acceptance-qa` returns `rejected`, `blocked`, or `conditionally-accepted` with unresolved delivery-path gaps, route the work back to the appropriate owner:
+
+- `coder` for implementation gaps within the approved writable scope
+- `code-reviewer` when acceptance exposed missing or insufficient technical evidence
+- `planner` when the acceptance block reveals requirement ambiguity or contract drift
+- parent/user when the remaining issue is a real environment or sign-off blocker
+
+### 6. Commit
 
 Commit creation is a parent-orchestrator step only.
 
@@ -255,9 +276,10 @@ Only proceed to parent-owned commit activity when all of the following are true:
 
 1. The required validation passed for the scoped work.
 2. `code-reviewer` reports no remaining open `[blocking]` or `[important]` findings.
-3. There is no unresolved shared-contract or ownership blocker.
-4. The user did not opt out with `no-commit`.
-5. For migration-style work, unresolved staged or excluded records are either handled within scope or explicitly reported with the required sign-off or follow-up owner.
+3. When the selected `Acceptance mode` requires an independent acceptance pass, `acceptance-qa` has returned `accepted`, `skipped`, or an explicitly justified `conditionally-accepted` result with no hidden delivery-path gap.
+4. There is no unresolved shared-contract or ownership blocker.
+5. The user did not opt out with `no-commit`.
+6. For migration-style work, unresolved staged or excluded records are either handled within scope or explicitly reported with the required sign-off or follow-up owner.
 
 Default commit behavior:
 
@@ -277,7 +299,8 @@ Do not let subagents create the commit directly.
 5. Do not run write-capable subagents in background mode.
 6. Shared files default to parent ownership unless one worker is explicitly named as the sole owner.
 7. Before finalizing substantive work, involve `code-reviewer`.
-8. If the task is ambiguous or has meaningful trade-offs, either switch to Plan Mode first or use the `planner` subagent before any code write step.
+8. If the selected `Acceptance mode` is `full`, or the user explicitly asked for end-to-end or business-level verification, involve `acceptance-qa` before commit readiness.
+9. If the task is ambiguous or has meaningful trade-offs, either switch to Plan Mode first or use the `planner` subagent before any code write step.
 
 ## Frozen repo constraints
 
@@ -297,7 +320,7 @@ The parent orchestrator owns the distinction between durable rules and runtime c
 - put stable, reusable facts in `.cursor/rules/*.mdc`
 - do not write temporary runtime observations into rules
 - put detailed task-scoped runtime context in `docs/tasks/**`, the parent handoff, or another clearly temporary shared context artifact when multiple subagents need the same live status
-- keep the linked `docs/requirements/**` updated with concise user-facing progress instead of leaving orchestration status only in chat memory
+- keep the task doc `docs/tasks/*.md` updated with concise user-facing progress; update the topic capability status in `docs/requirements/topics/*.md` only when an ability completes or its status changes
 - put decision-relevant findings (trade-offs, option analysis, decision rationale, human-intervention needs) in `docs/workspace/<workflow>/` instead of leaving them only in task docs or chat history; parent orchestrator owns all workspace writes
 - before promoting a new observation into rules, confirm that it is likely to remain valid across future tasks and does not contain secrets
 
@@ -305,7 +328,7 @@ The parent orchestrator owns the distinction between durable rules and runtime c
 
 Before stopping and returning control to the user on any non-trivial task, make sure the continuation-critical runtime state is written to durable docs instead of relying on chat memory alone.
 
-Prefer the active `docs/tasks/*.md` as the detailed handoff source, and sync concise user-facing progress into the linked `docs/requirements/*.md`. If task-doc ownership belongs to `planner` or `code-reviewer`, route the detailed update through the appropriate owner before stopping instead of leaving the latest state only in the conversation.
+Prefer the active `docs/tasks/*.md` as the detailed handoff source. If task-doc ownership belongs to `planner` or `code-reviewer`, route the detailed update through the appropriate owner before stopping instead of leaving the latest state only in the conversation.
 
 The durable handoff should capture:
 
@@ -317,7 +340,7 @@ The durable handoff should capture:
 - exact commands, report paths, or artifacts the next chat should read or run first
 - any required environment or credential prerequisites still missing
 
-The requirement doc should capture the same turn in concise user-facing form:
+The task doc should capture the same turn in concise user-facing form:
 
 - `阶段进度`
 - `当前状态`
@@ -374,6 +397,13 @@ The `code-reviewer` owns:
 - test coverage feedback
 - blocker visibility and readiness judgment for migration-style work
 
+The `acceptance-qa` owns:
+
+- acceptance judgment for the selected scope
+- acceptance-mode fit check
+- requirement-level verification and user-flow evidence
+- acceptance-spec or acceptance-run updates when the chosen mode requires them
+
 ## Parent merge behavior
 
 When parallel writers were active:
@@ -402,6 +432,7 @@ Additionally require:
 - planner: implementation steps, validation plan, parallelization safety, and the exact execution scope assigned to `coder`
 - planner for migration-style work: staging-or-exclusion plan, replay-vs-copy judgment, deterministic generation rules, cutover blockers, and current-runtime alignment checks for target constants or status semantics
 - code-reviewer: findings ordered by severity, plus clear fix actions for any `[blocking]` or `[important]` item
+- acceptance-qa: acceptance mode, judgment, criteria coverage, environment or browser execution details when relevant, and explicit route-back classification for any non-pass result
 
 ## Validation rules
 
@@ -431,9 +462,10 @@ Treat commit readiness as the end of the orchestration loop, not as a side effec
 
 Stop only when one of these is true:
 
-1. The scoped task completed its `plan -> code -> review -> fix -> commit -> retrospect` loop.
-2. The user explicitly asked for `plan-only`, `review-only`, or `docs-only`.
-3. A real blocker remains that requires user direction.
+1. The scoped task completed its `plan -> code -> review -> fix -> commit -> retrospect` loop when independent acceptance was not required.
+2. The scoped task completed its `plan -> code -> review -> fix -> acceptance -> commit -> retrospect` loop when independent acceptance was required.
+3. The user explicitly asked for `plan-only`, `review-only`, or `docs-only`.
+4. A real blocker remains that requires user direction.
 
 For migration, backfill, reconciliation, or cutover-prep work, "ready" means:
 

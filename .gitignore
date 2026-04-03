@@ -176,6 +176,7 @@ logs-dev
 
 # Local tooling / one-off counts
 .VSCodeCounter/
+.claude/
 
 # Migration dry-run / execute / validate JSON outputs (regenerated locally)
 scripts/migration/reports/

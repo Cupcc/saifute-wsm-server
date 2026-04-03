@@ -1,3 +1,4 @@
+import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { InMemoryRbacRepository } from "./in-memory-rbac.repository";
 
 describe("InMemoryRbacRepository", () => {
@@ -102,5 +103,292 @@ describe("InMemoryRbacRepository", () => {
     expect(user?.permissions).not.toEqual(
       expect.arrayContaining(["inbound:order:list", "customer:order:list"]),
     );
+  });
+
+  it("seeds supplier CRUD function permissions under the supplier menu", () => {
+    const supplierFunctionMenus = repository
+      .listMenus({})
+      .filter((menu) => menu.parentId === 3030 && menu.menuType === "F");
+
+    expect(supplierFunctionMenus.map((menu) => menu.perms)).toEqual(
+      expect.arrayContaining([
+        "master:supplier:create",
+        "master:supplier:update",
+        "master:supplier:deactivate",
+      ]),
+    );
+  });
+
+  it("seeds normalized tables when no data exists on init", async () => {
+    const count = jest.fn().mockResolvedValue(0);
+    const findMany = jest.fn().mockResolvedValue([]);
+    const createMany = jest.fn().mockResolvedValue({ count: 0 });
+    const deleteMany = jest.fn().mockResolvedValue({ count: 0 });
+    const modelStub = { count, findMany, createMany, deleteMany };
+    const txHandler = jest
+      .fn()
+      .mockImplementation(async (fn) => fn(mockPrisma));
+    const mockPrisma = {
+      sysUser: modelStub,
+      sysDept: modelStub,
+      sysPost: modelStub,
+      sysMenu: modelStub,
+      sysRole: modelStub,
+      sysDictType: modelStub,
+      sysDictData: modelStub,
+      sysConfig: modelStub,
+      sysNotice: modelStub,
+      sysUserRole: modelStub,
+      sysUserPost: modelStub,
+      sysRoleMenu: modelStub,
+      sysRoleDept: modelStub,
+      systemManagementSnapshot: {
+        findUnique: jest.fn().mockResolvedValue(null),
+      },
+      $transaction: txHandler,
+    };
+    const persistentRepository = new InMemoryRbacRepository(
+      mockPrisma as unknown as PrismaService,
+    );
+
+    await persistentRepository.onModuleInit();
+
+    expect(count).toHaveBeenCalled();
+    expect(txHandler).toHaveBeenCalledTimes(1);
+  });
+
+  it("backfills normalized tables from legacy snapshot when normalized tables are empty", async () => {
+    const count = jest.fn().mockResolvedValue(0);
+    const findMany = jest.fn().mockResolvedValue([]);
+    const createMany = jest.fn().mockResolvedValue({ count: 0 });
+    const deleteMany = jest.fn().mockResolvedValue({ count: 0 });
+    const modelStub = { count, findMany, createMany, deleteMany };
+    const txHandler = jest
+      .fn()
+      .mockImplementation(async (fn) => fn(mockPrisma));
+    const snapshotPayload = {
+      depts: [
+        {
+          deptId: 300,
+          parentId: 0,
+          ancestors: "0",
+          deptName: "仓库",
+          orderNum: 1,
+          leader: "",
+          phone: "",
+          email: "",
+          status: "0",
+          createTime: "2026-03-01T09:00:00.000Z",
+        },
+      ],
+      posts: [],
+      menus: [],
+      roles: [],
+      dictTypes: [],
+      dictData: [],
+      configs: [],
+      notices: [],
+      users: [
+        {
+          userId: 10,
+          deptId: 300,
+          userName: "legacy-admin",
+          nickName: "旧管理员",
+          avatarUrl: null,
+          email: "legacy-admin@test.local",
+          phonenumber: "13800000010",
+          sex: "0",
+          status: "0",
+          deleted: false,
+          remark: "",
+          createTime: "2026-03-01T09:00:00.000Z",
+          postIds: [],
+          roleIds: [],
+          passwordHash: "hash",
+          consoleMode: "default",
+          workshopScope: {
+            mode: "ALL",
+            workshopId: null,
+            workshopCode: null,
+            workshopName: null,
+          },
+          extraPermissions: ["*:*:*"],
+        },
+      ],
+    };
+    const mockPrisma = {
+      sysUser: modelStub,
+      sysDept: modelStub,
+      sysPost: modelStub,
+      sysMenu: modelStub,
+      sysRole: modelStub,
+      sysDictType: modelStub,
+      sysDictData: modelStub,
+      sysConfig: modelStub,
+      sysNotice: modelStub,
+      sysUserRole: modelStub,
+      sysUserPost: modelStub,
+      sysRoleMenu: modelStub,
+      sysRoleDept: modelStub,
+      systemManagementSnapshot: {
+        findUnique: jest.fn().mockResolvedValue({
+          snapshotKey: "default",
+          payload: snapshotPayload,
+        }),
+      },
+      $transaction: txHandler,
+    };
+    const persistentRepository = new InMemoryRbacRepository(
+      mockPrisma as unknown as PrismaService,
+    );
+
+    await persistentRepository.onModuleInit();
+
+    const user = await persistentRepository.findUserByUsername("legacy-admin");
+    expect(user?.userId).toBe(10);
+    expect(txHandler).toHaveBeenCalledTimes(1);
+  });
+
+  it("loads from normalized tables when data exists", async () => {
+    const dbDept = {
+      deptId: 300,
+      parentId: 0,
+      ancestors: "0",
+      deptName: "仓库",
+      orderNum: 1,
+      leader: "",
+      phone: "",
+      email: "",
+      status: "0",
+      createdAt: new Date("2026-03-01T09:00:00.000Z"),
+      updatedAt: new Date(),
+    };
+    const dbUser = {
+      userId: 1,
+      deptId: 300,
+      userName: "admin",
+      nickName: "管理员",
+      avatarUrl: null,
+      email: "admin@test.local",
+      phonenumber: "13800000001",
+      sex: "0",
+      status: "0",
+      deleted: false,
+      remark: "",
+      passwordHash: "hash",
+      consoleMode: "default",
+      workshopScope: {
+        mode: "ALL",
+        workshopId: null,
+        workshopCode: null,
+        workshopName: null,
+      },
+      extraPermissions: ["*:*:*"],
+      createdAt: new Date("2026-03-01T09:00:00.000Z"),
+      updatedAt: new Date(),
+    };
+    const count = jest.fn().mockResolvedValue(1);
+    const emptyFindMany = jest.fn().mockResolvedValue([]);
+    const modelStub = {
+      count,
+      findMany: emptyFindMany,
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    };
+    const mockPrisma = {
+      sysUser: {
+        ...modelStub,
+        count,
+        findMany: jest.fn().mockResolvedValue([dbUser]),
+      },
+      sysDept: {
+        ...modelStub,
+        findMany: jest.fn().mockResolvedValue([dbDept]),
+      },
+      sysPost: modelStub,
+      sysMenu: modelStub,
+      sysRole: modelStub,
+      sysDictType: modelStub,
+      sysDictData: modelStub,
+      sysConfig: modelStub,
+      sysNotice: modelStub,
+      sysUserRole: modelStub,
+      sysUserPost: modelStub,
+      sysRoleMenu: modelStub,
+      sysRoleDept: modelStub,
+      $transaction: jest.fn(),
+    };
+    const persistentRepository = new InMemoryRbacRepository(
+      mockPrisma as unknown as PrismaService,
+    );
+
+    await persistentRepository.onModuleInit();
+
+    const user = await persistentRepository.findUserByUsername("admin");
+    expect(user).toBeDefined();
+    expect(user?.userId).toBe(1);
+  });
+
+  it("does not reseed when non-user normalized tables already contain data", async () => {
+    const dbDept = {
+      deptId: 300,
+      parentId: 0,
+      ancestors: "0",
+      deptName: "仓库",
+      orderNum: 1,
+      leader: "",
+      phone: "",
+      email: "",
+      status: "0",
+      createdAt: new Date("2026-03-01T09:00:00.000Z"),
+      updatedAt: new Date(),
+    };
+    const zeroCount = jest.fn().mockResolvedValue(0);
+    const oneCount = jest.fn().mockResolvedValue(1);
+    const emptyFindMany = jest.fn().mockResolvedValue([]);
+    const modelStub = {
+      count: zeroCount,
+      findMany: emptyFindMany,
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
+    };
+    const txHandler = jest.fn();
+    const mockPrisma = {
+      sysUser: {
+        ...modelStub,
+        count: zeroCount,
+      },
+      sysDept: {
+        ...modelStub,
+        count: oneCount,
+        findMany: jest.fn().mockResolvedValue([dbDept]),
+      },
+      sysPost: modelStub,
+      sysMenu: modelStub,
+      sysRole: modelStub,
+      sysDictType: modelStub,
+      sysDictData: modelStub,
+      sysConfig: modelStub,
+      sysNotice: modelStub,
+      sysUserRole: modelStub,
+      sysUserPost: modelStub,
+      sysRoleMenu: modelStub,
+      sysRoleDept: modelStub,
+      systemManagementSnapshot: {
+        findUnique: jest.fn().mockResolvedValue({
+          snapshotKey: "default",
+          payload: { users: [] },
+        }),
+      },
+      $transaction: txHandler,
+    };
+    const persistentRepository = new InMemoryRbacRepository(
+      mockPrisma as unknown as PrismaService,
+    );
+
+    await persistentRepository.onModuleInit();
+
+    expect(persistentRepository.getDept(300).deptName).toBe("仓库");
+    expect(txHandler).not.toHaveBeenCalled();
   });
 });

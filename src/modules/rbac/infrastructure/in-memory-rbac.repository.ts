@@ -1,10 +1,19 @@
-import { Injectable, type OnModuleInit, Optional } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  type OnModuleInit,
+  Optional,
+} from "@nestjs/common";
 import type { Prisma } from "../../../generated/prisma/client";
 import {
   compareHash,
   hashText,
 } from "../../../shared/common/security/hash.util";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
+import type {
+  SessionConsoleMode,
+  SessionWorkshopScopeSnapshot,
+} from "../../session/domain/user-session";
 import type {
   ManagedConfigRecord,
   ManagedDeptRecord,
@@ -1542,6 +1551,57 @@ export class InMemoryRbacRepository implements OnModuleInit {
       status: "0",
       perms: "master:supplier:list",
       icon: "peoples",
+      query: "",
+      isFrame: "1",
+      isCache: "0",
+    },
+    {
+      menuId: 3031,
+      parentId: 3030,
+      menuName: "供应商新增",
+      orderNum: 1,
+      path: "",
+      component: "",
+      routeName: "",
+      menuType: "F",
+      visible: "0",
+      status: "0",
+      perms: "master:supplier:create",
+      icon: "",
+      query: "",
+      isFrame: "1",
+      isCache: "0",
+    },
+    {
+      menuId: 3032,
+      parentId: 3030,
+      menuName: "供应商修改",
+      orderNum: 2,
+      path: "",
+      component: "",
+      routeName: "",
+      menuType: "F",
+      visible: "0",
+      status: "0",
+      perms: "master:supplier:update",
+      icon: "",
+      query: "",
+      isFrame: "1",
+      isCache: "0",
+    },
+    {
+      menuId: 3033,
+      parentId: 3030,
+      menuName: "供应商停用",
+      orderNum: 3,
+      path: "",
+      component: "",
+      routeName: "",
+      menuType: "F",
+      visible: "0",
+      status: "0",
+      perms: "master:supplier:deactivate",
+      icon: "",
       query: "",
       isFrame: "1",
       isCache: "0",
@@ -3087,6 +3147,9 @@ export class InMemoryRbacRepository implements OnModuleInit {
         "master:material:update",
         "master:customer:list",
         "master:supplier:list",
+        "master:supplier:create",
+        "master:supplier:update",
+        "master:supplier:deactivate",
         "master:personnel:list",
         "master:workshop:list",
         "inbound:order:list",
@@ -3243,8 +3306,10 @@ export class InMemoryRbacRepository implements OnModuleInit {
     this.applyDefaultRoleMenuAssignments();
   }
 
+  private readonly logger = new Logger(InMemoryRbacRepository.name);
+
   async onModuleInit(): Promise<void> {
-    if (!this.prisma?.systemManagementSnapshot) {
+    if (!this.prisma) {
       return;
     }
 
@@ -3256,44 +3321,495 @@ export class InMemoryRbacRepository implements OnModuleInit {
   }
 
   private async restoreOrSeedState(): Promise<void> {
-    const snapshotDelegate = this.prisma?.systemManagementSnapshot;
-    if (!snapshotDelegate) {
+    if (!this.prisma) {
       return;
     }
 
-    const snapshot = await snapshotDelegate.findUnique({
-      where: { snapshotKey: SYSTEM_MANAGEMENT_SNAPSHOT_KEY },
-    });
-    if (!snapshot) {
-      await this.persistState();
-      return;
-    }
-
-    this.applySnapshot(
-      snapshot.payload as unknown as SystemManagementStateSnapshot,
+    const normalizedBaseCounts = await this.getNormalizedBaseCounts();
+    const hasAnyNormalizedData = Object.values(normalizedBaseCounts).some(
+      (count) => count > 0,
     );
+    if (hasAnyNormalizedData) {
+      await this.loadFromNormalizedTables();
+      if (normalizedBaseCounts.users === 0) {
+        this.logger.warn(
+          "Normalized system-management tables are partially populated without users; loading existing rows without reseeding",
+        );
+      }
+      this.logger.log(
+        `Loaded system management state from normalized tables (${normalizedBaseCounts.users} users)`,
+      );
+      return;
+    }
+
+    const snapshotDelegate = this.prisma.systemManagementSnapshot;
+    if (snapshotDelegate) {
+      try {
+        const snapshot = await snapshotDelegate.findUnique({
+          where: { snapshotKey: SYSTEM_MANAGEMENT_SNAPSHOT_KEY },
+        });
+        if (snapshot) {
+          this.applySnapshot(
+            snapshot.payload as unknown as SystemManagementStateSnapshot,
+          );
+          this.logger.log("Backfilled from legacy system_management_snapshot");
+        }
+      } catch {
+        this.logger.warn(
+          "Legacy snapshot table not readable; using default seed",
+        );
+      }
+    }
+
+    await this.persistState();
+    this.logger.log("Persisted initial seed to normalized tables");
+  }
+
+  private async getNormalizedBaseCounts(): Promise<{
+    depts: number;
+    posts: number;
+    menus: number;
+    roles: number;
+    users: number;
+    dictTypes: number;
+    dictData: number;
+    configs: number;
+    notices: number;
+  }> {
+    if (!this.prisma) {
+      return {
+        depts: 0,
+        posts: 0,
+        menus: 0,
+        roles: 0,
+        users: 0,
+        dictTypes: 0,
+        dictData: 0,
+        configs: 0,
+        notices: 0,
+      };
+    }
+
+    const [
+      depts,
+      posts,
+      menus,
+      roles,
+      users,
+      dictTypes,
+      dictData,
+      configs,
+      notices,
+    ] = await Promise.all([
+      this.prisma.sysDept.count(),
+      this.prisma.sysPost.count(),
+      this.prisma.sysMenu.count(),
+      this.prisma.sysRole.count(),
+      this.prisma.sysUser.count(),
+      this.prisma.sysDictType.count(),
+      this.prisma.sysDictData.count(),
+      this.prisma.sysConfig.count(),
+      this.prisma.sysNotice.count(),
+    ]);
+
+    return {
+      depts,
+      posts,
+      menus,
+      roles,
+      users,
+      dictTypes,
+      dictData,
+      configs,
+      notices,
+    };
+  }
+
+  private async loadFromNormalizedTables(): Promise<void> {
+    if (!this.prisma) {
+      return;
+    }
+
+    const [
+      dbDepts,
+      dbPosts,
+      dbMenus,
+      dbRoles,
+      dbDictTypes,
+      dbDictData,
+      dbConfigs,
+      dbNotices,
+      dbUsers,
+      dbUserRoles,
+      dbUserPosts,
+      dbRoleMenus,
+      dbRoleDepts,
+    ] = await Promise.all([
+      this.prisma.sysDept.findMany(),
+      this.prisma.sysPost.findMany(),
+      this.prisma.sysMenu.findMany(),
+      this.prisma.sysRole.findMany(),
+      this.prisma.sysDictType.findMany(),
+      this.prisma.sysDictData.findMany(),
+      this.prisma.sysConfig.findMany(),
+      this.prisma.sysNotice.findMany(),
+      this.prisma.sysUser.findMany(),
+      this.prisma.sysUserRole.findMany(),
+      this.prisma.sysUserPost.findMany(),
+      this.prisma.sysRoleMenu.findMany(),
+      this.prisma.sysRoleDept.findMany(),
+    ]);
+
+    this.depts = dbDepts.map((d) => ({
+      deptId: d.deptId,
+      parentId: d.parentId,
+      ancestors: d.ancestors,
+      deptName: d.deptName,
+      orderNum: d.orderNum,
+      leader: d.leader,
+      phone: d.phone,
+      email: d.email,
+      status: d.status as "0" | "1",
+      createTime: d.createdAt.toISOString(),
+    }));
+
+    this.posts = dbPosts.map((p) => ({
+      postId: p.postId,
+      postCode: p.postCode,
+      postName: p.postName,
+      postSort: p.postSort,
+      status: p.status as "0" | "1",
+      remark: p.remark,
+      createTime: p.createdAt.toISOString(),
+    }));
+
+    this.menus = dbMenus.map((m) => ({
+      menuId: m.menuId,
+      parentId: m.parentId,
+      menuName: m.menuName,
+      orderNum: m.orderNum,
+      path: m.path,
+      component: m.component,
+      routeName: m.routeName,
+      menuType: m.menuType as "M" | "C" | "F",
+      visible: m.visible as "0" | "1",
+      status: m.status as "0" | "1",
+      perms: m.perms,
+      icon: m.icon,
+      query: m.query,
+      isFrame: m.isFrame as "0" | "1",
+      isCache: m.isCache as "0" | "1",
+    }));
+
+    this.roles = dbRoles.map((r) => ({
+      roleId: r.roleId,
+      roleName: r.roleName,
+      roleKey: r.roleKey,
+      roleSort: r.roleSort,
+      status: r.status as "0" | "1",
+      dataScope: r.dataScope,
+      menuCheckStrictly: r.menuCheckStrictly,
+      deptCheckStrictly: r.deptCheckStrictly,
+      menuIds: dbRoleMenus
+        .filter((rm) => rm.roleId === r.roleId)
+        .map((rm) => rm.menuId),
+      deptIds: dbRoleDepts
+        .filter((rd) => rd.roleId === r.roleId)
+        .map((rd) => rd.deptId),
+      remark: r.remark,
+      createTime: r.createdAt.toISOString(),
+    }));
+
+    this.dictTypes = dbDictTypes.map((dt) => ({
+      dictId: dt.dictId,
+      dictName: dt.dictName,
+      dictType: dt.dictType,
+      status: dt.status as "0" | "1",
+      remark: dt.remark,
+      createTime: dt.createdAt.toISOString(),
+    }));
+
+    this.dictData = dbDictData.map((dd) => ({
+      dictCode: dd.dictCode,
+      dictSort: dd.dictSort,
+      dictLabel: dd.dictLabel,
+      dictValue: dd.dictValue,
+      dictType: dd.dictType,
+      cssClass: dd.cssClass,
+      listClass: dd.listClass,
+      isDefault: dd.isDefault as "Y" | "N",
+      status: dd.status as "0" | "1",
+      remark: dd.remark,
+      createTime: dd.createdAt.toISOString(),
+    }));
+
+    this.configs = dbConfigs.map((c) => ({
+      configId: c.configId,
+      configName: c.configName,
+      configKey: c.configKey,
+      configValue: c.configValue,
+      configType: c.configType as "Y" | "N",
+      remark: c.remark,
+      createTime: c.createdAt.toISOString(),
+    }));
+
+    this.notices = dbNotices.map((n) => ({
+      noticeId: n.noticeId,
+      noticeTitle: n.noticeTitle,
+      noticeType: n.noticeType as "1" | "2",
+      noticeContent: n.noticeContent,
+      status: n.status as "0" | "1",
+      remark: n.remark,
+      createTime: n.createdAt.toISOString(),
+    }));
+
+    this.users = dbUsers.map((u) => ({
+      userId: u.userId,
+      deptId: u.deptId,
+      userName: u.userName,
+      nickName: u.nickName,
+      avatarUrl: u.avatarUrl,
+      email: u.email,
+      phonenumber: u.phonenumber,
+      sex: u.sex as "0" | "1" | "2",
+      status: u.status as "0" | "1",
+      deleted: u.deleted,
+      remark: u.remark,
+      createTime: u.createdAt.toISOString(),
+      postIds: dbUserPosts
+        .filter((up) => up.userId === u.userId)
+        .map((up) => up.postId),
+      roleIds: dbUserRoles
+        .filter((ur) => ur.userId === u.userId)
+        .map((ur) => ur.roleId),
+      passwordHash: u.passwordHash,
+      consoleMode: (u.consoleMode ?? "default") as SessionConsoleMode,
+      workshopScope:
+        (u.workshopScope as unknown as SessionWorkshopScopeSnapshot) ?? {
+          mode: "ALL",
+          workshopId: null,
+          workshopCode: null,
+          workshopName: null,
+        },
+      extraPermissions: (u.extraPermissions as unknown as string[]) ?? [],
+    }));
   }
 
   private async persistState(): Promise<void> {
-    const snapshotDelegate = this.prisma?.systemManagementSnapshot;
-    if (!snapshotDelegate) {
+    if (!this.prisma) {
       return;
     }
 
-    const payload =
-      this.toSnapshotPayload() as unknown as Prisma.InputJsonValue;
-    await snapshotDelegate.upsert({
-      where: { snapshotKey: SYSTEM_MANAGEMENT_SNAPSHOT_KEY },
-      update: { payload },
-      create: {
-        snapshotKey: SYSTEM_MANAGEMENT_SNAPSHOT_KEY,
-        payload,
-      },
+    const now = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      await tx.sysUserRole.deleteMany();
+      await tx.sysUserPost.deleteMany();
+      await tx.sysRoleMenu.deleteMany();
+      await tx.sysRoleDept.deleteMany();
+      await tx.sysUser.deleteMany();
+      await tx.sysRole.deleteMany();
+      await tx.sysMenu.deleteMany();
+      await tx.sysDept.deleteMany();
+      await tx.sysPost.deleteMany();
+      await tx.sysDictType.deleteMany();
+      await tx.sysDictData.deleteMany();
+      await tx.sysConfig.deleteMany();
+      await tx.sysNotice.deleteMany();
+
+      if (this.depts.length) {
+        await tx.sysDept.createMany({
+          data: this.depts.map((d) => ({
+            deptId: d.deptId,
+            parentId: d.parentId,
+            ancestors: d.ancestors,
+            deptName: d.deptName,
+            orderNum: d.orderNum,
+            leader: d.leader,
+            phone: d.phone,
+            email: d.email,
+            status: d.status,
+            createdAt: new Date(d.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.posts.length) {
+        await tx.sysPost.createMany({
+          data: this.posts.map((p) => ({
+            postId: p.postId,
+            postCode: p.postCode,
+            postName: p.postName,
+            postSort: p.postSort,
+            status: p.status,
+            remark: p.remark,
+            createdAt: new Date(p.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.menus.length) {
+        await tx.sysMenu.createMany({
+          data: this.menus.map((m) => ({
+            menuId: m.menuId,
+            parentId: m.parentId,
+            menuName: m.menuName,
+            orderNum: m.orderNum,
+            path: m.path,
+            component: m.component,
+            routeName: m.routeName,
+            menuType: m.menuType,
+            visible: m.visible,
+            status: m.status,
+            perms: m.perms,
+            icon: m.icon,
+            query: m.query,
+            isFrame: m.isFrame,
+            isCache: m.isCache,
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.roles.length) {
+        await tx.sysRole.createMany({
+          data: this.roles.map((r) => ({
+            roleId: r.roleId,
+            roleName: r.roleName,
+            roleKey: r.roleKey,
+            roleSort: r.roleSort,
+            status: r.status,
+            dataScope: r.dataScope,
+            menuCheckStrictly: r.menuCheckStrictly,
+            deptCheckStrictly: r.deptCheckStrictly,
+            remark: r.remark,
+            createdAt: new Date(r.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.dictTypes.length) {
+        await tx.sysDictType.createMany({
+          data: this.dictTypes.map((dt) => ({
+            dictId: dt.dictId,
+            dictName: dt.dictName,
+            dictType: dt.dictType,
+            status: dt.status,
+            remark: dt.remark,
+            createdAt: new Date(dt.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.dictData.length) {
+        await tx.sysDictData.createMany({
+          data: this.dictData.map((dd) => ({
+            dictCode: dd.dictCode,
+            dictSort: dd.dictSort,
+            dictLabel: dd.dictLabel,
+            dictValue: dd.dictValue,
+            dictType: dd.dictType,
+            cssClass: dd.cssClass,
+            listClass: dd.listClass,
+            isDefault: dd.isDefault,
+            status: dd.status,
+            remark: dd.remark,
+            createdAt: new Date(dd.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.configs.length) {
+        await tx.sysConfig.createMany({
+          data: this.configs.map((c) => ({
+            configId: c.configId,
+            configName: c.configName,
+            configKey: c.configKey,
+            configValue: c.configValue,
+            configType: c.configType,
+            remark: c.remark,
+            createdAt: new Date(c.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.notices.length) {
+        await tx.sysNotice.createMany({
+          data: this.notices.map((n) => ({
+            noticeId: n.noticeId,
+            noticeTitle: n.noticeTitle,
+            noticeType: n.noticeType,
+            noticeContent: n.noticeContent,
+            status: n.status,
+            remark: n.remark,
+            createdAt: new Date(n.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      if (this.users.length) {
+        await tx.sysUser.createMany({
+          data: this.users.map((u) => ({
+            userId: u.userId,
+            deptId: u.deptId,
+            userName: u.userName,
+            nickName: u.nickName,
+            avatarUrl: u.avatarUrl,
+            email: u.email,
+            phonenumber: u.phonenumber,
+            sex: u.sex,
+            status: u.status,
+            deleted: u.deleted,
+            remark: u.remark,
+            passwordHash: u.passwordHash,
+            consoleMode: u.consoleMode,
+            workshopScope: u.workshopScope as unknown as Prisma.InputJsonValue,
+            extraPermissions:
+              u.extraPermissions as unknown as Prisma.InputJsonValue,
+            createdAt: new Date(u.createTime),
+            updatedAt: now,
+          })),
+        });
+      }
+
+      const userRoleData = this.users.flatMap((u) =>
+        u.roleIds.map((roleId) => ({ userId: u.userId, roleId })),
+      );
+      if (userRoleData.length) {
+        await tx.sysUserRole.createMany({ data: userRoleData });
+      }
+
+      const userPostData = this.users.flatMap((u) =>
+        u.postIds.map((postId) => ({ userId: u.userId, postId })),
+      );
+      if (userPostData.length) {
+        await tx.sysUserPost.createMany({ data: userPostData });
+      }
+
+      const roleMenuData = this.roles.flatMap((r) =>
+        r.menuIds.map((menuId) => ({ roleId: r.roleId, menuId })),
+      );
+      if (roleMenuData.length) {
+        await tx.sysRoleMenu.createMany({ data: roleMenuData });
+      }
+
+      const roleDeptData = this.roles.flatMap((r) =>
+        r.deptIds.map((deptId) => ({ roleId: r.roleId, deptId })),
+      );
+      if (roleDeptData.length) {
+        await tx.sysRoleDept.createMany({ data: roleDeptData });
+      }
     });
   }
 
   private queuePersistence(): void {
-    if (!this.prisma?.systemManagementSnapshot) {
+    if (!this.prisma) {
       return;
     }
 
@@ -3304,20 +3820,6 @@ export class InMemoryRbacRepository implements OnModuleInit {
       persistOperation,
       persistOperation,
     );
-  }
-
-  private toSnapshotPayload(): SystemManagementStateSnapshot {
-    return {
-      depts: structuredClone(this.depts),
-      posts: structuredClone(this.posts),
-      menus: structuredClone(this.menus),
-      roles: structuredClone(this.roles),
-      dictTypes: structuredClone(this.dictTypes),
-      dictData: structuredClone(this.dictData),
-      configs: structuredClone(this.configs),
-      notices: structuredClone(this.notices),
-      users: structuredClone(this.users),
-    };
   }
 
   private applySnapshot(snapshot: SystemManagementStateSnapshot): void {

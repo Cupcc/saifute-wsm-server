@@ -82,7 +82,7 @@ Typical output:
 
 Checks include:
 
-- requirement drift between the linked requirement doc, task doc, and delivered changes
+- requirement drift between the linked topic capability (`docs/requirements/topics/*.md`), task doc, and delivered changes
 - auth and session lifecycle where relevant
 - inventory side effects and reverse operations
 - workflow regressions
@@ -91,6 +91,33 @@ Checks include:
 - whether the executed validation actually matches the changed risk surface
 - for migration-style work, staging or exclusion handling, replay-vs-copy fit, deterministic generation, runtime-alignment checks, and blocker visibility
 
+## Acceptance agent
+
+### `acceptance-qa`
+
+- Best for: independent requirement-level and user-flow verification when the selected `Acceptance mode` needs a separate acceptance pass or the user explicitly asks for end-to-end confirmation
+- Typical files:
+  - assigned `docs/tasks/*.md` acceptance section
+  - `docs/acceptance-tests/specs/**`
+  - `docs/acceptance-tests/runs/**`
+  - linked `docs/requirements/topics/*.md` status fields when acceptance closes an ability
+- Owns:
+  - acceptance-mode fit check
+  - acceptance judgment
+  - criteria coverage and user-flow evidence
+  - route-back classification for non-pass results
+
+Use it when:
+
+- `Acceptance mode = full`
+- browser, manual, or business-verification evidence is required
+- the user explicitly asks for acceptance, end-to-end verification, or business-level confirmation
+
+Skip it when:
+
+- the task stayed lightweight or docs-only
+- `Acceptance mode = light` and reviewer evidence already provides sufficient confidence
+
 ## Parallel writer policy
 
 - Multiple writer `coder` workers are allowed only when their writable scopes are explicitly disjoint before launch
@@ -98,6 +125,7 @@ Checks include:
 - Shared files such as `src/app.module.ts`, `src/main.ts`, `src/shared/**`, `prisma/schema.prisma`, route or permission registries, shared docs or contracts, active `docs/tasks/*.md`, shared staging schemas, reconciliation outputs, cutover evidence, and cross-module tests stay parent-owned unless one worker is explicitly named as the sole owner
 - Each writer handoff should list owned paths, forbidden shared files, and the validation command for that scope
 - If overlapping child changes appear and the source is clearly an active child worker, the parent should re-read the latest content and merge on top of it instead of stopping immediately
+- `acceptance-qa` owns `docs/acceptance-tests/**` and the task-doc acceptance section when a separate acceptance pass is active
 
 ## Rules vs runtime context
 
@@ -111,11 +139,11 @@ Checks include:
 ## Suggested combinations
 
 - Lightweight direct task: parent reads the smallest relevant files -> edits directly -> runs focused validation -> optional parent self-review -> stop
-- Non-trivial task flow: create or confirm `docs/requirements/*.md` -> `planner` writes `docs/tasks/*.md` and returns req-sync lines + decision_candidates -> parent syncs concise progress to the requirement doc -> parent writes qualifying decision_candidates to `docs/workspace/<workflow>/decisions.md` and updates dashboard -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> parent syncs progress to requirement doc and workspace -> parent follows `.cursor/rules/commit-workflow.mdc` for branch-local checkpoint or final semantic commit handling -> parent retrospect: append lessons to `docs/playbooks/{domain}/playbook.md`
-- Requirement-first flow for durable work: create or confirm `docs/requirements/*.md` -> create workspace folder under `docs/workspace/<workflow>/` when scope is non-trivial -> `planner` writes `docs/tasks/*.md` against it -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> parent keeps requirement doc and workspace updated
+- Non-trivial task flow: confirm topic capability in `docs/requirements/topics/*.md` (Fx) -> `planner` writes `docs/tasks/*.md` with `Related requirement` pointing to topic -> parent updates topic capability status at key milestones -> `coder` executes from the task doc -> `code-reviewer` reviews, tests, and updates docs -> if any `[blocking]` or `[important]` finding remains, route back to `coder` -> rerun `code-reviewer` -> if the selected `Acceptance mode` or user request requires independent acceptance, run `acceptance-qa` and route any non-pass result back to the right owner -> parent follows `.cursor/rules/commit-workflow.mdc` for branch-local checkpoint or final semantic commit handling -> parent retrospect: append lessons to `docs/playbooks/{domain}/playbook.md`
+- Requirement-first flow for durable work: confirm topic capability in `docs/requirements/topics/*.md` -> create workspace folder under `docs/workspace/<workflow>/` when scope is non-trivial -> `planner` writes `docs/tasks/*.md` against the topic capability -> `coder` executes the aligned scope -> `code-reviewer` checks requirement drift and validation -> run `acceptance-qa` when the chosen mode needs a separate acceptance pass -> parent updates topic capability status when done
 - Multi-module task with safe disjoint scopes: `planner` writes task docs or explicit scoped sections -> parallel `coder` workers with explicit boundaries -> `code-reviewer` -> fix loop as needed
 - Review-heavy task: `planner` writes `docs/tasks/*.md` -> `code-reviewer`
-- Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> parent follows `.cursor/rules/commit-workflow.mdc` for commit handling
+- Small but non-trivial bugfix: `planner` writes `docs/tasks/*.md` -> `coder` -> `code-reviewer` -> fix loop -> optionally `acceptance-qa` when the task's acceptance mode or user request calls for independent verification -> parent follows `.cursor/rules/commit-workflow.mdc` for commit handling
 
 ## Retrospect phase
 
@@ -141,10 +169,10 @@ What to produce:
 - Commit creation belongs to the parent orchestrator only
 - Do not let `coder` or `code-reviewer` create the commit directly
 - Use `.cursor/rules/commit-workflow.mdc` as the source of truth for checkpoint timing, final semantic commit rules, and squash-to-`main` expectations
-- Only proceed to parent-owned commit activity after required validation passes, review is clear of open `[blocking]` and `[important]` findings, there is no unresolved shared-contract blocker, and the user did not opt out with `no-commit`
+- Only proceed to parent-owned commit activity after required validation passes, review is clear of open `[blocking]` and `[important]` findings, required acceptance work is clear for the selected mode, there is no unresolved shared-contract blocker, and the user did not opt out with `no-commit`
 - Repository default: validated delivery work is commit-intended unless the user says `no-commit`
 - If a higher-priority runtime policy outside the repository blocks commit creation, stop at a commit-ready handoff instead of inventing a local exception
-- For delivery requests, review is not a stopping point; the parent should keep the repair loop moving until commit readiness or a real blocker
+- For delivery requests, review is not a stopping point; the parent should keep the repair loop moving, and run acceptance when required, until commit readiness or a real blocker
 - Only stop early when the user explicitly asked for `plan-only`, `review-only`, or `docs-only`
 - If the user says `no-commit`, finish the requested scope and review or fix loop, then stop without creating a commit
 
@@ -174,7 +202,7 @@ Tests run or still needed:
 Risks, blockers, sign-off needs, or follow-up work:
 - ...
 
-Requirement doc sync:
+Progress sync (task doc):
 - 阶段进度: ...
 - 当前状态: ...
 - 阻塞项: ...
@@ -233,4 +261,23 @@ Residual Risks Or Testing Gaps:
 
 Short Summary:
 - ...
+```
+
+Acceptance append:
+
+```markdown
+Acceptance mode:
+- none | light | full
+
+Acceptance judgment:
+- accepted | rejected | conditionally-accepted | skipped | blocked
+
+Verification coverage:
+- criteria and evidence pointers
+
+Execution details:
+- browser/manual/API surface, env notes, or why execution was skipped
+
+Route-back classification when not passed:
+- requirement-misunderstanding | implementation-gap | evidence-gap | environment-gap
 ```
