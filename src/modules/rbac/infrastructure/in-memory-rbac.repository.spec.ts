@@ -105,6 +105,20 @@ describe("InMemoryRbacRepository", () => {
     );
   });
 
+  it("seeds supplier CRUD function permissions under the supplier menu", () => {
+    const supplierFunctionMenus = repository
+      .listMenus({})
+      .filter((menu) => menu.parentId === 3030 && menu.menuType === "F");
+
+    expect(supplierFunctionMenus.map((menu) => menu.perms)).toEqual(
+      expect.arrayContaining([
+        "master:supplier:create",
+        "master:supplier:update",
+        "master:supplier:deactivate",
+      ]),
+    );
+  });
+
   it("seeds normalized tables when no data exists on init", async () => {
     const count = jest.fn().mockResolvedValue(0);
     const findMany = jest.fn().mockResolvedValue([]);

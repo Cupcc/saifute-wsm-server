@@ -15,6 +15,7 @@
 | 需求文档 | 状态 | 说明 |
 | --- | --- | --- |
 | `topics/system-management-module.md` | `confirmed` | 系统管理模块主题真源；F4 `conditionally-accepted`（规范化落库完成，browser smoke 待补跑 `[ENV-GAP-1]`）；后续推进直接开 `task-*.md`。 |
+| `topics/master-data-management.md` | `confirmed` | 基础数据管理主题真源；F4 供应商 CRUD 已通过自动化 + `agent-browser` full acceptance，其余 Phase 1 能力继续按 topic 开 task 推进。 |
 | `topics/rd-subwarehouse.md` | `confirmed` | RD 小仓主题真源；Phase 1–5 能力已全部完成。 |
 | `topics/inbound-business-module.md` | `needs-confirmation` | 入库业务模块主题真源；长期约束已沉淀，后续入库扩展从该 topic 开 task。 |
 | `topics/monthly-reporting.md` | `confirmed` | 月度报表主题真源；口径已确认，实施路线图待开 task。 |

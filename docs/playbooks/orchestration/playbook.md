@@ -16,6 +16,17 @@ Accumulated execution experience for subagent coordination, parallel writer mana
 - Treat everything else as mode-dependent defaults, not as a one-size-fits-all forced workflow.
 - When an agent needs browser-based testing or acceptance execution, use `agent-browser` as the default execution surface so browser evidence and reproduction steps stay consistent across runs.
 
+## 2026-04-03 · Browser Acceptance Contract Checks
+
+**Source task**: `master-data` F4 supplier CRUD full-mode acceptance
+**Scenario**: browser acceptance initially drifted to Chrome DevTools MCP and a stale assumption that captcha was still enabled, while the repo policy required `agent-browser` and the live `.env.dev` backend had captcha disabled.
+**Lesson**:
+- When the repo policy says browser acceptance uses `agent-browser`, use the CLI directly. Do not substitute Chrome DevTools MCP unless the task doc explicitly records an exception.
+- Before scripting a login flow, verify env-sensitive assumptions against the live backend first, then confirm them with a browser snapshot. In this repo, `GET /api/auth/captcha` was the fastest truth source for whether captcha was really enabled.
+- For async dropdowns, do not trust a transient same-name suggestion during typing as proof that the backend returned a real option. Cross-check the browser network request, optionally probe the backend directly, and take a fresh snapshot to confirm whether the combobox actually resolved a selectable record.
+**Reusable action**: for browser acceptance that touches login or remote selects, follow `live backend probe -> agent-browser open -> snapshot -> interact -> network check -> re-snapshot -> write evidence`.
+**Maturity**: verified ✓
+
 ## 2026-04-02 · agent-browser Reference Baseline
 
 **Source task**: user-requested browser-usage validation and documentation update

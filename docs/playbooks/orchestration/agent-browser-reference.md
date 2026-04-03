@@ -45,6 +45,8 @@ Use `agent-browser` whenever the task needs real browser behavior, for example:
 
 Do not mix `agent-browser` evidence with ad hoc manual Chrome steps in the same acceptance conclusion unless the task doc explicitly records that exception.
 
+In this repository, if the task or acceptance doc says browser work should use `agent-browser`, do not silently substitute Chrome DevTools MCP or another browser channel. Use the CLI directly unless the doc explicitly records an exception.
+
 ## Verified Working Flow
 
 The following flow was validated in this environment.
@@ -140,6 +142,37 @@ When writing browser evidence into a task or acceptance run, keep it concrete:
 - whether screenshots were captured
 
 Avoid vague statements like `browser smoke passed` without naming the checked routes or evidence.
+
+## Environment-Sensitive Login Checks
+
+Before automating a login flow, verify live assumptions that may be controlled by env:
+
+- If captcha, SSO, or route guards are env-driven, probe the live backend first.
+- In this repo, `GET /api/auth/captcha` is the fastest truth source for whether captcha is enabled in the running backend.
+- After the backend probe, open the login page with `agent-browser` and confirm the rendered form with `snapshot -i`.
+
+Recommended sequence:
+
+1. Check the live backend endpoint that controls the login assumption.
+2. Open the login page.
+3. Snapshot the interactive elements.
+4. Only then script the login flow.
+
+Trust the live endpoint plus the current browser snapshot over a stale assumption from an earlier run.
+
+## Async Dropdown Verification
+
+Async selects can briefly show typed text, input-method suggestions, or transient UI echoes that look like real options.
+
+Do not conclude from that transient state alone. For remote-search dropdown checks:
+
+1. Trigger the search in the browser.
+2. Inspect `agent-browser network requests` for the exact backend search request.
+3. If the result is important, probe the same backend endpoint directly with auth.
+4. Take a fresh `snapshot` after the request settles.
+5. Conclude from the server response plus the refreshed combobox state, not from the transient suggestion row.
+
+This was necessary in this repo for the supplier active-only contract on `/entry/order`: a disabled supplier name could appear momentarily while typing, but the backend returned `items=[] total=0` and the refreshed combobox remained empty.
 
 ## Troubleshooting
 

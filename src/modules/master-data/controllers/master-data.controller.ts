@@ -13,8 +13,10 @@ import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { MasterDataService } from "../application/master-data.service";
 import { CreateMaterialDto } from "../dto/create-material.dto";
+import { CreateSupplierDto } from "../dto/create-supplier.dto";
 import { QueryMasterDataDto } from "../dto/query-master-data.dto";
 import { UpdateMaterialDto } from "../dto/update-material.dto";
+import { UpdateSupplierDto } from "../dto/update-supplier.dto";
 
 @Controller("master-data")
 export class MasterDataController {
@@ -77,6 +79,41 @@ export class MasterDataController {
   @Get("suppliers/:id")
   async getSupplier(@Param("id", ParseIntPipe) id: number) {
     return this.masterDataService.getSupplierById(id);
+  }
+
+  @Permissions("master:supplier:create")
+  @Post("suppliers")
+  async createSupplier(
+    @Body() dto: CreateSupplierDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    return this.masterDataService.createSupplier(dto, user?.userId?.toString());
+  }
+
+  @Permissions("master:supplier:update")
+  @Patch("suppliers/:id")
+  async updateSupplier(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: UpdateSupplierDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    return this.masterDataService.updateSupplier(
+      id,
+      dto,
+      user?.userId?.toString(),
+    );
+  }
+
+  @Permissions("master:supplier:deactivate")
+  @Patch("suppliers/:id/deactivate")
+  async deactivateSupplier(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    return this.masterDataService.deactivateSupplier(
+      id,
+      user?.userId?.toString(),
+    );
   }
 
   @Permissions("master:personnel:list")

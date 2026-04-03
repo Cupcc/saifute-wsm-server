@@ -135,6 +135,12 @@ export class MasterDataRepository {
     });
   }
 
+  async findSupplierByCode(supplierCode: string) {
+    return this.prisma.supplier.findUnique({
+      where: { supplierCode },
+    });
+  }
+
   async findCustomerById(id: number) {
     return this.prisma.customer.findUnique({
       where: { id },
@@ -174,6 +180,59 @@ export class MasterDataRepository {
     return this.prisma.material.update({
       where: { id },
       data: { ...data, updatedBy },
+    });
+  }
+
+  async createSupplier(
+    data: Pick<
+      Prisma.SupplierUncheckedCreateInput,
+      "supplierCode" | "supplierName"
+    >,
+    createdBy?: string,
+  ) {
+    return this.prisma.supplier.create({
+      data: {
+        ...data,
+        status: "ACTIVE",
+        creationMode: "MANUAL",
+        createdBy,
+        updatedBy: createdBy,
+      },
+    });
+  }
+
+  async createAutoSupplier(
+    data: Pick<
+      Prisma.SupplierUncheckedCreateInput,
+      | "supplierCode"
+      | "supplierName"
+      | "sourceDocumentType"
+      | "sourceDocumentId"
+    >,
+    createdBy?: string,
+  ) {
+    return this.prisma.supplier.create({
+      data: {
+        ...data,
+        status: "ACTIVE",
+        creationMode: "AUTO_CREATED",
+        createdBy,
+        updatedBy: createdBy,
+      },
+    });
+  }
+
+  async updateSupplier(
+    id: number,
+    data: Prisma.SupplierUncheckedUpdateInput,
+    updatedBy?: string,
+  ) {
+    return this.prisma.supplier.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedBy,
+      },
     });
   }
 

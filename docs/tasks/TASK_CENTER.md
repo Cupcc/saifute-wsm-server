@@ -23,7 +23,7 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
-| 当前无 active task | `-` | `system-management` F4 已完成并归档到 `archive/retained-completed/`。 |
+| `task-20260402-1758-master-data-f4-supplier-crud.md` | `accepted` | `master-data` `F4` 供应商 CRUD 已通过自动化验证与 `agent-browser` full acceptance；当前处于 commit / archive-ready 状态。 |
 
 ## 已完成（`archive/retained-completed/`）
 
@@ -31,4 +31,6 @@
 
 ## 清理候选（`archive/cleanup-candidate/`）
 
-当前无待处理条目。
+| Task 文档 | 状态 | 说明 |
+| --- | --- | --- |
+| `task-20260402-1802-master-data-phase1-completion.md` | `cleanup-candidate` | 规划阶段生成的更大范围 `Phase 1` 草案；已被 `task-20260402-1758-master-data-f4-supplier-crud.md` supersede，待用户明确 cleanup 后再归档或删除。 |

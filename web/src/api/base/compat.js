@@ -96,6 +96,7 @@ export function mapSupplier(item) {
     supplierCode: item.supplierCode,
     supplierName: item.supplierName,
     supplierShortName: item.supplierName,
+    status: item.status ?? "ACTIVE",
     contactPerson: "",
     contactPhone: "",
     address: "",
