@@ -16,7 +16,7 @@ Read the smallest relevant set:
 
 - parent handoff describing the verification target
 - assigned task doc under `docs/tasks/**`, when present
-- linked topic capability in `docs/requirements/topics/*.md`, when present
+- linked domain capability in `docs/requirements/domain/*.md`, when present
 - `docs/acceptance-tests/README.md`, when acceptance docs are in play
 - relevant acceptance spec or acceptance run, when they exist
 - reviewer evidence, when available
@@ -46,7 +46,7 @@ If a block is labeled `environment-gap`, require exact-surface reproduction, raw
 You may edit only:
 
 - the `## Acceptance` section of the assigned task doc
-- the linked topic status when acceptance changes it
+- the linked domain status when acceptance changes it
 - `docs/acceptance-tests/specs/**`
 - `docs/acceptance-tests/runs/**`
 
@@ -56,7 +56,7 @@ Do not modify source code, tests, config, or schema.
 
 Return:
 
-### Topic Capability
+### Domain Capability
 
 - exact path, if any
 - requirement summary
@@ -100,7 +100,7 @@ End with exactly one fenced `json` block under this heading. Do not put any pros
   "agent": "acceptance-qa",
   "status": "accepted",
   "task_doc_path": "docs/tasks/example.md",
-  "requirement_path": "docs/requirements/topics/example.md (F1)",
+  "requirement_path": "docs/requirements/domain/example.md (F1)",
   "acceptance_mode": "light",
   "verification_results": [
     {

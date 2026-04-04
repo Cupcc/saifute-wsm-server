@@ -2,16 +2,31 @@
 
 ## Metadata
 
-- ID: `topic-inbound-business-module`
+- ID: `domain-inbound-business-module`
 - Status: `needs-confirmation`
-- Scope: `topic-level`
+- Scope: `domain-level`
 
 ## 主题定义
 
 - `inbound` 是长期业务主题，解决验收单、生产入库单如何在统一入库家族下完成录入、过账、修改、作废、追溯与下游协同。
 - 成品入库统一走 `inbound`（`/inbound/into-orders` 生产入库单），与验收单共用 `stock_in_order` / `stock_in_order_line`。
 - 当前范围覆盖 `/inbound/orders` 验收单、`/inbound/into-orders` 生产入库单，以及与 `inventory-core`、`workflow`、车间领料和来源成本追溯的长期边界。
-- 本文档只保留长期约束、长期业务口径、能力清单和能力合同；单次交付直接从本 topic 创建 `task-*.md`。
+- 本文档只保留长期约束、长期业务口径、能力清单和能力合同；单次交付直接从本 domain 创建 `task-*.md`。
+
+## 承接的项目级能力版图
+
+### 入库（`inbound`）
+
+- 本 domain 承接项目总纲中的 `inbound` 模块详细职责，作为入库家族的长期真源。
+- 成品 / 生产入库统一走 `inbound`，与客户退货等其它回流路径区分，不另起平行模块。
+- 第一阶段默认覆盖采购 / 验收入库和生产入库等真实入库事务，并在录入后立即影响实时库存。
+- 需要支持单据新增、修改、作废、查询、导出，以及按供应商、物料、日期等常见维度追溯入库记录。
+- 入库单据应与主数据、库存、审核记录保持关联，改单和作废时需同步处理库存与追溯结果。
+
+### 相邻共享边界
+
+- `inventory-core` 继续作为所有库存变动的唯一写入口；入库只负责组织单据语义，不旁路改库存。
+- `workflow` 第一阶段默认采用轻量审核模式，审核更多用于记录、查询、追溯和纠偏，不阻塞入库落账。
 
 ## 长期约束
 
@@ -21,7 +36,7 @@
 - `C4` 来源层成本语义：同一物料 / 型号在不同入库批次下可存在不同单价；入库价格必须成为后续出库、领料、退料等消耗动作的来源成本真源。状态：`生效中`
 - `C5` 默认 FIFO：未手动指定来源时，后续消耗类动作默认按先进先出确定来源层；手动指定来源时，系统仍必须保留可审计来源分配记录。状态：`生效中`
 - `C6` 双向快捷协同：允许从入库页面以“立即出库”方式发起到指定车间的下游领料，也允许在车间页面反选某张入库单据物料直接发起领料；后台仍必须沉淀为独立、可作废、可追溯的下游业务单据，且同一入库单据最多只允许创建一次对应出库。状态：`生效中`
-- `C7` 成品入库路径统一：凡属成品入库，一律经本 topic 的 `inbound`（生产入库单）落库与过账，不分散到客户收发或其它家族。状态：`生效中`
+- `C7` 成品入库路径统一：凡属成品入库，一律经本 domain 的 `inbound`（生产入库单）落库与过账，不分散到客户收发或其它家族。状态：`生效中`
 
 ## 长期业务口径
 
@@ -40,7 +55,7 @@
 | `F4` | 入库来源层与成本追溯      | 入库价格可作为后续消耗的来源成本真源，支持按入库来源追溯同物料 / 型号的实际消耗成本  | Phase 2 | `未开始` | `-`  |
 | `F5` | 默认 FIFO 与手动来源指定 | 消耗类动作默认按 FIFO 分配来源层，并支持按业务依据手动指定来源且保留可审计分配记录 | Phase 2 | `未开始` | `-`  |
 | `F6` | 入库到车间的一键双向协同    | 支持入库页“立即出库”生成车间领料单、车间页反选入库来源发起领料，且同一入库单据只能成功出库一次       | Phase 3 | `未开始` | `-`  |
-| `F7` | 后续入库扩展切片承接      | 后续若继续扩展上游联动、校验补强或体验优化，仍以本 topic 约束作为长期真源     | Phase 3 | `未开始` | `-`  |
+| `F7` | 后续入库扩展切片承接      | 后续若继续扩展上游联动、校验补强或体验优化，仍以本 domain 约束作为长期真源     | Phase 3 | `未开始` | `-`  |
 
 
 ## 能力合同（推荐）
@@ -52,14 +67,14 @@
   - 明确同一物料 / 型号多价格入库时，系统需要保留的最小追溯证据。
   - 明确入库改动、作废与历史追溯之间的补偿边界。
 - Out of scope / non-goals:
-  - 不在本 topic 内直接升级为完整批次、库位、多仓 WMS 模型。
+  - 不在本 domain 内直接升级为完整批次、库位、多仓 WMS 模型。
   - 不要求在本能力合同中定义完整报表或月结实现细节。
 - Completion criteria:
   - `[TC-1]` 入库明细价格被定义为后续消耗来源成本的业务真源，且文档口径不再允许退化为物料主档静态单价。
   - `[TC-2]` 文档明确下游消耗需保留"消费行 -> 来源入库层 / 来源流水"的可追溯关系。
   - `[TC-3]` 文档明确改单、作废、逆操作不能破坏既有来源追溯语义。
 - Evidence expectation:
-  - topic 文档更新 + 后续对应 task 的 schema / service / validation 设计说明。
+  - domain 文档更新 + 后续对应 task 的 schema / service / validation 设计说明。
 - Default derived slice acceptance mode: `light`
 - AI derivation note:
   - 优先以 `inventory_log(IN)` + `inventory_source_usage` 作为演进基础，先补来源分配闭环与成本快照，不默认直接新建完整批次子系统。
@@ -78,7 +93,7 @@
   - `[TC-2]` 文档明确手动指定来源后，扣减、成本、逆操作与追溯均以指定结果为准。
   - `[TC-3]` 文档明确无论 FIFO 还是手动指定，系统都必须保留来源分配记录。
 - Evidence expectation:
-  - topic 文档更新 + 后续 task 中的接口 / service contract 与测试清单。
+  - domain 文档更新 + 后续 task 中的接口 / service contract 与测试清单。
 - Default derived slice acceptance mode: `light`
 - AI derivation note:
   - 默认从库存核心统一下沉 FIFO 能力，再让 `customer`、`workshop-material`、`project`、`rd-subwarehouse` 等消耗链路复用，不要在各模块重复实现。
@@ -100,7 +115,7 @@
   - `[TC-3]` 文档明确同一入库单据只能成功创建一次对应出库，系统必须拦截重复创建。
   - `[TC-4]` 文档明确车间仍只作为归属 / 核算维度，不变成真实库存池。
 - Evidence expectation:
-  - topic 文档更新 + 后续 task 中的页面入口、接口契约和逆操作说明。
+  - domain 文档更新 + 后续 task 中的页面入口、接口契约和逆操作说明。
 - Default derived slice acceptance mode: `light`
 - AI derivation note:
   - 优先复用 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 与 `document_relation` / `document_line_relation` 体系，不要为快捷操作单独再造一套关系表。
@@ -127,4 +142,4 @@
 - 架构设计：`docs/architecture/modules/inbound.md`
 - 架构设计：`docs/architecture/20-wms-database-tables-and-schema.md`
 - 方案草案：`docs/workspace/fifo-costing-default-fifo/README.md`
-- 后续继续推进时，直接从本 topic 能力合同创建 `docs/tasks/task-*.md`（`Related requirement` 指向本 topic 对应 `Fx`）。
+- 后续继续推进时，直接从本 domain 能力合同创建 `docs/tasks/task-*.md`（`Related requirement` 指向本 domain 对应 `Fx`）。

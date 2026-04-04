@@ -23,7 +23,7 @@ For the actual lane-selection rule, follow [SKILL.md](SKILL.md).
 | `planner` | turn a non-trivial request into an execution-ready task doc | `docs/tasks/**` only | `.cursor/agents/planner.md` |
 | `coder` | implement inside an explicitly assigned writable scope | owned paths only; `docs/tasks/**` stays read-only unless reassigned | `.cursor/agents/coder.md` |
 | `code-reviewer` | find bugs, regressions, contract drift, and validation gaps | review-owned task-doc/checklist updates only when assigned | `.cursor/agents/code-reviewer.md` |
-| `acceptance-qa` | independent requirement-level or user-flow verification | task-doc `## Acceptance`, linked topic status, `docs/acceptance-tests/**` | `.cursor/agents/acceptance-qa.md` |
+| `acceptance-qa` | independent requirement-level or user-flow verification | task-doc `## Acceptance`, linked domain status, `docs/acceptance-tests/**` | `.cursor/agents/acceptance-qa.md` |
 | `explore` | readonly codebase discovery support | none | parent handoff only |
 
 ## Shared-file and parallel-writer reminders

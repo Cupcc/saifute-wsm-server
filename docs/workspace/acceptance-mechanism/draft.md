@@ -426,7 +426,7 @@ code-reviewer ──→ 技术审查
 建议文件命名：
 
 - 模块级：`<module>.md`
-- 主题级：`<topic>.md`
+- 主题级：`<domain>.md`
 
 建议模板：
 
@@ -435,7 +435,7 @@ code-reviewer ──→ 技术审查
 
 ## Metadata
 
-- Module / topic:
+- Module / domain:
 - Owner: `acceptance-qa`
 - Last updated:
 

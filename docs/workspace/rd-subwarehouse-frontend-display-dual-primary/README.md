@@ -1,6 +1,6 @@
 # RD 小仓双一级界面与前端展示澄清
 
-关联需求: `docs/requirements/topics/rd-subwarehouse.md`（主题真源；本工作流聚焦展示层业务抽象，尚未另开切片 `req-*.md`）
+关联需求: `docs/requirements/domain/rd-subwarehouse.md`（领域真源；本工作流聚焦展示层业务抽象，尚未另开切片 `req-*.md`）
 关联任务: 无（待业务口径确认后再开 task）
 阶段: 需求确认 / 探索中
 创建: 2026-03-30
@@ -12,15 +12,15 @@
 
 ## 待决策项
 
-当前无已收敛的 `decisions.md` 条目；待用户确认「双一级」的验收口径与范围后，再提炼 DEC 或升级 `topics` / `req-*.md` 的 `待确认`。
+当前无已收敛的 `decisions.md` 条目；待用户确认「双一级」的验收口径与范围后，再提炼 DEC 或升级 `domain` / `req-*.md` 的 `待确认`。
 
 ## 草稿入口
 
-见 [draft.md](draft.md)：用户意图、两套一级界面的业务定位与功能清单、系统管理员双侧可见口径、与主题真源 C4/C8 的对齐说明及对话留痕。
+见 [draft.md](draft.md)：用户意图、两套一级界面的业务定位与功能清单、系统管理员双侧可见口径、与领域真源 C4/C8 的对齐说明及对话留痕。
 
 ## 背景与上下文
 
-- 长期约束与角色口径：`docs/requirements/topics/rd-subwarehouse.md`（C4 非镜像双视角、系统管理员双侧可见；大仓 / 小仓 / 系统管理员分工）。
+- 长期约束与角色口径：`docs/requirements/domain/rd-subwarehouse.md`（C4 非镜像双视角、系统管理员双侧可见；大仓 / 小仓 / 系统管理员分工）。
 - Phase 1 决策溯源：`docs/workspace/archive/retained-completed/rd-subwarehouse/README.md`。
 - 模块与实现侧叙述（非本工作流真源）：`docs/architecture/modules/rd-subwarehouse.md`。
 

@@ -36,7 +36,7 @@
 
 | 工作流                                                                                       | 完成时间       | 简述                      |
 | ----------------------------------------------------------------------------------------- | ---------- | ----------------------- |
-| [system-management-module](archive/retained-completed/system-management-module/README.md) | 2026-03-31 | 已完成 `system-management` 主题 `F2/F3` 基线与运行态收口：真实部门、主角色、预留查看角色、账号维护职责，以及 `在线用户 / 登录日志 / 操作日志` 的主题归属已同步到 topic、项目级需求、架构文档、运行态样例矩阵与前端治理菜单分组 |
+| [system-management-module](archive/retained-completed/system-management-module/README.md) | 2026-03-31 | 已完成 `system-management` 主题 `F2/F3` 基线与运行态收口：真实部门、主角色、预留查看角色、账号维护职责，以及 `在线用户 / 登录日志 / 操作日志` 的主题归属已同步到 domain、项目级需求、架构文档、运行态样例矩阵与前端治理菜单分组 |
 | [stock-scope-phase2-cutover](archive/retained-completed/stock-scope-phase2-cutover/README.md) | 2026-03-30 | 已完成 `stockScope` Phase 2 全体代码与脚本收口：首波与 `rd-subwarehouse` follow-up 的持久化轴、目标库 schema apply、`dry-run / execute / validate` 均已通过，并已在最小非空样本上补过 rehearsal；若后续要验证更大规模真实历史数据，应另开新的 rehearsal scope |
 | [system-readiness](archive/retained-completed/system-readiness/README.md)                 | 2026-03-26 | 最终 `customer` / 销售域缺口已关闭；首页、菜单、四个页面与关键动作入口均通过 fresh login 浏览器验证 |
 | [outbound-customer-rename](archive/retained-completed/outbound-customer-rename/README.md) | 2026-03-26 | repo 内 `outbound` 兼容层已清理完成；工作流已归档 |

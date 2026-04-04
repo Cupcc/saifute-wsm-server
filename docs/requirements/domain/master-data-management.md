@@ -2,16 +2,25 @@
 
 ## Metadata
 
-- ID: `topic-master-data-management`
+- ID: `domain-master-data-management`
 - Version: `v1.0`
 - Status: `confirmed`
-- Scope: `topic-level`
+- Scope: `domain-level`
 
 ## 主题定义
 
 - 基础数据管理负责维护系统中所有业务动作共同依赖的"字典底座"：物料分类、物料、客户、供应商、人员、车间、库存范围。
 - 这些数据不直接参与库存计算，而是以**快照**形式被各类业务单据引用；主数据的维护质量直接决定了单据录入的准确性与后续的追溯能力。
-- 本 topic 覆盖所有主数据实体的新增、修改、停用与查询能力，以及为其他业务模块提供标准主数据下拉和快照查询的能力。
+- 本 domain 覆盖所有主数据实体的新增、修改、停用与查询能力，以及为其他业务模块提供标准主数据下拉和快照查询的能力。
+
+## 承接的项目级能力版图
+
+### 主数据（`master-data`）
+
+- 本 domain 承接项目总纲中的 `master-data` 模块详细职责，作为主数据域的长期真源。
+- 默认承接物料、客户、供应商、人员、车间、库存范围等基础资料，并为各业务单据提供稳定下拉、快照和引用基础。
+- 第一阶段主数据以“够用、清晰、易维护”为目标，不做过度统一建模或复杂版本化。
+- 对历史兼容确有需要的场景，可支持受控自动补建主数据，但必须可审计、可追溯。
 
 ---
 
@@ -413,5 +422,4 @@
 - 项目级长期背景：`docs/requirements/PROJECT_REQUIREMENTS.md`
 - 架构设计：`docs/architecture/modules/master-data.md`
 - 数据库 Schema：`docs/architecture/20-wms-database-tables-and-schema.md`（第 4.1 节）
-- 后续交付时，直接从本 topic 能力合同创建 `docs/tasks/task-*.md`（`Related requirement` 指向本 topic 对应 `Fx`）。
-
+- 后续交付时，直接从本 domain 能力合同创建 `docs/tasks/task-*.md`（`Related requirement` 指向本 domain 对应 `Fx`）。

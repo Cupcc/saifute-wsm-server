@@ -12,5 +12,5 @@
 
 ## 后续边界
 
-- 长期约束、能力清单与阶段路线图已收口到 `docs/requirements/topics/monthly-reporting.md`。
+- 长期约束、能力清单与阶段路线图已收口到 `docs/requirements/domain/monthly-reporting.md`。
 - 当前不再保留活跃 requirement 占位；真正进入设计或实现时，应另开新的月报切片 requirement / task。

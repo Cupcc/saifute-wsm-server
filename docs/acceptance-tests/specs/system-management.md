@@ -6,7 +6,7 @@
 | 字段   | 值                                                    |
 | ---- | ---------------------------------------------------- |
 | 模块   | system-management                                    |
-| 需求源  | docs/requirements/topics/system-management-module.md |
+| 需求源  | docs/requirements/domain/system-management-module.md |
 | 最近更新 | 2026-04-02                                           |
 
 

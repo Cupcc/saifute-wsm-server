@@ -6,7 +6,7 @@
 | 字段   | 值                                                  |
 | ---- | -------------------------------------------------- |
 | 模块   | master-data                                        |
-| 需求源  | docs/requirements/topics/master-data-management.md |
+| 需求源  | docs/requirements/domain/master-data-management.md |
 | 最近更新 | 2026-04-04                                         |
 
 

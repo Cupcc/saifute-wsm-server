@@ -1,6 +1,6 @@
 ---
 name: saifute-subagent-orchestration
-description: Orchestrate non-trivial delivery work in the Saifute NestJS WMS repository with durable handoffs and repo-specific guardrails. Use for migration, backfill, reconciliation, cutover-prep, topic-driven execution, or resume/continue requests where the main agent should autonomously decide whether to use `planner`, `coder`, `code-reviewer`, `acceptance-qa`, and `retrospect`; skip this skill for small, clear, low-risk edits that can be handled directly by the parent.
+description: Orchestrate non-trivial delivery work in the Saifute NestJS WMS repository with durable handoffs and repo-specific guardrails. Use for migration, backfill, reconciliation, cutover-prep, domain-driven execution, or resume/continue requests where the main agent should autonomously decide whether to use `planner`, `coder`, `code-reviewer`, `acceptance-qa`, and `retrospect`; skip this skill for small, clear, low-risk edits that can be handled directly by the parent.
 ---
 
 # Saifute Subagent Orchestration
@@ -51,7 +51,7 @@ Use the heavy lane when any of these are true:
 
 Before delegating, read the smallest relevant source of truth for the task:
 
-- the relevant topic capability in `docs/requirements/topics/*.md` when the task is driven by a requirement
+- the relevant domain capability in `docs/requirements/domain/*.md` when the task is driven by a requirement
 - `docs/tasks/TASK_CENTER.md`, `docs/requirements/REQUIREMENT_CENTER.md`, and `docs/workspace/DASHBOARD.md` when resuming or continuing
 - the active `docs/tasks/*.md` for the still-active scope, if one exists
 - the relevant workspace under `docs/workspace/<workflow>/` when the workflow has one
@@ -66,7 +66,7 @@ For migration, backfill, reconciliation, or cutover-prep work, also read:
 - `docs/architecture/20-wms-database-tables-and-schema.md` when inventory, workflow, reporting, document relations, reservation semantics, or business-state semantics are affected
 - the relevant `prisma/**`, `scripts/**`, `docs/**`, or module surfaces that define current runtime behavior
 
-If the topic capability is unconfirmed, unclear, or missing contract data needed to plan safely, stop and ask the user before planning or coding.
+If the domain capability is unconfirmed, unclear, or missing contract data needed to plan safely, stop and ask the user before planning or coding.
 
 Treat archived task docs as provenance only. Do not revive archived scope unless the user explicitly reopens it.
 

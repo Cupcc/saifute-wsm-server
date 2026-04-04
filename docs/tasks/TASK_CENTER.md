@@ -4,7 +4,7 @@
 
 需求侧看板：`docs/requirements/REQUIREMENT_CENTER.md`。
 
-需求真源统一维护在 `docs/requirements/topics/*.md`，不使用切片 `req-*.md`。task 的 `Related requirement` 指向对应 topic 能力（如 `docs/requirements/topics/system-management-module.md (F4)`）。
+需求真源统一维护在 `docs/requirements/domain/*.md`，不使用切片 `req-*.md`。task 的 `Related requirement` 指向对应 domain 能力（如 `docs/requirements/domain/system-management-module.md (F4)`）。
 
 ## 生命周期分类
 

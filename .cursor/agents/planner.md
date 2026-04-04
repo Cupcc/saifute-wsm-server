@@ -24,7 +24,7 @@ If a valid active task doc already exists and the scope is unchanged, the parent
 Read the smallest relevant set:
 
 - explicit parent request describing what planning problem needs to be solved
-- linked topic capability in `docs/requirements/topics/*.md`, when present
+- linked domain capability in `docs/requirements/domain/*.md`, when present
 - existing active task doc, when present
 - `docs/tasks/_template.md`, only when a new task doc is actually needed
 - `docs/acceptance-tests/README.md`, only when acceptance planning is in scope
@@ -67,7 +67,7 @@ Return:
 
 ### Requirement Alignment
 
-- linked topic path, if any
+- linked domain path, if any
 - whether the requirement is clear enough for planning
 - open questions, if any
 
@@ -107,7 +107,7 @@ End with exactly one fenced `json` block under this heading. Do not put any pros
   "agent": "planner",
   "status": "ready_for_coder",
   "task_doc_path": "docs/tasks/example.md",
-  "requirement_path": "docs/requirements/topics/example.md (F1)",
+  "requirement_path": "docs/requirements/domain/example.md (F1)",
   "acceptance_mode": "light",
   "parallelization": "not_safe",
   "summary": ["updated active task doc", "confirmed execution scope"],

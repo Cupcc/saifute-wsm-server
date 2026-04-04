@@ -24,7 +24,7 @@ Read the smallest relevant set:
 
 - explicit parent handoff defining writable scope
 - assigned task doc under `docs/tasks/**`, when present
-- linked topic capability, if the task doc or parent handoff references one
+- linked domain capability, if the task doc or parent handoff references one
 - relevant architecture and module docs
 - related code, schema, scripts, config, tests, or `.cursor/**` files
 - matching `docs/fix-checklists/**` file when the task comes from review findings
@@ -66,7 +66,7 @@ Return:
 
 ### Requirement Alignment
 
-- linked topic path, if any
+- linked domain path, if any
 - still aligned or blocked
 
 ### Files Or Paths Touched
@@ -99,7 +99,7 @@ End with exactly one fenced `json` block under this heading. Do not put any pros
   "agent": "coder",
   "status": "needs_review",
   "task_doc_path": "docs/tasks/example.md",
-  "requirement_path": "docs/requirements/topics/example.md (F1)",
+  "requirement_path": "docs/requirements/domain/example.md (F1)",
   "changed_paths": ["src/modules/example/example.service.ts"],
   "summary": ["implemented scoped change"],
   "contracts": ["no shared contract change"],

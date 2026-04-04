@@ -5,7 +5,7 @@
 | 字段 | 值 |
 |------|------|
 | 模块 | {module-name} |
-| 需求源 | docs/requirements/topics/{topic}.md |
+| 需求源 | docs/requirements/domain/{domain}.md |
 | 最近更新 | {YYYY-MM-DD} |
 
 ## 能力覆盖

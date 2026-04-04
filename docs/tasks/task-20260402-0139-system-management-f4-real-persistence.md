@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope: 将 `用户 / 角色 / 部门 / 菜单 / 岗位 / 字典 / 参数 / 通知` 从 `InMemoryRbacRepository + system_management_snapshot` 切换为规范化数据库表真源，并保持 `auth/me`、`auth/routes`、权限判定、会话失效与代表账号边界不回归。
-- Related requirement: `docs/requirements/topics/system-management-module.md` (F4)
+- Related requirement: `docs/requirements/domain/system-management-module.md` (F4)
 - Status: `accepted`
 - Review status: `reviewed-clean`
 - Delivery mode: `autonomous`
@@ -20,7 +20,7 @@
 - Related acceptance spec: `docs/acceptance-tests/specs/system-management.md`
 - Related acceptance run: `None`
 - Related files:
-  - `docs/requirements/topics/system-management-module.md`
+  - `docs/requirements/domain/system-management-module.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/system-management.md`
   - `docs/acceptance-tests/README.md`
@@ -38,11 +38,11 @@
 
 ## Requirement Alignment
 
-- Topic capability:
-  - `docs/requirements/topics/system-management-module.md` (F4)
+- Domain capability:
+  - `docs/requirements/domain/system-management-module.md` (F4)
 - User intent summary:
   - 继续完成 `system-management` 当前唯一未完成能力 `F4`，把八类系统管理主数据从 JSON 快照桥接切到规范化数据库表真实落库。
-  - 在不改写 topic 长期边界的前提下，保持 `/api/auth/me`、`/api/auth/routes`、角色菜单关系、权限判定、动态菜单与会话失效策略语义一致。
+  - 在不改写 domain 长期边界的前提下，保持 `/api/auth/me`、`/api/auth/routes`、角色菜单关系、权限判定、动态菜单与会话失效策略语义一致。
   - 采用 AI 自主交付路径，最终以 `full` 模式 acceptance spec 作为默认完整测试报告载体；必要时再追加独立 `run`。
 - Acceptance criteria carried into this task:
   - `[AC-1]` `用户 / 角色 / 部门 / 菜单 / 岗位 / 字典类型 / 字典数据 / 参数 / 通知` 均以规范化数据库表作为长期真源，不再以 `system_management_snapshot` 单行 JSON 作为完成态。
@@ -64,7 +64,7 @@
 - Phase progress:
   - `F4` 真实落库、full acceptance 与浏览器 smoke 已全部完成；task 可归档为 `retained-completed`。
 - Current state:
-  - 规划已对齐 topic、架构与当前仓库实现；当前真实现状仍是 `InMemoryRbacRepository + system_management_snapshot`，本 task 已明确其只可作为迁移来源，不再作为完成态。
+  - 规划已对齐 domain、架构与当前仓库实现；当前真实现状仍是 `InMemoryRbacRepository + system_management_snapshot`，本 task 已明确其只可作为迁移来源，不再作为完成态。
 - Acceptance state:
   - `待验收`；需由 `acceptance-qa` 产出或更新 spec，并在其中记录 `Latest Verification` 作为完整测试报告。
 - Blockers:
@@ -106,7 +106,7 @@
   - `test/batch-d-slice.e2e-spec.ts`
   - `test/redis-real-integration.e2e-spec.ts`
 - Frozen or shared paths:
-  - `docs/requirements/topics/system-management-module.md`
+  - `docs/requirements/domain/system-management-module.md`
   - `docs/architecture/**`
   - `docs/playbooks/**`
   - `docs/tasks/archive/retained-completed/task-20260402-0139-system-management-f4-real-persistence.md`
@@ -128,7 +128,7 @@
   - `consoleMode` 只负责壳层 / 默认入口体验，不替代真实授权。
   - `stockScope / workshopScope` 仍是库存访问与 RD 固定视角的既有语义，不得被部门树替代。
   - `admin` 超级管理员判定必须在数据库、后端鉴权、会话快照与前端识别上保持一致。
-  - `scheduler / ai-assistant` 继续作为 topic 外邻接能力，不并入当前实现。
+  - `scheduler / ai-assistant` 继续作为 domain 外邻接能力，不并入当前实现。
 
 ## Implementation Plan
 
@@ -157,10 +157,10 @@
 ## Coder Handoff
 
 - Execution brief:
-  - 实现 `F4` 的最小安全路径是“保上层 API 契约，替换底层真源”，不要在同一切片里顺手拆模块、重写前端或扩大 topic 范围。
+  - 实现 `F4` 的最小安全路径是“保上层 API 契约，替换底层真源”，不要在同一切片里顺手拆模块、重写前端或扩大 domain 范围。
   - `system_management_snapshot` 只能作为 backfill 输入或迁移期兼容资产，不能继续作为运行时主写路径或验收完成态。
 - Required source docs or files:
-  - `docs/requirements/topics/system-management-module.md`
+  - `docs/requirements/domain/system-management-module.md`
   - `docs/architecture/00-architecture-overview.md`
   - `docs/architecture/modules/system-management.md`
   - `docs/acceptance-tests/README.md`
@@ -174,7 +174,7 @@
   - `test/batch-d-slice.e2e-spec.ts`
   - `test/redis-real-integration.e2e-spec.ts`
 - Forbidden shared files:
-  - `docs/requirements/topics/system-management-module.md`
+  - `docs/requirements/domain/system-management-module.md`
   - `docs/architecture/**`
   - `docs/playbooks/**`
   - `docs/tasks/archive/retained-completed/task-20260402-0139-system-management-f4-real-persistence.md`
@@ -320,7 +320,7 @@
 ## Review Log
 
 - Validation results:
-  - 重新对照了 `docs/tasks/archive/retained-completed/task-20260402-0139-system-management-f4-real-persistence.md`、`docs/requirements/topics/system-management-module.md (F4)` 与 `docs/architecture/modules/system-management.md`，确认本轮 re-review 仍以”规范化表真源 + auth/rbac/session 语义不回归 + backfill / mixed-state 安全”为准。
+  - 重新对照了 `docs/tasks/archive/retained-completed/task-20260402-0139-system-management-f4-real-persistence.md`、`docs/requirements/domain/system-management-module.md (F4)` 与 `docs/architecture/modules/system-management.md`，确认本轮 re-review 仍以”规范化表真源 + auth/rbac/session 语义不回归 + backfill / mixed-state 安全”为准。
   - 直接复核了 `prisma/schema.prisma`、`src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`、`src/modules/rbac/infrastructure/in-memory-rbac.repository.spec.ts`，并结合 scoped diff 复核 `src/modules/rbac/application/rbac.service.spec.ts`、`src/modules/rbac/controllers/system-config.controller.spec.ts`、`test/app.e2e-spec.ts`、`test/batch-d-slice.e2e-spec.ts`、`test/redis-real-integration.e2e-spec.ts`。
   - 已确认 `restoreOrSeedState()` 现先统计各规范化 base table，只要任一 `sys_*` 真源已有数据就直接从规范化表加载，并在 `users === 0` 的 mixed-state 场景只告警不 reseed，消除了此前“仅看 `sys_user.count()` 导致破坏性重灌”的问题。
   - 已确认 `prisma/schema.prisma` 为 `sys_user.dept_id`、`sys_user_role`、`sys_user_post`、`sys_role_menu`、`sys_role_dept` 以及 `sys_dict_data -> sys_dict_type` 补齐了 relation / FK，当前 review 范围内未再发现“规范化真源缺少基础引用约束”的遗留问题。

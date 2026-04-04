@@ -2,8 +2,8 @@
 
 ## Metadata
 
-- Scope: 完成 `docs/requirements/topics/master-data-management.md` 中最小且可闭环的显式能力 `F4`。补齐供应商新增、修改、逻辑停用、默认 `ACTIVE` 列表/搜索、受控自动补建，以及供应商管理页/API/权限兼容的最小收口；不把 `F1/F2/F3/F5/F6/F7/F8/F9/F10` 静默并入本 task。
-- Related requirement: `docs/requirements/topics/master-data-management.md` (F4)
+- Scope: 完成 `docs/requirements/domain/master-data-management.md` 中最小且可闭环的显式能力 `F4`。补齐供应商新增、修改、逻辑停用、默认 `ACTIVE` 列表/搜索、受控自动补建，以及供应商管理页/API/权限兼容的最小收口；不把 `F1/F2/F3/F5/F6/F7/F8/F9/F10` 静默并入本 task。
+- Related requirement: `docs/requirements/domain/master-data-management.md` (F4)
 - Status: `accepted`
 - Review status: `reviewed-clean`
 - Delivery mode: `autonomous`
@@ -22,11 +22,11 @@
 
 ## Requirement Alignment
 
-- Topic capability:
-  - `docs/requirements/topics/master-data-management.md` (F4)
+- Domain capability:
+  - `docs/requirements/domain/master-data-management.md` (F4)
 - User intent summary:
-  - 用户要求在 confirmed 的 `master-data` topic 上继续推进，遇到问题自行解决，不在中间里程碑停下，并最终达到“所有测试通过、完成交付、可以 commit”的标准。
-  - 该 topic 同时包含 Phase 1 多条未完成能力，以及明确属于未来阶段的 `F9` / `F10`；本 task 仅切取 `F4` 作为最小安全交付切片。
+  - 用户要求在 confirmed 的 `master-data` domain 上继续推进，遇到问题自行解决，不在中间里程碑停下，并最终达到“所有测试通过、完成交付、可以 commit”的标准。
+  - 该 domain 同时包含 Phase 1 多条未完成能力，以及明确属于未来阶段的 `F9` / `F10`；本 task 仅切取 `F4` 作为最小安全交付切片。
   - 当前运行时真源保持 `supplierCode`、`supplierName`、`status` 与 provenance 字段，本 task 明确不为追旧 UI 而无依据扩写 `supplier` schema。
 - Acceptance criteria carried into this task:
   - `[AC-1]` 新增供应商时，`supplierCode` 全局唯一；重复编码返回明确冲突错误。
@@ -100,4 +100,4 @@
   - `ensureSupplier()` 目前仅有合同测试覆盖，无真实调用方；待 `inbound` 接入时补充集成验证。
   - browser 面未单独覆盖 edit 流程，但 unit + e2e 已覆盖更新合同。
 - Next action:
-  - None. 已归档，后续如继续推进 `master-data` topic，请从 `F1/F2/F3/F5/F6/F7/F8` 中创建新 task。
+  - None. 已归档，后续如继续推进 `master-data` domain，请从 `F1/F2/F3/F5/F6/F7/F8` 中创建新 task。

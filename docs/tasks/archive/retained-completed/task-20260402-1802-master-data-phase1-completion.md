@@ -6,7 +6,7 @@
 
 - Scope:
   - 完成 `master-data` `Phase 1` 的剩余能力 `F1/F2/F3/F5/F6/F7/F8`，以已验收的 `F4` 供应商 CRUD 为上游基线，收口 CRUD、停用守卫、active-only 查询、统一主数据查询能力与最小前端兼容层；明确排除 `F9` 物料库存预警与 `F10` 批量导入。
-- Related requirement: `docs/requirements/topics/master-data-management.md (Phase 1: F1-F8)`
+- Related requirement: `docs/requirements/domain/master-data-management.md (Phase 1: F1-F8)`
 - Status: `accepted`
 - Review status: `reviewed-clean`
 - Delivery mode: `autonomous`
@@ -23,7 +23,7 @@
 - Related acceptance spec: `docs/acceptance-tests/specs/master-data.md`
 - Related acceptance run: `None`
 - Related files:
-  - `docs/requirements/topics/master-data-management.md`
+  - `docs/requirements/domain/master-data-management.md`
   - `docs/architecture/modules/master-data.md`
   - `docs/acceptance-tests/specs/master-data.md`
   - `docs/tasks/archive/retained-completed/task-20260402-1758-master-data-f4-supplier-crud.md`
@@ -36,8 +36,8 @@
 
 ## Requirement Alignment
 
-- Topic capability:
-  - `docs/requirements/topics/master-data-management.md`
+- Domain capability:
+  - `docs/requirements/domain/master-data-management.md`
   - 本 task 只完成 `Phase 1` 的 `F1`~`F8`，不把 `F9/F10` 拉入本轮。
   - `F4` 供应商 CRUD 继续沿用 `docs/tasks/archive/retained-completed/task-20260402-1758-master-data-f4-supplier-crud.md` 的已验收基线，不重置设计口径。
 - User intent summary:
@@ -66,7 +66,7 @@
 ## Goal And Acceptance Criteria
 
 - Goal:
-  - 在不扩写 topic 路线图的前提下，完成 `master-data` `Phase 1` 运行态交付：让主数据实体的 CRUD、active-only 查询、统一下拉 / 快照读取和最小前端兼容层全部达到可签收状态，并保持既有 `F4` 已验收行为不回归。
+  - 在不扩写 domain 路线图的前提下，完成 `master-data` `Phase 1` 运行态交付：让主数据实体的 CRUD、active-only 查询、统一下拉 / 快照读取和最小前端兼容层全部达到可签收状态，并保持既有 `F4` 已验收行为不回归。
 - Acceptance criteria:
   - `[AC-1]` `MaterialCategory` 完成树形 CRUD 与停用守卫。
   - `[AC-2]` `Material` 完成停用守卫与受控自动补建。
