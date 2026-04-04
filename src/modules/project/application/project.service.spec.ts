@@ -55,6 +55,8 @@ describe("ProjectService", () => {
         quantity: new Prisma.Decimal(100),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(1000),
+        costUnitPrice: null,
+        costAmount: null,
         remark: null,
         createdBy: "1",
         createdAt: new Date(),
@@ -138,8 +140,20 @@ describe("ProjectService", () => {
           provide: InventoryService,
           useValue: {
             decreaseStock: jest.fn().mockResolvedValue({ id: 1 }),
+            settleConsumerOut: jest.fn().mockResolvedValue({
+              outLog: { id: 1 },
+              settledUnitCost: new Prisma.Decimal(10),
+              settledCostAmount: new Prisma.Decimal(1000),
+              allocations: [],
+            }),
             reverseStock: jest.fn().mockResolvedValue({ id: 2 }),
             getLogsForDocument: jest.fn().mockResolvedValue([{ id: 1 }]),
+            releaseAllSourceUsagesForConsumer: jest
+              .fn()
+              .mockResolvedValue(undefined),
+            releaseSourceUsagesForConsumerLine: jest
+              .fn()
+              .mockResolvedValue(undefined),
           },
         },
       ],
@@ -188,7 +202,7 @@ describe("ProjectService", () => {
       expect(result).toEqual(mockProject);
       expect(repository.findProjectByCode).toHaveBeenCalledWith("PRJ-001");
       expect(repository.createProject).toHaveBeenCalled();
-      expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
+      expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
           stockScope: "MAIN",
@@ -222,6 +236,44 @@ describe("ProjectService", () => {
   });
 
   describe("updateProject", () => {
+    it("should release source usages for removed line before reversal", async () => {
+      // Project has one line; update with empty lines → line deleted
+      (repository.findProjectById as jest.Mock)
+        .mockResolvedValueOnce(mockProject)
+        .mockResolvedValueOnce(mockProject)
+        .mockResolvedValueOnce({ ...mockProject, materialLines: [] });
+      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+        { id: 1, businessDocumentLineId: 1 },
+      ]);
+      (repository.updateProject as jest.Mock).mockResolvedValue({
+        ...mockProject,
+        materialLines: [],
+      });
+
+      await service.updateProject(1, { bizDate: "2025-03-15", lines: [] }, "1");
+
+      // Release must be called before reverseStock
+      const releaseCalls = (
+        inventoryService.releaseSourceUsagesForConsumerLine as jest.Mock
+      ).mock.invocationCallOrder;
+      const reverseCalls = (inventoryService.reverseStock as jest.Mock).mock
+        .invocationCallOrder;
+      expect(releaseCalls.length).toBeGreaterThan(0);
+      expect(reverseCalls.length).toBeGreaterThan(0);
+      expect(releaseCalls[0]).toBeLessThan(reverseCalls[0]);
+
+      expect(
+        inventoryService.releaseSourceUsagesForConsumerLine,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          consumerDocumentType: "Project",
+          consumerDocumentId: 1,
+          consumerLineId: 1,
+        }),
+        expect.anything(),
+      );
+    });
+
     it("should update project with line-aware inventory recalculation", async () => {
       (repository.findProjectById as jest.Mock)
         .mockResolvedValueOnce(mockProject)
@@ -252,7 +304,7 @@ describe("ProjectService", () => {
       await service.updateProject(1, dto, "1");
 
       expect(inventoryService.reverseStock).toHaveBeenCalled();
-      expect(inventoryService.decreaseStock).toHaveBeenCalled();
+      expect(inventoryService.settleConsumerOut).toHaveBeenCalled();
     });
   });
 

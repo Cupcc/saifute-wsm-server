@@ -358,6 +358,8 @@ model InventoryLog {
   changeQty                 Decimal                   @db.Decimal(18, 6)
   beforeQty                 Decimal                   @db.Decimal(18, 6)
   afterQty                  Decimal                   @db.Decimal(18, 6)
+  unitCost                  Decimal?                  @db.Decimal(18, 2)
+  costAmount                Decimal?                  @db.Decimal(18, 2)
   operatorId                String?                   @db.VarChar(64)
   occurredAt                DateTime                  @default(now())
   reversalOfLogId           Int?                      @unique
@@ -583,6 +585,8 @@ model CustomerStockOrderLine {
   quantity             Decimal            @db.Decimal(18, 6)
   unitPrice            Decimal            @default(0) @db.Decimal(18, 2)
   amount               Decimal            @default(0) @db.Decimal(18, 2)
+  costUnitPrice        Decimal?           @db.Decimal(18, 2)
+  costAmount           Decimal?           @db.Decimal(18, 2)
   startNumber          String?            @db.VarChar(64)
   endNumber            String?            @db.VarChar(64)
   sourceDocumentType   String?            @db.VarChar(64)
@@ -649,6 +653,8 @@ model WorkshopMaterialOrderLine {
   quantity             Decimal               @db.Decimal(18, 6)
   unitPrice            Decimal               @default(0) @db.Decimal(18, 2)
   amount               Decimal               @default(0) @db.Decimal(18, 2)
+  costUnitPrice        Decimal?              @db.Decimal(18, 2)
+  costAmount           Decimal?              @db.Decimal(18, 2)
   sourceDocumentType   String?               @db.VarChar(64)
   sourceDocumentId     Int?
   sourceDocumentLineId Int?
@@ -723,6 +729,8 @@ model ProjectMaterialLine {
   quantity             Decimal  @db.Decimal(18, 6)
   unitPrice            Decimal  @default(0) @db.Decimal(18, 2)
   amount               Decimal  @default(0) @db.Decimal(18, 2)
+  costUnitPrice        Decimal? @db.Decimal(18, 2)
+  costAmount           Decimal? @db.Decimal(18, 2)
   remark               String?  @db.VarChar(500)
   createdBy            String?  @db.VarChar(64)
   createdAt            DateTime @default(now())
@@ -789,6 +797,8 @@ model RdHandoffOrderLine {
   quantity             Decimal        @db.Decimal(18, 6)
   unitPrice            Decimal        @default(0) @db.Decimal(18, 2)
   amount               Decimal        @default(0) @db.Decimal(18, 2)
+  costUnitPrice        Decimal?       @db.Decimal(18, 2)
+  costAmount           Decimal?       @db.Decimal(18, 2)
   sourceDocumentType   String?        @db.VarChar(64)
   sourceDocumentId     Int?
   sourceDocumentLineId Int?

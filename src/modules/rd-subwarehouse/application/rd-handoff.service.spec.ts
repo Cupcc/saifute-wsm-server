@@ -76,6 +76,8 @@ describe("RdHandoffService", () => {
         quantity: new Prisma.Decimal(8),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(80),
+        costUnitPrice: null,
+        costAmount: null,
         sourceDocumentType: "RdProcurementRequest",
         sourceDocumentId: 5,
         sourceDocumentLineId: 501,
@@ -117,6 +119,7 @@ describe("RdHandoffService", () => {
             findOrderByDocumentNo: jest.fn(),
             createOrder: jest.fn(),
             updateOrder: jest.fn(),
+            updateOrderLineCost: jest.fn().mockResolvedValue({}),
           },
         },
         {
@@ -162,8 +165,18 @@ describe("RdHandoffService", () => {
           provide: InventoryService,
           useValue: {
             decreaseStock: jest.fn().mockResolvedValue({ id: 11 }),
+            settleConsumerOut: jest.fn().mockResolvedValue({
+              outLog: { id: 11 },
+              settledUnitCost: new Prisma.Decimal(10),
+              settledCostAmount: new Prisma.Decimal(80),
+              allocations: [],
+            }),
             increaseStock: jest.fn().mockResolvedValue({ id: 12 }),
             reverseStock: jest.fn().mockResolvedValue({ id: 21 }),
+            releaseAllSourceUsagesForConsumer: jest
+              .fn()
+              .mockResolvedValue(undefined),
+            hasUnreleasedAllocations: jest.fn().mockResolvedValue(false),
             getLogsForDocument: jest.fn().mockResolvedValue([
               { id: 1, direction: StockDirection.OUT },
               { id: 2, direction: StockDirection.IN },
@@ -207,7 +220,7 @@ describe("RdHandoffService", () => {
 
     expect(result).toEqual(mockOrder);
     expect(repository.createOrder).toHaveBeenCalled();
-    expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
+    expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
       expect.objectContaining({
         stockScope: "MAIN",
         operationType: InventoryOperationType.RD_HANDOFF_OUT,
@@ -339,5 +352,89 @@ describe("RdHandoffService", () => {
     repository.findOrderById.mockResolvedValue(null);
 
     await expect(service.getOrderById(999)).rejects.toThrow(NotFoundException);
+  });
+
+  it("creates one RD_SUB IN log per FIFO allocation piece for multi-layer bridge", async () => {
+    // Simulate two MAIN source layers in the FIFO allocation result
+    (inventoryService.settleConsumerOut as jest.Mock).mockResolvedValueOnce({
+      outLog: { id: 11 },
+      settledUnitCost: new Prisma.Decimal(9),
+      settledCostAmount: new Prisma.Decimal(72),
+      allocations: [
+        {
+          sourceLogId: 101,
+          allocatedQty: new Prisma.Decimal(4),
+          unitCost: new Prisma.Decimal(8),
+          costAmount: new Prisma.Decimal(32),
+        },
+        {
+          sourceLogId: 102,
+          allocatedQty: new Prisma.Decimal(4),
+          unitCost: new Prisma.Decimal(10),
+          costAmount: new Prisma.Decimal(40),
+        },
+      ],
+    });
+    repository.findOrderByDocumentNo.mockResolvedValue(null);
+    repository.createOrder.mockResolvedValue(mockOrder);
+
+    await service.createOrder(
+      {
+        documentNo: "RDH-003",
+        bizDate: "2026-03-28",
+        sourceWorkshopId: 1,
+        lines: [
+          {
+            materialId: 100,
+            quantity: "8",
+            sourceDocumentId: 5,
+            sourceDocumentLineId: 501,
+          },
+        ],
+      },
+      "1",
+    );
+
+    // increaseStock should be called twice (once per allocation piece)
+    const increaseStockCalls = (inventoryService.increaseStock as jest.Mock)
+      .mock.calls;
+    expect(increaseStockCalls.length).toBe(2);
+
+    // First call: piece from source layer 101
+    expect(increaseStockCalls[0][0]).toMatchObject(
+      expect.objectContaining({
+        stockScope: "RD_SUB",
+        operationType: InventoryOperationType.RD_HANDOFF_IN,
+        idempotencyKey: expect.stringContaining(":src:101"),
+        unitCost: expect.objectContaining({}), // Prisma.Decimal
+        costAmount: expect.objectContaining({}),
+      }),
+    );
+
+    // Second call: piece from source layer 102
+    expect(increaseStockCalls[1][0]).toMatchObject(
+      expect.objectContaining({
+        stockScope: "RD_SUB",
+        operationType: InventoryOperationType.RD_HANDOFF_IN,
+        idempotencyKey: expect.stringContaining(":src:102"),
+      }),
+    );
+  });
+
+  it("blocks void when an RD_SUB IN log has unreleased downstream allocations", async () => {
+    (reverseHandoffStatusesForOrder as jest.Mock).mockResolvedValueOnce(1);
+    repository.findOrderById.mockResolvedValueOnce(mockOrder);
+
+    // Simulate the IN log (id=2) having downstream allocations
+    (inventoryService.hasUnreleasedAllocations as jest.Mock).mockImplementation(
+      async (logId: number) => logId === 2,
+    );
+
+    await expect(service.voidOrder(1, "rollback", "1")).rejects.toThrow(
+      /已有下游消耗分配/,
+    );
+
+    // Should NOT have called reverseStock
+    expect(inventoryService.reverseStock).not.toHaveBeenCalled();
   });
 });

@@ -9,7 +9,10 @@ import {
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { InventoryRepository } from "../infrastructure/inventory.repository";
-import { InventoryService } from "./inventory.service";
+import {
+  FIFO_SOURCE_OPERATION_TYPES,
+  InventoryService,
+} from "./inventory.service";
 import { StockScopeCompatibilityService } from "./stock-scope-compatibility.service";
 
 describe("InventoryService", () => {
@@ -673,5 +676,632 @@ describe("InventoryService", () => {
 
     expect(result.status).toBe(SourceUsageStatus.RELEASED);
     expect(Number(result.releasedQty)).toBe(30);
+  });
+
+  it("should allow restoring released inventory source usage back to zero", async () => {
+    const restoredUsage = {
+      ...mockSourceUsage,
+      releasedQty: 0,
+      status: SourceUsageStatus.ALLOCATED,
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        InventoryService,
+        {
+          provide: MasterDataService,
+          useValue: {
+            getMaterialById: jest.fn().mockResolvedValue({ id: 10 }),
+            getWorkshopById: jest.fn().mockResolvedValue({ id: 20 }),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            runInTransaction: jest.fn((handler) => handler({})),
+          },
+        },
+        {
+          provide: InventoryRepository,
+          useValue: {
+            lockSourceLog: jest.fn().mockResolvedValue(undefined),
+            findLogByIdempotencyKey: jest.fn().mockResolvedValue(null),
+            findLogById: jest.fn(),
+            findReversalLogBySourceLogId: jest.fn(),
+            findSourceUsage: jest.fn().mockResolvedValue({
+              ...mockSourceUsage,
+              releasedQty: 20,
+              status: SourceUsageStatus.PARTIALLY_RELEASED,
+            }),
+            getSourceUsageTotals: jest.fn(),
+            createSourceUsage: jest.fn(),
+            updateSourceUsage: jest.fn().mockResolvedValue(restoredUsage),
+          },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(InventoryService);
+    const result = await service.releaseInventorySource({
+      sourceLogId: 1,
+      consumerDocumentType: "WorkshopMaterialOrder",
+      consumerDocumentId: 300,
+      consumerLineId: 1,
+      targetReleasedQty: 0,
+      operatorId: "1",
+    });
+
+    expect(result.status).toBe(SourceUsageStatus.ALLOCATED);
+    expect(Number(result.releasedQty)).toBe(0);
+  });
+
+  // ─── settleConsumerOut – FIFO & Manual Source ────────────────────────────
+
+  describe("settleConsumerOut", () => {
+    const mockSourceLog = {
+      ...mockLog,
+      id: 50,
+      direction: StockDirection.IN,
+      operationType: InventoryOperationType.ACCEPTANCE_IN,
+      changeQty: new Prisma.Decimal(100),
+      unitCost: new Prisma.Decimal(10),
+      costAmount: new Prisma.Decimal(1000),
+      balanceId: 1,
+    };
+
+    const mockOutBalance = {
+      ...mockBalance,
+      quantityOnHand: new Prisma.Decimal(100),
+    };
+
+    const buildServiceForFifo = async (
+      overrides: {
+        existingLog?: unknown | null;
+        fifoLogs?: unknown[];
+        sourceLog?: unknown;
+        reversalLog?: unknown | null;
+        totals?: { allocatedQty: Prisma.Decimal; releasedQty: Prisma.Decimal };
+        existingUsage?: unknown | null;
+        lineUsages?: unknown[];
+        createUsageResult?: unknown;
+      } = {},
+    ) => {
+      const mockTx = {
+        inventoryBalance: {
+          findUnique: jest.fn().mockResolvedValue(mockOutBalance),
+          update: jest.fn().mockResolvedValue({
+            ...mockOutBalance,
+            quantityOnHand: new Prisma.Decimal(80),
+          }),
+        },
+        inventoryLog: {
+          create: jest
+            .fn()
+            .mockImplementation(
+              (args: {
+                data: { direction: string; changeQty: Prisma.Decimal };
+              }) => ({
+                id: 99,
+                direction: args.data.direction,
+                changeQty: args.data.changeQty,
+                unitCost: null,
+                costAmount: null,
+              }),
+            ),
+        },
+        inventorySourceUsage: {
+          create: jest.fn().mockResolvedValue({
+            id: 200,
+            allocatedQty: new Prisma.Decimal(20),
+            releasedQty: new Prisma.Decimal(0),
+            status: "ALLOCATED",
+          }),
+          findFirst: jest
+            .fn()
+            .mockResolvedValue(overrides.existingUsage ?? null),
+          findMany: jest.fn().mockResolvedValue([]),
+          update: jest.fn().mockResolvedValue({
+            id: 200,
+            allocatedQty: new Prisma.Decimal(20),
+            releasedQty: new Prisma.Decimal(0),
+            status: "ALLOCATED",
+          }),
+        },
+        $queryRaw: jest.fn().mockResolvedValue([]),
+      };
+
+      const moduleRef = await Test.createTestingModule({
+        providers: [
+          InventoryService,
+          {
+            provide: MasterDataService,
+            useValue: {
+              getMaterialById: jest.fn().mockResolvedValue({ id: 10 }),
+              getWorkshopById: jest.fn().mockResolvedValue({ id: 20 }),
+            },
+          },
+          {
+            provide: PrismaService,
+            useValue: {
+              runInTransaction: jest.fn(
+                (handler: (tx: unknown) => Promise<unknown>) => handler(mockTx),
+              ),
+            },
+          },
+          {
+            provide: InventoryRepository,
+            useValue: {
+              findLogByIdempotencyKey: jest
+                .fn()
+                .mockResolvedValue(overrides.existingLog ?? null),
+              findLogById: jest
+                .fn()
+                .mockResolvedValue(overrides.sourceLog ?? mockSourceLog),
+              findReversalLogBySourceLogId: jest
+                .fn()
+                .mockResolvedValue(overrides.reversalLog ?? null),
+              getSourceUsageTotals: jest.fn().mockResolvedValue(
+                overrides.totals ?? {
+                  allocatedQty: new Prisma.Decimal(0),
+                  releasedQty: new Prisma.Decimal(0),
+                },
+              ),
+              findFifoSourceLogs: jest.fn().mockResolvedValue(
+                overrides.fifoLogs ?? [
+                  {
+                    id: 50,
+                    changeQty: new Prisma.Decimal(100),
+                    occurredAt: new Date(),
+                    unitCost: new Prisma.Decimal(10),
+                    availableQty: new Prisma.Decimal(100),
+                  },
+                ],
+              ),
+              findSourceUsage: jest
+                .fn()
+                .mockResolvedValue(overrides.existingUsage ?? null),
+              createSourceUsage: jest.fn().mockResolvedValue({
+                id: 200,
+                allocatedQty: new Prisma.Decimal(20),
+                releasedQty: new Prisma.Decimal(0),
+                status: "ALLOCATED",
+              }),
+              updateSourceUsage: jest.fn().mockResolvedValue({
+                id: 200,
+                allocatedQty: new Prisma.Decimal(20),
+                releasedQty: new Prisma.Decimal(0),
+                status: "ALLOCATED",
+              }),
+              lockSourceLog: jest.fn().mockResolvedValue(undefined),
+              findSourceUsages: jest
+                .fn()
+                .mockResolvedValue({ items: [], total: 0 }),
+              findSourceUsagesForConsumerLine: jest
+                .fn()
+                .mockResolvedValue(overrides.lineUsages ?? []),
+              findActiveSourceUsagesForConsumer: jest
+                .fn()
+                .mockResolvedValue([]),
+            },
+          },
+          {
+            provide: StockScopeCompatibilityService,
+            useFactory: createStockScopeCompatibilityServiceMock,
+          },
+        ],
+      }).compile();
+
+      const service = moduleRef.get(InventoryService);
+      return { service, mockTx };
+    };
+
+    it("should perform FIFO allocation and return settled cost", async () => {
+      const { service } = await buildServiceForFifo({
+        fifoLogs: [
+          {
+            id: 50,
+            changeQty: new Prisma.Decimal(100),
+            occurredAt: new Date(),
+            unitCost: new Prisma.Decimal(10),
+            availableQty: new Prisma.Decimal(100),
+          },
+        ],
+      });
+
+      const result = await service.settleConsumerOut({
+        materialId: 10,
+        workshopId: 20,
+        quantity: 20,
+        operationType: InventoryOperationType.OUTBOUND_OUT,
+        businessModule: "customer",
+        businessDocumentType: "CustomerStockOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "OB-001",
+        businessDocumentLineId: 1,
+        consumerLineId: 1,
+        idempotencyKey: "fifo-test-1",
+        sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.allocations).toHaveLength(1);
+      expect(result.allocations[0].sourceLogId).toBe(50);
+      expect(Number(result.settledUnitCost)).toBe(10);
+      expect(Number(result.settledCostAmount)).toBe(200);
+    });
+
+    it("should use manual source when sourceLogId is provided", async () => {
+      const { service } = await buildServiceForFifo();
+
+      const result = await service.settleConsumerOut({
+        materialId: 10,
+        workshopId: 20,
+        quantity: 20,
+        operationType: InventoryOperationType.PICK_OUT,
+        businessModule: "workshop",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 5,
+        businessDocumentNumber: "WM-001",
+        businessDocumentLineId: 10,
+        consumerLineId: 10,
+        idempotencyKey: "manual-test-1",
+        sourceLogId: 50,
+        sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.allocations).toHaveLength(1);
+      expect(result.allocations[0].sourceLogId).toBe(50);
+    });
+
+    it("should throw when FIFO candidates are insufficient", async () => {
+      const { service } = await buildServiceForFifo({
+        fifoLogs: [],
+      });
+
+      await expect(
+        service.settleConsumerOut({
+          materialId: 10,
+          workshopId: 20,
+          quantity: 50,
+          operationType: InventoryOperationType.OUTBOUND_OUT,
+          businessModule: "customer",
+          businessDocumentType: "CustomerStockOrder",
+          businessDocumentId: 1,
+          businessDocumentNumber: "OB-001",
+          businessDocumentLineId: 1,
+          consumerLineId: 1,
+          idempotencyKey: "fifo-fail-1",
+          sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES,
+        }),
+      ).rejects.toThrow("FIFO 可用来源库存不足");
+    });
+
+    it("should throw when manual source log is already reversed", async () => {
+      const { service } = await buildServiceForFifo({
+        reversalLog: { id: 999 },
+      });
+
+      await expect(
+        service.settleConsumerOut({
+          materialId: 10,
+          workshopId: 20,
+          quantity: 20,
+          operationType: InventoryOperationType.PICK_OUT,
+          businessModule: "workshop",
+          businessDocumentType: "WorkshopMaterialOrder",
+          businessDocumentId: 5,
+          businessDocumentNumber: "WM-001",
+          businessDocumentLineId: 10,
+          consumerLineId: 10,
+          idempotencyKey: "manual-reversed-1",
+          sourceLogId: 50,
+          sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES,
+        }),
+      ).rejects.toThrow("来源流水已逆操作");
+    });
+
+    it("should throw when manual source log has mismatched materialId", async () => {
+      const wrongMaterialLog = {
+        ...mockSourceLog,
+        materialId: 999, // Different from cmd.materialId=10
+      };
+      const { service } = await buildServiceForFifo({
+        sourceLog: wrongMaterialLog,
+      });
+
+      await expect(
+        service.settleConsumerOut({
+          materialId: 10,
+          workshopId: 20,
+          quantity: 20,
+          operationType: InventoryOperationType.PICK_OUT,
+          businessModule: "workshop",
+          businessDocumentType: "WorkshopMaterialOrder",
+          businessDocumentId: 5,
+          businessDocumentNumber: "WM-001",
+          businessDocumentLineId: 10,
+          consumerLineId: 10,
+          idempotencyKey: "manual-material-mismatch-1",
+          sourceLogId: 50,
+          sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES,
+        }),
+      ).rejects.toThrow("手动来源流水物料不匹配");
+    });
+
+    it("should throw when manual source log has mismatched stockScopeId", async () => {
+      const wrongScopeLog = {
+        ...mockSourceLog,
+        stockScopeId: 999, // Different from resolved MAIN scope id
+      };
+      const { service } = await buildServiceForFifo({
+        sourceLog: wrongScopeLog,
+      });
+
+      await expect(
+        service.settleConsumerOut({
+          materialId: 10,
+          workshopId: 20,
+          quantity: 20,
+          operationType: InventoryOperationType.PICK_OUT,
+          businessModule: "workshop",
+          businessDocumentType: "WorkshopMaterialOrder",
+          businessDocumentId: 5,
+          businessDocumentNumber: "WM-001",
+          businessDocumentLineId: 10,
+          consumerLineId: 10,
+          idempotencyKey: "manual-scope-mismatch-1",
+          sourceLogId: 50,
+          sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES,
+        }),
+      ).rejects.toThrow("手动来源流水库存范围不匹配");
+    });
+
+    it("should throw when manual source log operation type is not in allowed list", async () => {
+      const returnInLog = {
+        ...mockSourceLog,
+        operationType: InventoryOperationType.SALES_RETURN_IN, // Not in FIFO source types
+      };
+      const { service } = await buildServiceForFifo({ sourceLog: returnInLog });
+
+      await expect(
+        service.settleConsumerOut({
+          materialId: 10,
+          workshopId: 20,
+          quantity: 20,
+          operationType: InventoryOperationType.OUTBOUND_OUT,
+          businessModule: "customer",
+          businessDocumentType: "CustomerStockOrder",
+          businessDocumentId: 1,
+          businessDocumentNumber: "OB-001",
+          businessDocumentLineId: 1,
+          consumerLineId: 1,
+          idempotencyKey: "manual-optype-mismatch-1",
+          sourceLogId: 50,
+          sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES.filter(
+            (t) => t !== "RD_HANDOFF_IN",
+          ),
+        }),
+      ).rejects.toThrow("手动来源流水操作类型不在允许列表中");
+    });
+
+    it("should reload exact line allocations when idempotency race returns an existing log", async () => {
+      const existingLog = {
+        ...mockLog,
+        id: 901,
+        direction: StockDirection.OUT,
+        businessDocumentId: 1,
+        businessDocumentLineId: 1,
+        idempotencyKey: "dup-out-1",
+      };
+      const lineUsages = [
+        {
+          sourceLogId: 50,
+          allocatedQty: new Prisma.Decimal(20),
+          sourceLog: {
+            unitCost: new Prisma.Decimal(10),
+          },
+        },
+      ];
+      const { service, mockTx } = await buildServiceForFifo({
+        lineUsages,
+      });
+      const duplicateError = new Prisma.PrismaClientKnownRequestError(
+        "duplicate",
+        {
+          code: "P2002",
+          clientVersion: "test",
+        },
+      );
+      (mockTx.inventoryLog.create as jest.Mock).mockRejectedValueOnce(
+        duplicateError,
+      );
+      const repository = (
+        service as unknown as { repository: InventoryRepository }
+      ).repository as unknown as {
+        findLogByIdempotencyKey: jest.Mock;
+        findSourceUsagesForConsumerLine: jest.Mock;
+      };
+      repository.findLogByIdempotencyKey
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(existingLog);
+
+      const result = await service.settleConsumerOut({
+        materialId: 10,
+        workshopId: 20,
+        quantity: 20,
+        operationType: InventoryOperationType.OUTBOUND_OUT,
+        businessModule: "customer",
+        businessDocumentType: "CustomerStockOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "OB-001",
+        businessDocumentLineId: 1,
+        consumerLineId: 1,
+        idempotencyKey: "dup-out-1",
+        sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES,
+      });
+
+      expect(repository.findSourceUsagesForConsumerLine).toHaveBeenCalledWith(
+        {
+          consumerDocumentType: "CustomerStockOrder",
+          consumerDocumentId: 1,
+          consumerLineId: 1,
+        },
+        undefined,
+      );
+      expect(result.outLog.id).toBe(901);
+      expect(result.allocations).toHaveLength(1);
+      expect(Number(result.settledCostAmount)).toBe(200);
+      expect(Number(result.settledUnitCost)).toBe(10);
+    });
+  });
+
+  // ─── increaseStock with cost fields ─────────────────────────────────────
+
+  it("should persist unitCost and costAmount on IN log when provided", async () => {
+    const mockTx = {
+      inventoryBalance: {
+        findUnique: jest.fn().mockResolvedValue(mockBalance),
+        update: jest
+          .fn()
+          .mockResolvedValue({ ...mockBalance, quantityOnHand: 150 }),
+      },
+      inventoryLog: {
+        create: jest
+          .fn()
+          .mockImplementation(
+            (args: {
+              data: { unitCost?: Prisma.Decimal; costAmount?: Prisma.Decimal };
+            }) => ({
+              ...mockLog,
+              id: 2,
+              unitCost: args.data.unitCost ?? null,
+              costAmount: args.data.costAmount ?? null,
+            }),
+          ),
+      },
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        InventoryService,
+        {
+          provide: MasterDataService,
+          useValue: {
+            getMaterialById: jest.fn().mockResolvedValue({ id: 10 }),
+            getWorkshopById: jest.fn().mockResolvedValue({ id: 20 }),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            runInTransaction: jest.fn(
+              (handler: (tx: unknown) => Promise<unknown>) => handler(mockTx),
+            ),
+          },
+        },
+        {
+          provide: InventoryRepository,
+          useValue: {
+            findLogByIdempotencyKey: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(InventoryService);
+    const log = await service.increaseStock({
+      materialId: 10,
+      workshopId: 20,
+      quantity: 50,
+      operationType: InventoryOperationType.ACCEPTANCE_IN,
+      businessModule: "inbound",
+      businessDocumentType: "StockInOrder",
+      businessDocumentId: 100,
+      businessDocumentNumber: "SI-001",
+      idempotencyKey: "cost-test-1",
+      unitCost: 10,
+      costAmount: 500,
+    });
+
+    expect(log.unitCost).toBeDefined();
+    expect(Number(log.unitCost)).toBe(10);
+    expect(Number(log.costAmount)).toBe(500);
+  });
+
+  // ─── hasUnreleasedAllocations ────────────────────────────────────────────
+
+  it("should return true when source log has unreleased allocations", async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        InventoryService,
+        {
+          provide: MasterDataService,
+          useValue: {},
+        },
+        {
+          provide: PrismaService,
+          useValue: {},
+        },
+        {
+          provide: InventoryRepository,
+          useValue: {
+            getSourceUsageTotals: jest.fn().mockResolvedValue({
+              allocatedQty: new Prisma.Decimal(30),
+              releasedQty: new Prisma.Decimal(10),
+            }),
+          },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(InventoryService);
+    const result = await service.hasUnreleasedAllocations(1);
+    expect(result).toBe(true);
+  });
+
+  it("should return false when source log has no unreleased allocations", async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        InventoryService,
+        {
+          provide: MasterDataService,
+          useValue: {},
+        },
+        {
+          provide: PrismaService,
+          useValue: {},
+        },
+        {
+          provide: InventoryRepository,
+          useValue: {
+            getSourceUsageTotals: jest.fn().mockResolvedValue({
+              allocatedQty: new Prisma.Decimal(30),
+              releasedQty: new Prisma.Decimal(30),
+            }),
+          },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(InventoryService);
+    const result = await service.hasUnreleasedAllocations(1);
+    expect(result).toBe(false);
   });
 });

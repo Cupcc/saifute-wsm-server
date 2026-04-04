@@ -19,9 +19,16 @@ docs/acceptance-tests/
 - **Spec 按模块组织**：每个模块一个文件（如 `master-data.md`），模块内每个能力（F1/F2/…）一个 section
 - **AC 矩阵是核心**：每个 AC 一行，结论用 `met | partially-met | not-met | blocked`
 - **不重复代码**：已代码化的 case 不在文档里重复步骤，只在证据索引里指向测试文件
-- **未代码化的 case** 用 `cases/{module}.json` 记录（如 browser smoke）
+- **未代码化的 case** 用 `cases/{module}.json` 记录（如 browser smoke / manual walkthrough）
 - **环境默认** `.env.dev`，与 `pnpm dev` 对齐
 - **Run 是可选项**：仅在需要冻结基线、保留复杂阻塞证据或满足审计要求时创建
+
+补充说明：
+
+- 是否需要 browser smoke，先看风险和证据，不看 `cases/*.json` 是否已存在
+- `cases/*.json` 是 browser/manual 验收的记录载体，不是触发条件
+- 当 browser/manual 验收被选择且没有代码化覆盖时，应补对应 `cases/{module}.json`
+- 当 browser 被明确豁免时，应在 task 或 acceptance 文档里写清 `waiver reason`
 
 ## 本地 QA 与 `.env.dev`
 

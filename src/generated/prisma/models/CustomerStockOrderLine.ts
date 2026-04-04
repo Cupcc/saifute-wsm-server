@@ -34,6 +34,8 @@ export type CustomerStockOrderLineAvgAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
 };
@@ -46,6 +48,8 @@ export type CustomerStockOrderLineSumAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
 };
@@ -62,6 +66,8 @@ export type CustomerStockOrderLineMinAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   startNumber: string | null;
   endNumber: string | null;
   sourceDocumentType: string | null;
@@ -86,6 +92,8 @@ export type CustomerStockOrderLineMaxAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   startNumber: string | null;
   endNumber: string | null;
   sourceDocumentType: string | null;
@@ -110,6 +118,8 @@ export type CustomerStockOrderLineCountAggregateOutputType = {
   quantity: number;
   unitPrice: number;
   amount: number;
+  costUnitPrice: number;
+  costAmount: number;
   startNumber: number;
   endNumber: number;
   sourceDocumentType: number;
@@ -131,6 +141,8 @@ export type CustomerStockOrderLineAvgAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
 };
@@ -143,6 +155,8 @@ export type CustomerStockOrderLineSumAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
 };
@@ -159,6 +173,8 @@ export type CustomerStockOrderLineMinAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   startNumber?: true;
   endNumber?: true;
   sourceDocumentType?: true;
@@ -183,6 +199,8 @@ export type CustomerStockOrderLineMaxAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   startNumber?: true;
   endNumber?: true;
   sourceDocumentType?: true;
@@ -207,6 +225,8 @@ export type CustomerStockOrderLineCountAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   startNumber?: true;
   endNumber?: true;
   sourceDocumentType?: true;
@@ -331,6 +351,8 @@ export type CustomerStockOrderLineGroupByOutputType = {
   quantity: runtime.Decimal;
   unitPrice: runtime.Decimal;
   amount: runtime.Decimal;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   startNumber: string | null;
   endNumber: string | null;
   sourceDocumentType: string | null;
@@ -406,6 +428,20 @@ export type CustomerStockOrderLineWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"CustomerStockOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"CustomerStockOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?:
     | Prisma.StringNullableFilter<"CustomerStockOrderLine">
     | string
@@ -462,6 +498,8 @@ export type CustomerStockOrderLineOrderByWithRelationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   startNumber?: Prisma.SortOrderInput | Prisma.SortOrder;
   endNumber?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -520,6 +558,20 @@ export type CustomerStockOrderLineWhereUniqueInput = Prisma.AtLeast<
       | runtime.DecimalJsLike
       | number
       | string;
+    costUnitPrice?:
+      | Prisma.DecimalNullableFilter<"CustomerStockOrderLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    costAmount?:
+      | Prisma.DecimalNullableFilter<"CustomerStockOrderLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
     startNumber?:
       | Prisma.StringNullableFilter<"CustomerStockOrderLine">
       | string
@@ -578,6 +630,8 @@ export type CustomerStockOrderLineOrderByWithAggregationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   startNumber?: Prisma.SortOrderInput | Prisma.SortOrder;
   endNumber?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -640,6 +694,20 @@ export type CustomerStockOrderLineScalarWhereWithAggregatesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"CustomerStockOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"CustomerStockOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?:
     | Prisma.StringNullableWithAggregatesFilter<"CustomerStockOrderLine">
     | string
@@ -691,6 +759,13 @@ export type CustomerStockOrderLineCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -717,6 +792,13 @@ export type CustomerStockOrderLineUncheckedCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -756,6 +838,20 @@ export type CustomerStockOrderLineUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -809,6 +905,20 @@ export type CustomerStockOrderLineUncheckedUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -842,6 +952,13 @@ export type CustomerStockOrderLineCreateManyInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -881,6 +998,20 @@ export type CustomerStockOrderLineUpdateManyMutationInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -932,6 +1063,20 @@ export type CustomerStockOrderLineUncheckedUpdateManyInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -988,6 +1133,8 @@ export type CustomerStockOrderLineCountOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   startNumber?: Prisma.SortOrder;
   endNumber?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
@@ -1008,6 +1155,8 @@ export type CustomerStockOrderLineAvgOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
 };
@@ -1024,6 +1173,8 @@ export type CustomerStockOrderLineMaxOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   startNumber?: Prisma.SortOrder;
   endNumber?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
@@ -1048,6 +1199,8 @@ export type CustomerStockOrderLineMinOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   startNumber?: Prisma.SortOrder;
   endNumber?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
@@ -1068,6 +1221,8 @@ export type CustomerStockOrderLineSumOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
 };
@@ -1303,6 +1458,13 @@ export type CustomerStockOrderLineCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -1327,6 +1489,13 @@ export type CustomerStockOrderLineUncheckedCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -1419,6 +1588,20 @@ export type CustomerStockOrderLineScalarWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"CustomerStockOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"CustomerStockOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?:
     | Prisma.StringNullableFilter<"CustomerStockOrderLine">
     | string
@@ -1464,6 +1647,13 @@ export type CustomerStockOrderLineCreateWithoutOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -1488,6 +1678,13 @@ export type CustomerStockOrderLineUncheckedCreateWithoutOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -1554,6 +1751,13 @@ export type CustomerStockOrderLineCreateManyMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -1593,6 +1797,20 @@ export type CustomerStockOrderLineUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -1644,6 +1862,20 @@ export type CustomerStockOrderLineUncheckedUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -1694,6 +1926,20 @@ export type CustomerStockOrderLineUncheckedUpdateManyWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -1726,6 +1972,13 @@ export type CustomerStockOrderLineCreateManyOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   startNumber?: string | null;
   endNumber?: string | null;
   sourceDocumentType?: string | null;
@@ -1765,6 +2018,20 @@ export type CustomerStockOrderLineUpdateWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -1816,6 +2083,20 @@ export type CustomerStockOrderLineUncheckedUpdateWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -1866,6 +2147,20 @@ export type CustomerStockOrderLineUncheckedUpdateManyWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   startNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   endNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   sourceDocumentType?:
@@ -1903,6 +2198,8 @@ export type CustomerStockOrderLineSelect<
     quantity?: boolean;
     unitPrice?: boolean;
     amount?: boolean;
+    costUnitPrice?: boolean;
+    costAmount?: boolean;
     startNumber?: boolean;
     endNumber?: boolean;
     sourceDocumentType?: boolean;
@@ -1931,6 +2228,8 @@ export type CustomerStockOrderLineSelectScalar = {
   quantity?: boolean;
   unitPrice?: boolean;
   amount?: boolean;
+  costUnitPrice?: boolean;
+  costAmount?: boolean;
   startNumber?: boolean;
   endNumber?: boolean;
   sourceDocumentType?: boolean;
@@ -1958,6 +2257,8 @@ export type CustomerStockOrderLineOmit<
   | "quantity"
   | "unitPrice"
   | "amount"
+  | "costUnitPrice"
+  | "costAmount"
   | "startNumber"
   | "endNumber"
   | "sourceDocumentType"
@@ -2000,6 +2301,8 @@ export type $CustomerStockOrderLinePayload<
       quantity: runtime.Decimal;
       unitPrice: runtime.Decimal;
       amount: runtime.Decimal;
+      costUnitPrice: runtime.Decimal | null;
+      costAmount: runtime.Decimal | null;
       startNumber: string | null;
       endNumber: string | null;
       sourceDocumentType: string | null;
@@ -2603,6 +2906,8 @@ export interface CustomerStockOrderLineFieldRefs {
   readonly quantity: Prisma.FieldRef<"CustomerStockOrderLine", "Decimal">;
   readonly unitPrice: Prisma.FieldRef<"CustomerStockOrderLine", "Decimal">;
   readonly amount: Prisma.FieldRef<"CustomerStockOrderLine", "Decimal">;
+  readonly costUnitPrice: Prisma.FieldRef<"CustomerStockOrderLine", "Decimal">;
+  readonly costAmount: Prisma.FieldRef<"CustomerStockOrderLine", "Decimal">;
   readonly startNumber: Prisma.FieldRef<"CustomerStockOrderLine", "String">;
   readonly endNumber: Prisma.FieldRef<"CustomerStockOrderLine", "String">;
   readonly sourceDocumentType: Prisma.FieldRef<

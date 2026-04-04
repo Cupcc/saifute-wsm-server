@@ -34,6 +34,8 @@ export type WorkshopMaterialOrderLineAvgAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
 };
@@ -46,6 +48,8 @@ export type WorkshopMaterialOrderLineSumAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
 };
@@ -62,6 +66,8 @@ export type WorkshopMaterialOrderLineMinAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
@@ -84,6 +90,8 @@ export type WorkshopMaterialOrderLineMaxAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
@@ -106,6 +114,8 @@ export type WorkshopMaterialOrderLineCountAggregateOutputType = {
   quantity: number;
   unitPrice: number;
   amount: number;
+  costUnitPrice: number;
+  costAmount: number;
   sourceDocumentType: number;
   sourceDocumentId: number;
   sourceDocumentLineId: number;
@@ -125,6 +135,8 @@ export type WorkshopMaterialOrderLineAvgAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
 };
@@ -137,6 +149,8 @@ export type WorkshopMaterialOrderLineSumAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
 };
@@ -153,6 +167,8 @@ export type WorkshopMaterialOrderLineMinAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentType?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
@@ -175,6 +191,8 @@ export type WorkshopMaterialOrderLineMaxAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentType?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
@@ -197,6 +215,8 @@ export type WorkshopMaterialOrderLineCountAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentType?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
@@ -319,6 +339,8 @@ export type WorkshopMaterialOrderLineGroupByOutputType = {
   quantity: runtime.Decimal;
   unitPrice: runtime.Decimal;
   amount: runtime.Decimal;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
@@ -399,6 +421,20 @@ export type WorkshopMaterialOrderLineWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"WorkshopMaterialOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"WorkshopMaterialOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.StringNullableFilter<"WorkshopMaterialOrderLine">
     | string
@@ -453,6 +489,8 @@ export type WorkshopMaterialOrderLineOrderByWithRelationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -511,6 +549,20 @@ export type WorkshopMaterialOrderLineWhereUniqueInput = Prisma.AtLeast<
       | runtime.DecimalJsLike
       | number
       | string;
+    costUnitPrice?:
+      | Prisma.DecimalNullableFilter<"WorkshopMaterialOrderLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    costAmount?:
+      | Prisma.DecimalNullableFilter<"WorkshopMaterialOrderLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
     sourceDocumentType?:
       | Prisma.StringNullableFilter<"WorkshopMaterialOrderLine">
       | string
@@ -567,6 +619,8 @@ export type WorkshopMaterialOrderLineOrderByWithAggregationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -629,6 +683,20 @@ export type WorkshopMaterialOrderLineScalarWhereWithAggregatesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"WorkshopMaterialOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"WorkshopMaterialOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.StringNullableWithAggregatesFilter<"WorkshopMaterialOrderLine">
     | string
@@ -672,6 +740,13 @@ export type WorkshopMaterialOrderLineCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -696,6 +771,13 @@ export type WorkshopMaterialOrderLineUncheckedCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -733,6 +815,20 @@ export type WorkshopMaterialOrderLineUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -784,6 +880,20 @@ export type WorkshopMaterialOrderLineUncheckedUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -815,6 +925,13 @@ export type WorkshopMaterialOrderLineCreateManyInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -852,6 +969,20 @@ export type WorkshopMaterialOrderLineUpdateManyMutationInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -901,6 +1032,20 @@ export type WorkshopMaterialOrderLineUncheckedUpdateManyInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -955,6 +1100,8 @@ export type WorkshopMaterialOrderLineCountOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
@@ -973,6 +1120,8 @@ export type WorkshopMaterialOrderLineAvgOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
 };
@@ -989,6 +1138,8 @@ export type WorkshopMaterialOrderLineMaxOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
@@ -1011,6 +1162,8 @@ export type WorkshopMaterialOrderLineMinOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
@@ -1029,6 +1182,8 @@ export type WorkshopMaterialOrderLineSumOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
 };
@@ -1266,6 +1421,13 @@ export type WorkshopMaterialOrderLineCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1288,6 +1450,13 @@ export type WorkshopMaterialOrderLineUncheckedCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1384,6 +1553,20 @@ export type WorkshopMaterialOrderLineScalarWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"WorkshopMaterialOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"WorkshopMaterialOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.StringNullableFilter<"WorkshopMaterialOrderLine">
     | string
@@ -1427,6 +1610,13 @@ export type WorkshopMaterialOrderLineCreateWithoutOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1449,6 +1639,13 @@ export type WorkshopMaterialOrderLineUncheckedCreateWithoutOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1513,6 +1710,13 @@ export type WorkshopMaterialOrderLineCreateManyMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1550,6 +1754,20 @@ export type WorkshopMaterialOrderLineUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1599,6 +1817,20 @@ export type WorkshopMaterialOrderLineUncheckedUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1647,6 +1879,20 @@ export type WorkshopMaterialOrderLineUncheckedUpdateManyWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1677,6 +1923,13 @@ export type WorkshopMaterialOrderLineCreateManyOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1714,6 +1967,20 @@ export type WorkshopMaterialOrderLineUpdateWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1763,6 +2030,20 @@ export type WorkshopMaterialOrderLineUncheckedUpdateWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1811,6 +2092,20 @@ export type WorkshopMaterialOrderLineUncheckedUpdateManyWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1846,6 +2141,8 @@ export type WorkshopMaterialOrderLineSelect<
     quantity?: boolean;
     unitPrice?: boolean;
     amount?: boolean;
+    costUnitPrice?: boolean;
+    costAmount?: boolean;
     sourceDocumentType?: boolean;
     sourceDocumentId?: boolean;
     sourceDocumentLineId?: boolean;
@@ -1872,6 +2169,8 @@ export type WorkshopMaterialOrderLineSelectScalar = {
   quantity?: boolean;
   unitPrice?: boolean;
   amount?: boolean;
+  costUnitPrice?: boolean;
+  costAmount?: boolean;
   sourceDocumentType?: boolean;
   sourceDocumentId?: boolean;
   sourceDocumentLineId?: boolean;
@@ -1897,6 +2196,8 @@ export type WorkshopMaterialOrderLineOmit<
   | "quantity"
   | "unitPrice"
   | "amount"
+  | "costUnitPrice"
+  | "costAmount"
   | "sourceDocumentType"
   | "sourceDocumentId"
   | "sourceDocumentLineId"
@@ -1937,6 +2238,8 @@ export type $WorkshopMaterialOrderLinePayload<
       quantity: runtime.Decimal;
       unitPrice: runtime.Decimal;
       amount: runtime.Decimal;
+      costUnitPrice: runtime.Decimal | null;
+      costAmount: runtime.Decimal | null;
       sourceDocumentType: string | null;
       sourceDocumentId: number | null;
       sourceDocumentLineId: number | null;
@@ -2550,6 +2853,11 @@ export interface WorkshopMaterialOrderLineFieldRefs {
   readonly quantity: Prisma.FieldRef<"WorkshopMaterialOrderLine", "Decimal">;
   readonly unitPrice: Prisma.FieldRef<"WorkshopMaterialOrderLine", "Decimal">;
   readonly amount: Prisma.FieldRef<"WorkshopMaterialOrderLine", "Decimal">;
+  readonly costUnitPrice: Prisma.FieldRef<
+    "WorkshopMaterialOrderLine",
+    "Decimal"
+  >;
+  readonly costAmount: Prisma.FieldRef<"WorkshopMaterialOrderLine", "Decimal">;
   readonly sourceDocumentType: Prisma.FieldRef<
     "WorkshopMaterialOrderLine",
     "String"

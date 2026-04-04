@@ -13,7 +13,10 @@ import {
   StockDirection,
 } from "../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
-import { InventoryService } from "../../inventory-core/application/inventory.service";
+import {
+  FIFO_SOURCE_OPERATION_TYPES,
+  InventoryService,
+} from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import type { CreateRdHandoffOrderDto } from "../dto/create-rd-handoff-order.dto";
 import type { QueryRdHandoffOrderDto } from "../dto/query-rd-handoff-order.dto";
@@ -187,8 +190,12 @@ export class RdHandoffService {
       );
 
       const inboundLogIdByLineId = new Map<number, number>();
+      const mainSourceTypes = FIFO_SOURCE_OPERATION_TYPES.filter(
+        (t) => t !== "RD_HANDOFF_IN",
+      );
       for (const line of order.lines) {
-        await this.inventoryService.decreaseStock(
+        // MAIN OUT: settle against MAIN source layers via FIFO.
+        const outSettlement = await this.inventoryService.settleConsumerOut(
           {
             materialId: line.materialId,
             stockScope: "MAIN",
@@ -202,27 +209,76 @@ export class RdHandoffService {
             operatorId: createdBy,
             idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:out:${line.id}`,
             note: `主仓交接到 RD 小仓: ${order.sourceWorkshopNameSnapshot} -> ${order.targetWorkshopNameSnapshot}`,
+            consumerLineId: line.id,
+            sourceOperationTypes: mainSourceTypes,
           },
           tx,
         );
-        const inboundLog = await this.inventoryService.increaseStock(
+
+        // RD_SUB IN: create one IN log per FIFO allocation piece to preserve the
+        // original MAIN source layer granularity (cost bridge). Each piece gets its
+        // own deterministic idempotency key so the bridge is idempotent and auditable.
+        // The first piece's log is used as the representative for status-helper mapping.
+        let representativeInLogId: number | undefined;
+        const allocationsToCreate =
+          outSettlement.allocations.length > 0
+            ? outSettlement.allocations
+            : [
+                // Fallback: single synthetic piece covering the full line qty with
+                // aggregated cost (only used if FIFO returned empty allocations,
+                // which should not occur in normal operation).
+                {
+                  sourceLogId: 0,
+                  allocatedQty: new Prisma.Decimal(line.quantity),
+                  unitCost: outSettlement.settledUnitCost,
+                  costAmount: outSettlement.settledCostAmount,
+                },
+              ];
+
+        for (const allocation of allocationsToCreate) {
+          const bridgeIdempotencyKey =
+            allocation.sourceLogId > 0
+              ? `${DOCUMENT_TYPE}:${order.id}:in:${line.id}:src:${allocation.sourceLogId}`
+              : `${DOCUMENT_TYPE}:${order.id}:in:${line.id}`;
+
+          const bridgeLog = await this.inventoryService.increaseStock(
+            {
+              materialId: line.materialId,
+              stockScope: "RD_SUB",
+              quantity: allocation.allocatedQty,
+              operationType: InventoryOperationType.RD_HANDOFF_IN,
+              businessModule: BUSINESS_MODULE,
+              businessDocumentType: DOCUMENT_TYPE,
+              businessDocumentId: order.id,
+              businessDocumentNumber: order.documentNo,
+              businessDocumentLineId: line.id,
+              operatorId: createdBy,
+              idempotencyKey: bridgeIdempotencyKey,
+              note: `主仓交接到 RD 小仓 (MAIN 来源层 ${allocation.sourceLogId}): ${order.sourceWorkshopNameSnapshot} -> ${order.targetWorkshopNameSnapshot}`,
+              unitCost: allocation.unitCost,
+              costAmount: allocation.costAmount,
+            },
+            tx,
+          );
+
+          if (representativeInLogId === undefined) {
+            representativeInLogId = bridgeLog.id;
+          }
+        }
+
+        if (representativeInLogId !== undefined) {
+          inboundLogIdByLineId.set(line.id, representativeInLogId);
+        }
+
+        // Persist aggregated cost snapshot on the handoff order line.
+        await this.repository.updateOrderLineCost(
+          line.id,
           {
-            materialId: line.materialId,
-            stockScope: "RD_SUB",
-            quantity: line.quantity,
-            operationType: InventoryOperationType.RD_HANDOFF_IN,
-            businessModule: BUSINESS_MODULE,
-            businessDocumentType: DOCUMENT_TYPE,
-            businessDocumentId: order.id,
-            businessDocumentNumber: order.documentNo,
-            businessDocumentLineId: line.id,
-            operatorId: createdBy,
-            idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:in:${line.id}`,
-            note: `主仓交接到 RD 小仓: ${order.sourceWorkshopNameSnapshot} -> ${order.targetWorkshopNameSnapshot}`,
+            costUnitPrice: outSettlement.settledUnitCost,
+            costAmount: outSettlement.settledCostAmount,
           },
           tx,
         );
-        inboundLogIdByLineId.set(line.id, inboundLog.id);
       }
 
       await applyHandoffStatusesForOrder(
@@ -263,6 +319,16 @@ export class RdHandoffService {
         tx,
       );
 
+      // Release MAIN source allocations that were created during the OUT settlement.
+      await this.inventoryService.releaseAllSourceUsagesForConsumer(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: id,
+          operatorId: voidedBy,
+        },
+        tx,
+      );
+
       const logs = await this.inventoryService.getLogsForDocument(
         {
           businessDocumentType: DOCUMENT_TYPE,
@@ -280,6 +346,21 @@ export class RdHandoffService {
         }
         return left.direction === StockDirection.IN ? -1 : 1;
       });
+
+      // Guard: RD_SUB IN bridge logs are FIFO source layers for downstream RD_SUB
+      // consumers. Block the void if any bridge layer has been partially or fully
+      // allocated downstream and not yet released.
+      for (const log of orderedLogs) {
+        if (log.direction === StockDirection.IN) {
+          const hasAllocations =
+            await this.inventoryService.hasUnreleasedAllocations(log.id, tx);
+          if (hasAllocations) {
+            throw new BadRequestException(
+              `RD 小仓交接入库流水 ${log.id} 已有下游消耗分配，不能作废交接单，请先撤销 RD 小仓内的相关消耗记录`,
+            );
+          }
+        }
+      }
 
       for (const log of orderedLogs) {
         await this.inventoryService.reverseStock(

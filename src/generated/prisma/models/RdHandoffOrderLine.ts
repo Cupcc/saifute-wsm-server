@@ -34,6 +34,8 @@ export type RdHandoffOrderLineAvgAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
 };
@@ -46,6 +48,8 @@ export type RdHandoffOrderLineSumAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
 };
@@ -62,6 +66,8 @@ export type RdHandoffOrderLineMinAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
@@ -84,6 +90,8 @@ export type RdHandoffOrderLineMaxAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
@@ -106,6 +114,8 @@ export type RdHandoffOrderLineCountAggregateOutputType = {
   quantity: number;
   unitPrice: number;
   amount: number;
+  costUnitPrice: number;
+  costAmount: number;
   sourceDocumentType: number;
   sourceDocumentId: number;
   sourceDocumentLineId: number;
@@ -125,6 +135,8 @@ export type RdHandoffOrderLineAvgAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
 };
@@ -137,6 +149,8 @@ export type RdHandoffOrderLineSumAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
 };
@@ -153,6 +167,8 @@ export type RdHandoffOrderLineMinAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentType?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
@@ -175,6 +191,8 @@ export type RdHandoffOrderLineMaxAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentType?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
@@ -197,6 +215,8 @@ export type RdHandoffOrderLineCountAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   sourceDocumentType?: true;
   sourceDocumentId?: true;
   sourceDocumentLineId?: true;
@@ -319,6 +339,8 @@ export type RdHandoffOrderLineGroupByOutputType = {
   quantity: runtime.Decimal;
   unitPrice: runtime.Decimal;
   amount: runtime.Decimal;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
@@ -386,6 +408,20 @@ export type RdHandoffOrderLineWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"RdHandoffOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"RdHandoffOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.StringNullableFilter<"RdHandoffOrderLine">
     | string
@@ -425,6 +461,8 @@ export type RdHandoffOrderLineOrderByWithRelationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -477,6 +515,20 @@ export type RdHandoffOrderLineWhereUniqueInput = Prisma.AtLeast<
       | runtime.DecimalJsLike
       | number
       | string;
+    costUnitPrice?:
+      | Prisma.DecimalNullableFilter<"RdHandoffOrderLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    costAmount?:
+      | Prisma.DecimalNullableFilter<"RdHandoffOrderLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
     sourceDocumentType?:
       | Prisma.StringNullableFilter<"RdHandoffOrderLine">
       | string
@@ -524,6 +576,8 @@ export type RdHandoffOrderLineOrderByWithAggregationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrderInput | Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -582,6 +636,20 @@ export type RdHandoffOrderLineScalarWhereWithAggregatesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"RdHandoffOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"RdHandoffOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.StringNullableWithAggregatesFilter<"RdHandoffOrderLine">
     | string
@@ -625,6 +693,13 @@ export type RdHandoffOrderLineCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -649,6 +724,13 @@ export type RdHandoffOrderLineUncheckedCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -686,6 +768,20 @@ export type RdHandoffOrderLineUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -737,6 +833,20 @@ export type RdHandoffOrderLineUncheckedUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -768,6 +878,13 @@ export type RdHandoffOrderLineCreateManyInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -805,6 +922,20 @@ export type RdHandoffOrderLineUpdateManyMutationInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -854,6 +985,20 @@ export type RdHandoffOrderLineUncheckedUpdateManyInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -908,6 +1053,8 @@ export type RdHandoffOrderLineCountOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
@@ -926,6 +1073,8 @@ export type RdHandoffOrderLineAvgOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
 };
@@ -942,6 +1091,8 @@ export type RdHandoffOrderLineMaxOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
@@ -964,6 +1115,8 @@ export type RdHandoffOrderLineMinOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentType?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
@@ -982,6 +1135,8 @@ export type RdHandoffOrderLineSumOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   sourceDocumentId?: Prisma.SortOrder;
   sourceDocumentLineId?: Prisma.SortOrder;
 };
@@ -1215,6 +1370,13 @@ export type RdHandoffOrderLineCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1237,6 +1399,13 @@ export type RdHandoffOrderLineUncheckedCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1327,6 +1496,20 @@ export type RdHandoffOrderLineScalarWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"RdHandoffOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"RdHandoffOrderLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.StringNullableFilter<"RdHandoffOrderLine">
     | string
@@ -1355,6 +1538,13 @@ export type RdHandoffOrderLineCreateWithoutOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1377,6 +1567,13 @@ export type RdHandoffOrderLineUncheckedCreateWithoutOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1441,6 +1638,13 @@ export type RdHandoffOrderLineCreateManyMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1478,6 +1682,20 @@ export type RdHandoffOrderLineUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1527,6 +1745,20 @@ export type RdHandoffOrderLineUncheckedUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1575,6 +1807,20 @@ export type RdHandoffOrderLineUncheckedUpdateManyWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1605,6 +1851,13 @@ export type RdHandoffOrderLineCreateManyOrderInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   sourceDocumentType?: string | null;
   sourceDocumentId?: number | null;
   sourceDocumentLineId?: number | null;
@@ -1642,6 +1895,20 @@ export type RdHandoffOrderLineUpdateWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1691,6 +1958,20 @@ export type RdHandoffOrderLineUncheckedUpdateWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1739,6 +2020,20 @@ export type RdHandoffOrderLineUncheckedUpdateManyWithoutOrderInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   sourceDocumentType?:
     | Prisma.NullableStringFieldUpdateOperationsInput
     | string
@@ -1774,6 +2069,8 @@ export type RdHandoffOrderLineSelect<
     quantity?: boolean;
     unitPrice?: boolean;
     amount?: boolean;
+    costUnitPrice?: boolean;
+    costAmount?: boolean;
     sourceDocumentType?: boolean;
     sourceDocumentId?: boolean;
     sourceDocumentLineId?: boolean;
@@ -1800,6 +2097,8 @@ export type RdHandoffOrderLineSelectScalar = {
   quantity?: boolean;
   unitPrice?: boolean;
   amount?: boolean;
+  costUnitPrice?: boolean;
+  costAmount?: boolean;
   sourceDocumentType?: boolean;
   sourceDocumentId?: boolean;
   sourceDocumentLineId?: boolean;
@@ -1825,6 +2124,8 @@ export type RdHandoffOrderLineOmit<
   | "quantity"
   | "unitPrice"
   | "amount"
+  | "costUnitPrice"
+  | "costAmount"
   | "sourceDocumentType"
   | "sourceDocumentId"
   | "sourceDocumentLineId"
@@ -1865,6 +2166,8 @@ export type $RdHandoffOrderLinePayload<
       quantity: runtime.Decimal;
       unitPrice: runtime.Decimal;
       amount: runtime.Decimal;
+      costUnitPrice: runtime.Decimal | null;
+      costAmount: runtime.Decimal | null;
       sourceDocumentType: string | null;
       sourceDocumentId: number | null;
       sourceDocumentLineId: number | null;
@@ -2457,6 +2760,8 @@ export interface RdHandoffOrderLineFieldRefs {
   readonly quantity: Prisma.FieldRef<"RdHandoffOrderLine", "Decimal">;
   readonly unitPrice: Prisma.FieldRef<"RdHandoffOrderLine", "Decimal">;
   readonly amount: Prisma.FieldRef<"RdHandoffOrderLine", "Decimal">;
+  readonly costUnitPrice: Prisma.FieldRef<"RdHandoffOrderLine", "Decimal">;
+  readonly costAmount: Prisma.FieldRef<"RdHandoffOrderLine", "Decimal">;
   readonly sourceDocumentType: Prisma.FieldRef<"RdHandoffOrderLine", "String">;
   readonly sourceDocumentId: Prisma.FieldRef<"RdHandoffOrderLine", "Int">;
   readonly sourceDocumentLineId: Prisma.FieldRef<"RdHandoffOrderLine", "Int">;

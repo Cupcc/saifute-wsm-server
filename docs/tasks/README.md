@@ -78,21 +78,23 @@ Maintain the live directory-wide classification in `TASK_CENTER.md`, not in this
 3. Update `TASK_CENTER.md` when a new active task doc is introduced or when a task clearly changes lifecycle bucket.
 4. If the user is operating from a confirmed domain, have `planner` create or repair the task doc from one explicit unfinished domain capability only when planning is actually needed (no intermediate `req-*.md` needed).
 5. Have `planner` fill the goal, requirement alignment, scope, implementation plan, coder handoff fields, validation expectations, and parallelization safety when the task doc needs planning work.
-6. Have `planner` or `parent` choose `Acceptance mode: none | light | full` based on runtime impact, user risk, auditability need, and workflow cost. If the linked domain capability is in autonomous-delivery mode, or the user asked for a complete test report, default to `full` unless the scope is trivially small and docs-only.
-7. If `Acceptance mode = full`, have `acceptance-qa` prepare or update the relevant acceptance spec early, ensuring each in-scope `[AC-*]` maps to at least one acceptance case.
-8. If `Acceptance mode = light`, keep the default path lightweight and defer separate spec or run unless reuse, auditability, or complexity justifies them.
-9. Have `coder` implement from the task doc instead of inventing a new execution scope.
-10. Have `code-reviewer` record review status, validation, findings, and next action in the same task doc.
-11. If review finds open `[blocking]` or `[important]` items, route the work back to `coder` and keep the task doc current.
-12. If review passes and `Acceptance mode = none`, write `skipped` with rationale and close the task.
-13. If review passes and `Acceptance mode = light`, prefer the lightest sufficient path: fill the task doc `## Acceptance`, add direct evidence, and only create spec or run if the work has already crossed into full-mode complexity.
-14. If review passes and `Acceptance mode = full`, have `acceptance-qa` create or update the relevant acceptance spec, verify the minimum coverage baseline, and update `Latest Verification` as the default complete test report for the slice. Create a separate acceptance run only when a standalone report is justified.
-15. In `full` mode, have `acceptance-qa` verify environment readiness before execution. If required accounts, data, permissions, endpoints, or dependencies are not ready, mark the current acceptance record `blocked`, record `environment-gap`, and route to the parent or environment owner without consuming a rejection round.
-16. Have `acceptance-qa` execute acceptance testing, verify requirement alignment, fill the task doc `## Acceptance`, and update the domain capability status in the linked domain doc when an ability completes.
-17. If `acceptance-qa` rejects, route to `planner` (`requirement-misunderstanding`) only when requirement or task-doc truth needs repair; otherwise route to `coder` (`implementation-gap`) or `code-reviewer` or parent (`evidence-gap`) and repeat from the appropriate step.
-18. If `acceptance-qa` blocks, route to `parent` or environment owner (`environment-gap`) and resume acceptance after the environment is ready.
-19. Default soft limit: 2 rejection rounds before escalating to user. If each loop is clearly converging and the fix cost remains low, the parent may continue beyond 2 rounds; otherwise escalate.
-20. If the scoped work is accepted, conditionally accepted, or skipped, archive the task doc and update `TASK_CENTER.md` before ending the turn. Do not archive while the current acceptance record remains `blocked`.
+6. Have `planner` make an explicit browser decision for non-trivial work. This decision must be based on user-flow risk, not on whether `docs/acceptance-tests/cases/*.json` already exists.
+7. At minimum, the planner should record: `User-visible flow affected`, `Cross-module write path`, `Irreversible or high-cost business effect`, `Existing automated user-flow coverage`, `Browser test required`, and a short `Browser waiver reason` when the answer is `no`.
+8. Have `planner` or `parent` choose `Acceptance mode: none | light | full` based on runtime impact, user risk, auditability need, and workflow cost. If the linked domain capability is in autonomous-delivery mode, or the user asked for a complete test report, default to `full` unless the scope is trivially small and docs-only.
+9. If `Acceptance mode = full`, have `acceptance-qa` prepare or update the relevant acceptance spec early, ensuring each in-scope `[AC-*]` maps to at least one acceptance case.
+10. If `Acceptance mode = light`, keep the default path lightweight and defer separate spec or run unless reuse, auditability, or complexity justifies them.
+11. Have `coder` implement from the task doc instead of inventing a new execution scope.
+12. Have `code-reviewer` record review status, validation, findings, and next action in the same task doc.
+13. If review finds open `[blocking]` or `[important]` items, route the work back to `coder` and keep the task doc current.
+14. If review passes and `Acceptance mode = none`, write `skipped` with rationale and close the task.
+15. If review passes and `Acceptance mode = light`, prefer the lightest sufficient path: fill the task doc `## Acceptance`, add direct evidence, and only create spec or run if the work has already crossed into full-mode complexity.
+16. If review passes and `Acceptance mode = full`, have `acceptance-qa` create or update the relevant acceptance spec, verify the minimum coverage baseline, and update `Latest Verification` as the default complete test report for the slice. Create a separate acceptance run only when a standalone report is justified.
+17. In `full` mode, have `acceptance-qa` verify environment readiness before execution. If required accounts, data, permissions, endpoints, or dependencies are not ready, mark the current acceptance record `blocked`, record `environment-gap`, and route to the parent or environment owner without consuming a rejection round.
+18. Have `acceptance-qa` execute acceptance testing, verify requirement alignment, fill the task doc `## Acceptance`, and update the domain capability status in the linked domain doc when an ability completes.
+19. If `acceptance-qa` rejects, route to `planner` (`requirement-misunderstanding`) only when requirement or task-doc truth needs repair; otherwise route to `coder` (`implementation-gap`) or `code-reviewer` or parent (`evidence-gap`) and repeat from the appropriate step.
+20. If `acceptance-qa` blocks, route to `parent` or environment owner (`environment-gap`) and resume acceptance after the environment is ready.
+21. Default soft limit: 2 rejection rounds before escalating to user. If each loop is clearly converging and the fix cost remains low, the parent may continue beyond 2 rounds; otherwise escalate.
+22. If the scoped work is accepted, conditionally accepted, or skipped, archive the task doc and update `TASK_CENTER.md` before ending the turn. Do not archive while the current acceptance record remains `blocked`.
 
 ## Task-Doc Field Expectations
 
@@ -101,6 +103,7 @@ Maintain the live directory-wide classification in `TASK_CENTER.md`, not in this
 - `## Metadata` should include `Lifecycle disposition`, which starts as `active` and should move to `retained-completed` or `cleanup-candidate` when the task is no longer active.
 - `## Coder Handoff` should record `owned paths`, `forbidden shared files`, and the `validation command for that scope`.
 - `## Reviewer Handoff` should record the `Acceptance evidence package`, whether a complete test report is required, and the `Acceptance test expectations`.
+- `## Reviewer Handoff` should also record the browser decision inputs: `User-visible flow affected`, `Cross-module write path`, `Irreversible or high-cost business effect`, `Existing automated user-flow coverage`, and `Browser waiver reason` when browser is not required.
 - `## Acceptance` should record the chosen path, criterion-by-criterion evidence, and the final acceptance verdict.
 - If the planner marks `## Parallelization Safety` as safe, the task doc should add one handoff subsection per writer with those same fields.
 - `## Final Status` should explain why a completed task should stay retained or become a cleanup candidate.

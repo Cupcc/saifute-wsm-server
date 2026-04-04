@@ -34,6 +34,8 @@ export type ProjectMaterialLineAvgAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
 };
 
 export type ProjectMaterialLineSumAggregateOutputType = {
@@ -44,6 +46,8 @@ export type ProjectMaterialLineSumAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
 };
 
 export type ProjectMaterialLineMinAggregateOutputType = {
@@ -58,6 +62,8 @@ export type ProjectMaterialLineMinAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   remark: string | null;
   createdBy: string | null;
   createdAt: Date | null;
@@ -77,6 +83,8 @@ export type ProjectMaterialLineMaxAggregateOutputType = {
   quantity: runtime.Decimal | null;
   unitPrice: runtime.Decimal | null;
   amount: runtime.Decimal | null;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   remark: string | null;
   createdBy: string | null;
   createdAt: Date | null;
@@ -96,6 +104,8 @@ export type ProjectMaterialLineCountAggregateOutputType = {
   quantity: number;
   unitPrice: number;
   amount: number;
+  costUnitPrice: number;
+  costAmount: number;
   remark: number;
   createdBy: number;
   createdAt: number;
@@ -112,6 +122,8 @@ export type ProjectMaterialLineAvgAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
 };
 
 export type ProjectMaterialLineSumAggregateInputType = {
@@ -122,6 +134,8 @@ export type ProjectMaterialLineSumAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
 };
 
 export type ProjectMaterialLineMinAggregateInputType = {
@@ -136,6 +150,8 @@ export type ProjectMaterialLineMinAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   remark?: true;
   createdBy?: true;
   createdAt?: true;
@@ -155,6 +171,8 @@ export type ProjectMaterialLineMaxAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   remark?: true;
   createdBy?: true;
   createdAt?: true;
@@ -174,6 +192,8 @@ export type ProjectMaterialLineCountAggregateInputType = {
   quantity?: true;
   unitPrice?: true;
   amount?: true;
+  costUnitPrice?: true;
+  costAmount?: true;
   remark?: true;
   createdBy?: true;
   createdAt?: true;
@@ -293,6 +313,8 @@ export type ProjectMaterialLineGroupByOutputType = {
   quantity: runtime.Decimal;
   unitPrice: runtime.Decimal;
   amount: runtime.Decimal;
+  costUnitPrice: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   remark: string | null;
   createdBy: string | null;
   createdAt: Date;
@@ -357,6 +379,20 @@ export type ProjectMaterialLineWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"ProjectMaterialLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"ProjectMaterialLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.StringNullableFilter<"ProjectMaterialLine"> | string | null;
   createdBy?:
     | Prisma.StringNullableFilter<"ProjectMaterialLine">
@@ -390,6 +426,8 @@ export type ProjectMaterialLineOrderByWithRelationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   remark?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdBy?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
@@ -439,6 +477,20 @@ export type ProjectMaterialLineWhereUniqueInput = Prisma.AtLeast<
       | runtime.DecimalJsLike
       | number
       | string;
+    costUnitPrice?:
+      | Prisma.DecimalNullableFilter<"ProjectMaterialLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    costAmount?:
+      | Prisma.DecimalNullableFilter<"ProjectMaterialLine">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
     remark?: Prisma.StringNullableFilter<"ProjectMaterialLine"> | string | null;
     createdBy?:
       | Prisma.StringNullableFilter<"ProjectMaterialLine">
@@ -474,6 +526,8 @@ export type ProjectMaterialLineOrderByWithAggregationInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   remark?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdBy?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
@@ -529,6 +583,20 @@ export type ProjectMaterialLineScalarWhereWithAggregatesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"ProjectMaterialLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"ProjectMaterialLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?:
     | Prisma.StringNullableWithAggregatesFilter<"ProjectMaterialLine">
     | string
@@ -560,6 +628,13 @@ export type ProjectMaterialLineCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -581,6 +656,13 @@ export type ProjectMaterialLineUncheckedCreateInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -615,6 +697,20 @@ export type ProjectMaterialLineUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -654,6 +750,20 @@ export type ProjectMaterialLineUncheckedUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -673,6 +783,13 @@ export type ProjectMaterialLineCreateManyInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -707,6 +824,20 @@ export type ProjectMaterialLineUpdateManyMutationInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -744,6 +875,20 @@ export type ProjectMaterialLineUncheckedUpdateManyInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -786,6 +931,8 @@ export type ProjectMaterialLineCountOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   remark?: Prisma.SortOrder;
   createdBy?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
@@ -801,6 +948,8 @@ export type ProjectMaterialLineAvgOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
 };
 
 export type ProjectMaterialLineMaxOrderByAggregateInput = {
@@ -815,6 +964,8 @@ export type ProjectMaterialLineMaxOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   remark?: Prisma.SortOrder;
   createdBy?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
@@ -834,6 +985,8 @@ export type ProjectMaterialLineMinOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   remark?: Prisma.SortOrder;
   createdBy?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
@@ -849,6 +1002,8 @@ export type ProjectMaterialLineSumOrderByAggregateInput = {
   quantity?: Prisma.SortOrder;
   unitPrice?: Prisma.SortOrder;
   amount?: Prisma.SortOrder;
+  costUnitPrice?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
 };
 
 export type ProjectMaterialLineCreateNestedManyWithoutMaterialInput = {
@@ -1080,6 +1235,13 @@ export type ProjectMaterialLineCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -1099,6 +1261,13 @@ export type ProjectMaterialLineUncheckedCreateWithoutMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -1186,6 +1355,20 @@ export type ProjectMaterialLineScalarWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.DecimalNullableFilter<"ProjectMaterialLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"ProjectMaterialLine">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.StringNullableFilter<"ProjectMaterialLine"> | string | null;
   createdBy?:
     | Prisma.StringNullableFilter<"ProjectMaterialLine">
@@ -1208,6 +1391,13 @@ export type ProjectMaterialLineCreateWithoutProjectInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -1227,6 +1417,13 @@ export type ProjectMaterialLineUncheckedCreateWithoutProjectInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -1288,6 +1485,13 @@ export type ProjectMaterialLineCreateManyMaterialInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -1322,6 +1526,20 @@ export type ProjectMaterialLineUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -1359,6 +1577,20 @@ export type ProjectMaterialLineUncheckedUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -1395,6 +1627,20 @@ export type ProjectMaterialLineUncheckedUpdateManyWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -1413,6 +1659,13 @@ export type ProjectMaterialLineCreateManyProjectInput = {
   quantity: runtime.Decimal | runtime.DecimalJsLike | number | string;
   unitPrice?: runtime.Decimal | runtime.DecimalJsLike | number | string;
   amount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  costUnitPrice?:
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   remark?: string | null;
   createdBy?: string | null;
   createdAt?: Date | string;
@@ -1447,6 +1700,20 @@ export type ProjectMaterialLineUpdateWithoutProjectInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -1484,6 +1751,20 @@ export type ProjectMaterialLineUncheckedUpdateWithoutProjectInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -1520,6 +1801,20 @@ export type ProjectMaterialLineUncheckedUpdateManyWithoutProjectInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  costUnitPrice?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
@@ -1543,6 +1838,8 @@ export type ProjectMaterialLineSelect<
     quantity?: boolean;
     unitPrice?: boolean;
     amount?: boolean;
+    costUnitPrice?: boolean;
+    costAmount?: boolean;
     remark?: boolean;
     createdBy?: boolean;
     createdAt?: boolean;
@@ -1566,6 +1863,8 @@ export type ProjectMaterialLineSelectScalar = {
   quantity?: boolean;
   unitPrice?: boolean;
   amount?: boolean;
+  costUnitPrice?: boolean;
+  costAmount?: boolean;
   remark?: boolean;
   createdBy?: boolean;
   createdAt?: boolean;
@@ -1588,6 +1887,8 @@ export type ProjectMaterialLineOmit<
   | "quantity"
   | "unitPrice"
   | "amount"
+  | "costUnitPrice"
+  | "costAmount"
   | "remark"
   | "createdBy"
   | "createdAt"
@@ -1625,6 +1926,8 @@ export type $ProjectMaterialLinePayload<
       quantity: runtime.Decimal;
       unitPrice: runtime.Decimal;
       amount: runtime.Decimal;
+      costUnitPrice: runtime.Decimal | null;
+      costAmount: runtime.Decimal | null;
       remark: string | null;
       createdBy: string | null;
       createdAt: Date;
@@ -2214,6 +2517,8 @@ export interface ProjectMaterialLineFieldRefs {
   readonly quantity: Prisma.FieldRef<"ProjectMaterialLine", "Decimal">;
   readonly unitPrice: Prisma.FieldRef<"ProjectMaterialLine", "Decimal">;
   readonly amount: Prisma.FieldRef<"ProjectMaterialLine", "Decimal">;
+  readonly costUnitPrice: Prisma.FieldRef<"ProjectMaterialLine", "Decimal">;
+  readonly costAmount: Prisma.FieldRef<"ProjectMaterialLine", "Decimal">;
   readonly remark: Prisma.FieldRef<"ProjectMaterialLine", "String">;
   readonly createdBy: Prisma.FieldRef<"ProjectMaterialLine", "String">;
   readonly createdAt: Prisma.FieldRef<"ProjectMaterialLine", "DateTime">;

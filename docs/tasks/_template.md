@@ -84,7 +84,13 @@
 ### Acceptance Test Expectations
 
 - Acceptance mode: `none` | `light` | `full`
+- User-visible flow affected: `yes` | `no`
+- Cross-module write path: `yes` | `no`
+- Irreversible or high-cost business effect: `yes` | `no`
+- Existing automated user-flow coverage: `yes` | `no`
 - Browser test required: `yes` | `no`
+- Browser waiver reason:
+- Related acceptance cases:
 - Related acceptance spec:
 - Separate acceptance run required: `yes` | `optional` | `no`
 - Complete test report required: `yes` | `no`

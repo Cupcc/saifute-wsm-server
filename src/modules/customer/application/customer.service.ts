@@ -15,7 +15,10 @@ import {
   Prisma,
 } from "../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
-import { InventoryService } from "../../inventory-core/application/inventory.service";
+import {
+  FIFO_SOURCE_OPERATION_TYPES,
+  InventoryService,
+} from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { WorkflowService } from "../../workflow/application/workflow.service";
 import type { CreateOutboundOrderDto } from "../dto/create-outbound-order.dto";
@@ -150,7 +153,7 @@ export class CustomerService {
       );
 
       for (const line of order.lines) {
-        await this.inventoryService.decreaseStock(
+        const settlement = await this.inventoryService.settleConsumerOut(
           {
             materialId: line.materialId,
             stockScope: "MAIN",
@@ -163,6 +166,18 @@ export class CustomerService {
             businessDocumentLineId: line.id,
             operatorId: createdBy,
             idempotencyKey: `CustomerStockOrder:${order.id}:line:${line.id}`,
+            consumerLineId: line.id,
+            sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES.filter(
+              (t) => t !== "RD_HANDOFF_IN",
+            ),
+          },
+          tx,
+        );
+        await this.repository.updateOrderLine(
+          line.id,
+          {
+            costUnitPrice: settlement.settledUnitCost,
+            costAmount: settlement.settledCostAmount,
           },
           tx,
         );
@@ -284,6 +299,17 @@ export class CustomerService {
           );
         }
 
+        // Release this line's source allocations before reversing its OUT log.
+        await this.inventoryService.releaseSourceUsagesForConsumerLine(
+          {
+            consumerDocumentType: DOCUMENT_TYPE,
+            consumerDocumentId: id,
+            consumerLineId: currentLine.id,
+            operatorId: updatedBy,
+          },
+          tx,
+        );
+
         await this.inventoryService.reverseStock(
           {
             logIdToReverse: currentLog.id,
@@ -336,6 +362,17 @@ export class CustomerService {
               );
             }
 
+            // Release this line's source allocations before reversing its OUT log.
+            await this.inventoryService.releaseSourceUsagesForConsumerLine(
+              {
+                consumerDocumentType: DOCUMENT_TYPE,
+                consumerDocumentId: id,
+                consumerLineId: currentLine.id,
+                operatorId: updatedBy,
+              },
+              tx,
+            );
+
             await this.inventoryService.reverseStock(
               {
                 logIdToReverse: currentLog.id,
@@ -382,19 +419,32 @@ export class CustomerService {
           );
 
           if (inventoryNeedsRepost) {
-            await this.inventoryService.decreaseStock(
+            const repostSettlement =
+              await this.inventoryService.settleConsumerOut(
+                {
+                  materialId: updatedLine.materialId,
+                  stockScope: "MAIN",
+                  quantity: updatedLine.quantity,
+                  operationType: InventoryOperationType.OUTBOUND_OUT,
+                  businessModule: BUSINESS_MODULE,
+                  businessDocumentType: DOCUMENT_TYPE,
+                  businessDocumentId: id,
+                  businessDocumentNumber: existing.documentNo,
+                  businessDocumentLineId: updatedLine.id,
+                  operatorId: updatedBy,
+                  idempotencyKey: `CustomerStockOrder:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
+                  consumerLineId: updatedLine.id,
+                  sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES.filter(
+                    (t) => t !== "RD_HANDOFF_IN",
+                  ),
+                },
+                tx,
+              );
+            await this.repository.updateOrderLine(
+              updatedLine.id,
               {
-                materialId: updatedLine.materialId,
-                stockScope: "MAIN",
-                quantity: updatedLine.quantity,
-                operationType: InventoryOperationType.OUTBOUND_OUT,
-                businessModule: BUSINESS_MODULE,
-                businessDocumentType: DOCUMENT_TYPE,
-                businessDocumentId: id,
-                businessDocumentNumber: existing.documentNo,
-                businessDocumentLineId: updatedLine.id,
-                operatorId: updatedBy,
-                idempotencyKey: `CustomerStockOrder:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
+                costUnitPrice: repostSettlement.settledUnitCost,
+                costAmount: repostSettlement.settledCostAmount,
               },
               tx,
             );
@@ -444,7 +494,7 @@ export class CustomerService {
           tx,
         );
 
-        await this.inventoryService.decreaseStock(
+        const newLineSettlement = await this.inventoryService.settleConsumerOut(
           {
             materialId: createdLine.materialId,
             stockScope: "MAIN",
@@ -457,6 +507,18 @@ export class CustomerService {
             businessDocumentLineId: createdLine.id,
             operatorId: updatedBy,
             idempotencyKey: `CustomerStockOrder:${id}:rev:${nextRevision}:line:${createdLine.id}`,
+            consumerLineId: createdLine.id,
+            sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES.filter(
+              (t) => t !== "RD_HANDOFF_IN",
+            ),
+          },
+          tx,
+        );
+        await this.repository.updateOrderLine(
+          createdLine.id,
+          {
+            costUnitPrice: newLineSettlement.settledUnitCost,
+            costAmount: newLineSettlement.settledCostAmount,
           },
           tx,
         );
@@ -551,6 +613,16 @@ export class CustomerService {
           "存在未作废的销售退货下游，不能作废出库单",
         );
       }
+
+      // Release FIFO source allocations before reversing the OUT log.
+      await this.inventoryService.releaseAllSourceUsagesForConsumer(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: id,
+          operatorId: voidedBy,
+        },
+        tx,
+      );
 
       const logs = await this.inventoryService.getLogsForDocument(
         {
@@ -814,6 +886,22 @@ export class CustomerService {
       );
 
       for (const line of order.lines) {
+        // Release original outbound source allocations proportional to return qty,
+        // and derive settled return cost from released allocation cost layers.
+        let returnCostUnitPrice: Prisma.Decimal | null = null;
+        let returnCostAmount: Prisma.Decimal | null = null;
+        if (line.sourceDocumentLineId) {
+          const releaseResult = await this.releaseOutboundSourceForReturn(
+            dto.sourceOutboundOrderId,
+            line.sourceDocumentLineId,
+            new Prisma.Decimal(line.quantity),
+            createdBy,
+            tx,
+          );
+          returnCostUnitPrice = releaseResult.releasedUnitCost;
+          returnCostAmount = releaseResult.releasedCostAmount;
+        }
+
         await this.inventoryService.increaseStock(
           {
             materialId: line.materialId,
@@ -830,6 +918,18 @@ export class CustomerService {
           },
           tx,
         );
+
+        // Persist settled return cost on the return line.
+        if (returnCostUnitPrice !== null) {
+          await this.repository.updateOrderLine(
+            line.id,
+            {
+              costUnitPrice: returnCostUnitPrice,
+              costAmount: returnCostAmount ?? undefined,
+            },
+            tx,
+          );
+        }
 
         if (line.sourceDocumentLineId) {
           await this.repository.createDocumentLineRelation(
@@ -884,6 +984,23 @@ export class CustomerService {
     }
 
     return this.prisma.runInTransaction(async (tx) => {
+      // Restore the outbound source allocations that were released when this
+      // return was created (mirrors the release done in createSalesReturn).
+      for (const line of order.lines) {
+        if (
+          line.sourceDocumentLineId != null &&
+          line.sourceDocumentId != null
+        ) {
+          await this.restoreOutboundSourceForReturnVoid(
+            line.sourceDocumentId,
+            line.sourceDocumentLineId,
+            new Prisma.Decimal(line.quantity),
+            voidedBy,
+            tx,
+          );
+        }
+      }
+
       const logs = await this.inventoryService.getLogsForDocument(
         {
           businessDocumentType: DOCUMENT_TYPE,
@@ -936,6 +1053,136 @@ export class CustomerService {
 
       return this.repository.findOrderById(id, tx);
     });
+  }
+
+  /**
+   * Releases outbound source usages proportional to the returned quantity and
+   * returns the derived cost (unit cost and total cost) from those released layers.
+   * Oldest allocations are released first (FIFO order).
+   */
+  private async releaseOutboundSourceForReturn(
+    outboundOrderId: number,
+    outboundLineId: number,
+    returnQty: Prisma.Decimal,
+    operatorId: string | undefined,
+    tx: Prisma.TransactionClient,
+  ): Promise<{
+    releasedUnitCost: Prisma.Decimal;
+    releasedCostAmount: Prisma.Decimal;
+  }> {
+    const lineUsages = (
+      await this.inventoryService.listSourceUsagesForConsumerLine(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: outboundOrderId,
+          consumerLineId: outboundLineId,
+        },
+        tx,
+      )
+    ).sort((a, b) => Number(a.sourceLogId) - Number(b.sourceLogId));
+
+    let remaining = new Prisma.Decimal(returnQty);
+    let releasedCostAmount = new Prisma.Decimal(0);
+    const releasedPieces: { qty: Prisma.Decimal; unitCost: Prisma.Decimal }[] =
+      [];
+
+    for (const usage of lineUsages) {
+      if (remaining.lte(0)) break;
+      const allocatedQty = new Prisma.Decimal(usage.allocatedQty);
+      const releasedQty = new Prisma.Decimal(usage.releasedQty);
+      const unreleased = allocatedQty.sub(releasedQty);
+      if (unreleased.lte(0)) continue;
+
+      const toReleaseNow = unreleased.gt(remaining) ? remaining : unreleased;
+      await this.inventoryService.releaseInventorySource(
+        {
+          sourceLogId: usage.sourceLogId,
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: outboundOrderId,
+          consumerLineId: outboundLineId,
+          targetReleasedQty: releasedQty.add(toReleaseNow),
+          operatorId,
+        },
+        tx,
+      );
+
+      const srcUnitCost = usage.sourceLog.unitCost
+        ? new Prisma.Decimal(usage.sourceLog.unitCost)
+        : new Prisma.Decimal(0);
+      releasedCostAmount = releasedCostAmount.add(
+        srcUnitCost.mul(toReleaseNow),
+      );
+      releasedPieces.push({ qty: toReleaseNow, unitCost: srcUnitCost });
+      remaining = remaining.sub(toReleaseNow);
+    }
+
+    if (remaining.gt(0)) {
+      throw new BadRequestException(
+        `销售退货来源库存释放不足: outboundOrderId=${outboundOrderId}, outboundLineId=${outboundLineId}，退货需释放 ${returnQty.toFixed()} 但实际只能释放 ${returnQty.sub(remaining).toFixed()}`,
+      );
+    }
+
+    const releasedUnitCost = returnQty.gt(0)
+      ? releasedCostAmount.div(returnQty)
+      : new Prisma.Decimal(0);
+
+    return { releasedUnitCost, releasedCostAmount };
+  }
+
+  /**
+   * Restores (un-releases) outbound source usage releases that were applied when
+   * a sales return was created. Processes usages newest-first to mirror the
+   * forward-release sequence in reverse.
+   */
+  private async restoreOutboundSourceForReturnVoid(
+    outboundOrderId: number | undefined,
+    outboundLineId: number,
+    quantityToRestore: Prisma.Decimal,
+    operatorId: string | undefined,
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
+    if (!outboundOrderId) return;
+
+    // Line-scoped lookup avoids document-level truncation when a large outbound
+    // order has many source-usage rows across multiple lines.
+    const lineUsages = (
+      await this.inventoryService.listSourceUsagesForConsumerLine(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: outboundOrderId,
+          consumerLineId: outboundLineId,
+        },
+        tx,
+      )
+    ).sort((a, b) => Number(b.sourceLogId) - Number(a.sourceLogId));
+
+    let remainingToRestore = new Prisma.Decimal(quantityToRestore);
+    for (const usage of lineUsages) {
+      if (remainingToRestore.lte(0)) break;
+      const releasedQty = new Prisma.Decimal(usage.releasedQty);
+      if (releasedQty.lte(0)) continue;
+      const toRestoreNow = releasedQty.gt(remainingToRestore)
+        ? remainingToRestore
+        : releasedQty;
+      await this.inventoryService.releaseInventorySource(
+        {
+          sourceLogId: usage.sourceLogId,
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: outboundOrderId,
+          consumerLineId: outboundLineId,
+          targetReleasedQty: releasedQty.sub(toRestoreNow),
+          operatorId,
+        },
+        tx,
+      );
+      remainingToRestore = remainingToRestore.sub(toRestoreNow);
+    }
+
+    if (remainingToRestore.gt(0)) {
+      throw new BadRequestException(
+        `销售退货来源库存恢复不足: outboundOrderId=${outboundOrderId}, outboundLineId=${outboundLineId}，需恢复 ${quantityToRestore.toFixed()} 但实际只能恢复 ${quantityToRestore.sub(remainingToRestore).toFixed()}`,
+      );
+    }
   }
 
   private async validateMasterDataForOutbound(dto: CreateOutboundOrderDto) {

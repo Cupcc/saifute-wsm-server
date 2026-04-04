@@ -202,6 +202,8 @@ export class InboundService {
             businessDocumentLineId: line.id,
             operatorId: createdBy,
             idempotencyKey: `StockInOrder:${order.id}:line:${line.id}`,
+            unitCost: new Prisma.Decimal(line.unitPrice),
+            costAmount: new Prisma.Decimal(line.amount),
           },
           tx,
         );
@@ -359,6 +361,17 @@ export class InboundService {
           );
         }
 
+        const hasAllocations =
+          await this.inventoryService.hasUnreleasedAllocations(
+            currentLog.id,
+            tx,
+          );
+        if (hasAllocations) {
+          throw new BadRequestException(
+            `入库明细 ${currentLine.id} 已有下游消耗分配，不能删除或改量，请先撤销对应的出库/领料记录`,
+          );
+        }
+
         await this.inventoryService.reverseStock(
           {
             logIdToReverse: currentLog.id,
@@ -406,6 +419,17 @@ export class InboundService {
               );
             }
 
+            const hasAllocations =
+              await this.inventoryService.hasUnreleasedAllocations(
+                currentLog.id,
+                tx,
+              );
+            if (hasAllocations) {
+              throw new BadRequestException(
+                `入库明细 ${currentLine.id} 已有下游消耗分配，不能直接改量，请先撤销对应的出库/领料记录`,
+              );
+            }
+
             await this.inventoryService.reverseStock(
               {
                 logIdToReverse: currentLog.id,
@@ -436,6 +460,9 @@ export class InboundService {
           );
 
           if (inventoryNeedsRepost) {
+            const updatedLineUnitPrice = new Prisma.Decimal(
+              updatedLine.unitPrice,
+            );
             const log = await this.inventoryService.increaseStock(
               {
                 materialId: updatedLine.materialId,
@@ -449,6 +476,10 @@ export class InboundService {
                 businessDocumentLineId: updatedLine.id,
                 operatorId: updatedBy,
                 idempotencyKey: `StockInOrder:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
+                unitCost: updatedLineUnitPrice,
+                costAmount: updatedLineUnitPrice.mul(
+                  new Prisma.Decimal(updatedLine.quantity),
+                ),
               },
               tx,
             );
@@ -488,6 +519,7 @@ export class InboundService {
           tx,
         );
 
+        const createdLineUnitPrice = new Prisma.Decimal(createdLine.unitPrice);
         const log = await this.inventoryService.increaseStock(
           {
             materialId: createdLine.materialId,
@@ -501,6 +533,10 @@ export class InboundService {
             businessDocumentLineId: createdLine.id,
             operatorId: updatedBy,
             idempotencyKey: `StockInOrder:${id}:rev:${nextRevision}:line:${createdLine.id}`,
+            unitCost: createdLineUnitPrice,
+            costAmount: createdLineUnitPrice.mul(
+              new Prisma.Decimal(createdLine.quantity),
+            ),
           },
           tx,
         );
@@ -619,6 +655,13 @@ export class InboundService {
       }
 
       for (let i = 0; i < logs.length; i++) {
+        const hasAllocations =
+          await this.inventoryService.hasUnreleasedAllocations(logs[i].id, tx);
+        if (hasAllocations) {
+          throw new BadRequestException(
+            `入库流水 ${logs[i].id} 已有下游消耗分配，不能作废，请先撤销对应的出库/领料记录`,
+          );
+        }
         await this.inventoryService.reverseStock(
           {
             logIdToReverse: logs[i].id,

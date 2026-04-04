@@ -60,6 +60,8 @@ describe("CustomerService", () => {
         quantity: new Prisma.Decimal(100),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(1000),
+        costUnitPrice: null,
+        costAmount: null,
         startNumber: "001",
         endNumber: "100",
         sourceDocumentType: null,
@@ -92,6 +94,8 @@ describe("CustomerService", () => {
         quantity: new Prisma.Decimal(50),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(500),
+        costUnitPrice: null,
+        costAmount: null,
         startNumber: null,
         endNumber: null,
         sourceDocumentType: "CustomerStockOrder",
@@ -181,12 +185,29 @@ describe("CustomerService", () => {
           provide: InventoryService,
           useValue: {
             decreaseStock: jest.fn().mockResolvedValue({ id: 1 }),
+            settleConsumerOut: jest.fn().mockResolvedValue({
+              outLog: { id: 1 },
+              settledUnitCost: new Prisma.Decimal(10),
+              settledCostAmount: new Prisma.Decimal(1000),
+              allocations: [],
+            }),
             increaseStock: jest.fn().mockResolvedValue({ id: 1 }),
             reverseStock: jest.fn().mockResolvedValue({ id: 2 }),
             reserveFactoryNumber: jest.fn().mockResolvedValue({ id: 1 }),
             releaseFactoryNumberReservations: jest.fn().mockResolvedValue({
               count: 1,
             }),
+            releaseAllSourceUsagesForConsumer: jest
+              .fn()
+              .mockResolvedValue(undefined),
+            releaseSourceUsagesForConsumerLine: jest
+              .fn()
+              .mockResolvedValue(undefined),
+            releaseInventorySource: jest.fn().mockResolvedValue({}),
+            listSourceUsages: jest
+              .fn()
+              .mockResolvedValue({ items: [], total: 0 }),
+            listSourceUsagesForConsumerLine: jest.fn().mockResolvedValue([]),
             getLogsForDocument: jest.fn().mockResolvedValue([{ id: 1 }]),
           },
         },
@@ -249,7 +270,7 @@ describe("CustomerService", () => {
       expect(result).toEqual(mockOutboundOrder);
       expect(repository.findOrderByDocumentNo).toHaveBeenCalledWith("OB-001");
       expect(repository.createOrder).toHaveBeenCalled();
-      expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
+      expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
           stockScope: "MAIN",
@@ -299,6 +320,46 @@ describe("CustomerService", () => {
   });
 
   describe("updateOrder", () => {
+    it("should release source usages for deleted line before reversal", async () => {
+      const updatedOrder = {
+        ...mockOutboundOrder,
+        revisionNo: 2,
+        totalQty: new Prisma.Decimal(0),
+        totalAmount: new Prisma.Decimal(0),
+        lines: [],
+      };
+      (repository.findOrderById as jest.Mock)
+        .mockResolvedValueOnce(mockOutboundOrder)
+        .mockResolvedValueOnce(mockOutboundOrder)
+        .mockResolvedValueOnce(updatedOrder);
+      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+        { id: 11, businessDocumentLineId: 1 },
+      ]);
+
+      await service.updateOrder(1, { bizDate: "2025-03-15", lines: [] }, "1");
+
+      // releaseSourceUsagesForConsumerLine must be called BEFORE reverseStock
+      const releaseCalls = (
+        inventoryService.releaseSourceUsagesForConsumerLine as jest.Mock
+      ).mock.invocationCallOrder;
+      const reverseCalls = (inventoryService.reverseStock as jest.Mock).mock
+        .invocationCallOrder;
+      expect(releaseCalls.length).toBeGreaterThan(0);
+      expect(reverseCalls.length).toBeGreaterThan(0);
+      expect(releaseCalls[0]).toBeLessThan(reverseCalls[0]);
+
+      expect(
+        inventoryService.releaseSourceUsagesForConsumerLine,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          consumerDocumentType: "CustomerStockOrder",
+          consumerDocumentId: 1,
+          consumerLineId: 1,
+        }),
+        expect.anything(),
+      );
+    });
+
     it("should release line reservations when deleting outbound lines", async () => {
       const updatedOrder = {
         ...mockOutboundOrder,
@@ -508,6 +569,17 @@ describe("CustomerService", () => {
       (repository.createOrder as jest.Mock).mockResolvedValue(
         mockSalesReturnOrder,
       );
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(50),
+          releasedQty: new Prisma.Decimal(0),
+          sourceLog: { unitCost: new Prisma.Decimal(8) },
+        },
+      ]);
 
       const dto = {
         documentNo: "SR-001",
@@ -627,6 +699,17 @@ describe("CustomerService", () => {
       (repository.createOrder as jest.Mock).mockResolvedValue(
         mockSalesReturnOrder,
       );
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(100),
+          releasedQty: new Prisma.Decimal(0),
+          sourceLog: { unitCost: new Prisma.Decimal(8) },
+        },
+      ]);
 
       const dto = {
         documentNo: "SR-002",
@@ -644,6 +727,43 @@ describe("CustomerService", () => {
 
       expect(result).toBeDefined();
       expect(repository.createOrder).toHaveBeenCalled();
+    });
+
+    it("should reject sales return when line-scoped source usages cannot cover the full return quantity", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.findOrderById as jest.Mock).mockResolvedValue(
+        mockOutboundOrder,
+      );
+      (
+        repository.sumActiveReturnedQtyByOutboundLine as jest.Mock
+      ).mockResolvedValue(new Map());
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        mockSalesReturnOrder,
+      );
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(20),
+          releasedQty: new Prisma.Decimal(10),
+          sourceLog: { unitCost: new Prisma.Decimal(8) },
+        },
+      ]);
+
+      const dto = {
+        documentNo: "SR-003",
+        bizDate: "2025-03-14",
+        sourceOutboundOrderId: 1,
+        customerId: 10,
+        workshopId: 1,
+        lines: [{ materialId: 100, quantity: "20", sourceOutboundLineId: 1 }],
+      };
+
+      await expect(service.createSalesReturn(dto, "1")).rejects.toThrow(
+        "销售退货来源库存释放不足",
+      );
     });
   });
 

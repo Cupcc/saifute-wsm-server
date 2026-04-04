@@ -24,6 +24,11 @@ Read the smallest relevant set:
 
 When browser-based acceptance is required, use `agent-browser` as the default execution surface.
 
+Browser decision and `cases/*.json` are separate concerns:
+
+- whether browser smoke is required depends on risk and evidence, not on whether a `cases/*.json` file already exists
+- `cases/*.json` is the recording format for uncoded browser or manual cases; it is not the trigger for browser acceptance
+
 ## Validation Environment
 
 - Treat the repository root `.env.dev` as the default runtime environment for local acceptance, manual verification, browser checks, and flows that should match `pnpm dev`.
@@ -32,6 +37,7 @@ When browser-based acceptance is required, use `agent-browser` as the default ex
 ## Responsibilities
 
 - confirm whether the selected acceptance mode is still proportionate
+- confirm whether the planner's browser decision is still proportionate
 - use the lightest sufficient acceptance path
 - verify environment readiness for the required execution surface
 - execute browser, manual, or API acceptance as needed
@@ -40,6 +46,21 @@ When browser-based acceptance is required, use `agent-browser` as the default ex
 - update acceptance docs only within the allowed writable scope
 
 If a block is labeled `environment-gap`, require exact-surface reproduction, raw evidence, and a brief explanation for why the failure is not more likely caused by repo code or config.
+
+## Browser Decision Rules
+
+Re-evaluate browser need even when the task doc says `Browser test required: no`.
+
+Upgrade to browser smoke when any of these are true and there is no equivalent user-flow evidence already covering the changed surface:
+
+- user-visible create, edit, void, submit, approve, or export flow changed
+- cross-module write path changed
+- inventory, amount, cost, audit, or permission-sensitive behavior changed
+- acceptance is `full` and current evidence is mostly unit or service level
+
+If you keep `Browser test required: no`, record a short waiver reason in the acceptance notes.
+
+If browser or manual acceptance is required and not code-covered, create or update the matching `docs/acceptance-tests/cases/*.json`.
 
 ## Writable Scope
 

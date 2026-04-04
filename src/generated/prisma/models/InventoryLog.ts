@@ -37,6 +37,8 @@ export type InventoryLogAvgAggregateOutputType = {
   changeQty: runtime.Decimal | null;
   beforeQty: runtime.Decimal | null;
   afterQty: runtime.Decimal | null;
+  unitCost: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   reversalOfLogId: number | null;
 };
 
@@ -51,6 +53,8 @@ export type InventoryLogSumAggregateOutputType = {
   changeQty: runtime.Decimal | null;
   beforeQty: runtime.Decimal | null;
   afterQty: runtime.Decimal | null;
+  unitCost: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   reversalOfLogId: number | null;
 };
 
@@ -70,6 +74,8 @@ export type InventoryLogMinAggregateOutputType = {
   changeQty: runtime.Decimal | null;
   beforeQty: runtime.Decimal | null;
   afterQty: runtime.Decimal | null;
+  unitCost: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   operatorId: string | null;
   occurredAt: Date | null;
   reversalOfLogId: number | null;
@@ -93,6 +99,8 @@ export type InventoryLogMaxAggregateOutputType = {
   changeQty: runtime.Decimal | null;
   beforeQty: runtime.Decimal | null;
   afterQty: runtime.Decimal | null;
+  unitCost: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   operatorId: string | null;
   occurredAt: Date | null;
   reversalOfLogId: number | null;
@@ -116,6 +124,8 @@ export type InventoryLogCountAggregateOutputType = {
   changeQty: number;
   beforeQty: number;
   afterQty: number;
+  unitCost: number;
+  costAmount: number;
   operatorId: number;
   occurredAt: number;
   reversalOfLogId: number;
@@ -135,6 +145,8 @@ export type InventoryLogAvgAggregateInputType = {
   changeQty?: true;
   beforeQty?: true;
   afterQty?: true;
+  unitCost?: true;
+  costAmount?: true;
   reversalOfLogId?: true;
 };
 
@@ -149,6 +161,8 @@ export type InventoryLogSumAggregateInputType = {
   changeQty?: true;
   beforeQty?: true;
   afterQty?: true;
+  unitCost?: true;
+  costAmount?: true;
   reversalOfLogId?: true;
 };
 
@@ -168,6 +182,8 @@ export type InventoryLogMinAggregateInputType = {
   changeQty?: true;
   beforeQty?: true;
   afterQty?: true;
+  unitCost?: true;
+  costAmount?: true;
   operatorId?: true;
   occurredAt?: true;
   reversalOfLogId?: true;
@@ -191,6 +207,8 @@ export type InventoryLogMaxAggregateInputType = {
   changeQty?: true;
   beforeQty?: true;
   afterQty?: true;
+  unitCost?: true;
+  costAmount?: true;
   operatorId?: true;
   occurredAt?: true;
   reversalOfLogId?: true;
@@ -214,6 +232,8 @@ export type InventoryLogCountAggregateInputType = {
   changeQty?: true;
   beforeQty?: true;
   afterQty?: true;
+  unitCost?: true;
+  costAmount?: true;
   operatorId?: true;
   occurredAt?: true;
   reversalOfLogId?: true;
@@ -332,6 +352,8 @@ export type InventoryLogGroupByOutputType = {
   changeQty: runtime.Decimal;
   beforeQty: runtime.Decimal;
   afterQty: runtime.Decimal;
+  unitCost: runtime.Decimal | null;
+  costAmount: runtime.Decimal | null;
   operatorId: string | null;
   occurredAt: Date;
   reversalOfLogId: number | null;
@@ -398,6 +420,20 @@ export type InventoryLogWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.DecimalNullableFilter<"InventoryLog">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"InventoryLog">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.StringNullableFilter<"InventoryLog"> | string | null;
   occurredAt?: Prisma.DateTimeFilter<"InventoryLog"> | Date | string;
   reversalOfLogId?: Prisma.IntNullableFilter<"InventoryLog"> | number | null;
@@ -448,6 +484,8 @@ export type InventoryLogOrderByWithRelationInput = {
   changeQty?: Prisma.SortOrder;
   beforeQty?: Prisma.SortOrder;
   afterQty?: Prisma.SortOrder;
+  unitCost?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   operatorId?: Prisma.SortOrderInput | Prisma.SortOrder;
   occurredAt?: Prisma.SortOrder;
   reversalOfLogId?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -509,6 +547,20 @@ export type InventoryLogWhereUniqueInput = Prisma.AtLeast<
       | runtime.DecimalJsLike
       | number
       | string;
+    unitCost?:
+      | Prisma.DecimalNullableFilter<"InventoryLog">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    costAmount?:
+      | Prisma.DecimalNullableFilter<"InventoryLog">
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
     operatorId?: Prisma.StringNullableFilter<"InventoryLog"> | string | null;
     occurredAt?: Prisma.DateTimeFilter<"InventoryLog"> | Date | string;
     note?: Prisma.StringNullableFilter<"InventoryLog"> | string | null;
@@ -559,6 +611,8 @@ export type InventoryLogOrderByWithAggregationInput = {
   changeQty?: Prisma.SortOrder;
   beforeQty?: Prisma.SortOrder;
   afterQty?: Prisma.SortOrder;
+  unitCost?: Prisma.SortOrderInput | Prisma.SortOrder;
+  costAmount?: Prisma.SortOrderInput | Prisma.SortOrder;
   operatorId?: Prisma.SortOrderInput | Prisma.SortOrder;
   occurredAt?: Prisma.SortOrder;
   reversalOfLogId?: Prisma.SortOrderInput | Prisma.SortOrder;
@@ -623,6 +677,20 @@ export type InventoryLogScalarWhereWithAggregatesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"InventoryLog">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableWithAggregatesFilter<"InventoryLog">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?:
     | Prisma.StringNullableWithAggregatesFilter<"InventoryLog">
     | string
@@ -653,6 +721,8 @@ export type InventoryLogCreateInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -684,6 +754,8 @@ export type InventoryLogUncheckedCreateInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -728,6 +800,20 @@ export type InventoryLogUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -781,6 +867,20 @@ export type InventoryLogUncheckedUpdateInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -811,6 +911,8 @@ export type InventoryLogCreateManyInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -851,6 +953,20 @@ export type InventoryLogUpdateManyMutationInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -895,6 +1011,20 @@ export type InventoryLogUncheckedUpdateManyInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -944,6 +1074,8 @@ export type InventoryLogCountOrderByAggregateInput = {
   changeQty?: Prisma.SortOrder;
   beforeQty?: Prisma.SortOrder;
   afterQty?: Prisma.SortOrder;
+  unitCost?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   operatorId?: Prisma.SortOrder;
   occurredAt?: Prisma.SortOrder;
   reversalOfLogId?: Prisma.SortOrder;
@@ -962,6 +1094,8 @@ export type InventoryLogAvgOrderByAggregateInput = {
   changeQty?: Prisma.SortOrder;
   beforeQty?: Prisma.SortOrder;
   afterQty?: Prisma.SortOrder;
+  unitCost?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   reversalOfLogId?: Prisma.SortOrder;
 };
 
@@ -981,6 +1115,8 @@ export type InventoryLogMaxOrderByAggregateInput = {
   changeQty?: Prisma.SortOrder;
   beforeQty?: Prisma.SortOrder;
   afterQty?: Prisma.SortOrder;
+  unitCost?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   operatorId?: Prisma.SortOrder;
   occurredAt?: Prisma.SortOrder;
   reversalOfLogId?: Prisma.SortOrder;
@@ -1004,6 +1140,8 @@ export type InventoryLogMinOrderByAggregateInput = {
   changeQty?: Prisma.SortOrder;
   beforeQty?: Prisma.SortOrder;
   afterQty?: Prisma.SortOrder;
+  unitCost?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   operatorId?: Prisma.SortOrder;
   occurredAt?: Prisma.SortOrder;
   reversalOfLogId?: Prisma.SortOrder;
@@ -1022,6 +1160,8 @@ export type InventoryLogSumOrderByAggregateInput = {
   changeQty?: Prisma.SortOrder;
   beforeQty?: Prisma.SortOrder;
   afterQty?: Prisma.SortOrder;
+  unitCost?: Prisma.SortOrder;
+  costAmount?: Prisma.SortOrder;
   reversalOfLogId?: Prisma.SortOrder;
 };
 
@@ -1710,6 +1850,8 @@ export type InventoryLogCreateWithoutMaterialInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -1739,6 +1881,8 @@ export type InventoryLogUncheckedCreateWithoutMaterialInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -1838,6 +1982,20 @@ export type InventoryLogScalarWhereInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.DecimalNullableFilter<"InventoryLog">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.DecimalNullableFilter<"InventoryLog">
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.StringNullableFilter<"InventoryLog"> | string | null;
   occurredAt?: Prisma.DateTimeFilter<"InventoryLog"> | Date | string;
   reversalOfLogId?: Prisma.IntNullableFilter<"InventoryLog"> | number | null;
@@ -1856,6 +2014,8 @@ export type InventoryLogCreateWithoutWorkshopInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -1885,6 +2045,8 @@ export type InventoryLogUncheckedCreateWithoutWorkshopInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -1950,6 +2112,8 @@ export type InventoryLogCreateWithoutStockScopeInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -1979,6 +2143,8 @@ export type InventoryLogUncheckedCreateWithoutStockScopeInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -2044,6 +2210,8 @@ export type InventoryLogCreateWithoutBalanceInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -2073,6 +2241,8 @@ export type InventoryLogUncheckedCreateWithoutBalanceInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -2138,6 +2308,8 @@ export type InventoryLogCreateWithoutReversedByLogsInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -2168,6 +2340,8 @@ export type InventoryLogUncheckedCreateWithoutReversedByLogsInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -2197,6 +2371,8 @@ export type InventoryLogCreateWithoutReversalOfLogInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -2227,6 +2403,8 @@ export type InventoryLogUncheckedCreateWithoutReversalOfLogInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -2305,6 +2483,20 @@ export type InventoryLogUpdateWithoutReversedByLogsInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -2357,6 +2549,20 @@ export type InventoryLogUncheckedUpdateWithoutReversedByLogsInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -2409,6 +2615,8 @@ export type InventoryLogCreateWithoutAllocatedSourceUsagesInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -2439,6 +2647,8 @@ export type InventoryLogUncheckedCreateWithoutAllocatedSourceUsagesInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -2511,6 +2721,20 @@ export type InventoryLogUpdateWithoutAllocatedSourceUsagesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -2563,6 +2787,20 @@ export type InventoryLogUncheckedUpdateWithoutAllocatedSourceUsagesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -2587,6 +2825,8 @@ export type InventoryLogCreateWithoutRdMaterialStatusHistoriesInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -2617,6 +2857,8 @@ export type InventoryLogUncheckedCreateWithoutRdMaterialStatusHistoriesInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -2689,6 +2931,20 @@ export type InventoryLogUpdateWithoutRdMaterialStatusHistoriesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -2741,6 +2997,20 @@ export type InventoryLogUncheckedUpdateWithoutRdMaterialStatusHistoriesInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -2765,6 +3035,8 @@ export type InventoryLogCreateWithoutRdStocktakeOrderLineInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -2795,6 +3067,8 @@ export type InventoryLogUncheckedCreateWithoutRdStocktakeOrderLineInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -2866,6 +3140,20 @@ export type InventoryLogUpdateWithoutRdStocktakeOrderLineInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -2918,6 +3206,20 @@ export type InventoryLogUncheckedUpdateWithoutRdStocktakeOrderLineInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -2946,6 +3248,8 @@ export type InventoryLogCreateManyMaterialInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -2986,6 +3290,20 @@ export type InventoryLogUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -3037,6 +3355,20 @@ export type InventoryLogUncheckedUpdateWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3088,6 +3420,20 @@ export type InventoryLogUncheckedUpdateManyWithoutMaterialInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3113,6 +3459,8 @@ export type InventoryLogCreateManyWorkshopInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -3153,6 +3501,20 @@ export type InventoryLogUpdateWithoutWorkshopInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -3204,6 +3566,20 @@ export type InventoryLogUncheckedUpdateWithoutWorkshopInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3255,6 +3631,20 @@ export type InventoryLogUncheckedUpdateManyWithoutWorkshopInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3280,6 +3670,8 @@ export type InventoryLogCreateManyStockScopeInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -3320,6 +3712,20 @@ export type InventoryLogUpdateWithoutStockScopeInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -3371,6 +3777,20 @@ export type InventoryLogUncheckedUpdateWithoutStockScopeInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3422,6 +3842,20 @@ export type InventoryLogUncheckedUpdateManyWithoutStockScopeInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3447,6 +3881,8 @@ export type InventoryLogCreateManyBalanceInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   reversalOfLogId?: number | null;
@@ -3487,6 +3923,20 @@ export type InventoryLogUpdateWithoutBalanceInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -3538,6 +3988,20 @@ export type InventoryLogUncheckedUpdateWithoutBalanceInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3589,6 +4053,20 @@ export type InventoryLogUncheckedUpdateManyWithoutBalanceInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   reversalOfLogId?:
@@ -3615,6 +4093,8 @@ export type InventoryLogCreateManyReversalOfLogInput = {
   changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
   afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
   operatorId?: string | null;
   occurredAt?: Date | string;
   idempotencyKey: string;
@@ -3654,6 +4134,20 @@ export type InventoryLogUpdateWithoutReversalOfLogInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -3706,6 +4200,20 @@ export type InventoryLogUncheckedUpdateWithoutReversalOfLogInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -3754,6 +4262,20 @@ export type InventoryLogUncheckedUpdateManyWithoutReversalOfLogInput = {
     | runtime.DecimalJsLike
     | number
     | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
   operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -3846,6 +4368,8 @@ export type InventoryLogSelect<
     changeQty?: boolean;
     beforeQty?: boolean;
     afterQty?: boolean;
+    unitCost?: boolean;
+    costAmount?: boolean;
     operatorId?: boolean;
     occurredAt?: boolean;
     reversalOfLogId?: boolean;
@@ -3887,6 +4411,8 @@ export type InventoryLogSelectScalar = {
   changeQty?: boolean;
   beforeQty?: boolean;
   afterQty?: boolean;
+  unitCost?: boolean;
+  costAmount?: boolean;
   operatorId?: boolean;
   occurredAt?: boolean;
   reversalOfLogId?: boolean;
@@ -3913,6 +4439,8 @@ export type InventoryLogOmit<
   | "changeQty"
   | "beforeQty"
   | "afterQty"
+  | "unitCost"
+  | "costAmount"
   | "operatorId"
   | "occurredAt"
   | "reversalOfLogId"
@@ -3975,6 +4503,8 @@ export type $InventoryLogPayload<
       changeQty: runtime.Decimal;
       beforeQty: runtime.Decimal;
       afterQty: runtime.Decimal;
+      unitCost: runtime.Decimal | null;
+      costAmount: runtime.Decimal | null;
       operatorId: string | null;
       occurredAt: Date;
       reversalOfLogId: number | null;
@@ -4655,6 +5185,8 @@ export interface InventoryLogFieldRefs {
   readonly changeQty: Prisma.FieldRef<"InventoryLog", "Decimal">;
   readonly beforeQty: Prisma.FieldRef<"InventoryLog", "Decimal">;
   readonly afterQty: Prisma.FieldRef<"InventoryLog", "Decimal">;
+  readonly unitCost: Prisma.FieldRef<"InventoryLog", "Decimal">;
+  readonly costAmount: Prisma.FieldRef<"InventoryLog", "Decimal">;
   readonly operatorId: Prisma.FieldRef<"InventoryLog", "String">;
   readonly occurredAt: Prisma.FieldRef<"InventoryLog", "DateTime">;
   readonly reversalOfLogId: Prisma.FieldRef<"InventoryLog", "Int">;

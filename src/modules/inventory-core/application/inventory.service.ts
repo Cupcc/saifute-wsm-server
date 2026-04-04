@@ -20,6 +20,13 @@ import {
 import { InventoryRepository } from "../infrastructure/inventory.repository";
 import { StockScopeCompatibilityService } from "./stock-scope-compatibility.service";
 
+/** Operation types that produce real source-layer IN logs eligible for FIFO consumption. */
+export const FIFO_SOURCE_OPERATION_TYPES: InventoryOperationTypeEnum[] = [
+  InventoryOperationType.ACCEPTANCE_IN,
+  InventoryOperationType.PRODUCTION_RECEIPT_IN,
+  InventoryOperationType.RD_HANDOFF_IN,
+];
+
 export interface IncreaseStockCommand {
   materialId: number;
   stockScope?: StockScopeCode;
@@ -34,6 +41,10 @@ export interface IncreaseStockCommand {
   operatorId?: string;
   idempotencyKey: string;
   note?: string;
+  /** Immutable cost snapshot for source-layer IN logs. */
+  unitCost?: Prisma.Decimal | number | string | null;
+  /** Immutable cost amount snapshot for source-layer IN logs. */
+  costAmount?: Prisma.Decimal | number | string | null;
 }
 
 export interface DecreaseStockCommand {
@@ -50,6 +61,38 @@ export interface DecreaseStockCommand {
   operatorId?: string;
   idempotencyKey: string;
   note?: string;
+}
+
+/**
+ * Command to post an OUT log and simultaneously allocate FIFO (or manual) source
+ * layers, returning the settled cost snapshot for the caller to persist on the
+ * consumer document line.
+ */
+export interface SettleConsumerOutCommand extends DecreaseStockCommand {
+  /** The consumer document line this OUT log belongs to (for source usage records). */
+  consumerLineId: number;
+  /** Explicit source log override; when provided FIFO is skipped. */
+  sourceLogId?: number;
+  /**
+   * Operation types eligible as FIFO source layers. Defaults to the repo-wide
+   * FIFO_SOURCE_OPERATION_TYPES constant. Pass a narrower list for scopes where
+   * only a subset of IN types should be eligible (e.g. RD_SUB only uses RD_HANDOFF_IN).
+   */
+  sourceOperationTypes?: InventoryOperationTypeEnum[];
+}
+
+export interface FifoAllocationPiece {
+  sourceLogId: number;
+  allocatedQty: Prisma.Decimal;
+  unitCost: Prisma.Decimal;
+  costAmount: Prisma.Decimal;
+}
+
+export interface SettleConsumerOutResult {
+  outLog: Awaited<ReturnType<InventoryRepository["findLogById"]>> & object;
+  settledUnitCost: Prisma.Decimal;
+  settledCostAmount: Prisma.Decimal;
+  allocations: FifoAllocationPiece[];
 }
 
 export interface ReverseStockCommand {
@@ -150,6 +193,11 @@ export class InventoryService {
         const beforeQty = new Prisma.Decimal(balance.quantityOnHand);
         const afterQty = beforeQty.add(changeQty);
 
+        const unitCost =
+          cmd.unitCost != null ? new Prisma.Decimal(cmd.unitCost) : null;
+        const logCostAmount =
+          cmd.costAmount != null ? new Prisma.Decimal(cmd.costAmount) : null;
+
         const [, log] = await Promise.all([
           db.inventoryBalance.update({
             where: { id: balance.id },
@@ -175,6 +223,8 @@ export class InventoryService {
               changeQty,
               beforeQty,
               afterQty,
+              unitCost,
+              costAmount: logCostAmount,
               operatorId: cmd.operatorId,
               idempotencyKey: cmd.idempotencyKey,
               note: cmd.note,
@@ -463,7 +513,7 @@ export class InventoryService {
     cmd: ReleaseInventorySourceCommand,
     tx?: Prisma.TransactionClient,
   ) {
-    const targetReleasedQty = this.toPositiveQuantityDecimal(
+    const targetReleasedQty = this.toNonNegativeQuantityDecimal(
       cmd.targetReleasedQty,
     );
 
@@ -489,12 +539,6 @@ export class InventoryService {
       const allocatedQty = new Prisma.Decimal(usage.allocatedQty);
       const currentReleasedQty = new Prisma.Decimal(usage.releasedQty);
 
-      if (targetReleasedQty.lt(currentReleasedQty)) {
-        throw new BadRequestException(
-          `目标释放数量不能小于当前已释放总量: 当前=${currentReleasedQty.toString()}, 目标=${targetReleasedQty.toString()}`,
-        );
-      }
-
       if (targetReleasedQty.gt(allocatedQty)) {
         throw new BadRequestException(
           `释放数量超过累计分配: 已分配=${allocatedQty.toString()}, 目标释放=${targetReleasedQty.toString()}`,
@@ -515,6 +559,450 @@ export class InventoryService {
         db,
       );
     });
+  }
+
+  /**
+   * Posts an OUT inventory log and simultaneously performs FIFO (or manual)
+   * source allocation, returning the settled cost summary for the caller to
+   * persist on the consumer document line.
+   *
+   * The method is idempotent on the OUT log key; if the log already exists the
+   * existing allocations are returned without re-running allocation.
+   */
+  async settleConsumerOut(
+    cmd: SettleConsumerOutCommand,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SettleConsumerOutResult> {
+    const existing = await this.repository.findLogByIdempotencyKey(
+      cmd.idempotencyKey,
+      tx,
+    );
+    if (existing) {
+      return this.buildSettlementResultFromExistingLog(
+        existing as SettleConsumerOutResult["outLog"],
+        cmd,
+        tx,
+      );
+    }
+
+    const changeQty = this.toPositiveQuantityDecimal(cmd.quantity);
+    const sourceTypes = cmd.sourceOperationTypes ?? FIFO_SOURCE_OPERATION_TYPES;
+    const scope = await this.stockScopeCompatibilityService.resolveRequired({
+      stockScope: cmd.stockScope,
+      workshopId: cmd.workshopId,
+    });
+    await this.ensureMasterDataExists(cmd.materialId, scope.workshopId);
+
+    try {
+      return await this.withTransaction(tx, async (db) => {
+        let allocations: FifoAllocationPiece[];
+
+        if (cmd.sourceLogId != null) {
+          // Manual source: validate material, scope, operation type, then allocate.
+          allocations = await this.allocateManualSource(
+            cmd.sourceLogId,
+            changeQty,
+            cmd.materialId,
+            scope.stockScopeId,
+            sourceTypes,
+            cmd.businessDocumentType,
+            cmd.businessDocumentId,
+            cmd.consumerLineId,
+            cmd.operatorId,
+            db,
+          );
+        } else {
+          // Default FIFO: greedily allocate from oldest eligible source layers.
+          allocations = await this.allocateByFifo(
+            cmd.materialId,
+            scope.stockScopeId,
+            changeQty,
+            sourceTypes,
+            cmd.businessDocumentType,
+            cmd.businessDocumentId,
+            cmd.consumerLineId,
+            cmd.operatorId,
+            db,
+          );
+        }
+
+        const settledCostAmount = allocations.reduce(
+          (s, a) => s.add(a.costAmount),
+          new Prisma.Decimal(0),
+        );
+        const settledUnitCost = changeQty.gt(0)
+          ? settledCostAmount.div(changeQty)
+          : new Prisma.Decimal(0);
+
+        const balance = await db.inventoryBalance.findUnique({
+          where: {
+            materialId_stockScopeId: {
+              materialId: cmd.materialId,
+              stockScopeId: scope.stockScopeId,
+            },
+          },
+        });
+
+        if (!balance) {
+          throw new BadRequestException(
+            `库存余额不存在: materialId=${cmd.materialId}, workshopId=${scope.workshopId}`,
+          );
+        }
+
+        const beforeQty = new Prisma.Decimal(balance.quantityOnHand);
+        const afterQty = beforeQty.sub(changeQty);
+
+        if (afterQty.lt(0)) {
+          throw new BadRequestException(
+            `库存不足: 当前=${beforeQty.toString()}, 需求=${changeQty.toString()}`,
+          );
+        }
+
+        const outLog = await db.inventoryLog.create({
+          data: {
+            balanceId: balance.id,
+            materialId: cmd.materialId,
+            stockScopeId: scope.stockScopeId,
+            workshopId: scope.workshopId,
+            direction: StockDirection.OUT,
+            operationType: cmd.operationType,
+            businessModule: cmd.businessModule,
+            businessDocumentType: cmd.businessDocumentType,
+            businessDocumentId: cmd.businessDocumentId,
+            businessDocumentNumber: cmd.businessDocumentNumber,
+            businessDocumentLineId: cmd.businessDocumentLineId,
+            changeQty,
+            beforeQty,
+            afterQty,
+            unitCost: settledUnitCost,
+            costAmount: settledCostAmount,
+            operatorId: cmd.operatorId,
+            idempotencyKey: cmd.idempotencyKey,
+            note: cmd.note,
+          },
+        });
+
+        await db.inventoryBalance.update({
+          where: { id: balance.id },
+          data: {
+            quantityOnHand: afterQty,
+            rowVersion: { increment: 1 },
+            updatedBy: cmd.operatorId,
+          },
+        });
+
+        return {
+          outLog: outLog as SettleConsumerOutResult["outLog"],
+          settledUnitCost,
+          settledCostAmount,
+          allocations,
+        };
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const existingLog = await this.repository.findLogByIdempotencyKey(
+          cmd.idempotencyKey,
+        );
+        if (existingLog) {
+          return this.buildSettlementResultFromExistingLog(
+            existingLog as SettleConsumerOutResult["outLog"],
+            cmd,
+          );
+        }
+      }
+      throw error;
+    }
+  }
+
+  private async buildSettlementResultFromExistingLog(
+    outLog: SettleConsumerOutResult["outLog"],
+    cmd: SettleConsumerOutCommand,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SettleConsumerOutResult> {
+    const lineUsages = await this.repository.findSourceUsagesForConsumerLine(
+      {
+        consumerDocumentType: cmd.businessDocumentType,
+        consumerDocumentId: cmd.businessDocumentId,
+        consumerLineId: cmd.consumerLineId,
+      },
+      tx,
+    );
+    const allocations: FifoAllocationPiece[] = lineUsages.map((u) => ({
+      sourceLogId: u.sourceLogId,
+      allocatedQty: new Prisma.Decimal(u.allocatedQty),
+      unitCost: u.sourceLog.unitCost
+        ? new Prisma.Decimal(u.sourceLog.unitCost)
+        : new Prisma.Decimal(0),
+      costAmount: u.sourceLog.unitCost
+        ? new Prisma.Decimal(u.allocatedQty).mul(
+            new Prisma.Decimal(u.sourceLog.unitCost),
+          )
+        : new Prisma.Decimal(0),
+    }));
+    const settledCostAmount = allocations.reduce(
+      (s, a) => s.add(a.costAmount),
+      new Prisma.Decimal(0),
+    );
+    const changeQty = this.toPositiveQuantityDecimal(cmd.quantity);
+    const settledUnitCost = changeQty.gt(0)
+      ? settledCostAmount.div(changeQty)
+      : new Prisma.Decimal(0);
+
+    return {
+      outLog,
+      settledUnitCost,
+      settledCostAmount,
+      allocations,
+    };
+  }
+
+  /**
+   * Releases all non-fully-released source usages for a consumer document. Call
+   * this before reversing the consumer's OUT log(s) to ensure source layer
+   * available quantities are correctly restored.
+   */
+  async releaseAllSourceUsagesForConsumer(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+      operatorId?: string;
+    },
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    return this.withTransaction(tx, async (db) => {
+      const usages = await this.repository.findActiveSourceUsagesForConsumer(
+        params,
+        db,
+      );
+      for (const usage of usages) {
+        const allocatedQty = new Prisma.Decimal(usage.allocatedQty);
+        const releasedQty = new Prisma.Decimal(usage.releasedQty);
+        if (releasedQty.gte(allocatedQty)) {
+          continue;
+        }
+        await this.releaseInventorySource(
+          {
+            sourceLogId: usage.sourceLogId,
+            consumerDocumentType: usage.consumerDocumentType,
+            consumerDocumentId: usage.consumerDocumentId,
+            consumerLineId: usage.consumerLineId,
+            targetReleasedQty: allocatedQty,
+            operatorId: params.operatorId,
+          },
+          db,
+        );
+      }
+    });
+  }
+
+  /**
+   * Releases all non-fully-released source usages for a single consumer line
+   * before its OUT log is reversed during an update (repost or delete).
+   */
+  async releaseSourceUsagesForConsumerLine(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+      consumerLineId: number;
+      operatorId?: string;
+    },
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    return this.withTransaction(tx, async (db) => {
+      const usages =
+        await this.repository.findActiveSourceUsagesForConsumerLine(params, db);
+      for (const usage of usages) {
+        const allocatedQty = new Prisma.Decimal(usage.allocatedQty);
+        const releasedQty = new Prisma.Decimal(usage.releasedQty);
+        if (releasedQty.gte(allocatedQty)) {
+          continue;
+        }
+        await this.releaseInventorySource(
+          {
+            sourceLogId: usage.sourceLogId,
+            consumerDocumentType: usage.consumerDocumentType,
+            consumerDocumentId: usage.consumerDocumentId,
+            consumerLineId: usage.consumerLineId,
+            targetReleasedQty: allocatedQty,
+            operatorId: params.operatorId,
+          },
+          db,
+        );
+      }
+    });
+  }
+
+  /**
+   * Checks whether a source IN log has any unreleased downstream allocations.
+   * Used by the inbound service to prevent changing a source layer that has
+   * already been consumed.
+   */
+  async hasUnreleasedAllocations(
+    sourceLogId: number,
+    tx?: Prisma.TransactionClient,
+  ): Promise<boolean> {
+    const totals = await this.repository.getSourceUsageTotals(sourceLogId, tx);
+    return totals.allocatedQty.gt(totals.releasedQty);
+  }
+
+  private async allocateManualSource(
+    sourceLogId: number,
+    qty: Prisma.Decimal,
+    materialId: number,
+    stockScopeId: number,
+    allowedOperationTypes: InventoryOperationTypeEnum[],
+    consumerDocumentType: string,
+    consumerDocumentId: number,
+    consumerLineId: number,
+    operatorId: string | undefined,
+    db: Prisma.TransactionClient,
+  ): Promise<FifoAllocationPiece[]> {
+    await this.repository.lockSourceLog(sourceLogId, db);
+
+    const [sourceLog, reversalLog, totals] = await Promise.all([
+      this.repository.findLogById(sourceLogId, db),
+      this.repository.findReversalLogBySourceLogId(sourceLogId, db),
+      this.repository.getSourceUsageTotals(sourceLogId, db),
+    ]);
+
+    if (!sourceLog) {
+      throw new NotFoundException(`来源流水不存在: ${sourceLogId}`);
+    }
+    if (sourceLog.direction !== StockDirection.IN) {
+      throw new BadRequestException("手动指定的来源流水必须是入库方向");
+    }
+    if (sourceLog.materialId !== materialId) {
+      throw new BadRequestException(
+        `手动来源流水物料不匹配: 流水物料=${sourceLog.materialId}, 当前物料=${materialId}`,
+      );
+    }
+    if (sourceLog.stockScopeId !== stockScopeId) {
+      throw new BadRequestException(
+        `手动来源流水库存范围不匹配: 流水范围=${sourceLog.stockScopeId ?? "null"}, 当前范围=${stockScopeId}`,
+      );
+    }
+    if (
+      !allowedOperationTypes.includes(
+        sourceLog.operationType as InventoryOperationTypeEnum,
+      )
+    ) {
+      throw new BadRequestException(
+        `手动来源流水操作类型不在允许列表中: ${sourceLog.operationType}`,
+      );
+    }
+    if (reversalLog) {
+      throw new BadRequestException("来源流水已逆操作，不能作为手动来源");
+    }
+
+    const availableQty = new Prisma.Decimal(sourceLog.changeQty).sub(
+      totals.allocatedQty.sub(totals.releasedQty),
+    );
+    if (qty.gt(availableQty)) {
+      throw new BadRequestException(
+        `手动来源库存不足: 可用=${availableQty.toString()}, 需求=${qty.toString()}`,
+      );
+    }
+
+    const unitCost = sourceLog.unitCost
+      ? new Prisma.Decimal(sourceLog.unitCost)
+      : new Prisma.Decimal(0);
+    const costAmount = unitCost.mul(qty);
+
+    await this.allocateInventorySource(
+      {
+        sourceLogId,
+        consumerDocumentType,
+        consumerDocumentId,
+        consumerLineId,
+        targetAllocatedQty: qty,
+        operatorId,
+      },
+      db,
+    );
+
+    return [{ sourceLogId, allocatedQty: qty, unitCost, costAmount }];
+  }
+
+  private async allocateByFifo(
+    materialId: number,
+    stockScopeId: number,
+    qty: Prisma.Decimal,
+    sourceTypes: InventoryOperationTypeEnum[],
+    consumerDocumentType: string,
+    consumerDocumentId: number,
+    consumerLineId: number,
+    operatorId: string | undefined,
+    db: Prisma.TransactionClient,
+  ): Promise<FifoAllocationPiece[]> {
+    const candidates = await this.repository.findFifoSourceLogs(
+      { materialId, stockScopeId, sourceOperationTypes: sourceTypes },
+      db,
+    );
+
+    let remaining = new Prisma.Decimal(qty);
+    const allocations: FifoAllocationPiece[] = [];
+
+    for (const candidate of candidates) {
+      if (remaining.lte(0)) break;
+
+      // Lock the source log row for update to prevent concurrent over-allocation.
+      await this.repository.lockSourceLog(candidate.id, db);
+
+      // Re-fetch available qty under lock.
+      const [sourceLog, reversalLog, totals] = await Promise.all([
+        this.repository.findLogById(candidate.id, db),
+        this.repository.findReversalLogBySourceLogId(candidate.id, db),
+        this.repository.getSourceUsageTotals(candidate.id, db),
+      ]);
+
+      if (!sourceLog || reversalLog) continue;
+
+      const freshAvailable = new Prisma.Decimal(sourceLog.changeQty).sub(
+        totals.allocatedQty.sub(totals.releasedQty),
+      );
+      if (freshAvailable.lte(0)) continue;
+
+      const toAllocate = remaining.gt(freshAvailable)
+        ? freshAvailable
+        : remaining;
+
+      const unitCost = sourceLog.unitCost
+        ? new Prisma.Decimal(sourceLog.unitCost)
+        : new Prisma.Decimal(0);
+      const pieceCost = unitCost.mul(toAllocate);
+
+      await this.allocateInventorySource(
+        {
+          sourceLogId: candidate.id,
+          consumerDocumentType,
+          consumerDocumentId,
+          consumerLineId,
+          targetAllocatedQty: toAllocate,
+          operatorId,
+        },
+        db,
+      );
+
+      allocations.push({
+        sourceLogId: candidate.id,
+        allocatedQty: toAllocate,
+        unitCost,
+        costAmount: pieceCost,
+      });
+
+      remaining = remaining.sub(toAllocate);
+    }
+
+    if (remaining.gt(0)) {
+      throw new BadRequestException(
+        `FIFO 可用来源库存不足: 缺少 ${remaining.toString()} 个来源层数量，请先确保有足够的入库记录`,
+      );
+    }
+
+    return allocations;
   }
 
   async listBalances(params: {
@@ -679,6 +1167,17 @@ export class InventoryService {
     );
   }
 
+  async listSourceUsagesForConsumerLine(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+      consumerLineId: number;
+    },
+    tx?: Prisma.TransactionClient,
+  ) {
+    return this.repository.findSourceUsagesForConsumerLine(params, tx);
+  }
+
   async listFactoryNumberReservations(params: {
     stockScope?: StockScopeCode;
     workshopId?: number;
@@ -729,6 +1228,23 @@ export class InventoryService {
 
     if (parsedQuantity.lte(0)) {
       throw new BadRequestException("库存变更数量必须大于 0");
+    }
+
+    return parsedQuantity;
+  }
+
+  private toNonNegativeQuantityDecimal(
+    quantity: Prisma.Decimal | number | string,
+  ): Prisma.Decimal {
+    let parsedQuantity: Prisma.Decimal;
+    try {
+      parsedQuantity = new Prisma.Decimal(quantity);
+    } catch {
+      throw new BadRequestException("库存变更数量格式无效");
+    }
+
+    if (parsedQuantity.lt(0)) {
+      throw new BadRequestException("库存变更数量不能小于 0");
     }
 
     return parsedQuantity;

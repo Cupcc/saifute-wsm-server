@@ -12,7 +12,10 @@ import {
   Prisma,
 } from "../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
-import { InventoryService } from "../../inventory-core/application/inventory.service";
+import {
+  FIFO_SOURCE_OPERATION_TYPES,
+  InventoryService,
+} from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import {
   resolveStockScopeFromWorkshopIdentity,
@@ -148,8 +151,13 @@ export class ProjectService {
         tx,
       );
 
+      const projectSourceTypes =
+        inventoryStockScope === "RD_SUB"
+          ? (["RD_HANDOFF_IN"] as typeof FIFO_SOURCE_OPERATION_TYPES)
+          : FIFO_SOURCE_OPERATION_TYPES.filter((t) => t !== "RD_HANDOFF_IN");
+
       for (const line of project.materialLines) {
-        await this.inventoryService.decreaseStock(
+        const settlement = await this.inventoryService.settleConsumerOut(
           {
             materialId: line.materialId,
             stockScope: inventoryStockScope,
@@ -162,6 +170,16 @@ export class ProjectService {
             businessDocumentLineId: line.id,
             operatorId: createdBy,
             idempotencyKey: `Project:${project.id}:line:${line.id}`,
+            consumerLineId: line.id,
+            sourceOperationTypes: projectSourceTypes,
+          },
+          tx,
+        );
+        await this.repository.updateProjectLine(
+          line.id,
+          {
+            costUnitPrice: settlement.settledUnitCost,
+            costAmount: settlement.settledCostAmount,
           },
           tx,
         );
@@ -266,6 +284,17 @@ export class ProjectService {
           );
         }
 
+        // Release this line's source allocations before reversing its OUT log.
+        await this.inventoryService.releaseSourceUsagesForConsumerLine(
+          {
+            consumerDocumentType: DOCUMENT_TYPE,
+            consumerDocumentId: id,
+            consumerLineId: currentLine.id,
+            operatorId: updatedBy,
+          },
+          tx,
+        );
+
         await this.inventoryService.reverseStock(
           {
             logIdToReverse: currentLog.id,
@@ -301,6 +330,17 @@ export class ProjectService {
               );
             }
 
+            // Release this line's source allocations before reversing its OUT log.
+            await this.inventoryService.releaseSourceUsagesForConsumerLine(
+              {
+                consumerDocumentType: DOCUMENT_TYPE,
+                consumerDocumentId: id,
+                consumerLineId: currentLine.id,
+                operatorId: updatedBy,
+              },
+              tx,
+            );
+
             await this.inventoryService.reverseStock(
               {
                 logIdToReverse: currentLog.id,
@@ -330,19 +370,36 @@ export class ProjectService {
           );
 
           if (inventoryNeedsRepost) {
-            await this.inventoryService.decreaseStock(
+            const updateSourceTypes =
+              inventoryStockScope === "RD_SUB"
+                ? (["RD_HANDOFF_IN"] as typeof FIFO_SOURCE_OPERATION_TYPES)
+                : FIFO_SOURCE_OPERATION_TYPES.filter(
+                    (t) => t !== "RD_HANDOFF_IN",
+                  );
+            const repostSettlement =
+              await this.inventoryService.settleConsumerOut(
+                {
+                  materialId: updatedLine.materialId,
+                  stockScope: inventoryStockScope,
+                  quantity: updatedLine.quantity,
+                  operationType: InventoryOperationType.PROJECT_CONSUMPTION_OUT,
+                  businessModule: BUSINESS_MODULE,
+                  businessDocumentType: DOCUMENT_TYPE,
+                  businessDocumentId: id,
+                  businessDocumentNumber: existing.projectCode,
+                  businessDocumentLineId: updatedLine.id,
+                  operatorId: updatedBy,
+                  idempotencyKey: `Project:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
+                  consumerLineId: updatedLine.id,
+                  sourceOperationTypes: updateSourceTypes,
+                },
+                tx,
+              );
+            await this.repository.updateProjectLine(
+              updatedLine.id,
               {
-                materialId: updatedLine.materialId,
-                stockScope: inventoryStockScope,
-                quantity: updatedLine.quantity,
-                operationType: InventoryOperationType.PROJECT_CONSUMPTION_OUT,
-                businessModule: BUSINESS_MODULE,
-                businessDocumentType: DOCUMENT_TYPE,
-                businessDocumentId: id,
-                businessDocumentNumber: existing.projectCode,
-                businessDocumentLineId: updatedLine.id,
-                operatorId: updatedBy,
-                idempotencyKey: `Project:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
+                costUnitPrice: repostSettlement.settledUnitCost,
+                costAmount: repostSettlement.settledCostAmount,
               },
               tx,
             );
@@ -371,7 +428,11 @@ export class ProjectService {
           tx,
         );
 
-        await this.inventoryService.decreaseStock(
+        const newLineSourceTypes =
+          inventoryStockScope === "RD_SUB"
+            ? (["RD_HANDOFF_IN"] as typeof FIFO_SOURCE_OPERATION_TYPES)
+            : FIFO_SOURCE_OPERATION_TYPES.filter((t) => t !== "RD_HANDOFF_IN");
+        const newLineSettlement = await this.inventoryService.settleConsumerOut(
           {
             materialId: createdLine.materialId,
             stockScope: inventoryStockScope,
@@ -384,6 +445,16 @@ export class ProjectService {
             businessDocumentLineId: createdLine.id,
             operatorId: updatedBy,
             idempotencyKey: `Project:${id}:rev:${nextRevision}:line:${createdLine.id}`,
+            consumerLineId: createdLine.id,
+            sourceOperationTypes: newLineSourceTypes,
+          },
+          tx,
+        );
+        await this.repository.updateProjectLine(
+          createdLine.id,
+          {
+            costUnitPrice: newLineSettlement.settledUnitCost,
+            costAmount: newLineSettlement.settledCostAmount,
           },
           tx,
         );
@@ -446,6 +517,16 @@ export class ProjectService {
       if (hasDownstreamDependencies) {
         throw new BadRequestException("存在下游依赖，不能作废");
       }
+
+      // Release FIFO source allocations before reversing the OUT logs.
+      await this.inventoryService.releaseAllSourceUsagesForConsumer(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: id,
+          operatorId: voidedBy,
+        },
+        tx,
+      );
 
       const logs = await this.inventoryService.getLogsForDocument(
         {

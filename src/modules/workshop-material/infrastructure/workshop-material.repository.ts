@@ -193,6 +193,20 @@ export class WorkshopMaterialRepository {
    * (non-voided) downstream return-order line relations for the given pick order.
    * Used to enforce cumulative return-quantity limits before creating a new return.
    */
+  async updateOrderLineCost(
+    id: number,
+    data: { costUnitPrice: Prisma.Decimal; costAmount: Prisma.Decimal },
+    db?: DbClient,
+  ) {
+    return this.db(db).workshopMaterialOrderLine.update({
+      where: { id },
+      data: {
+        costUnitPrice: data.costUnitPrice,
+        costAmount: data.costAmount,
+      },
+    });
+  }
+
   async sumActiveReturnedQtyByPickLine(
     pickOrderId: number,
     db?: DbClient,

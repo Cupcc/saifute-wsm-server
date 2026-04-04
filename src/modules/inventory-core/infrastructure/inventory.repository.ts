@@ -1,7 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import {
   FactoryNumberReservationStatus,
+  InventoryOperationType,
   Prisma,
+  StockDirection,
 } from "../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
@@ -139,6 +141,24 @@ export class InventoryRepository {
     return { items, total };
   }
 
+  async findSourceUsagesForConsumerLine(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+      consumerLineId: number;
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventorySourceUsage.findMany({
+      where: {
+        consumerDocumentType: params.consumerDocumentType,
+        consumerDocumentId: params.consumerDocumentId,
+        consumerLineId: params.consumerLineId,
+      },
+      include: { material: true, sourceLog: true },
+    });
+  }
+
   async lockSourceLog(
     sourceLogId: number,
     db: InventoryDbClient = this.prisma,
@@ -266,6 +286,103 @@ export class InventoryRepository {
     return db.inventorySourceUsage.update({
       where: { id },
       data,
+    });
+  }
+
+  /**
+   * Returns IN logs eligible as FIFO source layers for the given material and
+   * stock scope. Filters by operation type (only real inbound types), excludes
+   * logs that have been reversed, and includes only logs with remaining available
+   * quantity (changeQty minus net allocated). Results are ordered oldest-first so
+   * callers can greedily consume from the front.
+   */
+  async findFifoSourceLogs(
+    params: {
+      materialId: number;
+      stockScopeId: number;
+      sourceOperationTypes: InventoryOperationType[];
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    const logs = await db.inventoryLog.findMany({
+      where: {
+        materialId: params.materialId,
+        stockScopeId: params.stockScopeId,
+        direction: StockDirection.IN,
+        operationType: { in: params.sourceOperationTypes },
+        reversalOfLogId: null,
+        reversedByLogs: { none: {} },
+      },
+      include: {
+        allocatedSourceUsages: {
+          select: { allocatedQty: true, releasedQty: true },
+        },
+      },
+      orderBy: [{ occurredAt: "asc" }, { id: "asc" }],
+    });
+
+    return logs
+      .map((log) => {
+        const netAllocated = log.allocatedSourceUsages.reduce(
+          (sum, u) =>
+            sum
+              .add(new Prisma.Decimal(u.allocatedQty))
+              .sub(new Prisma.Decimal(u.releasedQty)),
+          new Prisma.Decimal(0),
+        );
+        const availableQty = new Prisma.Decimal(log.changeQty).sub(
+          netAllocated,
+        );
+        return {
+          id: log.id,
+          changeQty: new Prisma.Decimal(log.changeQty),
+          occurredAt: log.occurredAt,
+          unitCost: log.unitCost ? new Prisma.Decimal(log.unitCost) : null,
+          availableQty,
+        };
+      })
+      .filter((log) => log.availableQty.gt(0));
+  }
+
+  /**
+   * Finds all non-released source usages for a given consumer document, used to
+   * bulk-release them when the consumer document is voided.
+   */
+  async findActiveSourceUsagesForConsumer(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventorySourceUsage.findMany({
+      where: {
+        consumerDocumentType: params.consumerDocumentType,
+        consumerDocumentId: params.consumerDocumentId,
+        status: { not: "RELEASED" },
+      },
+    });
+  }
+
+  /**
+   * Finds all non-released source usages for a single consumer document line.
+   * Used to release allocations before reversing a specific OUT log during update.
+   */
+  async findActiveSourceUsagesForConsumerLine(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+      consumerLineId: number;
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventorySourceUsage.findMany({
+      where: {
+        consumerDocumentType: params.consumerDocumentType,
+        consumerDocumentId: params.consumerDocumentId,
+        consumerLineId: params.consumerLineId,
+        status: { not: "RELEASED" },
+      },
     });
   }
 

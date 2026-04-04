@@ -15,7 +15,10 @@ import {
   WorkshopMaterialOrderType,
 } from "../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
-import { InventoryService } from "../../inventory-core/application/inventory.service";
+import {
+  FIFO_SOURCE_OPERATION_TYPES,
+  InventoryService,
+} from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import {
   applyScrapStatusesForOrder,
@@ -259,8 +262,16 @@ export class WorkshopMaterialService {
         dto.orderType === WorkshopMaterialOrderType.PICK ||
         dto.orderType === WorkshopMaterialOrderType.SCRAP
       ) {
+        // Determine eligible source operation types for this stock scope.
+        // RD_SUB scope uses RD_HANDOFF_IN; MAIN scope uses acceptance/production.
+        const sourceTypes =
+          inventoryStockScope === "RD_SUB"
+            ? (["RD_HANDOFF_IN"] as typeof FIFO_SOURCE_OPERATION_TYPES)
+            : FIFO_SOURCE_OPERATION_TYPES.filter((t) => t !== "RD_HANDOFF_IN");
+
         for (const line of order.lines) {
-          const log = await this.inventoryService.decreaseStock(
+          const lineDto = dto.lines[line.lineNo - 1];
+          const settlement = await this.inventoryService.settleConsumerOut(
             {
               materialId: line.materialId,
               stockScope: inventoryStockScope,
@@ -273,24 +284,21 @@ export class WorkshopMaterialService {
               businessDocumentLineId: line.id,
               operatorId: createdBy,
               idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:line:${line.id}`,
+              consumerLineId: line.id,
+              sourceLogId: lineDto?.sourceLogId ?? undefined,
+              sourceOperationTypes: sourceTypes,
             },
             tx,
           );
-          logIdByLineId.set(line.id, log.id);
-          const lineDto = dto.lines[line.lineNo - 1];
-          if (lineDto?.sourceLogId) {
-            await this.inventoryService.allocateInventorySource(
-              {
-                sourceLogId: lineDto.sourceLogId,
-                consumerDocumentType: DOCUMENT_TYPE,
-                consumerDocumentId: order.id,
-                consumerLineId: line.id,
-                targetAllocatedQty: line.quantity,
-                operatorId: createdBy,
-              },
-              tx,
-            );
-          }
+          logIdByLineId.set(line.id, settlement.outLog.id);
+          await this.repository.updateOrderLineCost(
+            line.id,
+            {
+              costUnitPrice: settlement.settledUnitCost,
+              costAmount: settlement.settledCostAmount,
+            },
+            tx,
+          );
         }
 
         if (isRdScrapOrder) {
@@ -460,40 +468,22 @@ export class WorkshopMaterialService {
       );
     }
 
-    // Paginate through ALL source usages for this pick order so no usages are
-    // silently truncated, then filter to just the specific pick line.
-    const usagePageSize = 200;
-    let usagePage = await this.inventoryService.listSourceUsages(
-      {
-        consumerDocumentType: DOCUMENT_TYPE,
-        consumerDocumentId: sourceDocumentId,
-        limit: usagePageSize,
-        offset: 0,
-      },
-      tx,
-    );
-    const allDocUsages = [...usagePage.items];
-    let usageOffset = usagePageSize;
-    while (usagePage.items.length === usagePageSize) {
-      usagePage = await this.inventoryService.listSourceUsages(
+    // Line-scoped lookup avoids document-level truncation when a large pick
+    // order has many source-usage rows across multiple lines.
+    const lineUsages = (
+      await this.inventoryService.listSourceUsagesForConsumerLine(
         {
           consumerDocumentType: DOCUMENT_TYPE,
           consumerDocumentId: sourceDocumentId,
-          limit: usagePageSize,
-          offset: usageOffset,
+          consumerLineId: sourceDocumentLineId,
         },
         tx,
-      );
-      allDocUsages.push(...usagePage.items);
-      usageOffset += usagePageSize;
-    }
+      )
+    ).sort((a, b) => Number(a.sourceLogId) - Number(b.sourceLogId));
 
     // Release source usage only up to the quantity returned in this operation,
     // processing usages in deterministic (sourceLogId ascending) order so that
     // partial returns are always applied against the oldest allocations first.
-    const lineUsages = allDocUsages
-      .filter((u) => u.consumerLineId === sourceDocumentLineId)
-      .sort((a, b) => Number(a.sourceLogId) - Number(b.sourceLogId));
     let remainingToRelease = new Prisma.Decimal(linkedQty);
     for (const usage of lineUsages) {
       if (remainingToRelease.lte(0)) break;
@@ -526,7 +516,6 @@ export class WorkshopMaterialService {
         `领料来源库存释放不足: pickOrderId=${sourceDocumentId}, pickLineId=${sourceDocumentLineId}，退料需释放 ${new Prisma.Decimal(linkedQty).toFixed()} 但实际只能释放 ${new Prisma.Decimal(linkedQty).sub(remainingToRelease).toFixed()}`,
       );
     }
-
     const client = tx ?? this.prisma;
     await client.documentRelation.upsert({
       where: {
@@ -644,34 +633,14 @@ export class WorkshopMaterialService {
           );
         }
 
-        const usages = await this.inventoryService.listSourceUsages(
+        await this.inventoryService.releaseAllSourceUsagesForConsumer(
           {
             consumerDocumentType: DOCUMENT_TYPE,
             consumerDocumentId: id,
-            limit: 1000,
-            offset: 0,
+            operatorId: voidedBy,
           },
           tx,
         );
-        for (const usage of usages.items) {
-          const allocatedQty = new Prisma.Decimal(usage.allocatedQty);
-          const releasedQty = new Prisma.Decimal(usage.releasedQty);
-          if (releasedQty.gte(allocatedQty)) {
-            continue;
-          }
-
-          await this.inventoryService.releaseInventorySource(
-            {
-              sourceLogId: usage.sourceLogId,
-              consumerDocumentType: DOCUMENT_TYPE,
-              consumerDocumentId: id,
-              consumerLineId: usage.consumerLineId,
-              targetReleasedQty: allocatedQty,
-              operatorId: voidedBy,
-            },
-            tx,
-          );
-        }
       }
 
       if (orderType === WorkshopMaterialOrderType.SCRAP) {
@@ -768,37 +737,18 @@ export class WorkshopMaterialService {
     operatorId?: string,
     tx?: Prisma.TransactionClient,
   ): Promise<void> {
-    const usagePageSize = 200;
-    let usagePage = await this.inventoryService.listSourceUsages(
-      {
-        consumerDocumentType: DOCUMENT_TYPE,
-        consumerDocumentId: pickOrderId,
-        limit: usagePageSize,
-        offset: 0,
-      },
-      tx,
-    );
-    const allDocUsages = [...usagePage.items];
-    let usageOffset = usagePageSize;
-    while (usagePage.items.length === usagePageSize) {
-      usagePage = await this.inventoryService.listSourceUsages(
+    const lineUsages = (
+      await this.inventoryService.listSourceUsagesForConsumerLine(
         {
           consumerDocumentType: DOCUMENT_TYPE,
           consumerDocumentId: pickOrderId,
-          limit: usagePageSize,
-          offset: usageOffset,
+          consumerLineId: pickLineId,
         },
         tx,
-      );
-      allDocUsages.push(...usagePage.items);
-      usageOffset += usagePageSize;
-    }
+      )
+    ).sort((a, b) => Number(b.sourceLogId) - Number(a.sourceLogId));
 
     // Reverse order: undo the youngest release first (mirrors forward allocation order).
-    const lineUsages = allDocUsages
-      .filter((u) => u.consumerLineId === pickLineId)
-      .sort((a, b) => Number(b.sourceLogId) - Number(a.sourceLogId));
-
     let remainingToRestore = new Prisma.Decimal(quantityToRestore);
     for (const usage of lineUsages) {
       if (remainingToRestore.lte(0)) break;
@@ -819,6 +769,12 @@ export class WorkshopMaterialService {
         tx,
       );
       remainingToRestore = remainingToRestore.sub(toRestoreNow);
+    }
+
+    if (remainingToRestore.gt(0)) {
+      throw new BadRequestException(
+        `领料来源库存恢复不足: pickOrderId=${pickOrderId}, pickLineId=${pickLineId}，需恢复 ${quantityToRestore.toFixed()} 但实际只能恢复 ${quantityToRestore.sub(remainingToRestore).toFixed()}`,
+      );
     }
   }
 

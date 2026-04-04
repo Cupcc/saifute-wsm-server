@@ -174,6 +174,7 @@ describe("InboundService", () => {
             increaseStock: jest.fn().mockResolvedValue({ id: 1 }),
             reverseStock: jest.fn().mockResolvedValue({ id: 2 }),
             getLogsForDocument: jest.fn().mockResolvedValue([{ id: 1 }]),
+            hasUnreleasedAllocations: jest.fn().mockResolvedValue(false),
           },
         },
         {
@@ -254,6 +255,48 @@ describe("InboundService", () => {
         }),
         expect.anything(),
       );
+    });
+
+    it("should pass unit cost snapshot from inbound line price to increaseStock", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(mockOrder);
+
+      const dto = {
+        documentNo: "SI-001",
+        orderType: StockInOrderType.ACCEPTANCE,
+        bizDate: "2025-03-14",
+        supplierId: 10,
+        handlerPersonnelId: 20,
+        workshopId: 1,
+        lines: [{ materialId: 100, quantity: "100", unitPrice: "10" }],
+      };
+
+      await service.createOrder(dto, "1");
+
+      expect(inventoryService.increaseStock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          unitCost: expect.any(Prisma.Decimal),
+          costAmount: expect.any(Prisma.Decimal),
+        }),
+        expect.anything(),
+      );
+    });
+
+    it("should block void when source log has unreleased allocations", async () => {
+      (repository.findOrderById as jest.Mock).mockResolvedValue(mockOrder);
+      (
+        repository.hasActiveDownstreamDependencies as jest.Mock
+      ).mockResolvedValue(false);
+      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+        { id: 1 },
+      ]);
+      (
+        inventoryService.hasUnreleasedAllocations as jest.Mock
+      ).mockResolvedValue(true);
+
+      await expect(
+        service.voidOrder(1, "test reason", "admin"),
+      ).rejects.toThrow(/已有下游消耗分配/);
     });
 
     it("should create linked acceptance without writing RD stock", async () => {

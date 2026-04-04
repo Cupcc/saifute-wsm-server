@@ -56,6 +56,8 @@ describe("WorkshopMaterialService", () => {
         quantity: new Prisma.Decimal(50),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(500),
+        costUnitPrice: null,
+        costAmount: null,
         sourceDocumentType: null,
         sourceDocumentId: null,
         sourceDocumentLineId: null,
@@ -111,6 +113,7 @@ describe("WorkshopMaterialService", () => {
             findOrders: jest.fn(),
             createOrder: jest.fn(),
             updateOrder: jest.fn(),
+            updateOrderLineCost: jest.fn().mockResolvedValue({}),
             hasActiveReturnDownstream: jest.fn().mockResolvedValue(false),
             deactivateDocumentRelationsForReturn: jest
               .fn()
@@ -137,14 +140,24 @@ describe("WorkshopMaterialService", () => {
           provide: InventoryService,
           useValue: {
             decreaseStock: jest.fn().mockResolvedValue({ id: 1 }),
+            settleConsumerOut: jest.fn().mockResolvedValue({
+              outLog: { id: 1 },
+              settledUnitCost: new Prisma.Decimal(10),
+              settledCostAmount: new Prisma.Decimal(1000),
+              allocations: [],
+            }),
             increaseStock: jest.fn().mockResolvedValue({ id: 1 }),
             reverseStock: jest.fn().mockResolvedValue({ id: 2 }),
             getLogsForDocument: jest.fn().mockResolvedValue([{ id: 1 }]),
             allocateInventorySource: jest.fn().mockResolvedValue({}),
             releaseInventorySource: jest.fn().mockResolvedValue({}),
+            releaseAllSourceUsagesForConsumer: jest
+              .fn()
+              .mockResolvedValue(undefined),
             listSourceUsages: jest
               .fn()
               .mockResolvedValue({ items: [], total: 0 }),
+            listSourceUsagesForConsumerLine: jest.fn().mockResolvedValue([]),
           },
         },
         {
@@ -194,7 +207,7 @@ describe("WorkshopMaterialService", () => {
       expect(repository.findOrderByDocumentNo).toHaveBeenCalledWith(
         "WM-PICK-001",
       );
-      expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
+      expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
           stockScope: "MAIN",
@@ -258,7 +271,7 @@ describe("WorkshopMaterialService", () => {
       const result = await service.createScrapOrder(dto, "1");
 
       expect(result.orderType).toBe(WorkshopMaterialOrderType.SCRAP);
-      expect(inventoryService.decreaseStock).toHaveBeenCalledWith(
+      expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
         expect.objectContaining({
           operationType: "SCRAP_OUT",
         }),
@@ -289,6 +302,8 @@ describe("WorkshopMaterialService", () => {
           quantity: new Prisma.Decimal(20),
           unitPrice: new Prisma.Decimal(10),
           amount: new Prisma.Decimal(200),
+          costUnitPrice: null,
+          costAmount: null,
           sourceDocumentType: "WorkshopMaterialOrder",
           sourceDocumentId: 1,
           sourceDocumentLineId: 1,
@@ -433,17 +448,16 @@ describe("WorkshopMaterialService", () => {
         repository.sumActiveReturnedQtyByPickLine as jest.Mock
       ).mockResolvedValue(new Map());
       // Source usage has been restored after prior void: releasedQty=0, full 50 available
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 10,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(50),
-            releasedQty: new Prisma.Decimal(0),
-          },
-        ],
-        total: 1,
-      });
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(50),
+          releasedQty: new Prisma.Decimal(0),
+        },
+      ]);
 
       const dto = {
         documentNo: "WM-RETURN-002",
@@ -484,17 +498,16 @@ describe("WorkshopMaterialService", () => {
         repository.sumActiveReturnedQtyByPickLine as jest.Mock
       ).mockResolvedValue(new Map());
       // Single usage: allocated 50, released 0 — returning only 20
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 10,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(50),
-            releasedQty: new Prisma.Decimal(0),
-          },
-        ],
-        total: 1,
-      });
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(50),
+          releasedQty: new Prisma.Decimal(0),
+        },
+      ]);
 
       const dto = {
         documentNo: "WM-RETURN-002",
@@ -541,23 +554,22 @@ describe("WorkshopMaterialService", () => {
         repository.sumActiveReturnedQtyByPickLine as jest.Mock
       ).mockResolvedValue(new Map());
       // Two usages for the pick line: 30 + 20 = 50 allocated; returning 20
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 10,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(30),
-            releasedQty: new Prisma.Decimal(0),
-          },
-          {
-            sourceLogId: 11,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(20),
-            releasedQty: new Prisma.Decimal(0),
-          },
-        ],
-        total: 2,
-      });
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(30),
+          releasedQty: new Prisma.Decimal(0),
+        },
+        {
+          sourceLogId: 11,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(20),
+          releasedQty: new Prisma.Decimal(0),
+        },
+      ]);
 
       const dto = {
         documentNo: "WM-RETURN-002",
@@ -599,17 +611,16 @@ describe("WorkshopMaterialService", () => {
         repository.sumActiveReturnedQtyByPickLine as jest.Mock
       ).mockResolvedValue(new Map());
       // Only 10 unreleased available (allocated=20, released=10)
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 10,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(20),
-            releasedQty: new Prisma.Decimal(10),
-          },
-        ],
-        total: 1,
-      });
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(20),
+          releasedQty: new Prisma.Decimal(10),
+        },
+      ]);
 
       const dto = {
         documentNo: "WM-RETURN-002",
@@ -655,17 +666,16 @@ describe("WorkshopMaterialService", () => {
         repository.sumActiveReturnedQtyByPickLine as jest.Mock
       ).mockResolvedValue(new Map());
       // R1 void restored releasedQty to 0; R2 sees the full allocation available
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 10,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(50),
-            releasedQty: new Prisma.Decimal(0),
-          },
-        ],
-        total: 1,
-      });
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(50),
+          releasedQty: new Prisma.Decimal(0),
+        },
+      ]);
 
       const dto = {
         documentNo: "WM-RETURN-003",
@@ -717,6 +727,8 @@ describe("WorkshopMaterialService", () => {
           quantity: new Prisma.Decimal(20),
           unitPrice: new Prisma.Decimal(10),
           amount: new Prisma.Decimal(200),
+          costUnitPrice: null,
+          costAmount: null,
           sourceDocumentType: "WorkshopMaterialOrder",
           sourceDocumentId: 1,
           sourceDocumentLineId: 1,
@@ -738,17 +750,16 @@ describe("WorkshopMaterialService", () => {
           inventoryEffectStatus: InventoryEffectStatus.REVERSED,
         });
       // Usage: 20 of 50 was released by this return order when it was created
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 10,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(50),
-            releasedQty: new Prisma.Decimal(20),
-          },
-        ],
-        total: 1,
-      });
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(50),
+          releasedQty: new Prisma.Decimal(20),
+        },
+      ]);
       (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
         { id: 5 },
       ]);
@@ -780,23 +791,22 @@ describe("WorkshopMaterialService", () => {
           ...returnOrderWith20,
           lifecycleStatus: DocumentLifecycleStatus.VOIDED,
         });
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 10,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(15),
-            releasedQty: new Prisma.Decimal(15),
-          },
-          {
-            sourceLogId: 11,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(35),
-            releasedQty: new Prisma.Decimal(5),
-          },
-        ],
-        total: 2,
-      });
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(15),
+          releasedQty: new Prisma.Decimal(15),
+        },
+        {
+          sourceLogId: 11,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(35),
+          releasedQty: new Prisma.Decimal(5),
+        },
+      ]);
       (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
         { id: 5 },
       ]);
@@ -832,17 +842,6 @@ describe("WorkshopMaterialService", () => {
       (repository.hasActiveReturnDownstream as jest.Mock).mockResolvedValue(
         false,
       );
-      (inventoryService.listSourceUsages as jest.Mock).mockResolvedValue({
-        items: [
-          {
-            sourceLogId: 11,
-            consumerLineId: 1,
-            allocatedQty: new Prisma.Decimal(50),
-            releasedQty: new Prisma.Decimal(0),
-          },
-        ],
-        total: 1,
-      });
       (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
         { id: 1 },
       ]);
@@ -867,12 +866,13 @@ describe("WorkshopMaterialService", () => {
         }),
         expect.anything(),
       );
-      expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+      expect(
+        inventoryService.releaseAllSourceUsagesForConsumer,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
-          sourceLogId: 11,
           consumerDocumentType: "WorkshopMaterialOrder",
           consumerDocumentId: 1,
-          consumerLineId: 1,
+          operatorId: "1",
         }),
         expect.anything(),
       );
