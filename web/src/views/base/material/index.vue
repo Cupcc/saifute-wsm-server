@@ -221,15 +221,12 @@ import {
   delMaterial,
   getMaterial,
   listMaterial,
-  listMaterialByCodeOrName,
   updateMaterial,
 } from "@/api/base/material";
+import { listMaterialCategory } from "@/api/base/material-category";
 
 const { proxy } = getCurrentInstance();
-const { sys_yes_no, saifute_material_category } = proxy.useDict(
-  "sys_yes_no",
-  "saifute_material_category",
-);
+const saifute_material_category = ref([]);
 
 const materialList = ref([]);
 const open = ref(false);
@@ -266,7 +263,6 @@ const data = reactive({
     specification: [
       { required: true, message: "规格型号不能为空", trigger: "blur" },
     ],
-    category: [{ required: true, message: "分类不能为空", trigger: "change" }],
   },
 });
 
@@ -323,7 +319,7 @@ function reset() {
     materialCode: null,
     materialName: null,
     specification: null,
-    category: 1,
+    category: null,
     unit: null,
     stockMin: null,
   };
@@ -353,6 +349,7 @@ function handleSelectionChange(selection) {
 /** 新增按钮操作 */
 function handleAdd() {
   reset();
+  loadMaterialCategories();
   open.value = true;
   title.value = "添加物料";
 }
@@ -454,6 +451,19 @@ async function searchMaterials() {
   });
 }
 
+function loadMaterialCategories() {
+  return listMaterialCategory({ pageNum: 1, pageSize: 200 })
+    .then((response) => {
+      saifute_material_category.value = response.rows.map((item) => ({
+        label: item.categoryName,
+        value: String(item.categoryId),
+      }));
+    })
+    .catch(() => {
+      saifute_material_category.value = [];
+    });
+}
+
 // 高亮显示文本
 function highlightText(text, keyword) {
   if (!text || !keyword) return text;
@@ -468,4 +478,5 @@ function highlightText(text, keyword) {
 }
 
 getList();
+loadMaterialCategories();
 </script>

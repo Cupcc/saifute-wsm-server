@@ -125,6 +125,18 @@ export type CustomerStockOrder = Prisma.CustomerStockOrderModel;
  */
 export type CustomerStockOrderLine = Prisma.CustomerStockOrderLineModel;
 /**
+ * Model StockInPriceCorrectionOrder
+ *
+ */
+export type StockInPriceCorrectionOrder =
+  Prisma.StockInPriceCorrectionOrderModel;
+/**
+ * Model StockInPriceCorrectionOrderLine
+ *
+ */
+export type StockInPriceCorrectionOrderLine =
+  Prisma.StockInPriceCorrectionOrderLineModel;
+/**
  * Model WorkshopMaterialOrder
  *
  */

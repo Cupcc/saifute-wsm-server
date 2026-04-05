@@ -30,6 +30,25 @@ import { CustomerRepository } from "../infrastructure/customer.repository";
 
 const DOCUMENT_TYPE = "CustomerStockOrder";
 const BUSINESS_MODULE = "customer";
+const OUTBOUND_SOURCE_OPERATION_TYPES = FIFO_SOURCE_OPERATION_TYPES.filter(
+  (type) => type !== InventoryOperationType.RD_HANDOFF_IN,
+);
+
+type OutboundLineWriteData = {
+  lineNo: number;
+  materialId: number;
+  materialCodeSnapshot: string;
+  materialNameSnapshot: string;
+  materialSpecSnapshot: string;
+  unitCodeSnapshot: string;
+  quantity: Prisma.Decimal;
+  unitPrice: Prisma.Decimal;
+  amount: Prisma.Decimal;
+  selectedUnitCost: Prisma.Decimal;
+  startNumber: string | null;
+  endNumber: string | null;
+  remark?: string;
+};
 
 @Injectable()
 export class CustomerService {
@@ -64,7 +83,7 @@ export class CustomerService {
     if (order.orderType !== CustomerStockOrderType.OUTBOUND) {
       throw new NotFoundException(`出库单不存在: ${id}`);
     }
-    return order;
+    return this.attachOutboundTraceability(order);
   }
 
   async createOrder(dto: CreateOutboundOrderDto, createdBy?: string) {
@@ -90,28 +109,14 @@ export class CustomerService {
     );
 
     const linesWithSnapshots = await Promise.all(
-      dto.lines.map(async (line, idx) => {
-        const material = await this.masterDataService.getMaterialById(
-          line.materialId,
-        );
-        const qty = new Prisma.Decimal(line.quantity);
-        const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
-        const amount = qty.mul(unitPrice);
-        return {
-          lineNo: idx + 1,
-          materialId: material.id,
-          materialCodeSnapshot: material.materialCode,
-          materialNameSnapshot: material.materialName,
-          materialSpecSnapshot: material.specModel ?? "",
-          unitCodeSnapshot: material.unitCode,
-          quantity: qty,
-          unitPrice,
-          amount,
-          startNumber: line.startNumber ?? null,
-          endNumber: line.endNumber ?? null,
-          remark: line.remark,
-        };
-      }),
+      dto.lines.map((line, idx) =>
+        this.buildOutboundLineWriteData(line, idx + 1),
+      ),
+    );
+    this.assertNoDuplicateOutboundPriceLayers(linesWithSnapshots);
+    await this.assertOutboundPriceLayerAvailability(
+      linesWithSnapshots,
+      dto.workshopId,
     );
 
     const totalQty = linesWithSnapshots.reduce(
@@ -123,7 +128,7 @@ export class CustomerService {
       new Prisma.Decimal(0),
     );
 
-    return this.prisma.runInTransaction(async (tx) => {
+    const createdOrder = await this.prisma.runInTransaction(async (tx) => {
       const order = await this.repository.createOrder(
         {
           documentNo: dto.documentNo,
@@ -158,6 +163,7 @@ export class CustomerService {
             materialId: line.materialId,
             stockScope: "MAIN",
             quantity: line.quantity,
+            selectedUnitCost: line.selectedUnitCost,
             operationType: InventoryOperationType.OUTBOUND_OUT,
             businessModule: BUSINESS_MODULE,
             businessDocumentType: DOCUMENT_TYPE,
@@ -167,9 +173,7 @@ export class CustomerService {
             operatorId: createdBy,
             idempotencyKey: `CustomerStockOrder:${order.id}:line:${line.id}`,
             consumerLineId: line.id,
-            sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES.filter(
-              (t) => t !== "RD_HANDOFF_IN",
-            ),
+            sourceOperationTypes: OUTBOUND_SOURCE_OPERATION_TYPES,
           },
           tx,
         );
@@ -211,8 +215,14 @@ export class CustomerService {
         tx,
       );
 
-      return order;
+      const refreshedOrder = await this.repository.findOrderById(order.id, tx);
+      if (!refreshedOrder) {
+        throw new NotFoundException(`出库单不存在: ${order.id}`);
+      }
+      return refreshedOrder;
     });
+
+    return this.attachOutboundTraceability(createdOrder);
   }
 
   async updateOrder(
@@ -253,8 +263,14 @@ export class CustomerService {
     const workshop = dto.workshopId
       ? await this.masterDataService.getWorkshopById(dto.workshopId)
       : { workshopName: existing.workshopNameSnapshot };
+    const plannedLines = await Promise.all(
+      dto.lines.map((line, idx) =>
+        this.buildOutboundLineWriteData(line, idx + 1),
+      ),
+    );
+    this.assertNoDuplicateOutboundPriceLayers(plannedLines);
 
-    return this.prisma.runInTransaction(async (tx) => {
+    const updatedOrder = await this.prisma.runInTransaction(async (tx) => {
       const currentOrder = await this.repository.findOrderById(id, tx);
       if (!currentOrder) {
         throw new NotFoundException(`出库单不存在: ${id}`);
@@ -335,10 +351,7 @@ export class CustomerService {
       const finalLines = [];
       for (let index = 0; index < dto.lines.length; index++) {
         const incomingLine = dto.lines[index];
-        const lineData = await this.buildOutboundLineWriteData(
-          incomingLine,
-          index + 1,
-        );
+        const lineData = plannedLines[index];
 
         if (incomingLine.id) {
           const currentLine = currentLinesById.get(incomingLine.id);
@@ -348,7 +361,10 @@ export class CustomerService {
 
           const inventoryNeedsRepost =
             currentLine.materialId !== lineData.materialId ||
-            !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity);
+            !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity) ||
+            !new Prisma.Decimal(currentLine.selectedUnitCost).eq(
+              lineData.selectedUnitCost,
+            );
           const reservationChanged =
             currentLine.materialId !== lineData.materialId ||
             currentLine.startNumber !== lineData.startNumber ||
@@ -410,6 +426,7 @@ export class CustomerService {
               quantity: lineData.quantity,
               unitPrice: lineData.unitPrice,
               amount: lineData.amount,
+              selectedUnitCost: lineData.selectedUnitCost,
               startNumber: lineData.startNumber,
               endNumber: lineData.endNumber,
               remark: lineData.remark,
@@ -425,6 +442,7 @@ export class CustomerService {
                   materialId: updatedLine.materialId,
                   stockScope: "MAIN",
                   quantity: updatedLine.quantity,
+                  selectedUnitCost: updatedLine.selectedUnitCost,
                   operationType: InventoryOperationType.OUTBOUND_OUT,
                   businessModule: BUSINESS_MODULE,
                   businessDocumentType: DOCUMENT_TYPE,
@@ -434,9 +452,7 @@ export class CustomerService {
                   operatorId: updatedBy,
                   idempotencyKey: `CustomerStockOrder:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
                   consumerLineId: updatedLine.id,
-                  sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES.filter(
-                    (t) => t !== "RD_HANDOFF_IN",
-                  ),
+                  sourceOperationTypes: OUTBOUND_SOURCE_OPERATION_TYPES,
                 },
                 tx,
               );
@@ -485,6 +501,7 @@ export class CustomerService {
             quantity: lineData.quantity,
             unitPrice: lineData.unitPrice,
             amount: lineData.amount,
+            selectedUnitCost: lineData.selectedUnitCost,
             startNumber: lineData.startNumber,
             endNumber: lineData.endNumber,
             remark: lineData.remark,
@@ -499,6 +516,7 @@ export class CustomerService {
             materialId: createdLine.materialId,
             stockScope: "MAIN",
             quantity: createdLine.quantity,
+            selectedUnitCost: createdLine.selectedUnitCost,
             operationType: InventoryOperationType.OUTBOUND_OUT,
             businessModule: BUSINESS_MODULE,
             businessDocumentType: DOCUMENT_TYPE,
@@ -508,9 +526,7 @@ export class CustomerService {
             operatorId: updatedBy,
             idempotencyKey: `CustomerStockOrder:${id}:rev:${nextRevision}:line:${createdLine.id}`,
             consumerLineId: createdLine.id,
-            sourceOperationTypes: FIFO_SOURCE_OPERATION_TYPES.filter(
-              (t) => t !== "RD_HANDOFF_IN",
-            ),
+            sourceOperationTypes: OUTBOUND_SOURCE_OPERATION_TYPES,
           },
           tx,
         );
@@ -586,8 +602,14 @@ export class CustomerService {
         tx,
       );
 
-      return this.repository.findOrderById(id, tx);
+      const refreshedOrder = await this.repository.findOrderById(id, tx);
+      if (!refreshedOrder) {
+        throw new NotFoundException(`出库单不存在: ${id}`);
+      }
+      return refreshedOrder;
     });
+
+    return this.attachOutboundTraceability(updatedOrder);
   }
 
   async voidOrder(id: number, voidReason?: string, voidedBy?: string) {
@@ -813,6 +835,9 @@ export class CustomerService {
         );
         const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
         const amount = returnQty.mul(unitPrice);
+        const selectedUnitCost = new Prisma.Decimal(
+          sourceLine.selectedUnitCost,
+        );
         return {
           lineNo: idx + 1,
           materialId: material.id,
@@ -823,6 +848,7 @@ export class CustomerService {
           quantity: returnQty,
           unitPrice,
           amount,
+          selectedUnitCost,
           sourceDocumentType: DOCUMENT_TYPE,
           sourceDocumentId: dto.sourceOutboundOrderId,
           sourceDocumentLineId: line.sourceOutboundLineId,
@@ -1259,23 +1285,240 @@ export class CustomerService {
     return { handlerNameSnapshot: p.personnelName };
   }
 
+  private assertNoDuplicateOutboundPriceLayers(lines: OutboundLineWriteData[]) {
+    const keys = new Set<string>();
+    for (const line of lines) {
+      const key = `${line.materialId}:${line.selectedUnitCost.toString()}`;
+      if (keys.has(key)) {
+        throw new BadRequestException(
+          `同一单据内不允许重复的物料+价格层: materialId=${line.materialId}, selectedUnitCost=${line.selectedUnitCost.toString()}`,
+        );
+      }
+      keys.add(key);
+    }
+  }
+
+  private async assertOutboundPriceLayerAvailability(
+    lines: OutboundLineWriteData[],
+    workshopId: number,
+  ) {
+    const materialIds = [...new Set(lines.map((line) => line.materialId))];
+    const availabilityByMaterial = new Map<
+      number,
+      Map<string, Prisma.Decimal>
+    >();
+
+    for (const materialId of materialIds) {
+      const priceLayers =
+        await this.inventoryService.listPriceLayerAvailability({
+          materialId,
+          stockScope: "MAIN",
+          workshopId,
+          sourceOperationTypes: OUTBOUND_SOURCE_OPERATION_TYPES,
+        });
+      availabilityByMaterial.set(
+        materialId,
+        new Map(
+          priceLayers.map((layer) => [
+            layer.unitCost.toString(),
+            new Prisma.Decimal(layer.availableQty),
+          ]),
+        ),
+      );
+    }
+
+    for (const line of lines) {
+      const materialLayers = availabilityByMaterial.get(line.materialId);
+      const availableQty = materialLayers?.get(
+        line.selectedUnitCost.toString(),
+      );
+      if (!availableQty || availableQty.lt(line.quantity)) {
+        throw new BadRequestException(
+          `所选价格层库存不足: materialId=${line.materialId}, selectedUnitCost=${line.selectedUnitCost.toString()}, requiredQty=${line.quantity.toString()}, availableQty=${availableQty?.toString() ?? "0"}`,
+        );
+      }
+    }
+  }
+
+  private async attachOutboundTraceability(
+    order: NonNullable<
+      Awaited<ReturnType<CustomerRepository["findOrderById"]>>
+    >,
+  ) {
+    const sourceUsagesByLine = new Map<
+      number,
+      Awaited<ReturnType<InventoryService["listSourceUsagesForConsumerLine"]>>
+    >();
+
+    for (const line of order.lines) {
+      sourceUsagesByLine.set(
+        line.id,
+        await this.inventoryService.listSourceUsagesForConsumerLine({
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: order.id,
+          consumerLineId: line.id,
+        }),
+      );
+    }
+
+    const sourceLogIds = [
+      ...new Set(
+        [...sourceUsagesByLine.values()].flatMap((usages) =>
+          usages.map((usage) => usage.sourceLogId),
+        ),
+      ),
+    ];
+
+    const correctionLines =
+      sourceLogIds.length > 0
+        ? await this.prisma.stockInPriceCorrectionOrderLine.findMany({
+            where: {
+              OR: [
+                { sourceInventoryLogId: { in: sourceLogIds } },
+                { generatedInLogId: { in: sourceLogIds } },
+              ],
+            },
+            include: {
+              order: {
+                select: {
+                  id: true,
+                  documentNo: true,
+                  bizDate: true,
+                },
+              },
+              sourceStockInOrder: {
+                select: {
+                  id: true,
+                  documentNo: true,
+                  bizDate: true,
+                },
+              },
+              sourceStockInOrderLine: {
+                select: {
+                  id: true,
+                  lineNo: true,
+                  materialId: true,
+                  materialCodeSnapshot: true,
+                  materialNameSnapshot: true,
+                  quantity: true,
+                  unitPrice: true,
+                },
+              },
+            },
+          })
+        : [];
+    const correctionByGeneratedInLogId = new Map<
+      number,
+      (typeof correctionLines)[number]
+    >();
+    for (const correctionLine of correctionLines) {
+      if (correctionLine.generatedInLogId != null) {
+        correctionByGeneratedInLogId.set(
+          correctionLine.generatedInLogId,
+          correctionLine,
+        );
+      }
+    }
+
+    const directStockInLineIds = [
+      ...new Set(
+        [...sourceUsagesByLine.values()].flatMap((usages) =>
+          usages
+            .filter(
+              (usage) =>
+                usage.sourceLog.businessDocumentType === "StockInOrder" &&
+                usage.sourceLog.businessDocumentLineId != null,
+            )
+            .map((usage) => usage.sourceLog.businessDocumentLineId as number),
+        ),
+      ),
+    ];
+    const directStockInLines =
+      directStockInLineIds.length > 0
+        ? await this.prisma.stockInOrderLine.findMany({
+            where: { id: { in: directStockInLineIds } },
+            include: {
+              order: {
+                select: {
+                  id: true,
+                  documentNo: true,
+                  bizDate: true,
+                },
+              },
+            },
+          })
+        : [];
+    const directStockInLineById = new Map(
+      directStockInLines.map((line) => [line.id, line]),
+    );
+
+    return {
+      ...order,
+      lines: order.lines.map((line) => ({
+        ...line,
+        sourceUsages: (sourceUsagesByLine.get(line.id) ?? []).map((usage) => {
+          const directStockInLine =
+            usage.sourceLog.businessDocumentType === "StockInOrder" &&
+            usage.sourceLog.businessDocumentLineId != null
+              ? directStockInLineById.get(
+                  usage.sourceLog.businessDocumentLineId,
+                )
+              : null;
+          const correctionLine =
+            directStockInLine == null
+              ? (correctionByGeneratedInLogId.get(usage.sourceLogId) ?? null)
+              : null;
+
+          const originalInboundOrder =
+            correctionLine?.sourceStockInOrder ??
+            directStockInLine?.order ??
+            null;
+          const originalInboundLine =
+            correctionLine?.sourceStockInOrderLine ?? directStockInLine ?? null;
+
+          return {
+            ...usage,
+            priceCorrection: correctionLine
+              ? {
+                  id: correctionLine.id,
+                  orderId: correctionLine.orderId,
+                  documentNo: correctionLine.order.documentNo,
+                  bizDate: correctionLine.order.bizDate,
+                  sourceInventoryLogId: correctionLine.sourceInventoryLogId,
+                  wrongUnitCost: correctionLine.wrongUnitCost,
+                  correctUnitCost: correctionLine.correctUnitCost,
+                  historicalDiffAmount: correctionLine.historicalDiffAmount,
+                  generatedInLogId: correctionLine.generatedInLogId,
+                  generatedOutLogId: correctionLine.generatedOutLogId,
+                }
+              : null,
+            originalInboundOrder,
+            originalInboundLine,
+          };
+        }),
+      })),
+    };
+  }
+
   private async buildOutboundLineWriteData(
     line: {
       materialId: number;
       quantity: string;
+      selectedUnitCost: string;
       unitPrice?: string;
       startNumber?: string;
       endNumber?: string;
       remark?: string;
     },
     lineNo: number,
-  ) {
+  ): Promise<OutboundLineWriteData> {
     const material = await this.masterDataService.getMaterialById(
       line.materialId,
     );
     const quantity = new Prisma.Decimal(line.quantity);
     const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
     const amount = quantity.mul(unitPrice);
+    const selectedUnitCost = new Prisma.Decimal(line.selectedUnitCost);
 
     return {
       lineNo,
@@ -1287,6 +1530,7 @@ export class CustomerService {
       quantity,
       unitPrice,
       amount,
+      selectedUnitCost,
       startNumber: line.startNumber ?? null,
       endNumber: line.endNumber ?? null,
       remark: line.remark,

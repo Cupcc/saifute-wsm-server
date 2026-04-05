@@ -7,7 +7,7 @@
 | ---- | -------------------------------------------------- |
 | 模块   | master-data                                        |
 | 需求源  | docs/requirements/domain/master-data-management.md |
-| 最近更新 | 2026-04-04                                         |
+| 最近更新 | 2026-04-06                                         |
 
 
 ## 能力覆盖
@@ -37,7 +37,9 @@
   - **HTTP e2e**：`pnpm test:e2e` **全量通过**（4 suites，23 tests，exit 0），含 `test/redis-real-integration.e2e-spec.ts`；其中 Redis 连接类日志为用例内**预期探测行为**，不视为环境缺口。
   - **供应商负向权限**：`test/master-data-supplier.e2e-spec.ts` 负向用例已改为使用 **`rd-operator`**（无 `master:supplier:create`），与 `warehouse-manager` / `operator` 含创建权限的预设区分，避免陈旧期望。
   - **前端**：`pnpm --dir web build:prod` 通过；`web/src/api/base/**` 对 Phase 1 实体使用真实 `/api/master-data/*` 路径；`permissionCompat.js` 覆盖 `master:*` 与 legacy `base:*` 别名。
-  - **非阻塞残留**：(1) 仓库级 `pnpm lint`（biome）仍因**既有**前端/工具链文件未净，**本轮变更的 master-data / RBAC / web 兼容路径无新增 lint 报告**；(2) 本地已用 `.env.dev` 启动前后端，**自动化浏览器验收**因会话侧工具/配置限制未完成，**不**归因于应用启动失败；历史 F4 browser 记录仍可作参考。
+  - **Browser QA 复验**：2026-04-06 使用 `agent-browser` 在 `http://localhost:90` 完成 `F4-BROWSER-1` 与 `F2-BROWSER-1`。其中 F4 验证供应商管理页新增/停用与 `验收单` 供应商下拉过滤；F2 在空 `material_category` 环境下首次新增返回 `500`，补最小分类 fixture 后复验通过，关键网络证据为 `POST /api/master-data/materials` = `201`、`PATCH /api/master-data/materials/6/deactivate` = `200`、`GET /api/master-data/materials?keyword=MAT-QA-20260406-001&limit=30&offset=0` = `{"items":[],"total":0}`。
+  - **对齐修复复验**：同日后续切片 `task-20260406-0106` 已补齐 `物料分类管理` 页面、移除物料页默认 `categoryId=1` 并在后端收口非法分类错误语义；targeted browser 复验中，`POST /api/master-data/material-categories` = `201`、物料在“无分类选择”和“有效分类选择”两种路径下 `POST /api/master-data/materials` 均 = `201`，直接提交 `categoryId=999999` 返回 `400`，不再出现历史 `500`。
+  - **非阻塞残留**：仓库级 `pnpm lint`（biome）仍因**既有**前端/工具链文件未净，**本轮变更的 master-data / RBAC / web 兼容路径无新增 lint 报告**。
 
 ### 测试环境注意（门禁可复现）
 
@@ -51,6 +53,9 @@
 | ---------- | ------------------------------- | -------------------------------- | --------------------- |
 | 2026-04-03 | task-20260402-1758（F4 基线）       | .env.dev；unit+e2e+build+browser（历史） | `passed`（F4 section 保留） |
 | 2026-04-04 | task-20260402-1802（Phase 1 全量收口） | prisma validate/generate；`env -u CAPTCHA_ENABLED pnpm verify`；master-data + consumer tests；`web build:prod`；`pnpm test:e2e` 全绿；repo-wide lint 未净（非本改动引入） | `accepted` |
+| 2026-04-06 | task-20260402-1758（F4 browser QA 复验） | `.env.dev`；backend `:8112` + web `:90`；`agent-browser` | `passed` |
+| 2026-04-06 | task-20260402-1802（F2 browser QA 补证） | `.env.dev`；backend `:8112` + web `:90`；`agent-browser`；补最小 `material-category` fixture | `passed` |
+| 2026-04-06 | task-20260406-0106（F1/F2 对齐修复复验） | `.env.dev`；backend `:8112` + web `:90`；`agent-browser`；真实登录 `admin` | `passed` |
 
 
 ---
@@ -79,6 +84,7 @@
 | 时间         | 关联task             | 环境                               | 结果       |
 | ---------- | ------------------ | -------------------------------- | -------- |
 | 2026-04-03 | task-20260402-1758 | .env.dev; unit+e2e+build+browser | `passed` |
+| 2026-04-06 | task-20260402-1758 | `.env.dev`; `agent-browser`; `http://localhost:90` | `passed` |
 
 
 ### 证据索引
@@ -95,35 +101,44 @@
 | e2e     | `test/redis-real-integration.e2e-spec.ts`                                     | pass |
 | build   | `pnpm --dir web build:prod`                                             | pass |
 | build   | `pnpm verify`（`env -u CAPTCHA_ENABLED`）                                 | pass |
-| browser | agent-browser on `http://localhost:90`（历史 F4）                          | 历史 pass |
+| browser | `docs/acceptance-tests/runs/run-20260406-0026-master-data-f4-browser-qa.md` | pass |
 
 
 ### 残余风险
 
 - `ensureSupplier()` 仅有合同测试覆盖，无真实调用方；待 inbound 接入时补充集成测试
-- 本轮未跑通**自动化** browser smoke；本地前后端已启动，历史 F4 browser 证据仍可参考
 
 
 ---
 
 ## F1 物料分类 CRUD
 
+> 关联任务：`task-20260406-0106-master-data-material-category-alignment`（已归档）  
+> Browser QA 补充证据：`docs/acceptance-tests/runs/run-20260406-0124-master-data-f1-f2-browser-alignment.md`
+
 ### 验收矩阵
 
 
 | AC   | 描述                         | 结论  | 执行面 | 关键证据 |
 | ---- | -------------------------- | --- | --- | ---- |
-| TC-1 | 编码唯一                       | met | unit | service.spec / repository.spec：重复编码 Conflict |
+| TC-1 | 编码唯一                       | met | unit+browser | service.spec / repository.spec：重复编码 Conflict；browser：`POST /api/master-data/material-categories` = `201` |
 | TC-2 | 树形查询                       | met | unit | 树构建与列表用例 |
 | TC-3 | 停用前存在启用物料拦截                | met | unit | disable 守卫 |
 | TC-4 | 停用前存在启用子分类拦截               | met | unit | 子节点校验 |
+| TC-5 | 页面/API/权限兼容                | met | build+browser | `BaseMaterialCategory` 路由映射；`material-category` 页面真实可访问并回显新增分类 |
 
+### 验证摘要
+
+| 时间         | 关联 task              | 环境 | 结果 |
+| ---------- | -------------------- | ---- | ---- |
+| 2026-04-06 | `task-20260406-0106` | `.env.dev`; `agent-browser`; `/base/material-category` | `passed` |
 
 ### 证据索引
 
 - `src/modules/master-data/application/master-data.service.spec.ts`
 - `src/modules/master-data/infrastructure/master-data.repository.spec.ts`
 - `src/modules/master-data/controllers/master-data.controller.spec.ts`
+- `docs/acceptance-tests/runs/run-20260406-0124-master-data-f1-f2-browser-alignment.md`
 
 
 ---
@@ -141,9 +156,26 @@
 | TC-4 | AUTO_CREATED 审计字段完整   | met | unit | provenance |
 
 
+### 验证摘要
+
+
+| 时间         | 关联 task              | 环境 | 结果 |
+| ---------- | -------------------- | ---- | ---- |
+| 2026-04-06 | `task-20260402-1802` | `.env.dev`; `agent-browser`; 浏览器前置需至少 1 条 ACTIVE 物料分类，当前环境通过 API 补最小 fixture 后复验 | `passed` |
+| 2026-04-06 | `task-20260406-0106` | `.env.dev`; `agent-browser`; `物料分类管理` 页面已补齐；物料在“无分类选择”与“有效分类选择”两种路径均可新增；非法 `categoryId` 返回 `400` | `passed` |
+
+
 ### 证据索引
 
 - 同上 master-data `*.spec.ts`
+- `docs/acceptance-tests/runs/run-20260406-0043-master-data-f2-browser-qa.md`
+- `docs/acceptance-tests/runs/run-20260406-0124-master-data-f1-f2-browser-alignment.md`
+
+### Browser 补充说明
+
+- 本次 browser QA 验证了真实 UI 的新增、作废与 active-only 消费面过滤。
+- 后续对齐修复已消除“页面默认提交 `categoryId=1` 导致空分类环境首次新增返回 `500`”的问题；当前页面已支持“不选分类”提交与“选择真实分类”提交两条路径。
+- `TC-2` 正余额停用拦截与 `TC-3` 生效单据引用拦截仍以 unit / service 合同测试为准，本次未在浏览器层伪造这些阻断场景。
 
 
 ---

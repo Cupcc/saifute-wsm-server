@@ -18,10 +18,10 @@
 - Coder: `coder`
 - Reviewer: `code-reviewer`
 - Acceptance QA: `acceptance-qa`
-- Last updated: `2026-04-04`
+- Last updated: `2026-04-06`
 - Related checklist: `None`
 - Related acceptance spec: `docs/acceptance-tests/specs/master-data.md`
-- Related acceptance run: `None`
+- Related acceptance run: `docs/acceptance-tests/runs/run-20260406-0043-master-data-f2-browser-qa.md`
 - Related files:
   - `docs/requirements/domain/master-data-management.md`
   - `docs/architecture/modules/master-data.md`
@@ -170,7 +170,7 @@
   - **最终判定 `accepted`**。`Phase 1`（`F1`~`F8`）由 unit、consumer regression、`pnpm test:e2e` 全量、`pnpm verify` 与 `web build:prod` 共同覆盖；`F4` 既有基线保留。
   - `test/redis-real-integration.e2e-spec.ts` 已确认通过；相关 Redis 连接拒绝日志属于用例内预期探测，不构成环境阻塞。
   - 供应商负向权限 e2e 已改为 `rd-operator`，与当前 RBAC 真相一致。
-  - 自动化 browser smoke 未在本会话完成，原因是会话侧工具 / profile 限制，而非应用无法启动。
+  - 2026-04-06 已补充自动化 browser 证据：`F4` 供应商与 `F2` 物料两条 smoke 已冻结到 acceptance run；其中 `F2` 额外识别出“空 `material_category` 前置会导致新增 500”的环境缺口，并通过最小 fixture 完成复验。
 
 ## Final Status
 
@@ -180,7 +180,7 @@
   - 交付范围严格锁定在 `Phase 1`；`F9/F10` 保持未开始，`F4` 继续作为已验收子切片基线保留。
 - Residual risks or testing gaps:
   - 仓库级 `pnpm lint` 仍未净，但为既有前端 / 工具链债务，非本 scope 引入。
-  - 自动化 browser 证据未在本会话重新采集，可作为可选补证项处理。
+  - `F2/F4` browser 证据已补充；其余 `Phase 1` 能力仍主要依赖 unit / consumer regression / build 证据。
 - Directory disposition after completion:
   - archived under `docs/tasks/archive/retained-completed/`
 - Next action:

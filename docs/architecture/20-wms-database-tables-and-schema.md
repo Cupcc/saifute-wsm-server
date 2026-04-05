@@ -178,6 +178,20 @@ NestJS `inbound` 模块映射补充：
 - 两类单据共用 `stock_in_order` / `stock_in_order_line`，差异通过 `orderType`、权限前缀、应用服务入口区分
 - 第一阶段验收单与生产入库单默认写入主仓 `MAIN`；RD 采购到货在验收时也先入主仓，再由后续协同过账转入 RD 小仓
 
+入库调价单（计划中）：
+
+- `stock_in_price_correction_order`：入库调价单
+- `stock_in_price_correction_order_line`
+
+流程：
+
+1. 选择原入库来源流水（`inventory_log.id`），填写正确单价
+2. 审核时重新锁定并计算原来源流水的剩余数量和已消费数量
+3. 对剩余数量：生成 `PRICE_CORRECTION_OUT` 流水（强制从原来源分配）+ `PRICE_CORRECTION_IN` 流水（按正确单价转入）
+4. `inventory_balance.quantityOnHand` 净变化为零，原来源可用量归零，新转入流水成为后续 FIFO 来源
+5. 对已消费部分：只记录历史差异金额，不改历史消费链和 `inventory_source_usage`
+6. 不允许对同一原来源流水存在多张未作废、未完成的调价单
+
 ### 5.2 客户收发家族
 
 范围：
@@ -203,6 +217,13 @@ NestJS `customer` 模块映射补充：
 - 两类单据共用 `customer_stock_order` / `customer_stock_order_line`
 - 销售退货与出库的来源关系优先通过 `document_relation`、`document_line_relation` 表达，而不是继续拆独立关系表
 - 第一阶段客户出库与销售退货默认作用于主仓 `MAIN`
+
+价格层出库（计划中）：
+
+- 出库时用户按 `物料 + 价格层 + 数量` 录单，价格只能从当前有库存的价格层中选择
+- 价格层可用库存口径：按 `物料 + unitCost` 聚合现有可用来源流水得到，不新建独立价格库存余额主表
+- 系统在用户选定的价格层内部自动按 FIFO 分配到具体来源，写入 `inventory_source_usage`
+- 出库行明细新增 `selectedUnitCost` 字段记录用户选定的价格层（待确认是否复用现有 `unitPrice`）
 
 历史数据兼容补充：
 
@@ -282,6 +303,8 @@ NestJS `project` / `reporting` 模块映射补充：
 | `workflow`          | `workflow_audit_document`      | 表   | 审核投影表              |
 | `inbound`           | `stock_in_order`               | 表   | 入库家族主表，承载验收单与生产入库单 |
 | `inbound`           | `stock_in_order_line`          | 表   | 入库家族明细             |
+| `inbound`           | `stock_in_price_correction_order`      | 表   | 入库调价单主表（计划中）       |
+| `inbound`           | `stock_in_price_correction_order_line` | 表   | 入库调价单明细（计划中）       |
 | `customer`          | `customer_stock_order`         | 表   | 客户收发主表，承载出库单与销售退货单 |
 | `customer`          | `customer_stock_order_line`    | 表   | 客户收发明细             |
 | `workshop-material` | `workshop_material_order`      | 表   | 车间物料主表，承载领料、退料、报废  |
@@ -366,6 +389,21 @@ NestJS `project` / `reporting` 模块映射补充：
 - `inbound` 模块里的验收单与生产入库单只是在应用层入口不同，不再拆成两套独立表
 - 第一阶段验收单与生产入库单默认写入主仓 `MAIN`
 - 修改时必须按明细差量处理，不允许直接覆盖旧明细后忽略库存补偿
+
+### 入库调价单（计划中）
+
+| 表名                                       | 说明     | 关键字段                                                                                                                                   | 关键约束                                            |
+| ---------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `stock_in_price_correction_order`        | 入库调价单主表 | `documentNo`、`stockScopeId`、`workshopId`、三轴状态、`totalLineCount`、`totalHistoricalDiffAmount`                                              | `documentNo` 唯一                                 |
+| `stock_in_price_correction_order_line`   | 入库调价单明细 | `orderId`、`lineNo`、`materialId`、`sourceInventoryLogId`、`wrongUnitCost`、`correctUnitCost`、`consumedQtyAtCorrection`、`remainingQtyAtCorrection`、`historicalDiffAmount`、`generatedOutLogId`、`generatedInLogId` | `orderId + lineNo` 唯一；`sourceInventoryLogId` 唯一限制同一来源仅一张有效调价单 |
+
+补充说明：
+
+- 调价单不复用 `stock_in_order`，是独立单据家族
+- `wrongUnitCost` 记录原来源流水上的错误成本，`correctUnitCost` 记录本次确认后的正确成本
+- `consumedQtyAtCorrection` 和 `remainingQtyAtCorrection` 必须在审核时重新锁定并计算，不使用制单时缓存值
+- `historicalDiffAmount = (correctUnitCost - wrongUnitCost) × consumedQtyAtCorrection`
+- `generatedOutLogId` / `generatedInLogId` 与 `inventory_log` 闭环，审核过账后填写
 
 ## 6.6 `customer` 表
 

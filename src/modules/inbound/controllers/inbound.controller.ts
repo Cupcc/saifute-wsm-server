@@ -13,8 +13,11 @@ import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import { WorkshopScopeService } from "../../rbac/application/workshop-scope.service";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { InboundService } from "../application/inbound.service";
+import { StockInPriceCorrectionService } from "../application/stock-in-price-correction.service";
 import { CreateInboundOrderDto } from "../dto/create-inbound-order.dto";
+import { CreateStockInPriceCorrectionOrderDto } from "../dto/create-stock-in-price-correction-order.dto";
 import { QueryInboundOrderDto } from "../dto/query-inbound-order.dto";
+import { QueryStockInPriceCorrectionOrderDto } from "../dto/query-stock-in-price-correction-order.dto";
 import { UpdateInboundOrderDto } from "../dto/update-inbound-order.dto";
 import { VoidInboundOrderDto } from "../dto/void-inbound-order.dto";
 
@@ -22,8 +25,56 @@ import { VoidInboundOrderDto } from "../dto/void-inbound-order.dto";
 export class InboundController {
   constructor(
     private readonly inboundService: InboundService,
+    private readonly stockInPriceCorrectionService: StockInPriceCorrectionService,
     private readonly workshopScopeService: WorkshopScopeService,
   ) {}
+
+  @Permissions("inbound:price-correction-order:list")
+  @Get("price-correction-orders")
+  async listPriceCorrectionOrders(
+    @Query() query: QueryStockInPriceCorrectionOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
+    return this.stockInPriceCorrectionService.listOrders({
+      ...query,
+      stockScopeId: inventoryScope?.stockScopeId,
+    });
+  }
+
+  @Permissions("inbound:price-correction-order:list")
+  @Get("price-correction-orders/:id")
+  async getPriceCorrectionOrder(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const order = await this.stockInPriceCorrectionService.getOrderById(id);
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
+      user,
+      order.stockScopeId,
+    );
+    return order;
+  }
+
+  @Permissions("inbound:price-correction-order:create")
+  @Post("price-correction-orders")
+  async createPriceCorrectionOrder(
+    @Body() dto: CreateStockInPriceCorrectionOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const scopedDto = await this.workshopScopeService.applyFixedWorkshopScope(
+      user,
+      dto,
+    );
+    return this.stockInPriceCorrectionService.createOrder(
+      scopedDto,
+      user?.userId?.toString(),
+    );
+  }
 
   @Permissions("inbound:order:list")
   @Get("orders")

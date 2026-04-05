@@ -341,6 +341,92 @@ describe("MasterDataService", () => {
       expect(result).toEqual(expect.objectContaining({ status: "DISABLED" }));
     });
 
+    it("rejects material creation when category does not exist", async () => {
+      const repository = createRepositoryMock();
+      repository.findMaterialByCode.mockResolvedValue(null);
+      repository.findMaterialCategoryById.mockResolvedValue(null);
+      const service = new MasterDataService(
+        repository as unknown as MasterDataRepository,
+      );
+
+      await expect(
+        service.createMaterial({
+          materialCode: "MAT-404",
+          materialName: "不存在分类物料",
+          unitCode: "个",
+          categoryId: 999,
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(repository.createMaterial).not.toHaveBeenCalled();
+    });
+
+    it("rejects material creation when category is disabled", async () => {
+      const repository = createRepositoryMock();
+      repository.findMaterialByCode.mockResolvedValue(null);
+      repository.findMaterialCategoryById.mockResolvedValue({
+        id: 3,
+        categoryCode: "CAT-3",
+        categoryName: "停用分类",
+        status: "DISABLED",
+      });
+      const service = new MasterDataService(
+        repository as unknown as MasterDataRepository,
+      );
+
+      await expect(
+        service.createMaterial({
+          materialCode: "MAT-DISABLED-CAT",
+          materialName: "停用分类物料",
+          unitCode: "个",
+          categoryId: 3,
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(repository.createMaterial).not.toHaveBeenCalled();
+    });
+
+    it("rejects material updates when category does not exist", async () => {
+      const repository = createRepositoryMock();
+      repository.findMaterialById.mockResolvedValue({
+        id: 1,
+        materialCode: "MAT-001",
+        materialName: "测试物料",
+        status: "ACTIVE",
+      });
+      repository.findMaterialCategoryById.mockResolvedValue(null);
+      const service = new MasterDataService(
+        repository as unknown as MasterDataRepository,
+      );
+
+      await expect(
+        service.updateMaterial(1, { categoryId: 777 }, "1"),
+      ).rejects.toThrow(BadRequestException);
+      expect(repository.updateMaterial).not.toHaveBeenCalled();
+    });
+
+    it("allows material create without category", async () => {
+      const repository = createRepositoryMock();
+      repository.findMaterialByCode.mockResolvedValue(null);
+      repository.createMaterial.mockResolvedValue({
+        id: 1,
+        materialCode: "MAT-OPTIONAL-CAT",
+        materialName: "可空分类物料",
+        categoryId: null,
+        status: "ACTIVE",
+      });
+      const service = new MasterDataService(
+        repository as unknown as MasterDataRepository,
+      );
+
+      await service.createMaterial({
+        materialCode: "MAT-OPTIONAL-CAT",
+        materialName: "可空分类物料",
+        unitCode: "个",
+      });
+
+      expect(repository.findMaterialCategoryById).not.toHaveBeenCalled();
+      expect(repository.createMaterial).toHaveBeenCalled();
+    });
+
     it("creates AUTO_CREATED materials only when provenance is complete", async () => {
       const repository = createRepositoryMock();
       repository.findMaterialByCode.mockResolvedValue(null);

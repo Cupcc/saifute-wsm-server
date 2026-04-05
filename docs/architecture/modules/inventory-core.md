@@ -30,6 +30,8 @@
 - `releaseInventorySource()`
 - `checkInventoryWarning()`
 - `reserveFactoryNumberInterval()`
+- `queryPriceLayerAvailability()` — 按 `物料 + 单价` 聚合可用来源层，供客户出库价格层选择（计划中）
+- `allocateInventorySourceByPriceLayer()` — 在指定价格层内按 FIFO 分配来源（计划中）
 
 ## Controller 接口草案
 
@@ -112,6 +114,15 @@
 - 来源分配与释放测试
 - 并发扣减一致性测试
 - 预警生成测试
+
+## 计划新增操作类型
+
+以下操作类型由入库调价单（`inbound` F8）引入，实现后需纳入 `InventoryOperationType`：
+
+- `PRICE_CORRECTION_OUT` — 把原来源流水中尚未消费的剩余数量转出
+- `PRICE_CORRECTION_IN` — 按正确单价重新转入，形成新的 FIFO 来源流水；需纳入 `FIFO_SOURCE_OPERATION_TYPES`
+
+详见需求：`docs/requirements/domain/inbound-business-module.md`（F8）。
 
 ## 暂不实现范围
 

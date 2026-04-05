@@ -164,6 +164,13 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     title: "物料管理",
     icon: "list",
   },
+  BaseMaterialCategory: {
+    group: "base",
+    path: "material-category",
+    component: "base/material-category/index",
+    title: "物料分类管理",
+    icon: "tree-table",
+  },
   BaseCustomer: {
     group: "base",
     path: "customer",
@@ -433,6 +440,7 @@ const SUPPORTED_BACKEND_ROUTE_META = {
 };
 
 const FRONTEND_ROUTE_PERMISSION_FALLBACK = {
+  BaseMaterialCategory: ["master:material-category:list"],
   CustomerOrder: ["customer:order:list"],
   CustomerDetail: ["customer:order:list"],
   CustomerSalesReturnOrder: ["customer:sales-return:list"],

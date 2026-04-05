@@ -55,6 +55,10 @@ export async function getMaterial(materialId) {
 
 // 新增物料
 export function addMaterial(data) {
+  const categoryId =
+    data.category === null || typeof data.category === "undefined"
+      ? undefined
+      : data.category;
   return request({
     url: "/api/master-data/materials",
     method: "post",
@@ -62,7 +66,7 @@ export function addMaterial(data) {
       materialCode: data.materialCode,
       materialName: data.materialName,
       specModel: data.specification,
-      categoryId: data.category,
+      categoryId,
       unitCode: data.unit,
       warningMinQty: data.stockMin,
       warningMaxQty: data.stockMax,
@@ -72,13 +76,17 @@ export function addMaterial(data) {
 
 // 修改物料
 export function updateMaterial(data) {
+  const categoryId =
+    data.category === null || typeof data.category === "undefined"
+      ? undefined
+      : data.category;
   return request({
     url: `/api/master-data/materials/${data.materialId}`,
     method: "patch",
     data: {
       materialName: data.materialName,
       specModel: data.specification,
-      categoryId: data.category,
+      categoryId,
       unitCode: data.unit,
       warningMinQty: data.stockMin,
       warningMaxQty: data.stockMax,

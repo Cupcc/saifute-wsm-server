@@ -24,6 +24,7 @@ import { StockScopeCompatibilityService } from "./stock-scope-compatibility.serv
 export const FIFO_SOURCE_OPERATION_TYPES: InventoryOperationTypeEnum[] = [
   InventoryOperationType.ACCEPTANCE_IN,
   InventoryOperationType.PRODUCTION_RECEIPT_IN,
+  InventoryOperationType.PRICE_CORRECTION_IN,
   InventoryOperationType.RD_HANDOFF_IN,
 ];
 
@@ -73,6 +74,8 @@ export interface SettleConsumerOutCommand extends DecreaseStockCommand {
   consumerLineId: number;
   /** Explicit source log override; when provided FIFO is skipped. */
   sourceLogId?: number;
+  /** Restricts allocation to a single cost layer. */
+  selectedUnitCost?: Prisma.Decimal | number | string;
   /**
    * Operation types eligible as FIFO source layers. Defaults to the repo-wide
    * FIFO_SOURCE_OPERATION_TYPES constant. Pass a narrower list for scopes where
@@ -93,6 +96,13 @@ export interface SettleConsumerOutResult {
   settledUnitCost: Prisma.Decimal;
   settledCostAmount: Prisma.Decimal;
   allocations: FifoAllocationPiece[];
+}
+
+export interface PriceLayerAvailabilityItem {
+  materialId: number;
+  unitCost: Prisma.Decimal;
+  availableQty: Prisma.Decimal;
+  sourceLogCount: number;
 }
 
 export interface ReverseStockCommand {
@@ -587,6 +597,10 @@ export class InventoryService {
 
     const changeQty = this.toPositiveQuantityDecimal(cmd.quantity);
     const sourceTypes = cmd.sourceOperationTypes ?? FIFO_SOURCE_OPERATION_TYPES;
+    const selectedUnitCost =
+      cmd.selectedUnitCost != null
+        ? this.toPositiveDecimal(cmd.selectedUnitCost, "价格层单价")
+        : null;
     const scope = await this.stockScopeCompatibilityService.resolveRequired({
       stockScope: cmd.stockScope,
       workshopId: cmd.workshopId,
@@ -605,6 +619,7 @@ export class InventoryService {
             cmd.materialId,
             scope.stockScopeId,
             sourceTypes,
+            selectedUnitCost,
             cmd.businessDocumentType,
             cmd.businessDocumentId,
             cmd.consumerLineId,
@@ -618,6 +633,7 @@ export class InventoryService {
             scope.stockScopeId,
             changeQty,
             sourceTypes,
+            selectedUnitCost,
             cmd.businessDocumentType,
             cmd.businessDocumentId,
             cmd.consumerLineId,
@@ -854,6 +870,7 @@ export class InventoryService {
     materialId: number,
     stockScopeId: number,
     allowedOperationTypes: InventoryOperationTypeEnum[],
+    selectedUnitCost: Prisma.Decimal | null,
     consumerDocumentType: string,
     consumerDocumentId: number,
     consumerLineId: number,
@@ -909,6 +926,11 @@ export class InventoryService {
     const unitCost = sourceLog.unitCost
       ? new Prisma.Decimal(sourceLog.unitCost)
       : new Prisma.Decimal(0);
+    if (selectedUnitCost && !unitCost.eq(selectedUnitCost)) {
+      throw new BadRequestException(
+        `来源流水价格层不匹配: 目标=${selectedUnitCost.toString()}, 实际=${unitCost.toString()}`,
+      );
+    }
     const costAmount = unitCost.mul(qty);
 
     await this.allocateInventorySource(
@@ -931,6 +953,7 @@ export class InventoryService {
     stockScopeId: number,
     qty: Prisma.Decimal,
     sourceTypes: InventoryOperationTypeEnum[],
+    selectedUnitCost: Prisma.Decimal | null,
     consumerDocumentType: string,
     consumerDocumentId: number,
     consumerLineId: number,
@@ -938,7 +961,12 @@ export class InventoryService {
     db: Prisma.TransactionClient,
   ): Promise<FifoAllocationPiece[]> {
     const candidates = await this.repository.findFifoSourceLogs(
-      { materialId, stockScopeId, sourceOperationTypes: sourceTypes },
+      {
+        materialId,
+        stockScopeId,
+        sourceOperationTypes: sourceTypes,
+        unitCost: selectedUnitCost ?? undefined,
+      },
       db,
     );
 
@@ -1216,15 +1244,65 @@ export class InventoryService {
     return this.withStockScope(reservation);
   }
 
+  async listPriceLayerAvailability(params: {
+    materialId: number;
+    stockScope?: StockScopeCode;
+    workshopId?: number;
+    sourceOperationTypes?: InventoryOperationTypeEnum[];
+  }): Promise<PriceLayerAvailabilityItem[]> {
+    const scope = await this.stockScopeCompatibilityService.resolveRequired({
+      stockScope: params.stockScope,
+      workshopId: params.workshopId,
+    });
+    await this.ensureMasterDataExists(params.materialId, scope.workshopId);
+
+    const sourceLogs = await this.repository.findFifoSourceLogs({
+      materialId: params.materialId,
+      stockScopeId: scope.stockScopeId,
+      sourceOperationTypes:
+        params.sourceOperationTypes ?? FIFO_SOURCE_OPERATION_TYPES,
+    });
+
+    const grouped = new Map<
+      string,
+      {
+        materialId: number;
+        unitCost: Prisma.Decimal;
+        availableQty: Prisma.Decimal;
+        sourceLogCount: number;
+      }
+    >();
+
+    for (const sourceLog of sourceLogs) {
+      if (!sourceLog.unitCost) {
+        continue;
+      }
+
+      const key = sourceLog.unitCost.toString();
+      const current = grouped.get(key);
+      if (current) {
+        current.availableQty = current.availableQty.add(sourceLog.availableQty);
+        current.sourceLogCount += 1;
+        continue;
+      }
+
+      grouped.set(key, {
+        materialId: params.materialId,
+        unitCost: sourceLog.unitCost,
+        availableQty: new Prisma.Decimal(sourceLog.availableQty),
+        sourceLogCount: 1,
+      });
+    }
+
+    return [...grouped.values()].sort((left, right) =>
+      left.unitCost.comparedTo(right.unitCost),
+    );
+  }
+
   private toPositiveQuantityDecimal(
     quantity: Prisma.Decimal | number | string,
   ): Prisma.Decimal {
-    let parsedQuantity: Prisma.Decimal;
-    try {
-      parsedQuantity = new Prisma.Decimal(quantity);
-    } catch {
-      throw new BadRequestException("库存变更数量格式无效");
-    }
+    const parsedQuantity = this.toDecimal(quantity, "库存变更数量格式无效");
 
     if (parsedQuantity.lte(0)) {
       throw new BadRequestException("库存变更数量必须大于 0");
@@ -1233,15 +1311,34 @@ export class InventoryService {
     return parsedQuantity;
   }
 
+  private toPositiveDecimal(
+    value: Prisma.Decimal | number | string,
+    fieldLabel: string,
+  ): Prisma.Decimal {
+    const parsedValue = this.toDecimal(value, `${fieldLabel}格式无效`);
+    if (parsedValue.lte(0)) {
+      throw new BadRequestException(`${fieldLabel}必须大于 0`);
+    }
+    return parsedValue;
+  }
+
+  private toDecimal(
+    value: Prisma.Decimal | number | string,
+    invalidMessage: string,
+  ): Prisma.Decimal {
+    let parsedValue: Prisma.Decimal;
+    try {
+      parsedValue = new Prisma.Decimal(value);
+    } catch {
+      throw new BadRequestException(invalidMessage);
+    }
+    return parsedValue;
+  }
+
   private toNonNegativeQuantityDecimal(
     quantity: Prisma.Decimal | number | string,
   ): Prisma.Decimal {
-    let parsedQuantity: Prisma.Decimal;
-    try {
-      parsedQuantity = new Prisma.Decimal(quantity);
-    } catch {
-      throw new BadRequestException("库存变更数量格式无效");
-    }
+    const parsedQuantity = this.toDecimal(quantity, "库存变更数量格式无效");
 
     if (parsedQuantity.lt(0)) {
       throw new BadRequestException("库存变更数量不能小于 0");

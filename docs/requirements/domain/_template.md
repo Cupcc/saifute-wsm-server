@@ -200,6 +200,5 @@
 - 关联执行任务：`docs/tasks/*.md` 或 `docs/tasks/archive/**/task-*.md`
 - 任务回链格式：`Related requirement: docs/requirements/domain/*.md (Fx)`
 
-主题文档负责长期分类、长期边界和可验收结果，不负责当前进展。
-新开任务时，从功能项清单中挑选本次要交付的 1-2 项，直接创建 `docs/tasks/task-*.md`。
+主题文档负责长期分类、长期边界和可验收结果，不负责当前进展。  
 功能项交付完成后，更新功能项清单中对应行的状态与 task 链接。

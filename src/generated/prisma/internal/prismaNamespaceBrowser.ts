@@ -70,6 +70,8 @@ export const ModelName = {
   StockInOrderLine: "StockInOrderLine",
   CustomerStockOrder: "CustomerStockOrder",
   CustomerStockOrderLine: "CustomerStockOrderLine",
+  StockInPriceCorrectionOrder: "StockInPriceCorrectionOrder",
+  StockInPriceCorrectionOrderLine: "StockInPriceCorrectionOrderLine",
   WorkshopMaterialOrder: "WorkshopMaterialOrder",
   WorkshopMaterialOrderLine: "WorkshopMaterialOrderLine",
   Project: "Project",
@@ -449,6 +451,7 @@ export const CustomerStockOrderLineScalarFieldEnum = {
   quantity: "quantity",
   unitPrice: "unitPrice",
   amount: "amount",
+  selectedUnitCost: "selectedUnitCost",
   costUnitPrice: "costUnitPrice",
   costAmount: "costAmount",
   startNumber: "startNumber",
@@ -465,6 +468,55 @@ export const CustomerStockOrderLineScalarFieldEnum = {
 
 export type CustomerStockOrderLineScalarFieldEnum =
   (typeof CustomerStockOrderLineScalarFieldEnum)[keyof typeof CustomerStockOrderLineScalarFieldEnum];
+
+export const StockInPriceCorrectionOrderScalarFieldEnum = {
+  id: "id",
+  documentNo: "documentNo",
+  bizDate: "bizDate",
+  stockScopeId: "stockScopeId",
+  workshopId: "workshopId",
+  lifecycleStatus: "lifecycleStatus",
+  auditStatusSnapshot: "auditStatusSnapshot",
+  inventoryEffectStatus: "inventoryEffectStatus",
+  totalLineCount: "totalLineCount",
+  totalHistoricalDiffAmount: "totalHistoricalDiffAmount",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type StockInPriceCorrectionOrderScalarFieldEnum =
+  (typeof StockInPriceCorrectionOrderScalarFieldEnum)[keyof typeof StockInPriceCorrectionOrderScalarFieldEnum];
+
+export const StockInPriceCorrectionOrderLineScalarFieldEnum = {
+  id: "id",
+  orderId: "orderId",
+  lineNo: "lineNo",
+  materialId: "materialId",
+  sourceStockInOrderId: "sourceStockInOrderId",
+  sourceStockInOrderLineId: "sourceStockInOrderLineId",
+  sourceInventoryLogId: "sourceInventoryLogId",
+  sourceDocumentNoSnapshot: "sourceDocumentNoSnapshot",
+  sourceBizDateSnapshot: "sourceBizDateSnapshot",
+  wrongUnitCost: "wrongUnitCost",
+  correctUnitCost: "correctUnitCost",
+  sourceInQty: "sourceInQty",
+  consumedQtyAtCorrection: "consumedQtyAtCorrection",
+  remainingQtyAtCorrection: "remainingQtyAtCorrection",
+  historicalDiffAmount: "historicalDiffAmount",
+  generatedOutLogId: "generatedOutLogId",
+  generatedInLogId: "generatedInLogId",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type StockInPriceCorrectionOrderLineScalarFieldEnum =
+  (typeof StockInPriceCorrectionOrderLineScalarFieldEnum)[keyof typeof StockInPriceCorrectionOrderLineScalarFieldEnum];
 
 export const WorkshopMaterialOrderScalarFieldEnum = {
   id: "id",
@@ -1325,6 +1377,26 @@ export const CustomerStockOrderLineOrderByRelevanceFieldEnum = {
 
 export type CustomerStockOrderLineOrderByRelevanceFieldEnum =
   (typeof CustomerStockOrderLineOrderByRelevanceFieldEnum)[keyof typeof CustomerStockOrderLineOrderByRelevanceFieldEnum];
+
+export const StockInPriceCorrectionOrderOrderByRelevanceFieldEnum = {
+  documentNo: "documentNo",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type StockInPriceCorrectionOrderOrderByRelevanceFieldEnum =
+  (typeof StockInPriceCorrectionOrderOrderByRelevanceFieldEnum)[keyof typeof StockInPriceCorrectionOrderOrderByRelevanceFieldEnum];
+
+export const StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum = {
+  sourceDocumentNoSnapshot: "sourceDocumentNoSnapshot",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum =
+  (typeof StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum)[keyof typeof StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum];
 
 export const WorkshopMaterialOrderOrderByRelevanceFieldEnum = {
   documentNo: "documentNo",

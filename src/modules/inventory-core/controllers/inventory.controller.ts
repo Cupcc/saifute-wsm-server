@@ -8,6 +8,7 @@ import {
   QueryFactoryNumberReservationsDto,
   QueryInventoryBalancesDto,
   QueryInventoryLogsDto,
+  QueryInventoryPriceLayersDto,
   QueryInventorySourceUsagesDto,
 } from "../dto/query-inventory.dto";
 
@@ -59,6 +60,23 @@ export class InventoryController {
       occurredAtTo: query.occurredAtTo,
       limit: query.limit,
       offset: query.offset,
+    });
+  }
+
+  @Permissions("inventory:balance:list")
+  @Get("price-layers")
+  async listPriceLayers(
+    @Query() query: QueryInventoryPriceLayersDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
+    return this.inventoryService.listPriceLayerAvailability({
+      materialId: query.materialId,
+      stockScope: inventoryScope?.stockScope,
     });
   }
 

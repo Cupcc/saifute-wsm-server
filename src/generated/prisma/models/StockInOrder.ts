@@ -517,6 +517,7 @@ export type StockInOrderWhereInput = {
     Prisma.RdProcurementRequestWhereInput
   > | null;
   lines?: Prisma.StockInOrderLineListRelationFilter;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineListRelationFilter;
 };
 
 export type StockInOrderOrderByWithRelationInput = {
@@ -556,6 +557,7 @@ export type StockInOrderOrderByWithRelationInput = {
   workshop?: Prisma.WorkshopOrderByWithRelationInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestOrderByWithRelationInput;
   lines?: Prisma.StockInOrderLineOrderByRelationAggregateInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineOrderByRelationAggregateInput;
   _relevance?: Prisma.StockInOrderOrderByRelevanceInput;
 };
 
@@ -661,6 +663,7 @@ export type StockInOrderWhereUniqueInput = Prisma.AtLeast<
       Prisma.RdProcurementRequestWhereInput
     > | null;
     lines?: Prisma.StockInOrderLineListRelationFilter;
+    priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineListRelationFilter;
   },
   "id" | "documentNo"
 >;
@@ -849,6 +852,7 @@ export type StockInOrderCreateInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutStockInOrdersInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestCreateNestedOneWithoutAcceptanceOrdersInput;
   lines?: Prisma.StockInOrderLineCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUncheckedCreateInput = {
@@ -883,6 +887,7 @@ export type StockInOrderUncheckedCreateInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   lines?: Prisma.StockInOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUpdateInput = {
@@ -956,6 +961,7 @@ export type StockInOrderUpdateInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutStockInOrdersNestedInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestUpdateOneWithoutAcceptanceOrdersNestedInput;
   lines?: Prisma.StockInOrderLineUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateInput = {
@@ -1036,6 +1042,7 @@ export type StockInOrderUncheckedUpdateInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   lines?: Prisma.StockInOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderCreateManyInput = {
@@ -1361,6 +1368,11 @@ export type StockInOrderSumOrderByAggregateInput = {
 export type StockInOrderScalarRelationFilter = {
   is?: Prisma.StockInOrderWhereInput;
   isNot?: Prisma.StockInOrderWhereInput;
+};
+
+export type StockInOrderNullableScalarRelationFilter = {
+  is?: Prisma.StockInOrderWhereInput | null;
+  isNot?: Prisma.StockInOrderWhereInput | null;
 };
 
 export type StockInOrderCreateNestedManyWithoutSupplierInput = {
@@ -1843,6 +1855,34 @@ export type StockInOrderUpdateOneRequiredWithoutLinesNestedInput = {
   >;
 };
 
+export type StockInOrderCreateNestedOneWithoutPriceCorrectionLinesInput = {
+  create?: Prisma.XOR<
+    Prisma.StockInOrderCreateWithoutPriceCorrectionLinesInput,
+    Prisma.StockInOrderUncheckedCreateWithoutPriceCorrectionLinesInput
+  >;
+  connectOrCreate?: Prisma.StockInOrderCreateOrConnectWithoutPriceCorrectionLinesInput;
+  connect?: Prisma.StockInOrderWhereUniqueInput;
+};
+
+export type StockInOrderUpdateOneWithoutPriceCorrectionLinesNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.StockInOrderCreateWithoutPriceCorrectionLinesInput,
+    Prisma.StockInOrderUncheckedCreateWithoutPriceCorrectionLinesInput
+  >;
+  connectOrCreate?: Prisma.StockInOrderCreateOrConnectWithoutPriceCorrectionLinesInput;
+  upsert?: Prisma.StockInOrderUpsertWithoutPriceCorrectionLinesInput;
+  disconnect?: Prisma.StockInOrderWhereInput | boolean;
+  delete?: Prisma.StockInOrderWhereInput | boolean;
+  connect?: Prisma.StockInOrderWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.StockInOrderUpdateToOneWithWhereWithoutPriceCorrectionLinesInput,
+      Prisma.StockInOrderUpdateWithoutPriceCorrectionLinesInput
+    >,
+    Prisma.StockInOrderUncheckedUpdateWithoutPriceCorrectionLinesInput
+  >;
+};
+
 export type StockInOrderCreateNestedManyWithoutRdProcurementRequestInput = {
   create?:
     | Prisma.XOR<
@@ -1985,6 +2025,7 @@ export type StockInOrderCreateWithoutSupplierInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutStockInOrdersInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestCreateNestedOneWithoutAcceptanceOrdersInput;
   lines?: Prisma.StockInOrderLineCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUncheckedCreateWithoutSupplierInput = {
@@ -2018,6 +2059,7 @@ export type StockInOrderUncheckedCreateWithoutSupplierInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   lines?: Prisma.StockInOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderCreateOrConnectWithoutSupplierInput = {
@@ -2176,6 +2218,7 @@ export type StockInOrderCreateWithoutHandlerPersonnelInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutStockInOrdersInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestCreateNestedOneWithoutAcceptanceOrdersInput;
   lines?: Prisma.StockInOrderLineCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUncheckedCreateWithoutHandlerPersonnelInput = {
@@ -2209,6 +2252,7 @@ export type StockInOrderUncheckedCreateWithoutHandlerPersonnelInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   lines?: Prisma.StockInOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderCreateOrConnectWithoutHandlerPersonnelInput = {
@@ -2284,6 +2328,7 @@ export type StockInOrderCreateWithoutWorkshopInput = {
   stockScope?: Prisma.StockScopeCreateNestedOneWithoutStockInOrdersInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestCreateNestedOneWithoutAcceptanceOrdersInput;
   lines?: Prisma.StockInOrderLineCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUncheckedCreateWithoutWorkshopInput = {
@@ -2317,6 +2362,7 @@ export type StockInOrderUncheckedCreateWithoutWorkshopInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   lines?: Prisma.StockInOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderCreateOrConnectWithoutWorkshopInput = {
@@ -2392,6 +2438,7 @@ export type StockInOrderCreateWithoutStockScopeInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutStockInOrdersInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestCreateNestedOneWithoutAcceptanceOrdersInput;
   lines?: Prisma.StockInOrderLineCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUncheckedCreateWithoutStockScopeInput = {
@@ -2425,6 +2472,7 @@ export type StockInOrderUncheckedCreateWithoutStockScopeInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   lines?: Prisma.StockInOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderCreateOrConnectWithoutStockScopeInput = {
@@ -2500,6 +2548,7 @@ export type StockInOrderCreateWithoutLinesInput = {
   stockScope?: Prisma.StockScopeCreateNestedOneWithoutStockInOrdersInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutStockInOrdersInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestCreateNestedOneWithoutAcceptanceOrdersInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUncheckedCreateWithoutLinesInput = {
@@ -2533,6 +2582,7 @@ export type StockInOrderUncheckedCreateWithoutLinesInput = {
   createdAt?: Date | string;
   updatedBy?: string | null;
   updatedAt?: Date | string;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderCreateOrConnectWithoutLinesInput = {
@@ -2633,6 +2683,7 @@ export type StockInOrderUpdateWithoutLinesInput = {
   stockScope?: Prisma.StockScopeUpdateOneWithoutStockInOrdersNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutStockInOrdersNestedInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestUpdateOneWithoutAcceptanceOrdersNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateWithoutLinesInput = {
@@ -2712,6 +2763,255 @@ export type StockInOrderUncheckedUpdateWithoutLinesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateManyWithoutSourceStockInOrderNestedInput;
+};
+
+export type StockInOrderCreateWithoutPriceCorrectionLinesInput = {
+  documentNo: string;
+  orderType: $Enums.StockInOrderType;
+  bizDate: Date | string;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  handlerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  rdProcurementRequestNoSnapshot?: string | null;
+  rdProcurementProjectCodeSnapshot?: string | null;
+  rdProcurementProjectNameSnapshot?: string | null;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  supplier?: Prisma.SupplierCreateNestedOneWithoutStockInOrdersInput;
+  handlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutStockInOrdersInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutStockInOrdersInput;
+  workshop: Prisma.WorkshopCreateNestedOneWithoutStockInOrdersInput;
+  rdProcurementRequest?: Prisma.RdProcurementRequestCreateNestedOneWithoutAcceptanceOrdersInput;
+  lines?: Prisma.StockInOrderLineCreateNestedManyWithoutOrderInput;
+};
+
+export type StockInOrderUncheckedCreateWithoutPriceCorrectionLinesInput = {
+  id?: number;
+  documentNo: string;
+  orderType: $Enums.StockInOrderType;
+  bizDate: Date | string;
+  supplierId?: number | null;
+  handlerPersonnelId?: number | null;
+  stockScopeId?: number | null;
+  workshopId: number;
+  rdProcurementRequestId?: number | null;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  handlerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  rdProcurementRequestNoSnapshot?: string | null;
+  rdProcurementProjectCodeSnapshot?: string | null;
+  rdProcurementProjectNameSnapshot?: string | null;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  lines?: Prisma.StockInOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+};
+
+export type StockInOrderCreateOrConnectWithoutPriceCorrectionLinesInput = {
+  where: Prisma.StockInOrderWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.StockInOrderCreateWithoutPriceCorrectionLinesInput,
+    Prisma.StockInOrderUncheckedCreateWithoutPriceCorrectionLinesInput
+  >;
+};
+
+export type StockInOrderUpsertWithoutPriceCorrectionLinesInput = {
+  update: Prisma.XOR<
+    Prisma.StockInOrderUpdateWithoutPriceCorrectionLinesInput,
+    Prisma.StockInOrderUncheckedUpdateWithoutPriceCorrectionLinesInput
+  >;
+  create: Prisma.XOR<
+    Prisma.StockInOrderCreateWithoutPriceCorrectionLinesInput,
+    Prisma.StockInOrderUncheckedCreateWithoutPriceCorrectionLinesInput
+  >;
+  where?: Prisma.StockInOrderWhereInput;
+};
+
+export type StockInOrderUpdateToOneWithWhereWithoutPriceCorrectionLinesInput = {
+  where?: Prisma.StockInOrderWhereInput;
+  data: Prisma.XOR<
+    Prisma.StockInOrderUpdateWithoutPriceCorrectionLinesInput,
+    Prisma.StockInOrderUncheckedUpdateWithoutPriceCorrectionLinesInput
+  >;
+};
+
+export type StockInOrderUpdateWithoutPriceCorrectionLinesInput = {
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  orderType?:
+    | Prisma.EnumStockInOrderTypeFieldUpdateOperationsInput
+    | $Enums.StockInOrderType;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  rdProcurementRequestNoSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  rdProcurementProjectCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  rdProcurementProjectNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  supplier?: Prisma.SupplierUpdateOneWithoutStockInOrdersNestedInput;
+  handlerPersonnel?: Prisma.PersonnelUpdateOneWithoutStockInOrdersNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutStockInOrdersNestedInput;
+  workshop?: Prisma.WorkshopUpdateOneRequiredWithoutStockInOrdersNestedInput;
+  rdProcurementRequest?: Prisma.RdProcurementRequestUpdateOneWithoutAcceptanceOrdersNestedInput;
+  lines?: Prisma.StockInOrderLineUpdateManyWithoutOrderNestedInput;
+};
+
+export type StockInOrderUncheckedUpdateWithoutPriceCorrectionLinesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  documentNo?: Prisma.StringFieldUpdateOperationsInput | string;
+  orderType?:
+    | Prisma.EnumStockInOrderTypeFieldUpdateOperationsInput
+    | $Enums.StockInOrderType;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  supplierId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  handlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  rdProcurementRequestId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  handlerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  rdProcurementRequestNoSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  rdProcurementProjectCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  rdProcurementProjectNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lines?: Prisma.StockInOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
 };
 
 export type StockInOrderCreateWithoutRdProcurementRequestInput = {
@@ -2744,6 +3044,7 @@ export type StockInOrderCreateWithoutRdProcurementRequestInput = {
   stockScope?: Prisma.StockScopeCreateNestedOneWithoutStockInOrdersInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutStockInOrdersInput;
   lines?: Prisma.StockInOrderLineCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderUncheckedCreateWithoutRdProcurementRequestInput = {
@@ -2777,6 +3078,7 @@ export type StockInOrderUncheckedCreateWithoutRdProcurementRequestInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   lines?: Prisma.StockInOrderLineUncheckedCreateNestedManyWithoutOrderInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedManyWithoutSourceStockInOrderInput;
 };
 
 export type StockInOrderCreateOrConnectWithoutRdProcurementRequestInput = {
@@ -2926,6 +3228,7 @@ export type StockInOrderUpdateWithoutSupplierInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutStockInOrdersNestedInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestUpdateOneWithoutAcceptanceOrdersNestedInput;
   lines?: Prisma.StockInOrderLineUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateWithoutSupplierInput = {
@@ -3005,6 +3308,7 @@ export type StockInOrderUncheckedUpdateWithoutSupplierInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   lines?: Prisma.StockInOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateManyWithoutSupplierInput = {
@@ -3187,6 +3491,7 @@ export type StockInOrderUpdateWithoutHandlerPersonnelInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutStockInOrdersNestedInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestUpdateOneWithoutAcceptanceOrdersNestedInput;
   lines?: Prisma.StockInOrderLineUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateWithoutHandlerPersonnelInput = {
@@ -3263,6 +3568,7 @@ export type StockInOrderUncheckedUpdateWithoutHandlerPersonnelInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   lines?: Prisma.StockInOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateManyWithoutHandlerPersonnelInput = {
@@ -3442,6 +3748,7 @@ export type StockInOrderUpdateWithoutWorkshopInput = {
   stockScope?: Prisma.StockScopeUpdateOneWithoutStockInOrdersNestedInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestUpdateOneWithoutAcceptanceOrdersNestedInput;
   lines?: Prisma.StockInOrderLineUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateWithoutWorkshopInput = {
@@ -3521,6 +3828,7 @@ export type StockInOrderUncheckedUpdateWithoutWorkshopInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   lines?: Prisma.StockInOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateManyWithoutWorkshopInput = {
@@ -3703,6 +4011,7 @@ export type StockInOrderUpdateWithoutStockScopeInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutStockInOrdersNestedInput;
   rdProcurementRequest?: Prisma.RdProcurementRequestUpdateOneWithoutAcceptanceOrdersNestedInput;
   lines?: Prisma.StockInOrderLineUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateWithoutStockScopeInput = {
@@ -3782,6 +4091,7 @@ export type StockInOrderUncheckedUpdateWithoutStockScopeInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   lines?: Prisma.StockInOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateManyWithoutStockScopeInput = {
@@ -3964,6 +4274,7 @@ export type StockInOrderUpdateWithoutRdProcurementRequestInput = {
   stockScope?: Prisma.StockScopeUpdateOneWithoutStockInOrdersNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutStockInOrdersNestedInput;
   lines?: Prisma.StockInOrderLineUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateWithoutRdProcurementRequestInput = {
@@ -4040,6 +4351,7 @@ export type StockInOrderUncheckedUpdateWithoutRdProcurementRequestInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   lines?: Prisma.StockInOrderLineUncheckedUpdateManyWithoutOrderNestedInput;
+  priceCorrectionLines?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateManyWithoutSourceStockInOrderNestedInput;
 };
 
 export type StockInOrderUncheckedUpdateManyWithoutRdProcurementRequestInput = {
@@ -4123,6 +4435,7 @@ export type StockInOrderUncheckedUpdateManyWithoutRdProcurementRequestInput = {
 
 export type StockInOrderCountOutputType = {
   lines: number;
+  priceCorrectionLines: number;
 };
 
 export type StockInOrderCountOutputTypeSelect<
@@ -4130,6 +4443,9 @@ export type StockInOrderCountOutputTypeSelect<
     runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   lines?: boolean | StockInOrderCountOutputTypeCountLinesArgs;
+  priceCorrectionLines?:
+    | boolean
+    | StockInOrderCountOutputTypeCountPriceCorrectionLinesArgs;
 };
 
 /**
@@ -4153,6 +4469,16 @@ export type StockInOrderCountOutputTypeCountLinesArgs<
     runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.StockInOrderLineWhereInput;
+};
+
+/**
+ * StockInOrderCountOutputType without action
+ */
+export type StockInOrderCountOutputTypeCountPriceCorrectionLinesArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.StockInPriceCorrectionOrderLineWhereInput;
 };
 
 export type StockInOrderSelect<
@@ -4200,6 +4526,9 @@ export type StockInOrderSelect<
       | boolean
       | Prisma.StockInOrder$rdProcurementRequestArgs<ExtArgs>;
     lines?: boolean | Prisma.StockInOrder$linesArgs<ExtArgs>;
+    priceCorrectionLines?:
+      | boolean
+      | Prisma.StockInOrder$priceCorrectionLinesArgs<ExtArgs>;
     _count?: boolean | Prisma.StockInOrderCountOutputTypeDefaultArgs<ExtArgs>;
   },
   ExtArgs["result"]["stockInOrder"]
@@ -4288,6 +4617,9 @@ export type StockInOrderInclude<
     | boolean
     | Prisma.StockInOrder$rdProcurementRequestArgs<ExtArgs>;
   lines?: boolean | Prisma.StockInOrder$linesArgs<ExtArgs>;
+  priceCorrectionLines?:
+    | boolean
+    | Prisma.StockInOrder$priceCorrectionLinesArgs<ExtArgs>;
   _count?: boolean | Prisma.StockInOrderCountOutputTypeDefaultArgs<ExtArgs>;
 };
 
@@ -4303,6 +4635,7 @@ export type $StockInOrderPayload<
     workshop: Prisma.$WorkshopPayload<ExtArgs>;
     rdProcurementRequest: Prisma.$RdProcurementRequestPayload<ExtArgs> | null;
     lines: Prisma.$StockInOrderLinePayload<ExtArgs>[];
+    priceCorrectionLines: Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs>[];
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -4898,6 +5231,22 @@ export interface Prisma__StockInOrderClient<
   ): Prisma.PrismaPromise<
     | runtime.Types.Result.GetResult<
         Prisma.$StockInOrderLinePayload<ExtArgs>,
+        T,
+        "findMany",
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  priceCorrectionLines<
+    T extends Prisma.StockInOrder$priceCorrectionLinesArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.StockInOrder$priceCorrectionLinesArgs<ExtArgs>
+    >,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs>,
         T,
         "findMany",
         GlobalOmitOptions
@@ -5522,6 +5871,37 @@ export type StockInOrder$linesArgs<
   distinct?:
     | Prisma.StockInOrderLineScalarFieldEnum
     | Prisma.StockInOrderLineScalarFieldEnum[];
+};
+
+/**
+ * StockInOrder.priceCorrectionLines
+ */
+export type StockInOrder$priceCorrectionLinesArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockInPriceCorrectionOrderLine
+   */
+  select?: Prisma.StockInPriceCorrectionOrderLineSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockInPriceCorrectionOrderLine
+   */
+  omit?: Prisma.StockInPriceCorrectionOrderLineOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockInPriceCorrectionOrderLineInclude<ExtArgs> | null;
+  where?: Prisma.StockInPriceCorrectionOrderLineWhereInput;
+  orderBy?:
+    | Prisma.StockInPriceCorrectionOrderLineOrderByWithRelationInput
+    | Prisma.StockInPriceCorrectionOrderLineOrderByWithRelationInput[];
+  cursor?: Prisma.StockInPriceCorrectionOrderLineWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.StockInPriceCorrectionOrderLineScalarFieldEnum
+    | Prisma.StockInPriceCorrectionOrderLineScalarFieldEnum[];
 };
 
 /**

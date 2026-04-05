@@ -37,14 +37,13 @@ const LOCAL_DICT_LOADERS = {
 
 async function loadMaterialCategoryDict() {
   const rows = [];
-  const seen = new Map();
   let offset = 0;
   const limit = 100;
   let total = 0;
 
   do {
     const response = await request({
-      url: "/api/master-data/materials",
+      url: "/api/master-data/material-categories",
       method: "get",
       params: {
         limit,
@@ -56,14 +55,12 @@ async function loadMaterialCategoryDict() {
     total = Number(data.total || 0);
 
     for (const item of items) {
-      const category = item.category;
-      if (!category?.id || seen.has(category.id)) {
+      if (!item?.id) {
         continue;
       }
-      seen.set(category.id, true);
       rows.push({
-        label: category.categoryName,
-        value: String(category.id),
+        label: item.categoryName,
+        value: String(item.id),
       });
     }
 

@@ -169,6 +169,7 @@ export class MasterDataService implements OnModuleInit {
     if (existing) {
       throw new ConflictException(`物料编码已存在: ${dto.materialCode}`);
     }
+    await this.assertCategoryIdIsActive(dto.categoryId);
 
     return this.repository.createMaterial(
       {
@@ -189,6 +190,7 @@ export class MasterDataService implements OnModuleInit {
     if (!existing) {
       throw new NotFoundException(`物料不存在: ${id}`);
     }
+    await this.assertCategoryIdIsActive(dto.categoryId);
 
     return this.repository.updateMaterial(
       id,
@@ -853,6 +855,17 @@ export class MasterDataService implements OnModuleInit {
     }
 
     throw error;
+  }
+
+  private async assertCategoryIdIsActive(categoryId?: number | null) {
+    if (typeof categoryId === "undefined" || categoryId === null) {
+      return;
+    }
+
+    const category = await this.repository.findMaterialCategoryById(categoryId);
+    if (!category || category.status !== "ACTIVE") {
+      throw new BadRequestException(`物料分类不存在或已停用: ${categoryId}`);
+    }
   }
 
   private async wouldCreateMaterialCategoryCycle(

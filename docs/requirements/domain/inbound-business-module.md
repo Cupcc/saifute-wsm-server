@@ -5,7 +5,7 @@
 - ID: `domain-inbound-business-module`
 - Status: `confirmed`
 - Scope: `domain-level`
-- 状态说明: `Phase 1` 与 `Phase 2`（`F4`/`F5`）已按 `task-20260404-1315-inbound-phase2-fifo-costing` 交付并 full acceptance；`Phase 3`（`F6` 等）仍待独立 task。领域长期约束与能力合同仍以本文档为真源。
+- 状态说明: `Phase 1` 与 `Phase 2`（`F4`/`F5`）已按 `task-20260404-1315-inbound-phase2-fifo-costing` 交付并 full acceptance；`Phase 3` 中 `F8` 已按 `task-20260405-2136-price-layer-outbound-and-inbound-price-correction` 交付，`F6/F7` 仍待独立 task。领域长期约束与能力合同仍以本文档为真源。
 
 ## 主题定义
 
@@ -38,28 +38,31 @@
 - `C5` 默认 FIFO：未手动指定来源时，后续消耗类动作默认按先进先出确定来源层；手动指定来源时，系统仍必须保留可审计来源分配记录。状态：`生效中`
 - `C6` 双向快捷协同：允许从入库页面以“立即出库”方式发起到指定车间的下游领料，也允许在车间页面反选某张入库单据物料直接发起领料；后台仍必须沉淀为独立、可作废、可追溯的下游业务单据，且同一入库单据最多只允许创建一次对应出库。状态：`生效中`
 - `C7` 成品入库路径统一：凡属成品入库，一律经本 domain 的 `inbound`（生产入库单）落库与过账，不分散到客户收发或其它家族。状态：`生效中`
+- `C8` 已消费来源禁改价：当入库来源流水已被 `inventory_source_usage` 占用时，禁止直接修改原 `stock_in_order_line.unitPrice` 和原来源流水 `inventory_log.unitCost`；必须通过入库调价单以补偿型修正处理。未被任何来源占用的入库行仍允许走现有"修改入库单 → reverseStock + repost"路径。状态：`生效中`
 
 ## 长期业务口径
 
 - 创建单据后立即写入库存，修改时按明细补偿库存，作废时冲回；入库单据不能直接兼做下游消耗单据，快捷操作须自动生成独立的车间领料单并保留上下游引用关系。
 - 入库明细的数量、单价、金额是来源成本层的业务真源；当同一物料存在多笔不同价格入库时，系统必须能追溯每笔下游消耗对应的入库来源；后续消耗成本不得退化为物料主档静态单价。
+- 入库单价写错且已被部分消费时，不允许静默改写原入库行和原来源流水的历史成本；必须通过专用调价单走补偿型修正，确保历史审计证据不丢失、后续 FIFO 可解释。
 - 后续扩展上游联动、来源成本追溯或快捷协同体验，必须在不破坏统一家族模型与库存真源的前提下推进。
 
 ## 能力清单
 
 
-| 编号   | 能力              | 验收口径                                             | 阶段      | 状态    | 关联任务 |
-| ---- | --------------- | ------------------------------------------------ | ------- | ----- | ---- |
-| `F1` | 统一入库家族模型        | 验收单与生产入库单共用同一套主从表、服务骨架和库存写入路径                    | Phase 1 | `已完成` | `-`  |
-| `F2` | 主仓准入与库存范围约束     | 验收单与生产入库单默认归主仓，RD 到货验收也先入主仓                      | Phase 1 | `已完成` | `-`  |
-| `F3` | 真实库存轴访问控制       | 查询、详情、修改、作废按 `stockScope` 判断，且关键路径具备测试覆盖         | Phase 1 | `已完成` | `-`  |
-| `F4` | 入库来源层与成本追溯      | 入库价格可作为后续消耗的来源成本真源，支持按入库来源追溯同物料 / 型号的实际消耗成本      | Phase 2 | `已完成` | `task-20260404-1315-inbound-phase2-fifo-costing`  |
-| `F5` | 默认 FIFO 与手动来源指定 | 消耗类动作默认按 FIFO 分配来源层，并支持按业务依据手动指定来源且保留可审计分配记录     | Phase 2 | `已完成` | `task-20260404-1315-inbound-phase2-fifo-costing`  |
-| `F6` | 入库到车间的一键双向协同    | 支持入库页“立即出库”生成车间领料单、车间页反选入库来源发起领料，且同一入库单据只能成功出库一次 | Phase 3 | `未开始` | `-`  |
-| `F7` | 后续入库扩展切片承接      | 后续若继续扩展上游联动、校验补强或体验优化，仍以本 domain 约束作为长期真源        | Phase 3 | `未开始` | `-`  |
+| 编号   | 能力              | 验收口径                                               | 阶段      | 状态    | 关联任务                                             |
+| ---- | --------------- | -------------------------------------------------- | ------- | ----- | ------------------------------------------------ |
+| `F1` | 统一入库家族模型        | 验收单与生产入库单共用同一套主从表、服务骨架和库存写入路径                      | Phase 1 | `已完成` | `-`                                              |
+| `F2` | 主仓准入与库存范围约束     | 验收单与生产入库单默认归主仓，RD 到货验收也先入主仓                        | Phase 1 | `已完成` | `-`                                              |
+| `F3` | 真实库存轴访问控制       | 查询、详情、修改、作废按 `stockScope` 判断，且关键路径具备测试覆盖           | Phase 1 | `已完成` | `-`                                              |
+| `F4` | 入库来源层与成本追溯      | 入库价格可作为后续消耗的来源成本真源，支持按入库来源追溯同物料 / 型号的实际消耗成本        | Phase 2 | `已完成` | `task-20260404-1315-inbound-phase2-fifo-costing` |
+| `F5` | 默认 FIFO 与手动来源指定 | 消耗类动作默认按 FIFO 分配来源层，并支持按业务依据手动指定来源且保留可审计分配记录       | Phase 2 | `已完成` | `task-20260404-1315-inbound-phase2-fifo-costing` |
+| `F6` | 入库到车间的一键双向协同    | 支持入库页“立即出库”生成车间领料单、车间页反选入库来源发起领料，且同一入库单据只能成功出库一次   | Phase 3 | `未开始` | `-`                                              |
+| `F7` | 后续入库扩展切片承接      | 后续若继续扩展上游联动、校验补强或体验优化，仍以本 domain 约束作为长期真源          | Phase 3 | `未开始` | `-`                                              |
+| `F8` | 入库调价单（入库错价纠偏）   | 入库单价写错且来源已被部分消费时，通过调价单安全纠偏：剩余数量切换新来源、已出部分记录差异、不改历史 | Phase 3 | `已完成` | `task-20260405-2136-price-layer-outbound-and-inbound-price-correction` |
 
 
-## 能力合同（推荐）
+## 能力合同（推荐）···
 
 ### `F4` 入库来源层与成本追溯
 
@@ -128,14 +131,41 @@
 - AI derivation note:
   - 优先复用 `sourceDocumentType/sourceDocumentId/sourceDocumentLineId` 与 `document_relation` / `document_line_relation` 体系，不要为快捷操作单独再造一套关系表。
 
+### `F8` 入库调价单（入库错价纠偏）
+
+- In scope:
+  - 新增专用调价单据（`stock_in_price_correction_order` / `stock_in_price_correction_order_line`），不复用原入库单修改路径。
+  - 新增两种库存操作类型 `PRICE_CORRECTION_OUT` / `PRICE_CORRECTION_IN`，用于把原来源流水的剩余数量转出并按正确单价重新转入。
+  - 调价单审核时，系统重新锁定并计算原来源流水的剩余数量和已消费数量，不使用制单时缓存值。
+  - 剩余数量通过一笔内部 OUT + 一笔内部 IN 切换来源，库存余额净变化为零；新 `PRICE_CORRECTION_IN` 流水纳入 `FIFO_SOURCE_OPERATION_TYPES`，成为后续消耗的真实来源。
+  - 已消费部分不做库存数量动作、不改已有 `inventory_source_usage`；只在调价单明细上记录 `historicalDiffAmount = (correctUnitCost - wrongUnitCost) × consumedQtyAtCorrection`。
+  - 调价后追溯规则：调价前的消费行继续追原 `sourceLogId`，调价后新消费追新生成的 `PRICE_CORRECTION_IN` 流水；如需追到最初入库行，通过调价单明细反查。
+  - 不允许对同一原来源流水存在多张未作废、未完成的调价单。
+- Out of scope / non-goals:
+  - V1 不回写历史消费行的 `costUnitPrice / costAmount`，避免静默改写既有审计事实。
+  - 不在本合同中引入完整的"成本更正凭证"读模型。
+  - 不允许直接修改原 `stock_in_order_line.unitPrice` 或 `inventory_log.unitCost`（约束 C8）。
+- Completion criteria:
+  - `[TC-1]` 调价单审核通过后，原来源流水剩余可用量归零，新 `PRICE_CORRECTION_IN` 流水成为后续 FIFO 的可用来源。
+  - `[TC-2]` 调价前已发生的消费行保持原 `sourceLogId` 不变，调价后新消费使用新来源。
+  - `[TC-3]` `inventory_balance.quantityOnHand` 在调价前后净变化为零。
+  - `[TC-4]` 调价单明细正确记录已消费数量和历史差异金额。
+  - `[TC-5]` 价格层库存查询把 `PRICE_CORRECTION_IN` 视为有效来源、`PRICE_CORRECTION_OUT` 视为普通消耗。
+  - `[TC-6]` 出库追溯查询能展示调价来源关系（新来源 → 调价单 → 原入库单行）。
+- Evidence expectation:
+  - domain 文档更新 + 调价单 CRUD / 审核过账 / 库存联动 / 追溯查询的功能验证与 QA 测试。
+- Default derived slice acceptance mode: `light`
+- AI derivation note:
+  - 调价单的库存副作用仍统一走 `inventory-core`，不旁路改库存；`PRICE_CORRECTION_OUT` 的来源分配必须强制指向原 `sourceInventoryLogId`，不走默认 FIFO 分配。
+
 ## 阶段路线图
 
 
-| 阶段      | 目标                           | 当前状态  |
-| ------- | ---------------------------- | ----- |
-| Phase 1 | 收口当前入库家族的统一模型、主仓准入和真实库存轴访问约束 | `已完成` |
-| Phase 2 | 收敛入库来源层、默认 FIFO 和来源成本追溯口径    | `已完成` |
-| Phase 3 | 落地入库页与车间页双向快捷协同，并继续扩展联动与体验优化 | `待规划` |
+| 阶段      | 目标                                   | 当前状态  |
+| ------- | ------------------------------------ | ----- |
+| Phase 1 | 收口当前入库家族的统一模型、主仓准入和真实库存轴访问约束         | `已完成` |
+| Phase 2 | 收敛入库来源层、默认 FIFO 和来源成本追溯口径            | `已完成` |
+| Phase 3 | 落地入库调价单纠偏能力、入库与车间双向快捷协同，并继续扩展联动与体验优化 | `进行中` |
 
 
 ## 已确认补充口径（2026-04-04）
@@ -152,4 +182,3 @@
 - 架构设计：`docs/architecture/20-wms-database-tables-and-schema.md`
 - 方案草案：`docs/workspace/fifo-costing-default-fifo/README.md`
 - 后续继续推进时，直接从本 domain 能力合同创建 `docs/tasks/task-*.md`（`Related requirement` 指向本 domain 对应 `Fx`）。
-

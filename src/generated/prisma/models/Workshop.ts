@@ -251,6 +251,7 @@ export type WorkshopWhereInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationListRelationFilter;
   stockInOrders?: Prisma.StockInOrderListRelationFilter;
   customerStockOrders?: Prisma.CustomerStockOrderListRelationFilter;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderListRelationFilter;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderListRelationFilter;
   projects?: Prisma.ProjectListRelationFilter;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderListRelationFilter;
@@ -273,6 +274,7 @@ export type WorkshopOrderByWithRelationInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationOrderByRelationAggregateInput;
   stockInOrders?: Prisma.StockInOrderOrderByRelationAggregateInput;
   customerStockOrders?: Prisma.CustomerStockOrderOrderByRelationAggregateInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderOrderByRelationAggregateInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderOrderByRelationAggregateInput;
   projects?: Prisma.ProjectOrderByRelationAggregateInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderOrderByRelationAggregateInput;
@@ -302,6 +304,7 @@ export type WorkshopWhereUniqueInput = Prisma.AtLeast<
     factoryNumberReservations?: Prisma.FactoryNumberReservationListRelationFilter;
     stockInOrders?: Prisma.StockInOrderListRelationFilter;
     customerStockOrders?: Prisma.CustomerStockOrderListRelationFilter;
+    stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderListRelationFilter;
     workshopMaterialOrders?: Prisma.WorkshopMaterialOrderListRelationFilter;
     projects?: Prisma.ProjectListRelationFilter;
     rdHandoffSourceOrders?: Prisma.RdHandoffOrderListRelationFilter;
@@ -367,6 +370,7 @@ export type WorkshopCreateInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -389,6 +393,7 @@ export type WorkshopUncheckedCreateInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -412,6 +417,7 @@ export type WorkshopUpdateInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -436,6 +442,7 @@ export type WorkshopUncheckedUpdateInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -665,6 +672,33 @@ export type WorkshopUpdateOneRequiredWithoutCustomerStockOrdersNestedInput = {
   >;
 };
 
+export type WorkshopCreateNestedOneWithoutStockInPriceCorrectionOrdersInput = {
+  create?: Prisma.XOR<
+    Prisma.WorkshopCreateWithoutStockInPriceCorrectionOrdersInput,
+    Prisma.WorkshopUncheckedCreateWithoutStockInPriceCorrectionOrdersInput
+  >;
+  connectOrCreate?: Prisma.WorkshopCreateOrConnectWithoutStockInPriceCorrectionOrdersInput;
+  connect?: Prisma.WorkshopWhereUniqueInput;
+};
+
+export type WorkshopUpdateOneRequiredWithoutStockInPriceCorrectionOrdersNestedInput =
+  {
+    create?: Prisma.XOR<
+      Prisma.WorkshopCreateWithoutStockInPriceCorrectionOrdersInput,
+      Prisma.WorkshopUncheckedCreateWithoutStockInPriceCorrectionOrdersInput
+    >;
+    connectOrCreate?: Prisma.WorkshopCreateOrConnectWithoutStockInPriceCorrectionOrdersInput;
+    upsert?: Prisma.WorkshopUpsertWithoutStockInPriceCorrectionOrdersInput;
+    connect?: Prisma.WorkshopWhereUniqueInput;
+    update?: Prisma.XOR<
+      Prisma.XOR<
+        Prisma.WorkshopUpdateToOneWithWhereWithoutStockInPriceCorrectionOrdersInput,
+        Prisma.WorkshopUpdateWithoutStockInPriceCorrectionOrdersInput
+      >,
+      Prisma.WorkshopUncheckedUpdateWithoutStockInPriceCorrectionOrdersInput
+    >;
+  };
+
 export type WorkshopCreateNestedOneWithoutWorkshopMaterialOrdersInput = {
   create?: Prisma.XOR<
     Prisma.WorkshopCreateWithoutWorkshopMaterialOrdersInput,
@@ -834,6 +868,7 @@ export type WorkshopCreateWithoutInventoryBalancesInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -855,6 +890,7 @@ export type WorkshopUncheckedCreateWithoutInventoryBalancesInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -905,6 +941,7 @@ export type WorkshopUpdateWithoutInventoryBalancesInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -928,6 +965,7 @@ export type WorkshopUncheckedUpdateWithoutInventoryBalancesInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -948,6 +986,7 @@ export type WorkshopCreateWithoutInventoryLogsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -969,6 +1008,7 @@ export type WorkshopUncheckedCreateWithoutInventoryLogsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -1019,6 +1059,7 @@ export type WorkshopUpdateWithoutInventoryLogsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1042,6 +1083,7 @@ export type WorkshopUncheckedUpdateWithoutInventoryLogsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1062,6 +1104,7 @@ export type WorkshopCreateWithoutFactoryNumberReservationsInput = {
   inventoryLogs?: Prisma.InventoryLogCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1083,6 +1126,7 @@ export type WorkshopUncheckedCreateWithoutFactoryNumberReservationsInput = {
   inventoryLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -1134,6 +1178,7 @@ export type WorkshopUpdateWithoutFactoryNumberReservationsInput = {
   inventoryLogs?: Prisma.InventoryLogUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1157,6 +1202,7 @@ export type WorkshopUncheckedUpdateWithoutFactoryNumberReservationsInput = {
   inventoryLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1177,6 +1223,7 @@ export type WorkshopCreateWithoutStockInOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogCreateNestedManyWithoutWorkshopInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1198,6 +1245,7 @@ export type WorkshopUncheckedCreateWithoutStockInOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutWorkshopInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -1248,6 +1296,7 @@ export type WorkshopUpdateWithoutStockInOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogUpdateManyWithoutWorkshopNestedInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1271,6 +1320,7 @@ export type WorkshopUncheckedUpdateWithoutStockInOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutWorkshopNestedInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1291,6 +1341,7 @@ export type WorkshopCreateWithoutCustomerStockOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogCreateNestedManyWithoutWorkshopInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1312,6 +1363,7 @@ export type WorkshopUncheckedCreateWithoutCustomerStockOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutWorkshopInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -1362,6 +1414,7 @@ export type WorkshopUpdateWithoutCustomerStockOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogUpdateManyWithoutWorkshopNestedInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1385,6 +1438,126 @@ export type WorkshopUncheckedUpdateWithoutCustomerStockOrdersInput = {
   inventoryLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutWorkshopNestedInput;
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedUpdateManyWithoutWorkshopNestedInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+};
+
+export type WorkshopCreateWithoutStockInPriceCorrectionOrdersInput = {
+  workshopCode: string;
+  workshopName: string;
+  status?: $Enums.MasterDataStatus;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceCreateNestedManyWithoutWorkshopInput;
+  inventoryLogs?: Prisma.InventoryLogCreateNestedManyWithoutWorkshopInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
+  stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
+  customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestCreateNestedManyWithoutWorkshopInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderCreateNestedManyWithoutWorkshopInput;
+};
+
+export type WorkshopUncheckedCreateWithoutStockInPriceCorrectionOrdersInput = {
+  id?: number;
+  workshopCode: string;
+  workshopName: string;
+  status?: $Enums.MasterDataStatus;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceUncheckedCreateNestedManyWithoutWorkshopInput;
+  inventoryLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutWorkshopInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedCreateNestedManyWithoutWorkshopInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+};
+
+export type WorkshopCreateOrConnectWithoutStockInPriceCorrectionOrdersInput = {
+  where: Prisma.WorkshopWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.WorkshopCreateWithoutStockInPriceCorrectionOrdersInput,
+    Prisma.WorkshopUncheckedCreateWithoutStockInPriceCorrectionOrdersInput
+  >;
+};
+
+export type WorkshopUpsertWithoutStockInPriceCorrectionOrdersInput = {
+  update: Prisma.XOR<
+    Prisma.WorkshopUpdateWithoutStockInPriceCorrectionOrdersInput,
+    Prisma.WorkshopUncheckedUpdateWithoutStockInPriceCorrectionOrdersInput
+  >;
+  create: Prisma.XOR<
+    Prisma.WorkshopCreateWithoutStockInPriceCorrectionOrdersInput,
+    Prisma.WorkshopUncheckedCreateWithoutStockInPriceCorrectionOrdersInput
+  >;
+  where?: Prisma.WorkshopWhereInput;
+};
+
+export type WorkshopUpdateToOneWithWhereWithoutStockInPriceCorrectionOrdersInput =
+  {
+    where?: Prisma.WorkshopWhereInput;
+    data: Prisma.XOR<
+      Prisma.WorkshopUpdateWithoutStockInPriceCorrectionOrdersInput,
+      Prisma.WorkshopUncheckedUpdateWithoutStockInPriceCorrectionOrdersInput
+    >;
+  };
+
+export type WorkshopUpdateWithoutStockInPriceCorrectionOrdersInput = {
+  workshopCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  workshopName?: Prisma.StringFieldUpdateOperationsInput | string;
+  status?:
+    | Prisma.EnumMasterDataStatusFieldUpdateOperationsInput
+    | $Enums.MasterDataStatus;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceUpdateManyWithoutWorkshopNestedInput;
+  inventoryLogs?: Prisma.InventoryLogUpdateManyWithoutWorkshopNestedInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
+  stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestUpdateManyWithoutWorkshopNestedInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderUpdateManyWithoutWorkshopNestedInput;
+};
+
+export type WorkshopUncheckedUpdateWithoutStockInPriceCorrectionOrdersInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  workshopCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  workshopName?: Prisma.StringFieldUpdateOperationsInput | string;
+  status?:
+    | Prisma.EnumMasterDataStatusFieldUpdateOperationsInput
+    | $Enums.MasterDataStatus;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceUncheckedUpdateManyWithoutWorkshopNestedInput;
+  inventoryLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutWorkshopNestedInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1406,6 +1579,7 @@ export type WorkshopCreateWithoutWorkshopMaterialOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
@@ -1427,6 +1601,7 @@ export type WorkshopUncheckedCreateWithoutWorkshopMaterialOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1477,6 +1652,7 @@ export type WorkshopUpdateWithoutWorkshopMaterialOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1500,6 +1676,7 @@ export type WorkshopUncheckedUpdateWithoutWorkshopMaterialOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1520,6 +1697,7 @@ export type WorkshopCreateWithoutProjectsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
@@ -1541,6 +1719,7 @@ export type WorkshopUncheckedCreateWithoutProjectsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1591,6 +1770,7 @@ export type WorkshopUpdateWithoutProjectsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1614,6 +1794,7 @@ export type WorkshopUncheckedUpdateWithoutProjectsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1634,6 +1815,7 @@ export type WorkshopCreateWithoutRdHandoffSourceOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
@@ -1655,6 +1837,7 @@ export type WorkshopUncheckedCreateWithoutRdHandoffSourceOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1683,6 +1866,7 @@ export type WorkshopCreateWithoutRdHandoffTargetOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1704,6 +1888,7 @@ export type WorkshopUncheckedCreateWithoutRdHandoffTargetOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -1754,6 +1939,7 @@ export type WorkshopUpdateWithoutRdHandoffSourceOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1777,6 +1963,7 @@ export type WorkshopUncheckedUpdateWithoutRdHandoffSourceOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1819,6 +2006,7 @@ export type WorkshopUpdateWithoutRdHandoffTargetOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1842,6 +2030,7 @@ export type WorkshopUncheckedUpdateWithoutRdHandoffTargetOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1862,6 +2051,7 @@ export type WorkshopCreateWithoutRdProcurementRequestsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1883,6 +2073,7 @@ export type WorkshopUncheckedCreateWithoutRdProcurementRequestsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -1933,6 +2124,7 @@ export type WorkshopUpdateWithoutRdProcurementRequestsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1956,6 +2148,7 @@ export type WorkshopUncheckedUpdateWithoutRdProcurementRequestsInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1976,6 +2169,7 @@ export type WorkshopCreateWithoutRdStocktakeOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1997,6 +2191,7 @@ export type WorkshopUncheckedCreateWithoutRdStocktakeOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
@@ -2047,6 +2242,7 @@ export type WorkshopUpdateWithoutRdStocktakeOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -2070,6 +2266,7 @@ export type WorkshopUncheckedUpdateWithoutRdStocktakeOrdersInput = {
   factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
@@ -2087,6 +2284,7 @@ export type WorkshopCountOutputType = {
   factoryNumberReservations: number;
   stockInOrders: number;
   customerStockOrders: number;
+  stockInPriceCorrectionOrders: number;
   workshopMaterialOrders: number;
   projects: number;
   rdHandoffSourceOrders: number;
@@ -2110,6 +2308,9 @@ export type WorkshopCountOutputTypeSelect<
   customerStockOrders?:
     | boolean
     | WorkshopCountOutputTypeCountCustomerStockOrdersArgs;
+  stockInPriceCorrectionOrders?:
+    | boolean
+    | WorkshopCountOutputTypeCountStockInPriceCorrectionOrdersArgs;
   workshopMaterialOrders?:
     | boolean
     | WorkshopCountOutputTypeCountWorkshopMaterialOrdersArgs;
@@ -2189,6 +2390,16 @@ export type WorkshopCountOutputTypeCountCustomerStockOrdersArgs<
     runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.CustomerStockOrderWhereInput;
+};
+
+/**
+ * WorkshopCountOutputType without action
+ */
+export type WorkshopCountOutputTypeCountStockInPriceCorrectionOrdersArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.StockInPriceCorrectionOrderWhereInput;
 };
 
 /**
@@ -2275,6 +2486,9 @@ export type WorkshopSelect<
     customerStockOrders?:
       | boolean
       | Prisma.Workshop$customerStockOrdersArgs<ExtArgs>;
+    stockInPriceCorrectionOrders?:
+      | boolean
+      | Prisma.Workshop$stockInPriceCorrectionOrdersArgs<ExtArgs>;
     workshopMaterialOrders?:
       | boolean
       | Prisma.Workshop$workshopMaterialOrdersArgs<ExtArgs>;
@@ -2334,6 +2548,9 @@ export type WorkshopInclude<
   customerStockOrders?:
     | boolean
     | Prisma.Workshop$customerStockOrdersArgs<ExtArgs>;
+  stockInPriceCorrectionOrders?:
+    | boolean
+    | Prisma.Workshop$stockInPriceCorrectionOrdersArgs<ExtArgs>;
   workshopMaterialOrders?:
     | boolean
     | Prisma.Workshop$workshopMaterialOrdersArgs<ExtArgs>;
@@ -2362,6 +2579,7 @@ export type $WorkshopPayload<
     factoryNumberReservations: Prisma.$FactoryNumberReservationPayload<ExtArgs>[];
     stockInOrders: Prisma.$StockInOrderPayload<ExtArgs>[];
     customerStockOrders: Prisma.$CustomerStockOrderPayload<ExtArgs>[];
+    stockInPriceCorrectionOrders: Prisma.$StockInPriceCorrectionOrderPayload<ExtArgs>[];
     workshopMaterialOrders: Prisma.$WorkshopMaterialOrderPayload<ExtArgs>[];
     projects: Prisma.$ProjectPayload<ExtArgs>[];
     rdHandoffSourceOrders: Prisma.$RdHandoffOrderPayload<ExtArgs>[];
@@ -2915,6 +3133,22 @@ export interface Prisma__WorkshopClient<
   ): Prisma.PrismaPromise<
     | runtime.Types.Result.GetResult<
         Prisma.$CustomerStockOrderPayload<ExtArgs>,
+        T,
+        "findMany",
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  stockInPriceCorrectionOrders<
+    T extends Prisma.Workshop$stockInPriceCorrectionOrdersArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.Workshop$stockInPriceCorrectionOrdersArgs<ExtArgs>
+    >,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$StockInPriceCorrectionOrderPayload<ExtArgs>,
         T,
         "findMany",
         GlobalOmitOptions
@@ -3606,6 +3840,37 @@ export type Workshop$customerStockOrdersArgs<
   distinct?:
     | Prisma.CustomerStockOrderScalarFieldEnum
     | Prisma.CustomerStockOrderScalarFieldEnum[];
+};
+
+/**
+ * Workshop.stockInPriceCorrectionOrders
+ */
+export type Workshop$stockInPriceCorrectionOrdersArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockInPriceCorrectionOrder
+   */
+  select?: Prisma.StockInPriceCorrectionOrderSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockInPriceCorrectionOrder
+   */
+  omit?: Prisma.StockInPriceCorrectionOrderOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockInPriceCorrectionOrderInclude<ExtArgs> | null;
+  where?: Prisma.StockInPriceCorrectionOrderWhereInput;
+  orderBy?:
+    | Prisma.StockInPriceCorrectionOrderOrderByWithRelationInput
+    | Prisma.StockInPriceCorrectionOrderOrderByWithRelationInput[];
+  cursor?: Prisma.StockInPriceCorrectionOrderWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.StockInPriceCorrectionOrderScalarFieldEnum
+    | Prisma.StockInPriceCorrectionOrderScalarFieldEnum[];
 };
 
 /**

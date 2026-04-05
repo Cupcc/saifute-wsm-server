@@ -24,6 +24,13 @@ export class UpdateOutboundOrderLineDto {
   quantity!: string;
 
   @IsString()
+  @Matches(/^(?!0+(\.0+)?$)\d+(\.\d{1,2})?$/, {
+    message:
+      "selectedUnitCost must be a positive decimal string with up to 2 decimals",
+  })
+  selectedUnitCost!: string;
+
+  @IsString()
   @IsOptional()
   @Matches(/^\d+(\.\d{1,2})?$/, {
     message:

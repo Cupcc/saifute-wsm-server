@@ -32,6 +32,7 @@
 - 修改单据并重置审核
 - 作废单据并冲回库存
 - 按供应商、物料、日期追溯入库记录
+- 新建入库调价单（计划中）— 当入库单价写错且来源已被部分消费时，通过 `PRICE_CORRECTION_OUT` + `PRICE_CORRECTION_IN` 安全纠偏
 
 ## Controller 接口草案
 
@@ -103,6 +104,13 @@
 - 修改单据后审核重置测试
 - 作废冲回库存测试
 - 明细差异更新测试
+
+## 计划新增单据
+
+以下由入库调价单能力（F8）引入，实现后需补充到本模块：
+
+- `stock_in_price_correction_order` / `stock_in_price_correction_order_line` — 入库调价单主从表
+- 详见需求：`docs/requirements/domain/inbound-business-module.md`（F8）
 
 ## 暂不实现范围
 

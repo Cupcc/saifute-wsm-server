@@ -87,6 +87,19 @@ export class QueryInventoryLogsDto {
   offset?: number = 0;
 }
 
+export class QueryInventoryPriceLayersDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  materialId!: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  workshopId?: number;
+}
+
 export class QueryInventorySourceUsagesDto {
   @IsOptional()
   @Type(() => Number)

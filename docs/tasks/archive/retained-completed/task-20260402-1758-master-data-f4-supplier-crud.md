@@ -15,7 +15,7 @@
 - Coder: `coder`
 - Reviewer: `code-reviewer`
 - Acceptance QA: `acceptance-qa`
-- Last updated: `2026-04-04`
+- Last updated: `2026-04-06`
 - Related checklist: `None`
 - Related acceptance spec: `docs/acceptance-tests/specs/master-data.md`
 - Related acceptance case: `docs/acceptance-tests/cases/master-data.json`
@@ -87,7 +87,7 @@
   - [x] `browser/full` 供应商管理页 + 入库单下拉消费者 smoke 通过
 - Acceptance notes:
   - `[AC-1]` ~ `[AC-7]` 已由 unit / e2e / build / browser 组合证据覆盖。
-  - `docs/acceptance-tests/specs/master-data.md` 的 `Latest Verification` 已更新为 `2026-04-03`，总体结果为 `passed`。
+  - `docs/acceptance-tests/specs/master-data.md` 已在 `2026-04-06` 同步 browser QA 复验结果；独立冻结报告见 `docs/acceptance-tests/runs/run-20260406-0026-master-data-f4-browser-qa.md`。
 
 ## Final Status
 

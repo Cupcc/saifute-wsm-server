@@ -5,8 +5,10 @@ import { RbacModule } from "../rbac/rbac.module";
 import { RdSubwarehouseModule } from "../rd-subwarehouse/rd-subwarehouse.module";
 import { WorkflowModule } from "../workflow/workflow.module";
 import { InboundService } from "./application/inbound.service";
+import { StockInPriceCorrectionService } from "./application/stock-in-price-correction.service";
 import { InboundController } from "./controllers/inbound.controller";
 import { InboundRepository } from "./infrastructure/inbound.repository";
+import { StockInPriceCorrectionRepository } from "./infrastructure/stock-in-price-correction.repository";
 
 @Module({
   imports: [
@@ -17,7 +19,12 @@ import { InboundRepository } from "./infrastructure/inbound.repository";
     RdSubwarehouseModule,
   ],
   controllers: [InboundController],
-  providers: [InboundService, InboundRepository],
-  exports: [InboundService],
+  providers: [
+    InboundService,
+    InboundRepository,
+    StockInPriceCorrectionService,
+    StockInPriceCorrectionRepository,
+  ],
+  exports: [InboundService, StockInPriceCorrectionService],
 })
 export class InboundModule {}

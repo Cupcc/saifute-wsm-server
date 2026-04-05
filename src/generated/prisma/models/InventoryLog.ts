@@ -461,6 +461,18 @@ export type InventoryLogWhereInput = {
   > | null;
   reversedByLogs?: Prisma.InventoryLogListRelationFilter;
   allocatedSourceUsages?: Prisma.InventorySourceUsageListRelationFilter;
+  sourcePriceCorrectionLine?: Prisma.XOR<
+    Prisma.StockInPriceCorrectionOrderLineNullableScalarRelationFilter,
+    Prisma.StockInPriceCorrectionOrderLineWhereInput
+  > | null;
+  generatedOutCorrectionLine?: Prisma.XOR<
+    Prisma.StockInPriceCorrectionOrderLineNullableScalarRelationFilter,
+    Prisma.StockInPriceCorrectionOrderLineWhereInput
+  > | null;
+  generatedInCorrectionLine?: Prisma.XOR<
+    Prisma.StockInPriceCorrectionOrderLineNullableScalarRelationFilter,
+    Prisma.StockInPriceCorrectionOrderLineWhereInput
+  > | null;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryListRelationFilter;
   rdStocktakeOrderLine?: Prisma.XOR<
     Prisma.RdStocktakeOrderLineNullableScalarRelationFilter,
@@ -498,6 +510,9 @@ export type InventoryLogOrderByWithRelationInput = {
   reversalOfLog?: Prisma.InventoryLogOrderByWithRelationInput;
   reversedByLogs?: Prisma.InventoryLogOrderByRelationAggregateInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageOrderByRelationAggregateInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineOrderByWithRelationInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineOrderByWithRelationInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineOrderByWithRelationInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryOrderByRelationAggregateInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineOrderByWithRelationInput;
   _relevance?: Prisma.InventoryLogOrderByRelevanceInput;
@@ -586,6 +601,18 @@ export type InventoryLogWhereUniqueInput = Prisma.AtLeast<
     > | null;
     reversedByLogs?: Prisma.InventoryLogListRelationFilter;
     allocatedSourceUsages?: Prisma.InventorySourceUsageListRelationFilter;
+    sourcePriceCorrectionLine?: Prisma.XOR<
+      Prisma.StockInPriceCorrectionOrderLineNullableScalarRelationFilter,
+      Prisma.StockInPriceCorrectionOrderLineWhereInput
+    > | null;
+    generatedOutCorrectionLine?: Prisma.XOR<
+      Prisma.StockInPriceCorrectionOrderLineNullableScalarRelationFilter,
+      Prisma.StockInPriceCorrectionOrderLineWhereInput
+    > | null;
+    generatedInCorrectionLine?: Prisma.XOR<
+      Prisma.StockInPriceCorrectionOrderLineNullableScalarRelationFilter,
+      Prisma.StockInPriceCorrectionOrderLineWhereInput
+    > | null;
     rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryListRelationFilter;
     rdStocktakeOrderLine?: Prisma.XOR<
       Prisma.RdStocktakeOrderLineNullableScalarRelationFilter,
@@ -734,6 +761,9 @@ export type InventoryLogCreateInput = {
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -763,6 +793,9 @@ export type InventoryLogUncheckedCreateInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -825,6 +858,9 @@ export type InventoryLogUpdateInput = {
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -891,6 +927,9 @@ export type InventoryLogUncheckedUpdateInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -1783,6 +1822,91 @@ export type InventoryLogUpdateOneRequiredWithoutAllocatedSourceUsagesNestedInput
     >;
   };
 
+export type InventoryLogCreateNestedOneWithoutSourcePriceCorrectionLineInput = {
+  create?: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutSourcePriceCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutSourcePriceCorrectionLineInput
+  >;
+  connectOrCreate?: Prisma.InventoryLogCreateOrConnectWithoutSourcePriceCorrectionLineInput;
+  connect?: Prisma.InventoryLogWhereUniqueInput;
+};
+
+export type InventoryLogCreateNestedOneWithoutGeneratedOutCorrectionLineInput =
+  {
+    create?: Prisma.XOR<
+      Prisma.InventoryLogCreateWithoutGeneratedOutCorrectionLineInput,
+      Prisma.InventoryLogUncheckedCreateWithoutGeneratedOutCorrectionLineInput
+    >;
+    connectOrCreate?: Prisma.InventoryLogCreateOrConnectWithoutGeneratedOutCorrectionLineInput;
+    connect?: Prisma.InventoryLogWhereUniqueInput;
+  };
+
+export type InventoryLogCreateNestedOneWithoutGeneratedInCorrectionLineInput = {
+  create?: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutGeneratedInCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutGeneratedInCorrectionLineInput
+  >;
+  connectOrCreate?: Prisma.InventoryLogCreateOrConnectWithoutGeneratedInCorrectionLineInput;
+  connect?: Prisma.InventoryLogWhereUniqueInput;
+};
+
+export type InventoryLogUpdateOneRequiredWithoutSourcePriceCorrectionLineNestedInput =
+  {
+    create?: Prisma.XOR<
+      Prisma.InventoryLogCreateWithoutSourcePriceCorrectionLineInput,
+      Prisma.InventoryLogUncheckedCreateWithoutSourcePriceCorrectionLineInput
+    >;
+    connectOrCreate?: Prisma.InventoryLogCreateOrConnectWithoutSourcePriceCorrectionLineInput;
+    upsert?: Prisma.InventoryLogUpsertWithoutSourcePriceCorrectionLineInput;
+    connect?: Prisma.InventoryLogWhereUniqueInput;
+    update?: Prisma.XOR<
+      Prisma.XOR<
+        Prisma.InventoryLogUpdateToOneWithWhereWithoutSourcePriceCorrectionLineInput,
+        Prisma.InventoryLogUpdateWithoutSourcePriceCorrectionLineInput
+      >,
+      Prisma.InventoryLogUncheckedUpdateWithoutSourcePriceCorrectionLineInput
+    >;
+  };
+
+export type InventoryLogUpdateOneWithoutGeneratedOutCorrectionLineNestedInput =
+  {
+    create?: Prisma.XOR<
+      Prisma.InventoryLogCreateWithoutGeneratedOutCorrectionLineInput,
+      Prisma.InventoryLogUncheckedCreateWithoutGeneratedOutCorrectionLineInput
+    >;
+    connectOrCreate?: Prisma.InventoryLogCreateOrConnectWithoutGeneratedOutCorrectionLineInput;
+    upsert?: Prisma.InventoryLogUpsertWithoutGeneratedOutCorrectionLineInput;
+    disconnect?: Prisma.InventoryLogWhereInput | boolean;
+    delete?: Prisma.InventoryLogWhereInput | boolean;
+    connect?: Prisma.InventoryLogWhereUniqueInput;
+    update?: Prisma.XOR<
+      Prisma.XOR<
+        Prisma.InventoryLogUpdateToOneWithWhereWithoutGeneratedOutCorrectionLineInput,
+        Prisma.InventoryLogUpdateWithoutGeneratedOutCorrectionLineInput
+      >,
+      Prisma.InventoryLogUncheckedUpdateWithoutGeneratedOutCorrectionLineInput
+    >;
+  };
+
+export type InventoryLogUpdateOneWithoutGeneratedInCorrectionLineNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutGeneratedInCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutGeneratedInCorrectionLineInput
+  >;
+  connectOrCreate?: Prisma.InventoryLogCreateOrConnectWithoutGeneratedInCorrectionLineInput;
+  upsert?: Prisma.InventoryLogUpsertWithoutGeneratedInCorrectionLineInput;
+  disconnect?: Prisma.InventoryLogWhereInput | boolean;
+  delete?: Prisma.InventoryLogWhereInput | boolean;
+  connect?: Prisma.InventoryLogWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.InventoryLogUpdateToOneWithWhereWithoutGeneratedInCorrectionLineInput,
+      Prisma.InventoryLogUpdateWithoutGeneratedInCorrectionLineInput
+    >,
+    Prisma.InventoryLogUncheckedUpdateWithoutGeneratedInCorrectionLineInput
+  >;
+};
+
 export type InventoryLogCreateNestedOneWithoutRdMaterialStatusHistoriesInput = {
   create?: Prisma.XOR<
     Prisma.InventoryLogCreateWithoutRdMaterialStatusHistoriesInput,
@@ -1862,6 +1986,9 @@ export type InventoryLogCreateWithoutMaterialInput = {
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -1890,6 +2017,9 @@ export type InventoryLogUncheckedCreateWithoutMaterialInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2026,6 +2156,9 @@ export type InventoryLogCreateWithoutWorkshopInput = {
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2054,6 +2187,9 @@ export type InventoryLogUncheckedCreateWithoutWorkshopInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2124,6 +2260,9 @@ export type InventoryLogCreateWithoutStockScopeInput = {
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2152,6 +2291,9 @@ export type InventoryLogUncheckedCreateWithoutStockScopeInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2222,6 +2364,9 @@ export type InventoryLogCreateWithoutBalanceInput = {
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2250,6 +2395,9 @@ export type InventoryLogUncheckedCreateWithoutBalanceInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2320,6 +2468,9 @@ export type InventoryLogCreateWithoutReversedByLogsInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutInventoryLogsInput;
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2348,6 +2499,9 @@ export type InventoryLogUncheckedCreateWithoutReversedByLogsInput = {
   idempotencyKey: string;
   note?: string | null;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2383,6 +2537,9 @@ export type InventoryLogCreateWithoutReversalOfLogInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutInventoryLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2411,6 +2568,9 @@ export type InventoryLogUncheckedCreateWithoutReversalOfLogInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2507,6 +2667,9 @@ export type InventoryLogUpdateWithoutReversedByLogsInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutInventoryLogsNestedInput;
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -2572,6 +2735,9 @@ export type InventoryLogUncheckedUpdateWithoutReversedByLogsInput = {
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -2627,6 +2793,9 @@ export type InventoryLogCreateWithoutAllocatedSourceUsagesInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutInventoryLogsInput;
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2655,6 +2824,9 @@ export type InventoryLogUncheckedCreateWithoutAllocatedSourceUsagesInput = {
   idempotencyKey: string;
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
@@ -2745,6 +2917,9 @@ export type InventoryLogUpdateWithoutAllocatedSourceUsagesInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutInventoryLogsNestedInput;
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -2810,6 +2985,686 @@ export type InventoryLogUncheckedUpdateWithoutAllocatedSourceUsagesInput = {
   idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
+};
+
+export type InventoryLogCreateWithoutSourcePriceCorrectionLineInput = {
+  direction: $Enums.StockDirection;
+  operationType: $Enums.InventoryOperationType;
+  businessModule: string;
+  businessDocumentType: string;
+  businessDocumentId: number;
+  businessDocumentNumber: string;
+  businessDocumentLineId?: number | null;
+  changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  operatorId?: string | null;
+  occurredAt?: Date | string;
+  idempotencyKey: string;
+  note?: string | null;
+  balance: Prisma.InventoryBalanceCreateNestedOneWithoutLogsInput;
+  material: Prisma.MaterialCreateNestedOneWithoutInventoryLogsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutInventoryLogsInput;
+  workshop: Prisma.WorkshopCreateNestedOneWithoutInventoryLogsInput;
+  reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
+  reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
+};
+
+export type InventoryLogUncheckedCreateWithoutSourcePriceCorrectionLineInput = {
+  id?: number;
+  balanceId: number;
+  materialId: number;
+  stockScopeId?: number | null;
+  workshopId: number;
+  direction: $Enums.StockDirection;
+  operationType: $Enums.InventoryOperationType;
+  businessModule: string;
+  businessDocumentType: string;
+  businessDocumentId: number;
+  businessDocumentNumber: string;
+  businessDocumentLineId?: number | null;
+  changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  operatorId?: string | null;
+  occurredAt?: Date | string;
+  reversalOfLogId?: number | null;
+  idempotencyKey: string;
+  note?: string | null;
+  reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
+};
+
+export type InventoryLogCreateOrConnectWithoutSourcePriceCorrectionLineInput = {
+  where: Prisma.InventoryLogWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutSourcePriceCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutSourcePriceCorrectionLineInput
+  >;
+};
+
+export type InventoryLogCreateWithoutGeneratedOutCorrectionLineInput = {
+  direction: $Enums.StockDirection;
+  operationType: $Enums.InventoryOperationType;
+  businessModule: string;
+  businessDocumentType: string;
+  businessDocumentId: number;
+  businessDocumentNumber: string;
+  businessDocumentLineId?: number | null;
+  changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  operatorId?: string | null;
+  occurredAt?: Date | string;
+  idempotencyKey: string;
+  note?: string | null;
+  balance: Prisma.InventoryBalanceCreateNestedOneWithoutLogsInput;
+  material: Prisma.MaterialCreateNestedOneWithoutInventoryLogsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutInventoryLogsInput;
+  workshop: Prisma.WorkshopCreateNestedOneWithoutInventoryLogsInput;
+  reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
+  reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
+};
+
+export type InventoryLogUncheckedCreateWithoutGeneratedOutCorrectionLineInput =
+  {
+    id?: number;
+    balanceId: number;
+    materialId: number;
+    stockScopeId?: number | null;
+    workshopId: number;
+    direction: $Enums.StockDirection;
+    operationType: $Enums.InventoryOperationType;
+    businessModule: string;
+    businessDocumentType: string;
+    businessDocumentId: number;
+    businessDocumentNumber: string;
+    businessDocumentLineId?: number | null;
+    changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+    beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+    afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+    unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+    costAmount?:
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    operatorId?: string | null;
+    occurredAt?: Date | string;
+    reversalOfLogId?: number | null;
+    idempotencyKey: string;
+    note?: string | null;
+    reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
+    allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+    sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+    generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
+    rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
+    rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
+  };
+
+export type InventoryLogCreateOrConnectWithoutGeneratedOutCorrectionLineInput =
+  {
+    where: Prisma.InventoryLogWhereUniqueInput;
+    create: Prisma.XOR<
+      Prisma.InventoryLogCreateWithoutGeneratedOutCorrectionLineInput,
+      Prisma.InventoryLogUncheckedCreateWithoutGeneratedOutCorrectionLineInput
+    >;
+  };
+
+export type InventoryLogCreateWithoutGeneratedInCorrectionLineInput = {
+  direction: $Enums.StockDirection;
+  operationType: $Enums.InventoryOperationType;
+  businessModule: string;
+  businessDocumentType: string;
+  businessDocumentId: number;
+  businessDocumentNumber: string;
+  businessDocumentLineId?: number | null;
+  changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  operatorId?: string | null;
+  occurredAt?: Date | string;
+  idempotencyKey: string;
+  note?: string | null;
+  balance: Prisma.InventoryBalanceCreateNestedOneWithoutLogsInput;
+  material: Prisma.MaterialCreateNestedOneWithoutInventoryLogsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutInventoryLogsInput;
+  workshop: Prisma.WorkshopCreateNestedOneWithoutInventoryLogsInput;
+  reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
+  reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
+};
+
+export type InventoryLogUncheckedCreateWithoutGeneratedInCorrectionLineInput = {
+  id?: number;
+  balanceId: number;
+  materialId: number;
+  stockScopeId?: number | null;
+  workshopId: number;
+  direction: $Enums.StockDirection;
+  operationType: $Enums.InventoryOperationType;
+  businessModule: string;
+  businessDocumentType: string;
+  businessDocumentId: number;
+  businessDocumentNumber: string;
+  businessDocumentLineId?: number | null;
+  changeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  beforeQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  afterQty: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  unitCost?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  costAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string | null;
+  operatorId?: string | null;
+  occurredAt?: Date | string;
+  reversalOfLogId?: number | null;
+  idempotencyKey: string;
+  note?: string | null;
+  reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
+};
+
+export type InventoryLogCreateOrConnectWithoutGeneratedInCorrectionLineInput = {
+  where: Prisma.InventoryLogWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutGeneratedInCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutGeneratedInCorrectionLineInput
+  >;
+};
+
+export type InventoryLogUpsertWithoutSourcePriceCorrectionLineInput = {
+  update: Prisma.XOR<
+    Prisma.InventoryLogUpdateWithoutSourcePriceCorrectionLineInput,
+    Prisma.InventoryLogUncheckedUpdateWithoutSourcePriceCorrectionLineInput
+  >;
+  create: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutSourcePriceCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutSourcePriceCorrectionLineInput
+  >;
+  where?: Prisma.InventoryLogWhereInput;
+};
+
+export type InventoryLogUpdateToOneWithWhereWithoutSourcePriceCorrectionLineInput =
+  {
+    where?: Prisma.InventoryLogWhereInput;
+    data: Prisma.XOR<
+      Prisma.InventoryLogUpdateWithoutSourcePriceCorrectionLineInput,
+      Prisma.InventoryLogUncheckedUpdateWithoutSourcePriceCorrectionLineInput
+    >;
+  };
+
+export type InventoryLogUpdateWithoutSourcePriceCorrectionLineInput = {
+  direction?:
+    | Prisma.EnumStockDirectionFieldUpdateOperationsInput
+    | $Enums.StockDirection;
+  operationType?:
+    | Prisma.EnumInventoryOperationTypeFieldUpdateOperationsInput
+    | $Enums.InventoryOperationType;
+  businessModule?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentType?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentId?: Prisma.IntFieldUpdateOperationsInput | number;
+  businessDocumentNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentLineId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  changeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  beforeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  afterQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  balance?: Prisma.InventoryBalanceUpdateOneRequiredWithoutLogsNestedInput;
+  material?: Prisma.MaterialUpdateOneRequiredWithoutInventoryLogsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutInventoryLogsNestedInput;
+  workshop?: Prisma.WorkshopUpdateOneRequiredWithoutInventoryLogsNestedInput;
+  reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
+  reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
+};
+
+export type InventoryLogUncheckedUpdateWithoutSourcePriceCorrectionLineInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  balanceId?: Prisma.IntFieldUpdateOperationsInput | number;
+  materialId?: Prisma.IntFieldUpdateOperationsInput | number;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  direction?:
+    | Prisma.EnumStockDirectionFieldUpdateOperationsInput
+    | $Enums.StockDirection;
+  operationType?:
+    | Prisma.EnumInventoryOperationTypeFieldUpdateOperationsInput
+    | $Enums.InventoryOperationType;
+  businessModule?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentType?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentId?: Prisma.IntFieldUpdateOperationsInput | number;
+  businessDocumentNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentLineId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  changeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  beforeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  afterQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  reversalOfLogId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
+};
+
+export type InventoryLogUpsertWithoutGeneratedOutCorrectionLineInput = {
+  update: Prisma.XOR<
+    Prisma.InventoryLogUpdateWithoutGeneratedOutCorrectionLineInput,
+    Prisma.InventoryLogUncheckedUpdateWithoutGeneratedOutCorrectionLineInput
+  >;
+  create: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutGeneratedOutCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutGeneratedOutCorrectionLineInput
+  >;
+  where?: Prisma.InventoryLogWhereInput;
+};
+
+export type InventoryLogUpdateToOneWithWhereWithoutGeneratedOutCorrectionLineInput =
+  {
+    where?: Prisma.InventoryLogWhereInput;
+    data: Prisma.XOR<
+      Prisma.InventoryLogUpdateWithoutGeneratedOutCorrectionLineInput,
+      Prisma.InventoryLogUncheckedUpdateWithoutGeneratedOutCorrectionLineInput
+    >;
+  };
+
+export type InventoryLogUpdateWithoutGeneratedOutCorrectionLineInput = {
+  direction?:
+    | Prisma.EnumStockDirectionFieldUpdateOperationsInput
+    | $Enums.StockDirection;
+  operationType?:
+    | Prisma.EnumInventoryOperationTypeFieldUpdateOperationsInput
+    | $Enums.InventoryOperationType;
+  businessModule?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentType?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentId?: Prisma.IntFieldUpdateOperationsInput | number;
+  businessDocumentNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentLineId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  changeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  beforeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  afterQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  balance?: Prisma.InventoryBalanceUpdateOneRequiredWithoutLogsNestedInput;
+  material?: Prisma.MaterialUpdateOneRequiredWithoutInventoryLogsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutInventoryLogsNestedInput;
+  workshop?: Prisma.WorkshopUpdateOneRequiredWithoutInventoryLogsNestedInput;
+  reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
+  reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
+};
+
+export type InventoryLogUncheckedUpdateWithoutGeneratedOutCorrectionLineInput =
+  {
+    id?: Prisma.IntFieldUpdateOperationsInput | number;
+    balanceId?: Prisma.IntFieldUpdateOperationsInput | number;
+    materialId?: Prisma.IntFieldUpdateOperationsInput | number;
+    stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+    workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+    direction?:
+      | Prisma.EnumStockDirectionFieldUpdateOperationsInput
+      | $Enums.StockDirection;
+    operationType?:
+      | Prisma.EnumInventoryOperationTypeFieldUpdateOperationsInput
+      | $Enums.InventoryOperationType;
+    businessModule?: Prisma.StringFieldUpdateOperationsInput | string;
+    businessDocumentType?: Prisma.StringFieldUpdateOperationsInput | string;
+    businessDocumentId?: Prisma.IntFieldUpdateOperationsInput | number;
+    businessDocumentNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+    businessDocumentLineId?:
+      | Prisma.NullableIntFieldUpdateOperationsInput
+      | number
+      | null;
+    changeQty?:
+      | Prisma.DecimalFieldUpdateOperationsInput
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string;
+    beforeQty?:
+      | Prisma.DecimalFieldUpdateOperationsInput
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string;
+    afterQty?:
+      | Prisma.DecimalFieldUpdateOperationsInput
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string;
+    unitCost?:
+      | Prisma.NullableDecimalFieldUpdateOperationsInput
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    costAmount?:
+      | Prisma.NullableDecimalFieldUpdateOperationsInput
+      | runtime.Decimal
+      | runtime.DecimalJsLike
+      | number
+      | string
+      | null;
+    operatorId?:
+      | Prisma.NullableStringFieldUpdateOperationsInput
+      | string
+      | null;
+    occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    reversalOfLogId?:
+      | Prisma.NullableIntFieldUpdateOperationsInput
+      | number
+      | null;
+    idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
+    note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
+    allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+    sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+    generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
+    rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
+    rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
+  };
+
+export type InventoryLogUpsertWithoutGeneratedInCorrectionLineInput = {
+  update: Prisma.XOR<
+    Prisma.InventoryLogUpdateWithoutGeneratedInCorrectionLineInput,
+    Prisma.InventoryLogUncheckedUpdateWithoutGeneratedInCorrectionLineInput
+  >;
+  create: Prisma.XOR<
+    Prisma.InventoryLogCreateWithoutGeneratedInCorrectionLineInput,
+    Prisma.InventoryLogUncheckedCreateWithoutGeneratedInCorrectionLineInput
+  >;
+  where?: Prisma.InventoryLogWhereInput;
+};
+
+export type InventoryLogUpdateToOneWithWhereWithoutGeneratedInCorrectionLineInput =
+  {
+    where?: Prisma.InventoryLogWhereInput;
+    data: Prisma.XOR<
+      Prisma.InventoryLogUpdateWithoutGeneratedInCorrectionLineInput,
+      Prisma.InventoryLogUncheckedUpdateWithoutGeneratedInCorrectionLineInput
+    >;
+  };
+
+export type InventoryLogUpdateWithoutGeneratedInCorrectionLineInput = {
+  direction?:
+    | Prisma.EnumStockDirectionFieldUpdateOperationsInput
+    | $Enums.StockDirection;
+  operationType?:
+    | Prisma.EnumInventoryOperationTypeFieldUpdateOperationsInput
+    | $Enums.InventoryOperationType;
+  businessModule?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentType?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentId?: Prisma.IntFieldUpdateOperationsInput | number;
+  businessDocumentNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentLineId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  changeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  beforeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  afterQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  balance?: Prisma.InventoryBalanceUpdateOneRequiredWithoutLogsNestedInput;
+  material?: Prisma.MaterialUpdateOneRequiredWithoutInventoryLogsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutInventoryLogsNestedInput;
+  workshop?: Prisma.WorkshopUpdateOneRequiredWithoutInventoryLogsNestedInput;
+  reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
+  reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
+  rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
+};
+
+export type InventoryLogUncheckedUpdateWithoutGeneratedInCorrectionLineInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  balanceId?: Prisma.IntFieldUpdateOperationsInput | number;
+  materialId?: Prisma.IntFieldUpdateOperationsInput | number;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  direction?:
+    | Prisma.EnumStockDirectionFieldUpdateOperationsInput
+    | $Enums.StockDirection;
+  operationType?:
+    | Prisma.EnumInventoryOperationTypeFieldUpdateOperationsInput
+    | $Enums.InventoryOperationType;
+  businessModule?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentType?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentId?: Prisma.IntFieldUpdateOperationsInput | number;
+  businessDocumentNumber?: Prisma.StringFieldUpdateOperationsInput | string;
+  businessDocumentLineId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  changeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  beforeQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  afterQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  unitCost?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  costAmount?:
+    | Prisma.NullableDecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string
+    | null;
+  operatorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  occurredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  reversalOfLogId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  idempotencyKey?: Prisma.StringFieldUpdateOperationsInput | string;
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
+  allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -2838,6 +3693,9 @@ export type InventoryLogCreateWithoutRdMaterialStatusHistoriesInput = {
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineCreateNestedOneWithoutInventoryLogInput;
 };
 
@@ -2866,6 +3724,9 @@ export type InventoryLogUncheckedCreateWithoutRdMaterialStatusHistoriesInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedCreateNestedOneWithoutInventoryLogInput;
 };
 
@@ -2956,6 +3817,9 @@ export type InventoryLogUpdateWithoutRdMaterialStatusHistoriesInput = {
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
 
@@ -3021,6 +3885,9 @@ export type InventoryLogUncheckedUpdateWithoutRdMaterialStatusHistoriesInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
 
@@ -3048,6 +3915,9 @@ export type InventoryLogCreateWithoutRdStocktakeOrderLineInput = {
   reversalOfLog?: Prisma.InventoryLogCreateNestedOneWithoutReversedByLogsInput;
   reversedByLogs?: Prisma.InventoryLogCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryCreateNestedManyWithoutRelatedInventoryLogInput;
 };
 
@@ -3076,6 +3946,9 @@ export type InventoryLogUncheckedCreateWithoutRdStocktakeOrderLineInput = {
   note?: string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutReversalOfLogInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedCreateNestedManyWithoutSourceLogInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutSourceInventoryLogInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedOutLogInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedCreateNestedOneWithoutGeneratedInLogInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedCreateNestedManyWithoutRelatedInventoryLogInput;
 };
 
@@ -3165,6 +4038,9 @@ export type InventoryLogUpdateWithoutRdStocktakeOrderLineInput = {
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
 };
 
@@ -3230,6 +4106,9 @@ export type InventoryLogUncheckedUpdateWithoutRdStocktakeOrderLineInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
 };
 
@@ -3314,6 +4193,9 @@ export type InventoryLogUpdateWithoutMaterialInput = {
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -3379,6 +4261,9 @@ export type InventoryLogUncheckedUpdateWithoutMaterialInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -3525,6 +4410,9 @@ export type InventoryLogUpdateWithoutWorkshopInput = {
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -3590,6 +4478,9 @@ export type InventoryLogUncheckedUpdateWithoutWorkshopInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -3736,6 +4627,9 @@ export type InventoryLogUpdateWithoutStockScopeInput = {
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -3801,6 +4695,9 @@ export type InventoryLogUncheckedUpdateWithoutStockScopeInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -3947,6 +4844,9 @@ export type InventoryLogUpdateWithoutBalanceInput = {
   reversalOfLog?: Prisma.InventoryLogUpdateOneWithoutReversedByLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -4012,6 +4912,9 @@ export type InventoryLogUncheckedUpdateWithoutBalanceInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -4158,6 +5061,9 @@ export type InventoryLogUpdateWithoutReversalOfLogInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutInventoryLogsNestedInput;
   reversedByLogs?: Prisma.InventoryLogUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -4220,6 +5126,9 @@ export type InventoryLogUncheckedUpdateWithoutReversalOfLogInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   reversedByLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutReversalOfLogNestedInput;
   allocatedSourceUsages?: Prisma.InventorySourceUsageUncheckedUpdateManyWithoutSourceLogNestedInput;
+  sourcePriceCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutSourceInventoryLogNestedInput;
+  generatedOutCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedOutLogNestedInput;
+  generatedInCorrectionLine?: Prisma.StockInPriceCorrectionOrderLineUncheckedUpdateOneWithoutGeneratedInLogNestedInput;
   rdMaterialStatusHistories?: Prisma.RdMaterialStatusHistoryUncheckedUpdateManyWithoutRelatedInventoryLogNestedInput;
   rdStocktakeOrderLine?: Prisma.RdStocktakeOrderLineUncheckedUpdateOneWithoutInventoryLogNestedInput;
 };
@@ -4384,6 +5293,15 @@ export type InventoryLogSelect<
     allocatedSourceUsages?:
       | boolean
       | Prisma.InventoryLog$allocatedSourceUsagesArgs<ExtArgs>;
+    sourcePriceCorrectionLine?:
+      | boolean
+      | Prisma.InventoryLog$sourcePriceCorrectionLineArgs<ExtArgs>;
+    generatedOutCorrectionLine?:
+      | boolean
+      | Prisma.InventoryLog$generatedOutCorrectionLineArgs<ExtArgs>;
+    generatedInCorrectionLine?:
+      | boolean
+      | Prisma.InventoryLog$generatedInCorrectionLineArgs<ExtArgs>;
     rdMaterialStatusHistories?:
       | boolean
       | Prisma.InventoryLog$rdMaterialStatusHistoriesArgs<ExtArgs>;
@@ -4461,6 +5379,15 @@ export type InventoryLogInclude<
   allocatedSourceUsages?:
     | boolean
     | Prisma.InventoryLog$allocatedSourceUsagesArgs<ExtArgs>;
+  sourcePriceCorrectionLine?:
+    | boolean
+    | Prisma.InventoryLog$sourcePriceCorrectionLineArgs<ExtArgs>;
+  generatedOutCorrectionLine?:
+    | boolean
+    | Prisma.InventoryLog$generatedOutCorrectionLineArgs<ExtArgs>;
+  generatedInCorrectionLine?:
+    | boolean
+    | Prisma.InventoryLog$generatedInCorrectionLineArgs<ExtArgs>;
   rdMaterialStatusHistories?:
     | boolean
     | Prisma.InventoryLog$rdMaterialStatusHistoriesArgs<ExtArgs>;
@@ -4483,6 +5410,9 @@ export type $InventoryLogPayload<
     reversalOfLog: Prisma.$InventoryLogPayload<ExtArgs> | null;
     reversedByLogs: Prisma.$InventoryLogPayload<ExtArgs>[];
     allocatedSourceUsages: Prisma.$InventorySourceUsagePayload<ExtArgs>[];
+    sourcePriceCorrectionLine: Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs> | null;
+    generatedOutCorrectionLine: Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs> | null;
+    generatedInCorrectionLine: Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs> | null;
     rdMaterialStatusHistories: Prisma.$RdMaterialStatusHistoryPayload<ExtArgs>[];
     rdStocktakeOrderLine: Prisma.$RdStocktakeOrderLinePayload<ExtArgs> | null;
   };
@@ -5090,6 +6020,60 @@ export interface Prisma__InventoryLogClient<
         GlobalOmitOptions
       >
     | Null
+  >;
+  sourcePriceCorrectionLine<
+    T extends Prisma.InventoryLog$sourcePriceCorrectionLineArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.InventoryLog$sourcePriceCorrectionLineArgs<ExtArgs>
+    >,
+  ): Prisma.Prisma__StockInPriceCorrectionOrderLineClient<
+    runtime.Types.Result.GetResult<
+      Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs>,
+      T,
+      "findUniqueOrThrow",
+      GlobalOmitOptions
+    > | null,
+    null,
+    ExtArgs,
+    GlobalOmitOptions
+  >;
+  generatedOutCorrectionLine<
+    T extends Prisma.InventoryLog$generatedOutCorrectionLineArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.InventoryLog$generatedOutCorrectionLineArgs<ExtArgs>
+    >,
+  ): Prisma.Prisma__StockInPriceCorrectionOrderLineClient<
+    runtime.Types.Result.GetResult<
+      Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs>,
+      T,
+      "findUniqueOrThrow",
+      GlobalOmitOptions
+    > | null,
+    null,
+    ExtArgs,
+    GlobalOmitOptions
+  >;
+  generatedInCorrectionLine<
+    T extends Prisma.InventoryLog$generatedInCorrectionLineArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.InventoryLog$generatedInCorrectionLineArgs<ExtArgs>
+    >,
+  ): Prisma.Prisma__StockInPriceCorrectionOrderLineClient<
+    runtime.Types.Result.GetResult<
+      Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs>,
+      T,
+      "findUniqueOrThrow",
+      GlobalOmitOptions
+    > | null,
+    null,
+    ExtArgs,
+    GlobalOmitOptions
   >;
   rdMaterialStatusHistories<
     T extends Prisma.InventoryLog$rdMaterialStatusHistoriesArgs<ExtArgs> = {},
@@ -5707,6 +6691,72 @@ export type InventoryLog$allocatedSourceUsagesArgs<
   distinct?:
     | Prisma.InventorySourceUsageScalarFieldEnum
     | Prisma.InventorySourceUsageScalarFieldEnum[];
+};
+
+/**
+ * InventoryLog.sourcePriceCorrectionLine
+ */
+export type InventoryLog$sourcePriceCorrectionLineArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockInPriceCorrectionOrderLine
+   */
+  select?: Prisma.StockInPriceCorrectionOrderLineSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockInPriceCorrectionOrderLine
+   */
+  omit?: Prisma.StockInPriceCorrectionOrderLineOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockInPriceCorrectionOrderLineInclude<ExtArgs> | null;
+  where?: Prisma.StockInPriceCorrectionOrderLineWhereInput;
+};
+
+/**
+ * InventoryLog.generatedOutCorrectionLine
+ */
+export type InventoryLog$generatedOutCorrectionLineArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockInPriceCorrectionOrderLine
+   */
+  select?: Prisma.StockInPriceCorrectionOrderLineSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockInPriceCorrectionOrderLine
+   */
+  omit?: Prisma.StockInPriceCorrectionOrderLineOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockInPriceCorrectionOrderLineInclude<ExtArgs> | null;
+  where?: Prisma.StockInPriceCorrectionOrderLineWhereInput;
+};
+
+/**
+ * InventoryLog.generatedInCorrectionLine
+ */
+export type InventoryLog$generatedInCorrectionLineArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the StockInPriceCorrectionOrderLine
+   */
+  select?: Prisma.StockInPriceCorrectionOrderLineSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the StockInPriceCorrectionOrderLine
+   */
+  omit?: Prisma.StockInPriceCorrectionOrderLineOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StockInPriceCorrectionOrderLineInclude<ExtArgs> | null;
+  where?: Prisma.StockInPriceCorrectionOrderLineWhereInput;
 };
 
 /**

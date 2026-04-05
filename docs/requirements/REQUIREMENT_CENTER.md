@@ -1,34 +1,139 @@
 # 需求中心
 
-本文件只做索引看板。详细规则见 `docs/requirements/README.md`。
+所有需求条目的统一看板。需求详细规格在 `domain/*.md`，本文件负责条目级追踪。
 
-需求真源统一维护在 `domain/*.md`，不使用切片 `req-*.md`。
+详细规则见 `docs/requirements/README.md`。
 
-## 固定项目需求
+## 统计
 
-| 需求文档 | 状态 | 说明 |
-| --- | --- | --- |
-| `PROJECT_REQUIREMENTS.md` | `confirmed` | 项目级业务总纲；定义项目目标与成功标准、业务边界、运营模型、全局业务规则、业务对象词典、主题地图与阶段策略，作为各 domain 的共同上位约束。 |
 
-## 领域需求
+| 指标     | 数量  |
+| ------ | --- |
+| 总计     | 42  |
+| ✅ 已完成  | 27  |
+| 🔧 进行中 | 1   |
+| 📋 未开始 | 14  |
 
-| 需求文档 | 状态 | 说明 |
-| --- | --- | --- |
-| `domain/system-management-module.md` | `confirmed` | 系统管理模块领域真源；F4 `conditionally-accepted`（规范化落库完成，browser smoke 待补跑 `[ENV-GAP-1]`）；后续推进直接开 `task-*.md`。 |
-| `domain/master-data-management.md` | `confirmed` | 基础数据管理领域真源；`Phase 1` 的 `F1`~`F8` 已完成并归档（`F4` 供应商 CRUD 保留为上游 accepted 基线，`task-20260402-1802` 完成 phase-level 收口）；后续仅剩 `F9/F10` 等后续阶段能力待推进。 |
-| `domain/rd-subwarehouse.md` | `confirmed` | RD 小仓领域真源；Phase 1–5 能力已全部完成。 |
-| `domain/inbound-business-module.md` | `confirmed` | 入库业务模块领域真源；Phase 1 与 Phase 2（`F4`/`F5`，FIFO 与来源成本追溯）已交付并 full acceptance（`task-20260404-1315`）；Phase 3（`F6` 等）待开 task。 |
-| `domain/monthly-reporting.md` | `confirmed` | 月度报表领域真源；口径已确认，实施路线图待开 task。 |
-| `domain/frontend-old-style-adaptation.md` | `confirmed` | 前端旧风格回归领域真源；Phase 1-2 已完成，后续推进开新 task。 |
-| `domain/customer-business-module.md` | `draft` | 客户收发领域骨架已补齐；业务边界、场景、规则、功能项与阶段路线图待补充。 |
-| `domain/workshop-material-module.md` | `draft` | 车间物料领域骨架已补齐；业务边界、场景、规则、功能项与阶段路线图待补充。 |
-| `domain/project-management.md` | `draft` | 项目 / 研发领域骨架已补齐；需与 `rd-subwarehouse` 拆清边界后补全文档。 |
-| `domain/inventory-core-module.md` | `draft` | 库存核心领域骨架已补齐；后续优先补库存事实、来源追溯、逆操作与成本口径。 |
-| `domain/workflow-module.md` | `draft` | 审核领域骨架已补齐；后续补轻量审核语义、状态重置与跨单据边界。 |
-| `domain/ai-assistant-module.md` | `draft` | AI 助手领域骨架已补齐；后续补白名单工具、查询边界和受控编排语义。 |
 
-## 维护
+## 需求清单
 
-- 新增领域时在表中添加行。
-- 能力状态变更时更新 domain 文档与本表说明列。
-- 历史溯源通过 `docs/tasks/archive/` 与 git log 查阅。
+> 每条对应 `domain/*.md` 中的一个功能项。来源为 `PRD` 表示从需求文档分析得出，其余标注实际来源。
+
+### 系统管理 — `domain/system-management-module.md`
+
+
+| REQ     | 功能项 | 需求摘要         | 来源  | 阶段      | 状态     | 关联任务                 |
+| ------- | --- | ------------ | --- | ------- | ------ | -------------------- |
+| REQ-001 | F1  | 系统管理八类核心能力收口 | PRD | Phase 1 | ✅ 已完成  | -                    |
+| REQ-002 | F2  | 组织与角色矩阵澄清    | PRD | Phase 2 | ✅ 已完成  | -                    |
+| REQ-003 | F3  | 平台审计与在线治理边界  | PRD | Phase 2 | ✅ 已完成  | -                    |
+| REQ-004 | F4  | 平台初始化与持久化方案  | PRD | Phase 2 | ✅ 已完成  | `task-20260402-0139` |
+| REQ-005 | F5  | 系统运维邻接能力边界   | PRD | Phase 3 | 📋 未开始 | -                    |
+
+
+### 基础数据 — `domain/master-data-management.md`
+
+
+| REQ     | 功能项 | 需求摘要         | 来源  | 阶段      | 状态     | 关联任务                 |
+| ------- | --- | ------------ | --- | ------- | ------ | -------------------- |
+| REQ-006 | F1  | 物料分类 CRUD    | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1802` |
+| REQ-007 | F2  | 物料 CRUD      | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1802` |
+| REQ-008 | F3  | 客户 CRUD      | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1802` |
+| REQ-009 | F4  | 供应商 CRUD     | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1758` |
+| REQ-010 | F5  | 人员 CRUD      | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1802` |
+| REQ-011 | F6  | 车间 CRUD      | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1802` |
+| REQ-012 | F7  | 库存范围 CRUD    | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1802` |
+| REQ-013 | F8  | 主数据下拉与快照查询服务 | PRD | Phase 1 | ✅ 已完成  | `task-20260402-1802` |
+| REQ-014 | F9  | 物料库存预警配置     | PRD | Phase 2 | 📋 未开始 | -                    |
+| REQ-015 | F10 | 主数据批量导入      | PRD | Phase 3 | 📋 未开始 | -                    |
+
+
+### 入库业务 — `domain/inbound-business-module.md`
+
+
+| REQ     | 功能项 | 需求摘要            | 来源   | 阶段      | 状态     | 关联任务                 |
+| ------- | --- | --------------- | ---- | ------- | ------ | -------------------- |
+| REQ-016 | F1  | 统一入库家族模型        | PRD  | Phase 1 | ✅ 已完成  | -                    |
+| REQ-017 | F2  | 主仓准入与库存范围约束     | PRD  | Phase 1 | ✅ 已完成  | -                    |
+| REQ-018 | F3  | 真实库存轴访问控制       | PRD  | Phase 1 | ✅ 已完成  | -                    |
+| REQ-019 | F4  | 入库来源层与成本追溯      | PRD  | Phase 2 | ✅ 已完成  | `task-20260404-1315` |
+| REQ-020 | F5  | 默认 FIFO 与手动来源指定 | PRD  | Phase 2 | ✅ 已完成  | `task-20260404-1315` |
+| REQ-021 | F6  | 入库到车间的一键双向协同    | PRD  | Phase 3 | 📋 未开始 | -                    |
+| REQ-022 | F7  | 后续入库扩展切片承接      | PRD  | Phase 3 | 📋 未开始 | -                    |
+| REQ-038 | F8  | 入库调价单（入库错价纠偏）   | 探索笔记 | Phase 3 | ✅ 已完成  | `task-20260405-2136` |
+
+
+### RD 小仓 — `domain/rd-subwarehouse.md`
+
+
+| REQ     | 功能项 | 需求摘要           | 来源  | 阶段      | 状态    | 关联任务 |
+| ------- | --- | -------------- | --- | ------- | ----- | ---- |
+| REQ-023 | F1  | RD 独立工作台与仓别隔离  | PRD | Phase 1 | ✅ 已完成 | -    |
+| REQ-024 | F2  | 主仓到 RD 自动交接    | PRD | Phase 2 | ✅ 已完成 | -    |
+| REQ-025 | F3  | RD 采购需求与主仓验收联动 | PRD | Phase 3 | ✅ 已完成 | -    |
+| REQ-026 | F4  | RD 物料独立状态链     | PRD | Phase 4 | ✅ 已完成 | -    |
+| REQ-027 | F5  | RD 小仓盘点与库存调整   | PRD | Phase 5 | ✅ 已完成 | -    |
+
+
+### 月度报表 — `domain/monthly-reporting.md`
+
+
+| REQ     | 功能项 | 需求摘要        | 来源  | 阶段      | 状态     | 关联任务 |
+| ------- | --- | ----------- | --- | ------- | ------ | ---- |
+| REQ-028 | F1  | 月报指标口径模型    | PRD | Phase 1 | 📋 未开始 | -    |
+| REQ-029 | F2  | 正式月报生成与重算   | PRD | Phase 1 | 📋 未开始 | -    |
+| REQ-030 | F3  | 多维月报视图      | PRD | Phase 2 | 📋 未开始 | -    |
+| REQ-031 | F4  | 系统查看与导出     | PRD | Phase 3 | 📋 未开始 | -    |
+| REQ-032 | F5  | 日期范围报表与追溯区分 | PRD | Phase 3 | 📋 未开始 | -    |
+
+
+### 前端旧风格回归 — `domain/frontend-old-style-adaptation.md`
+
+
+| REQ     | 功能项 | 需求摘要                  | 来源  | 阶段      | 状态     | 关联任务 |
+| ------- | --- | --------------------- | --- | ------- | ------ | ---- |
+| REQ-033 | F1  | 登录页 / Layout / 菜单壳层回归 | PRD | Phase 1 | ✅ 已完成  | -    |
+| REQ-034 | F2  | 旧版图表首页回归              | PRD | Phase 2 | ✅ 已完成  | -    |
+| REQ-035 | F3  | 业务列表页旧风格节奏细化          | PRD | Phase 3 | 📋 未开始 | -    |
+| REQ-036 | F4  | 详情页与编辑流适配             | PRD | Phase 4 | 📋 未开始 | -    |
+| REQ-037 | F5  | 多角色体验一致性              | PRD | Phase 4 | 🔧 进行中 | -    |
+
+
+### 客户收发 — `domain/customer-business-module.md`
+
+
+| REQ     | 功能项 | 需求摘要             | 来源   | 阶段      | 状态     | 关联任务 |
+| ------- | --- | ---------------- | ---- | ------- | ------ | ---- |
+| REQ-039 | F1  | 客户出库单家族统一模型      | PRD  | Phase 1 | 📋 未开始 | -    |
+| REQ-040 | F2  | 价格层出库选择与同价内 FIFO | 探索笔记 | Phase 2 | ✅ 已完成  | `task-20260405-2136` |
+| REQ-041 | F3  | 出库成本追溯与来源查询      | 探索笔记 | Phase 2 | ✅ 已完成  | `task-20260405-2136` |
+| REQ-042 | F4  | 销售退货与出库上下游联动     | PRD  | Phase 3 | 📋 未开始 | -    |
+
+
+### 待补齐领域（骨架已建，功能项待定义）
+
+
+| 领域文档                                 | 状态      | 说明                                     |
+| ------------------------------------ | ------- | -------------------------------------- |
+| `domain/workshop-material-module.md` | `draft` | 车间物料领域；业务边界、场景、规则、功能项待补充               |
+| `domain/project-management.md`       | `draft` | 项目 / 研发领域；需与 `rd-subwarehouse` 拆清边界后补全 |
+| `domain/inventory-core-module.md`    | `draft` | 库存核心领域；优先补库存事实、来源追溯、逆操作与成本口径           |
+| `domain/workflow-module.md`          | `draft` | 审核领域；补轻量审核语义、状态重置与跨单据边界                |
+| `domain/ai-assistant-module.md`      | `draft` | AI 助手领域；补白名单工具、查询边界和受控编排语义             |
+
+
+## 项目级需求
+
+
+| 需求文档                      | 状态          | 说明                                            |
+| ------------------------- | ----------- | --------------------------------------------- |
+| `PROJECT_REQUIREMENTS.md` | `confirmed` | 项目级业务总纲；定义项目目标、业务边界、全局业务规则，作为各 domain 的共同上位约束 |
+
+
+## 维护规则
+
+- **新增需求**：用户在对话中提出 → AI 分析后追加到对应领域分组，分配下一个 REQ 编号，同步写入 domain 文档。
+- **状态变更**：task 验收通过后，同步更新本表状态列与 domain 文档功能项状态。
+- **新增领域**：先在"待补齐领域"添加行，domain 文档功能项定义完成后迁入正式分组。
+- **统计刷新**：每次变更后更新顶部统计表。
+- **历史溯源**：通过 `docs/tasks/archive/` 与 git log 查阅。

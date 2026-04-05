@@ -60,6 +60,7 @@ describe("CustomerService", () => {
         quantity: new Prisma.Decimal(100),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(1000),
+        selectedUnitCost: new Prisma.Decimal(10),
         costUnitPrice: null,
         costAmount: null,
         startNumber: "001",
@@ -94,6 +95,7 @@ describe("CustomerService", () => {
         quantity: new Prisma.Decimal(50),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(500),
+        selectedUnitCost: new Prisma.Decimal(10),
         costUnitPrice: null,
         costAmount: null,
         startNumber: null,
@@ -130,13 +132,23 @@ describe("CustomerService", () => {
   let masterDataService: jest.Mocked<MasterDataService>;
   let inventoryService: jest.Mocked<InventoryService>;
   let workflowService: jest.Mocked<WorkflowService>;
-  let prisma: { runInTransaction: jest.Mock };
+  let prisma: {
+    runInTransaction: jest.Mock;
+    stockInPriceCorrectionOrderLine: { findMany: jest.Mock };
+    stockInOrderLine: { findMany: jest.Mock };
+  };
 
   beforeEach(async () => {
     prisma = {
       runInTransaction: jest.fn((handler: (tx: unknown) => Promise<unknown>) =>
         handler({}),
       ),
+      stockInPriceCorrectionOrderLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      stockInOrderLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -150,7 +162,7 @@ describe("CustomerService", () => {
           provide: CustomerRepository,
           useValue: {
             findOrderByDocumentNo: jest.fn(),
-            findOrderById: jest.fn(),
+            findOrderById: jest.fn().mockResolvedValue(mockOutboundOrder),
             findOrders: jest.fn(),
             findSalesReturns: jest.fn(),
             createOrder: jest.fn(),
@@ -207,6 +219,14 @@ describe("CustomerService", () => {
             listSourceUsages: jest
               .fn()
               .mockResolvedValue({ items: [], total: 0 }),
+            listPriceLayerAvailability: jest.fn().mockResolvedValue([
+              {
+                materialId: 100,
+                unitCost: new Prisma.Decimal(10),
+                availableQty: new Prisma.Decimal(100),
+                sourceLogCount: 1,
+              },
+            ]),
             listSourceUsagesForConsumerLine: jest.fn().mockResolvedValue([]),
             getLogsForDocument: jest.fn().mockResolvedValue([{ id: 1 }]),
           },
@@ -258,6 +278,7 @@ describe("CustomerService", () => {
           {
             materialId: 100,
             quantity: "100",
+            selectedUnitCost: "10",
             unitPrice: "10",
             startNumber: "001",
             endNumber: "100",
@@ -267,13 +288,14 @@ describe("CustomerService", () => {
 
       const result = await service.createOrder(dto, "1");
 
-      expect(result).toEqual(mockOutboundOrder);
+      expect(result).toMatchObject(mockOutboundOrder);
       expect(repository.findOrderByDocumentNo).toHaveBeenCalledWith("OB-001");
       expect(repository.createOrder).toHaveBeenCalled();
       expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
         expect.objectContaining({
           materialId: 100,
           stockScope: "MAIN",
+          selectedUnitCost: mockOutboundOrder.lines[0].selectedUnitCost,
           businessDocumentType: "CustomerStockOrder",
           businessDocumentId: 1,
           businessDocumentNumber: "OB-001",
@@ -309,12 +331,40 @@ describe("CustomerService", () => {
         documentNo: "OB-001",
         bizDate: "2025-03-14",
         workshopId: 1,
-        lines: [{ materialId: 100, quantity: "100" }],
+        lines: [{ materialId: 100, quantity: "100", selectedUnitCost: "10" }],
       };
 
       await expect(service.createOrder(dto, "1")).rejects.toThrow(
         ConflictException,
       );
+      expect(repository.createOrder).not.toHaveBeenCalled();
+    });
+
+    it("should reject duplicate material and selected-unit-cost combinations", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+
+      await expect(
+        service.createOrder(
+          {
+            documentNo: "OB-DUP",
+            bizDate: "2025-03-14",
+            workshopId: 1,
+            lines: [
+              {
+                materialId: 100,
+                quantity: "10",
+                selectedUnitCost: "10",
+              },
+              {
+                materialId: 100,
+                quantity: "20",
+                selectedUnitCost: "10.00",
+              },
+            ],
+          },
+          "1",
+        ),
+      ).rejects.toThrow("同一单据内不允许重复的物料+价格层");
       expect(repository.createOrder).not.toHaveBeenCalled();
     });
   });
@@ -408,7 +458,7 @@ describe("CustomerService", () => {
         1,
         expect.anything(),
       );
-      expect(result).toEqual(updatedOrder);
+      expect(result).toMatchObject(updatedOrder);
     });
 
     it("should replace line reservations when factory numbers change", async () => {
@@ -442,6 +492,7 @@ describe("CustomerService", () => {
               id: 1,
               materialId: 100,
               quantity: "100",
+              selectedUnitCost: "10",
               unitPrice: "10",
               startNumber: "101",
               endNumber: "200",
@@ -471,7 +522,36 @@ describe("CustomerService", () => {
         }),
         expect.anything(),
       );
-      expect(result).toEqual(updatedOrder);
+      expect(result).toMatchObject(updatedOrder);
+    });
+
+    it("should reject duplicate material and selected-unit-cost combinations on update", async () => {
+      (repository.findOrderById as jest.Mock).mockResolvedValue(
+        mockOutboundOrder,
+      );
+
+      await expect(
+        service.updateOrder(
+          1,
+          {
+            lines: [
+              {
+                id: 1,
+                materialId: 100,
+                quantity: "10",
+                selectedUnitCost: "10",
+              },
+              {
+                materialId: 100,
+                quantity: "5",
+                selectedUnitCost: "10.00",
+              },
+            ],
+          },
+          "1",
+        ),
+      ).rejects.toThrow("同一单据内不允许重复的物料+价格层");
+      expect(repository.updateOrder).not.toHaveBeenCalled();
     });
   });
 
@@ -796,7 +876,114 @@ describe("CustomerService", () => {
 
       const result = await service.getOrderById(1);
 
-      expect(result).toEqual(mockOutboundOrder);
+      expect(result).toMatchObject(mockOutboundOrder);
+      expect(result.lines[0]?.sourceUsages).toEqual([]);
+    });
+
+    it("should trace corrected source usages back to the correction that created the current source layer", async () => {
+      const correctionSourceBizDate = new Date("2026-04-01");
+      (repository.findOrderById as jest.Mock).mockResolvedValue(
+        mockOutboundOrder,
+      );
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 701,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(20),
+          releasedQty: new Prisma.Decimal(0),
+          sourceLog: {
+            id: 701,
+            businessDocumentType: "StockInPriceCorrectionOrder",
+            businessDocumentLineId: null,
+            unitCost: new Prisma.Decimal(10),
+          },
+        },
+      ]);
+      prisma.stockInPriceCorrectionOrderLine.findMany.mockResolvedValue([
+        {
+          id: 11,
+          orderId: 1001,
+          sourceInventoryLogId: 500,
+          generatedInLogId: 701,
+          generatedOutLogId: 700,
+          wrongUnitCost: new Prisma.Decimal(8),
+          correctUnitCost: new Prisma.Decimal(10),
+          historicalDiffAmount: new Prisma.Decimal(80),
+          order: {
+            id: 1001,
+            documentNo: "PC-001",
+            bizDate: new Date("2026-04-05"),
+          },
+          sourceStockInOrder: {
+            id: 900,
+            documentNo: "SI-900",
+            bizDate: correctionSourceBizDate,
+          },
+          sourceStockInOrderLine: {
+            id: 901,
+            lineNo: 1,
+            materialId: 100,
+            materialCodeSnapshot: "MAT001",
+            materialNameSnapshot: "Material A",
+            quantity: new Prisma.Decimal(100),
+            unitPrice: new Prisma.Decimal(8),
+          },
+        },
+        {
+          id: 12,
+          orderId: 1002,
+          sourceInventoryLogId: 701,
+          generatedInLogId: 702,
+          generatedOutLogId: 703,
+          wrongUnitCost: new Prisma.Decimal(10),
+          correctUnitCost: new Prisma.Decimal(12),
+          historicalDiffAmount: new Prisma.Decimal(40),
+          order: {
+            id: 1002,
+            documentNo: "PC-002",
+            bizDate: new Date("2026-04-06"),
+          },
+          sourceStockInOrder: {
+            id: 901,
+            documentNo: "SI-901",
+            bizDate: new Date("2026-04-02"),
+          },
+          sourceStockInOrderLine: {
+            id: 902,
+            lineNo: 1,
+            materialId: 100,
+            materialCodeSnapshot: "MAT001",
+            materialNameSnapshot: "Material A",
+            quantity: new Prisma.Decimal(60),
+            unitPrice: new Prisma.Decimal(10),
+          },
+        },
+      ]);
+
+      const result = await service.getOrderById(1);
+
+      expect(result.lines[0]?.sourceUsages).toHaveLength(1);
+      expect(result.lines[0]?.sourceUsages[0]).toMatchObject({
+        sourceLogId: 701,
+        priceCorrection: expect.objectContaining({
+          id: 11,
+          documentNo: "PC-001",
+          sourceInventoryLogId: 500,
+          generatedInLogId: 701,
+        }),
+        originalInboundOrder: expect.objectContaining({
+          id: 900,
+          documentNo: "SI-900",
+          bizDate: correctionSourceBizDate,
+        }),
+        originalInboundLine: expect.objectContaining({
+          id: 901,
+          lineNo: 1,
+          unitPrice: new Prisma.Decimal(8),
+        }),
+      });
     });
 
     it("should throw NotFoundException when not found", async () => {

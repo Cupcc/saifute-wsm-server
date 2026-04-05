@@ -430,6 +430,8 @@ export const ModelName = {
   StockInOrderLine: "StockInOrderLine",
   CustomerStockOrder: "CustomerStockOrder",
   CustomerStockOrderLine: "CustomerStockOrderLine",
+  StockInPriceCorrectionOrder: "StockInPriceCorrectionOrder",
+  StockInPriceCorrectionOrderLine: "StockInPriceCorrectionOrderLine",
   WorkshopMaterialOrder: "WorkshopMaterialOrder",
   WorkshopMaterialOrderLine: "WorkshopMaterialOrderLine",
   Project: "Project",
@@ -500,6 +502,8 @@ export type TypeMap<
       | "stockInOrderLine"
       | "customerStockOrder"
       | "customerStockOrderLine"
+      | "stockInPriceCorrectionOrder"
+      | "stockInPriceCorrectionOrderLine"
       | "workshopMaterialOrder"
       | "workshopMaterialOrderLine"
       | "project"
@@ -1619,6 +1623,142 @@ export type TypeMap<
           args: Prisma.CustomerStockOrderLineCountArgs<ExtArgs>;
           result:
             | runtime.Types.Utils.Optional<Prisma.CustomerStockOrderLineCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    StockInPriceCorrectionOrder: {
+      payload: Prisma.$StockInPriceCorrectionOrderPayload<ExtArgs>;
+      fields: Prisma.StockInPriceCorrectionOrderFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.StockInPriceCorrectionOrderFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.StockInPriceCorrectionOrderFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload>;
+        };
+        findFirst: {
+          args: Prisma.StockInPriceCorrectionOrderFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.StockInPriceCorrectionOrderFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload>;
+        };
+        findMany: {
+          args: Prisma.StockInPriceCorrectionOrderFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload>[];
+        };
+        create: {
+          args: Prisma.StockInPriceCorrectionOrderCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload>;
+        };
+        createMany: {
+          args: Prisma.StockInPriceCorrectionOrderCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.StockInPriceCorrectionOrderDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload>;
+        };
+        update: {
+          args: Prisma.StockInPriceCorrectionOrderUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload>;
+        };
+        deleteMany: {
+          args: Prisma.StockInPriceCorrectionOrderDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.StockInPriceCorrectionOrderUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.StockInPriceCorrectionOrderUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderPayload>;
+        };
+        aggregate: {
+          args: Prisma.StockInPriceCorrectionOrderAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStockInPriceCorrectionOrder>;
+        };
+        groupBy: {
+          args: Prisma.StockInPriceCorrectionOrderGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.StockInPriceCorrectionOrderGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.StockInPriceCorrectionOrderCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.StockInPriceCorrectionOrderCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    StockInPriceCorrectionOrderLine: {
+      payload: Prisma.$StockInPriceCorrectionOrderLinePayload<ExtArgs>;
+      fields: Prisma.StockInPriceCorrectionOrderLineFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.StockInPriceCorrectionOrderLineFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.StockInPriceCorrectionOrderLineFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload>;
+        };
+        findFirst: {
+          args: Prisma.StockInPriceCorrectionOrderLineFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.StockInPriceCorrectionOrderLineFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload>;
+        };
+        findMany: {
+          args: Prisma.StockInPriceCorrectionOrderLineFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload>[];
+        };
+        create: {
+          args: Prisma.StockInPriceCorrectionOrderLineCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload>;
+        };
+        createMany: {
+          args: Prisma.StockInPriceCorrectionOrderLineCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.StockInPriceCorrectionOrderLineDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload>;
+        };
+        update: {
+          args: Prisma.StockInPriceCorrectionOrderLineUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload>;
+        };
+        deleteMany: {
+          args: Prisma.StockInPriceCorrectionOrderLineDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.StockInPriceCorrectionOrderLineUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.StockInPriceCorrectionOrderLineUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StockInPriceCorrectionOrderLinePayload>;
+        };
+        aggregate: {
+          args: Prisma.StockInPriceCorrectionOrderLineAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStockInPriceCorrectionOrderLine>;
+        };
+        groupBy: {
+          args: Prisma.StockInPriceCorrectionOrderLineGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.StockInPriceCorrectionOrderLineGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.StockInPriceCorrectionOrderLineCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.StockInPriceCorrectionOrderLineCountAggregateOutputType>
             | number;
         };
       };
@@ -4167,6 +4307,7 @@ export const CustomerStockOrderLineScalarFieldEnum = {
   quantity: "quantity",
   unitPrice: "unitPrice",
   amount: "amount",
+  selectedUnitCost: "selectedUnitCost",
   costUnitPrice: "costUnitPrice",
   costAmount: "costAmount",
   startNumber: "startNumber",
@@ -4183,6 +4324,55 @@ export const CustomerStockOrderLineScalarFieldEnum = {
 
 export type CustomerStockOrderLineScalarFieldEnum =
   (typeof CustomerStockOrderLineScalarFieldEnum)[keyof typeof CustomerStockOrderLineScalarFieldEnum];
+
+export const StockInPriceCorrectionOrderScalarFieldEnum = {
+  id: "id",
+  documentNo: "documentNo",
+  bizDate: "bizDate",
+  stockScopeId: "stockScopeId",
+  workshopId: "workshopId",
+  lifecycleStatus: "lifecycleStatus",
+  auditStatusSnapshot: "auditStatusSnapshot",
+  inventoryEffectStatus: "inventoryEffectStatus",
+  totalLineCount: "totalLineCount",
+  totalHistoricalDiffAmount: "totalHistoricalDiffAmount",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type StockInPriceCorrectionOrderScalarFieldEnum =
+  (typeof StockInPriceCorrectionOrderScalarFieldEnum)[keyof typeof StockInPriceCorrectionOrderScalarFieldEnum];
+
+export const StockInPriceCorrectionOrderLineScalarFieldEnum = {
+  id: "id",
+  orderId: "orderId",
+  lineNo: "lineNo",
+  materialId: "materialId",
+  sourceStockInOrderId: "sourceStockInOrderId",
+  sourceStockInOrderLineId: "sourceStockInOrderLineId",
+  sourceInventoryLogId: "sourceInventoryLogId",
+  sourceDocumentNoSnapshot: "sourceDocumentNoSnapshot",
+  sourceBizDateSnapshot: "sourceBizDateSnapshot",
+  wrongUnitCost: "wrongUnitCost",
+  correctUnitCost: "correctUnitCost",
+  sourceInQty: "sourceInQty",
+  consumedQtyAtCorrection: "consumedQtyAtCorrection",
+  remainingQtyAtCorrection: "remainingQtyAtCorrection",
+  historicalDiffAmount: "historicalDiffAmount",
+  generatedOutLogId: "generatedOutLogId",
+  generatedInLogId: "generatedInLogId",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type StockInPriceCorrectionOrderLineScalarFieldEnum =
+  (typeof StockInPriceCorrectionOrderLineScalarFieldEnum)[keyof typeof StockInPriceCorrectionOrderLineScalarFieldEnum];
 
 export const WorkshopMaterialOrderScalarFieldEnum = {
   id: "id",
@@ -5044,6 +5234,26 @@ export const CustomerStockOrderLineOrderByRelevanceFieldEnum = {
 export type CustomerStockOrderLineOrderByRelevanceFieldEnum =
   (typeof CustomerStockOrderLineOrderByRelevanceFieldEnum)[keyof typeof CustomerStockOrderLineOrderByRelevanceFieldEnum];
 
+export const StockInPriceCorrectionOrderOrderByRelevanceFieldEnum = {
+  documentNo: "documentNo",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type StockInPriceCorrectionOrderOrderByRelevanceFieldEnum =
+  (typeof StockInPriceCorrectionOrderOrderByRelevanceFieldEnum)[keyof typeof StockInPriceCorrectionOrderOrderByRelevanceFieldEnum];
+
+export const StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum = {
+  sourceDocumentNoSnapshot: "sourceDocumentNoSnapshot",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum =
+  (typeof StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum)[keyof typeof StockInPriceCorrectionOrderLineOrderByRelevanceFieldEnum];
+
 export const WorkshopMaterialOrderOrderByRelevanceFieldEnum = {
   documentNo: "documentNo",
   handlerNameSnapshot: "handlerNameSnapshot",
@@ -5761,6 +5971,8 @@ export type GlobalOmitConfig = {
   stockInOrderLine?: Prisma.StockInOrderLineOmit;
   customerStockOrder?: Prisma.CustomerStockOrderOmit;
   customerStockOrderLine?: Prisma.CustomerStockOrderLineOmit;
+  stockInPriceCorrectionOrder?: Prisma.StockInPriceCorrectionOrderOmit;
+  stockInPriceCorrectionOrderLine?: Prisma.StockInPriceCorrectionOrderLineOmit;
   workshopMaterialOrder?: Prisma.WorkshopMaterialOrderOmit;
   workshopMaterialOrderLine?: Prisma.WorkshopMaterialOrderLineOmit;
   project?: Prisma.ProjectOmit;

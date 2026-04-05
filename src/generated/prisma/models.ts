@@ -36,6 +36,8 @@ export type * from "./models/SchedulerJob";
 export type * from "./models/SchedulerJobLog";
 export type * from "./models/StockInOrder";
 export type * from "./models/StockInOrderLine";
+export type * from "./models/StockInPriceCorrectionOrder";
+export type * from "./models/StockInPriceCorrectionOrderLine";
 export type * from "./models/StockScope";
 export type * from "./models/Supplier";
 export type * from "./models/SysConfig";
