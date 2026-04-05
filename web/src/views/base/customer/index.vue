@@ -422,6 +422,7 @@ function handleView(row) {
   const _customerId = row.customerId;
   getCustomer(_customerId).then((response) => {
     form.value = response.data;
+    getCustomerTree();
     open.value = true;
     title.value = "查看客户";
     isView.value = true;
@@ -431,6 +432,7 @@ function handleView(row) {
 /** 新增按钮操作 */
 function handleAdd() {
   reset();
+  getCustomerTree();
   open.value = true;
   title.value = "添加客户";
   isView.value = false;
@@ -442,6 +444,7 @@ function handleUpdate(row) {
   const _customerId = row.customerId || ids.value;
   getCustomer(_customerId).then((response) => {
     form.value = response.data;
+    getCustomerTree();
     open.value = true;
     title.value = "修改客户";
     isView.value = false;

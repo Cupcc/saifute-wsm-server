@@ -89,8 +89,8 @@
           <dict-tag :options="saifute_material_category" :value="scope.row.category"/>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="单位" align="center" prop="unit" v-if="columns[5].visible" />
-      <el-table-column sortable show-overflow-tooltip label="安全库存" align="center" prop="stockMin" v-if="columns[6].visible" />
+      <el-table-column sortable show-overflow-tooltip label="单位" align="center" prop="unit" v-if="columns[4].visible" />
+      <el-table-column sortable show-overflow-tooltip label="安全库存" align="center" prop="stockMin" v-if="columns[5].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['base:material:edit']">修改</el-button>
@@ -291,9 +291,8 @@ const columns = ref([
   { key: 1, label: `物料名称`, visible: true },
   { key: 2, label: `规格型号`, visible: true },
   { key: 3, label: `分类`, visible: true },
-  { key: 4, label: `附件`, visible: true },
-  { key: 5, label: `单位`, visible: true },
-  { key: 6, label: `安全库存`, visible: true },
+  { key: 4, label: `单位`, visible: true },
+  { key: 5, label: `安全库存`, visible: true },
 ]);
 
 /** 查询物料列表 */

@@ -200,7 +200,7 @@ const { cancelForm } = toRefs(data); // 添加对cancelForm的引用
 
 // 添加columns数组定义（已删除 personnelId 列）
 const columns = ref([
-  { key: 0, label: related_order_type.label, visible: true },
+  { key: 0, label: `类型`, visible: true },
   { key: 1, label: `编码`, visible: true },
   { key: 2, label: `姓名`, visible: true },
   { key: 3, label: `联系电话`, visible: true },
