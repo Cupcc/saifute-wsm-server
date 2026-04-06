@@ -80,6 +80,13 @@ function appendAuditLog(projectDir, record) {
   }
 }
 
+/** 飞书消息里展示的 task_id，仅取前 6 位（与 task-start-notify 一致） */
+function shortTaskIdForFeishuDisplay(id) {
+  const s = String(id || "").trim();
+  if (!s) return "";
+  return s.slice(0, 6);
+}
+
 function resolveTaskId(taskState, sessionState, payload) {
   // Priority: generation_id from payload → task state → session state
   const fromPayload = String(payload.generation_id || "").trim();
@@ -149,6 +156,7 @@ async function main() {
   const status = String(payload.status || "completed");
   const meta = STATUS_LABELS[status] || STATUS_LABELS.completed;
   const taskId = resolveTaskId(taskState, sessionState, payload);
+  const taskIdForFeishu = shortTaskIdForFeishuDisplay(taskId);
 
   // Build timing parts
   const timingParts = [];
@@ -183,8 +191,8 @@ async function main() {
     msg += `；${timingParts.join("；")}`;
   }
 
-  if (taskId) {
-    msg += `；task_id：${taskId}`;
+  if (taskIdForFeishu) {
+    msg += `；task_id：${taskIdForFeishu}`;
   }
 
   // Send webhook
