@@ -4,7 +4,7 @@
 
 ---
 
-## 事实优先编排
+## ORCH-001 事实优先编排
 
 > 编排规则不要写死执行顺序。恢复执行 (resume) 时先看当前事实，优先复用 active task doc，不要机械回到 `planner`。
 
@@ -13,7 +13,7 @@
 **做法**: 逐句检查编排文案是在表达 `hard`、`fact-conditioned soft` 还是 `guidance`。把 `after X`、`default to Y` 这类固定顺序，改成 `when X is true, prefer Y`；恢复执行 (resume) 时默认复用 active task doc，而不是先重新规划 (replan)。
 **成熟度**: 初步观察
 
-## Commit 不应作为默认编排阶段
+## ORCH-002 Commit 不应作为默认编排阶段
 
 > commit 不是日常执行循环里的默认步骤。只有到了明确交付或真实发布边界，再把它纳入编排。
 
@@ -22,7 +22,7 @@
 **做法**: 只有在用户明确要求可发布结果 (publish-ready)，或流程已经到达真实发布边界 (release boundary) 时，才把 commit 写进默认编排。
 **成熟度**: 初步观察
 
-## 先核实测试结论再标环境缺口
+## ORCH-003 先核实测试结论再标环境缺口
 
 > 在验收 (acceptance) 里看到“环境问题”时，不要急着下分类结论。先跑最小相关命令核实事实，再决定它是不是 blocker。
 

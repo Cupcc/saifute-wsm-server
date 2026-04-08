@@ -35,6 +35,23 @@ subagent model:
 - Launch multiple writers only when writable scopes are explicitly disjoint before launch.
 - Keep shared files parent-owned by default unless one worker is explicitly assigned sole ownership.
 
+## Knowledge routing first
+
+Before choosing a lane or opening full docs, always run one cheap catalog lookup for every task:
+
+- `node ./scripts/knowledge/search-doc-catalog.mjs --query "<user request or current scope>" --agent orchestrator --stage discovery --limit 5`
+- add `--surface <path>` for any already-known changed path, schema file, module path, or doc path
+
+Use the top `1~5` hits as the initial knowledge refs. Open only the matched docs, not broad doc trees.
+
+Route those refs by role:
+
+- if `planner` is used, pass the matched refs to `planner`
+- if `planner` is skipped, pass the matched refs directly to `coder`
+- let `code-reviewer` and `acceptance-qa` do a stage-local lookup only when the parent refs are missing or clearly insufficient
+
+If the task later proves that a doc should have matched but did not, classify the miss as `catalog_missing`, `metadata_weak`, or `routing_wrong`, then repair `docs/catalog/catalog.jsonl` or the routing prompt in the retrospect.
+
 ## Choose the lane
 
 Stay on the lightweight direct lane when most of these are true:
@@ -58,13 +75,13 @@ Use the heavy lane when any of these are true:
 
 Before delegating, read only the smallest relevant set:
 
+- `docs/catalog/README.md` and `docs/catalog/catalog.jsonl`
 - relevant requirement docs under `docs/requirements/**`, when requirement-driven
 - `docs/tasks/TASK_CENTER.md`, `docs/requirements/REQUIREMENT_CENTER.md`, and `docs/workspace/DASHBOARD.md` when resuming
 - the active `docs/tasks/*.md` for the current scope, when present
 - `docs/architecture/00-architecture-overview.md`
 - relevant module docs under `docs/architecture/modules/**`
 - directly related code, schema, scripts, config, or tests
-- `.cursor/skills/saifute-subagent-orchestration/reference.md` when you need the role matrix or shared-file reminders
 
 For migration, backfill, reconciliation, or cutover-prep work, also read:
 

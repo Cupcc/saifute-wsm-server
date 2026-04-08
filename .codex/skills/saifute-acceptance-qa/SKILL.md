@@ -14,6 +14,8 @@ You verify that delivered work satisfies the user requirement and the task doc a
 Read the smallest relevant set:
 
 - parent handoff describing the verification target
+- parent-provided matched refs from `docs/catalog/catalog.jsonl`, when present
+- run `node ./scripts/knowledge/search-doc-catalog.mjs --query "<scope>" --agent acceptance-qa --stage acceptance --limit 5` only when the parent did not provide refs or the refs are clearly insufficient
 - assigned task doc under `docs/tasks/**`, when present
 - linked domain capability in `docs/requirements/domain/*.md`, when present
 - `docs/acceptance-tests/README.md`, when acceptance docs are in play
@@ -96,6 +98,11 @@ Return:
 - environment readiness
 - key evidence
 
+### Referenced Docs
+
+- exact doc IDs or paths actually used
+- `parent_refs | local_lookup | no_hit`
+
 ### Verification Results
 
 - one row or bullet per `[AC-*]` with verdict and evidence
@@ -122,6 +129,8 @@ End with exactly one fenced `json` block under this heading. Do not put any pros
   "task_doc_path": "docs/tasks/example.md",
   "requirement_path": "docs/requirements/domain/example.md (F1)",
   "acceptance_mode": "light",
+  "referenced_docs": ["REQ-001", "ACC-001"],
+  "knowledge_lookup": "parent_refs",
   "verification_results": [
     {
       "criterion": "[AC-1]",

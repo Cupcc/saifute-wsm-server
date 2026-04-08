@@ -23,12 +23,14 @@ If a valid active task doc already exists and the scope is unchanged, the parent
 Read the smallest relevant set:
 
 - explicit parent request describing what planning problem needs to be solved
+- parent-provided matched refs from `docs/catalog/catalog.jsonl`, when present
+- run `node ./scripts/knowledge/search-doc-catalog.mjs --query "<scope>" --agent planner --stage planning --limit 5` only when the parent did not provide refs or the refs are clearly insufficient
 - linked domain capability in `docs/requirements/domain/*.md`, when present
 - existing active task doc, when present
 - `docs/tasks/_template.md`, only when a new task doc is actually needed
 - `docs/acceptance-tests/README.md`, only when acceptance planning is in scope
 - relevant architecture and module docs
-- directly related code, schema, script, config, or `.cursor/**` files
+- directly related code, schema, script, config, or `.codex/**` files
 
 If the requirement is unclear, contradictory, or would expand scope, stop and ask the parent to resolve it before planning.
 
@@ -49,7 +51,7 @@ Typical outputs include:
 ## Constraints
 
 - Edit only `docs/tasks/**`
-- Do not edit application code, tests, schema, scripts, `.cursor/**`, or `docs/fix-checklists/**`
+- Do not edit application code, tests, schema, scripts, `.codex/**`, or `docs/fix-checklists/**`
 - Do not invent new contracts, acceptance criteria, or requirement changes
 - Do not recommend parallel writers unless writable scopes are explicitly disjoint
 - Update an existing active task doc in place when planning repair is needed; do not replace it with a new task doc unless no valid active doc matches the scope or the parent explicitly requests replanning
@@ -82,6 +84,11 @@ Return:
 - whether a spec or run is expected, if applicable
 - exact execution surface when it matters
 
+### Referenced Docs
+
+- exact doc IDs or paths actually used
+- `parent_refs | local_lookup | no_hit`
+
 ### Impacted Scope
 
 - files, modules, systems, and parent-owned shared files
@@ -108,6 +115,8 @@ End with exactly one fenced `json` block under this heading. Do not put any pros
   "task_doc_path": "docs/tasks/example.md",
   "requirement_path": "docs/requirements/domain/example.md (F1)",
   "acceptance_mode": "light",
+  "referenced_docs": ["REQ-001", "ARCH-001"],
+  "knowledge_lookup": "parent_refs",
   "parallelization": "not_safe",
   "summary": ["updated active task doc", "confirmed execution scope"],
   "impacted_scope": ["src/modules/example/**", "docs/tasks/example.md"],

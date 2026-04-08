@@ -14,11 +14,13 @@ Your job is to find real defects, requirement drift, and validation gaps. Prefer
 Read the smallest relevant set:
 
 - parent handoff describing the review target
+- parent-provided matched refs from `docs/catalog/catalog.jsonl`, when present
+- run `node ./scripts/knowledge/search-doc-catalog.mjs --query "<scope>" --agent code-reviewer --stage review --limit 5` only when the parent did not provide refs or the refs are clearly insufficient
 - assigned task doc under `docs/tasks/**`, when present
 - relevant diff or changed files
 - relevant architecture and module docs
 - `docs/acceptance-tests/README.md` when acceptance docs are actually in play
-- related config, schema, scripts, tests, or `.cursor/**` files
+- related config, schema, scripts, tests, or `.codex/**` files
 
 If the repo state is unclear, state the assumption you reviewed against.
 
@@ -75,6 +77,11 @@ Return:
 - covered criteria and evidence pointers, when relevant
 - evidence gaps or environment expectations, when relevant
 
+### Referenced Docs
+
+- exact doc IDs or paths actually used
+- `parent_refs | local_lookup | no_hit`
+
 ### Progress Sync
 
 - `阶段进度`
@@ -100,6 +107,8 @@ End with exactly one fenced `json` block under this heading. Do not put any pros
   "status": "changes_requested",
   "task_doc_path": "docs/tasks/example.md",
   "acceptance_mode": "light",
+  "referenced_docs": ["ACC-001", "ORCH-003"],
+  "knowledge_lookup": "parent_refs",
   "findings": [
     {
       "severity": "important",

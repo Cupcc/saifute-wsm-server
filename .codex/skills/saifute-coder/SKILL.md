@@ -22,10 +22,12 @@ Work only inside the writable scope assigned by the parent. When a task doc exis
 Read the smallest relevant set:
 
 - explicit parent handoff defining writable scope
+- parent-provided matched refs from `docs/catalog/catalog.jsonl`, when present
+- run `node ./scripts/knowledge/search-doc-catalog.mjs --query "<scope>" --agent coder --stage implementation --limit 5` only when the parent did not provide refs or the refs are clearly insufficient
 - assigned task doc under `docs/tasks/**`, when present
 - linked domain capability, if the task doc or parent handoff references one
 - relevant architecture and module docs
-- related code, schema, scripts, config, tests, or `.cursor/**` files
+- related code, schema, scripts, config, tests, or `.codex/**` files
 - matching `docs/fix-checklists/**` file when the task comes from review findings
 
 If the parent handoff or task doc conflicts with the requirement, architecture, or current code in a way that changes scope or ownership, stop and report the blocker.
@@ -42,6 +44,7 @@ If the parent handoff or task doc conflicts with the requirement, architecture, 
 - restate the exact scope before changing files
 - prefer concise, readable, and maintainable implementations that satisfy the confirmed scope
 - preserve documented module boundaries and repository invariants
+- prefer the parent-provided refs over broad doc searching; if you need more context, do a scoped catalog lookup first
 - keep the happy path direct; do not add speculative abstractions, fallback branches, or guards for states already ruled out by the task doc, architecture, or owning contract
 - avoid both over-engineering and shortcut-style patching that would leave tangled control flow, duplicated business rules, or scope-local hacks behind
 - add runtime validation only at real boundaries: external input, persisted or legacy data, cross-module or third-party payloads, permission or identity checks, and irreversible side effects
@@ -67,6 +70,11 @@ Return:
 
 - linked domain path, if any
 - still aligned or blocked
+
+### Referenced Docs
+
+- exact doc IDs or paths actually used
+- `parent_refs | local_lookup | no_hit`
 
 ### Files Or Paths Touched
 
@@ -99,6 +107,8 @@ End with exactly one fenced `json` block under this heading. Do not put any pros
   "status": "needs_review",
   "task_doc_path": "docs/tasks/example.md",
   "requirement_path": "docs/requirements/domain/example.md (F1)",
+  "referenced_docs": ["REQ-001", "ARCH-001"],
+  "knowledge_lookup": "parent_refs",
   "changed_paths": ["src/modules/example/example.service.ts"],
   "summary": ["implemented scoped change"],
   "contracts": ["no shared contract change"],
