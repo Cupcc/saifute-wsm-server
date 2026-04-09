@@ -10,7 +10,7 @@
 
 ## 迁移目标
 
-将 NestJS WMS 后端的运行时从 Node.js 切换为 Bun，保持包管理器 pnpm 不变（渐进式迁移）。
+将 NestJS WMS 后端全面切换到 Bun：运行时、包管理器、开发模式、迁移脚本。
 
 ## 风险评估摘要
 
@@ -60,6 +60,31 @@
 - [x] `scripts/bun-migration/health-check.sh` — 健康检查（HTTP/DB/Redis/内存）
 - [x] `scripts/bun-migration/compare-runtimes.sh` — Node vs Bun 多轮对比基准测试
 - [x] `scripts/bun-migration/watch-stability.sh` — 长时间稳定性观察（后台自动运行）
+
+### Step 4: 包管理器切换 (2026-04-09)
+
+- [x] `bun install` 替代 `pnpm install` — 805 包，7.92s 完成
+- [x] 生成 `bun.lock` + `bunfig.toml`（registry 指向 npmmirror）
+- [x] 添加本地 `.npmrc` 覆盖全局 Verdaccio（Verdaccio tgz 下载返回 500）
+- [x] `packageManager` 字段: `pnpm@10.33.0` → `bun@1.3.11`
+- [x] scripts 中 `pnpm` 引用全部替换为 `bun run`
+- [x] 验证 bun-installed node_modules 下应用正常启动
+
+> **发现**: Verdaccio (192.168.6.128:4873) 的 tgz 下载全部 500，pnpm 靠全局缓存可用。bun 需要用 npmmirror 或修复 Verdaccio。
+
+### Step 5: 开发模式切换 (2026-04-09)
+
+- [x] `dev`: `nest start --watch` → `nest start --watch --exec bun`
+- [x] 新增 `dev:node` 保留原始 Node 开发模式
+- [x] 验证 Swagger plugin 编译时注入正常（/api/docs 200, /api/docs-json 200）
+
+### Step 6: 清理冗余依赖 (2026-04-09)
+
+- [x] 移除 `cross-env` (devDep) — bun `--env-file` 替代
+- [x] 移除 `ts-node` (devDep) — bun 原生 TS 执行替代
+- [x] 移除 `dotenv` (dep) — `@nestjs/config` 传递依赖提供
+- [x] `scripts/rebuild-collation.mjs` 移除 `import "dotenv/config"`，改用 `--env-file`
+- [x] 全链路验证通过: typecheck + test (588/590) + health check
 
 ---
 
@@ -123,4 +148,15 @@ nohup ./scripts/bun-migration/watch-stability.sh 60 0 &
 
 ## 结论
 
-**Bun 迁移可行**。所有核心组件兼容，无需代码层面修改。主要收益在测试速度（2.3x）和开发体验（跳过编译）。启动时间和内存差异不大。建议在 dev 环境用 `watch-stability.sh` 跑 24-48 小时观察后，再决定是否合入主分支。
+**Bun 全面迁移完成**。运行时 + 包管理器 + 开发模式 + 迁移脚本全部切换，移除 3 个冗余依赖。所有核心组件兼容，仅需 1 处代码修改（rebuild-collation.mjs 移除 dotenv import）。
+
+**主要收益:**
+- 测试速度 2.3x (10.7s → 4.7s)
+- 依赖安装 7.92s (bun install)
+- 开发体验: `--exec bun` + 原生 TS 执行
+- 减少 3 个依赖: cross-env, ts-node, dotenv
+
+**已知问题:**
+- Verdaccio (192.168.6.128:4873) tgz 下载 500，需修复或继续用 npmmirror
+
+**建议:** 在 dev 环境用 `watch-stability.sh` 跑 24-48 小时观察后，再决定是否合入主分支。
