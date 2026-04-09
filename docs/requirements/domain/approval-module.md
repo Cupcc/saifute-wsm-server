@@ -3,8 +3,9 @@
 ## Metadata
 
 - ID: `domain-approval-module`
-- Status: `needs-confirmation`
+- Status: `confirmed`
 - Scope: `domain-level`
+- 状态说明: `F1/F2/F3` 已按 `docs/tasks/archive/retained-completed/task-20260407-0033-approval-rename-two-phase-plan.md` 完成交付并 accepted；当前待独立规划的仅剩 `F4` 轻量审核适用策略与跨单据边界，不影响 `approval` 作为共享审核真源。
 
 ## 主题定义
 
@@ -62,9 +63,9 @@
 
 | 编号   | 功能项              | 一句话验收标准                           | 所属阶段    | 状态    | 关联任务 |
 | ---- | ---------------- | --------------------------------- | ------- | ----- | ---- |
-| `F1` | 审核投影创建与状态查询      | 单据创建后可生成 / 刷新审核投影，并在系统中统一查询当前审核状态 | Phase 1 | `进行中` | `-`  |
-| `F2` | 审核通过 / 拒绝 / 重置动作 | 系统支持统一的审核动作接口，并记录审核决策人、时间与原因      | Phase 1 | `进行中` | `-`  |
-| `F3` | 改单重置与作废前下游依赖校验   | 单据修改后可按业务规则重置审核，作废前可统一校验下游依赖与阻塞原因 | Phase 2 | `进行中` | `-`  |
+| `F1` | 审核投影创建与状态查询      | 单据创建后可生成 / 刷新审核投影，并在系统中统一查询当前审核状态 | Phase 1 | `已完成` | `docs/tasks/archive/retained-completed/task-20260407-0033-approval-rename-two-phase-plan.md`  |
+| `F2` | 审核通过 / 拒绝 / 重置动作 | 系统支持统一的审核动作接口，并记录审核决策人、时间与原因      | Phase 1 | `已完成` | `docs/tasks/archive/retained-completed/task-20260407-0033-approval-rename-two-phase-plan.md`  |
+| `F3` | 改单重置与作废前下游依赖校验   | 单据修改后可按业务规则重置审核，作废前可统一校验下游依赖与阻塞原因 | Phase 2 | `已完成` | `docs/tasks/archive/retained-completed/task-20260407-0033-approval-rename-two-phase-plan.md`  |
 | `F4` | 轻量审核适用策略与跨单据边界   | 不同单据家族的审核适用范围、免审策略与边界口径形成稳定合同     | Phase 3 | `未开始` | `-`  |
 
 
@@ -73,8 +74,8 @@
 
 | 阶段      | 目标                  | 当前状态  |
 | ------- | ------------------- | ----- |
-| Phase 1 | 收敛审核投影与基础审核动作       | `进行中` |
-| Phase 2 | 收敛改单重置、作废阻塞与下游依赖解释  | `进行中` |
+| Phase 1 | 收敛审核投影与基础审核动作       | `已完成` |
+| Phase 2 | 收敛改单重置、作废阻塞与下游依赖解释  | `已完成` |
 | Phase 3 | 固化各单据家族的轻量审核适用策略与边界 | `待规划` |
 
 

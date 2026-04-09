@@ -1,6 +1,5 @@
 import { Type } from "class-transformer";
 import {
-  ArrayMinSize,
   IsArray,
   IsDateString,
   IsInt,
@@ -11,7 +10,7 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
-import { CreateProjectLineDto } from "./create-project-line.dto";
+import { ProjectBomLineDto } from "./project-bom-line.dto";
 
 export class CreateProjectDto {
   @IsString()
@@ -52,8 +51,8 @@ export class CreateProjectDto {
   remark?: string;
 
   @IsArray()
-  @ArrayMinSize(1, { message: "lines must have at least one item" })
+  @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => CreateProjectLineDto)
-  lines!: CreateProjectLineDto[];
+  @Type(() => ProjectBomLineDto)
+  bomLines?: ProjectBomLineDto[];
 }

@@ -437,6 +437,9 @@ export const ModelName = {
   WorkshopMaterialOrderLine: "WorkshopMaterialOrderLine",
   Project: "Project",
   ProjectMaterialLine: "ProjectMaterialLine",
+  ProjectBomLine: "ProjectBomLine",
+  ProjectMaterialAction: "ProjectMaterialAction",
+  ProjectMaterialActionLine: "ProjectMaterialActionLine",
   RdHandoffOrder: "RdHandoffOrder",
   RdHandoffOrderLine: "RdHandoffOrderLine",
   RdProcurementRequest: "RdProcurementRequest",
@@ -509,6 +512,9 @@ export type TypeMap<
       | "workshopMaterialOrderLine"
       | "project"
       | "projectMaterialLine"
+      | "projectBomLine"
+      | "projectMaterialAction"
+      | "projectMaterialActionLine"
       | "rdHandoffOrder"
       | "rdHandoffOrderLine"
       | "rdProcurementRequest"
@@ -2099,6 +2105,210 @@ export type TypeMap<
           args: Prisma.ProjectMaterialLineCountArgs<ExtArgs>;
           result:
             | runtime.Types.Utils.Optional<Prisma.ProjectMaterialLineCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    ProjectBomLine: {
+      payload: Prisma.$ProjectBomLinePayload<ExtArgs>;
+      fields: Prisma.ProjectBomLineFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.ProjectBomLineFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.ProjectBomLineFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload>;
+        };
+        findFirst: {
+          args: Prisma.ProjectBomLineFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.ProjectBomLineFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload>;
+        };
+        findMany: {
+          args: Prisma.ProjectBomLineFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload>[];
+        };
+        create: {
+          args: Prisma.ProjectBomLineCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload>;
+        };
+        createMany: {
+          args: Prisma.ProjectBomLineCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.ProjectBomLineDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload>;
+        };
+        update: {
+          args: Prisma.ProjectBomLineUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload>;
+        };
+        deleteMany: {
+          args: Prisma.ProjectBomLineDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.ProjectBomLineUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.ProjectBomLineUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectBomLinePayload>;
+        };
+        aggregate: {
+          args: Prisma.ProjectBomLineAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProjectBomLine>;
+        };
+        groupBy: {
+          args: Prisma.ProjectBomLineGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.ProjectBomLineGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.ProjectBomLineCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.ProjectBomLineCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    ProjectMaterialAction: {
+      payload: Prisma.$ProjectMaterialActionPayload<ExtArgs>;
+      fields: Prisma.ProjectMaterialActionFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.ProjectMaterialActionFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.ProjectMaterialActionFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload>;
+        };
+        findFirst: {
+          args: Prisma.ProjectMaterialActionFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.ProjectMaterialActionFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload>;
+        };
+        findMany: {
+          args: Prisma.ProjectMaterialActionFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload>[];
+        };
+        create: {
+          args: Prisma.ProjectMaterialActionCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload>;
+        };
+        createMany: {
+          args: Prisma.ProjectMaterialActionCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.ProjectMaterialActionDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload>;
+        };
+        update: {
+          args: Prisma.ProjectMaterialActionUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload>;
+        };
+        deleteMany: {
+          args: Prisma.ProjectMaterialActionDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.ProjectMaterialActionUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.ProjectMaterialActionUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionPayload>;
+        };
+        aggregate: {
+          args: Prisma.ProjectMaterialActionAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProjectMaterialAction>;
+        };
+        groupBy: {
+          args: Prisma.ProjectMaterialActionGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.ProjectMaterialActionGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.ProjectMaterialActionCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.ProjectMaterialActionCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
+    ProjectMaterialActionLine: {
+      payload: Prisma.$ProjectMaterialActionLinePayload<ExtArgs>;
+      fields: Prisma.ProjectMaterialActionLineFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.ProjectMaterialActionLineFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.ProjectMaterialActionLineFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload>;
+        };
+        findFirst: {
+          args: Prisma.ProjectMaterialActionLineFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.ProjectMaterialActionLineFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload>;
+        };
+        findMany: {
+          args: Prisma.ProjectMaterialActionLineFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload>[];
+        };
+        create: {
+          args: Prisma.ProjectMaterialActionLineCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload>;
+        };
+        createMany: {
+          args: Prisma.ProjectMaterialActionLineCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        delete: {
+          args: Prisma.ProjectMaterialActionLineDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload>;
+        };
+        update: {
+          args: Prisma.ProjectMaterialActionLineUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload>;
+        };
+        deleteMany: {
+          args: Prisma.ProjectMaterialActionLineDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.ProjectMaterialActionLineUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        upsert: {
+          args: Prisma.ProjectMaterialActionLineUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProjectMaterialActionLinePayload>;
+        };
+        aggregate: {
+          args: Prisma.ProjectMaterialActionLineAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProjectMaterialActionLine>;
+        };
+        groupBy: {
+          args: Prisma.ProjectMaterialActionLineGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.ProjectMaterialActionLineGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.ProjectMaterialActionLineCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.ProjectMaterialActionLineCountAggregateOutputType>
             | number;
         };
       };
@@ -4505,6 +4715,80 @@ export const ProjectMaterialLineScalarFieldEnum = {
 export type ProjectMaterialLineScalarFieldEnum =
   (typeof ProjectMaterialLineScalarFieldEnum)[keyof typeof ProjectMaterialLineScalarFieldEnum];
 
+export const ProjectBomLineScalarFieldEnum = {
+  id: "id",
+  projectId: "projectId",
+  lineNo: "lineNo",
+  materialId: "materialId",
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  quantity: "quantity",
+  unitPrice: "unitPrice",
+  amount: "amount",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type ProjectBomLineScalarFieldEnum =
+  (typeof ProjectBomLineScalarFieldEnum)[keyof typeof ProjectBomLineScalarFieldEnum];
+
+export const ProjectMaterialActionScalarFieldEnum = {
+  id: "id",
+  documentNo: "documentNo",
+  projectId: "projectId",
+  actionType: "actionType",
+  bizDate: "bizDate",
+  stockScopeId: "stockScopeId",
+  workshopId: "workshopId",
+  lifecycleStatus: "lifecycleStatus",
+  inventoryEffectStatus: "inventoryEffectStatus",
+  totalQty: "totalQty",
+  totalAmount: "totalAmount",
+  remark: "remark",
+  voidReason: "voidReason",
+  voidedBy: "voidedBy",
+  voidedAt: "voidedAt",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type ProjectMaterialActionScalarFieldEnum =
+  (typeof ProjectMaterialActionScalarFieldEnum)[keyof typeof ProjectMaterialActionScalarFieldEnum];
+
+export const ProjectMaterialActionLineScalarFieldEnum = {
+  id: "id",
+  actionId: "actionId",
+  lineNo: "lineNo",
+  materialId: "materialId",
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  quantity: "quantity",
+  unitPrice: "unitPrice",
+  amount: "amount",
+  costUnitPrice: "costUnitPrice",
+  costAmount: "costAmount",
+  sourceDocumentType: "sourceDocumentType",
+  sourceDocumentId: "sourceDocumentId",
+  sourceDocumentLineId: "sourceDocumentLineId",
+  remark: "remark",
+  createdBy: "createdBy",
+  createdAt: "createdAt",
+  updatedBy: "updatedBy",
+  updatedAt: "updatedAt",
+} as const;
+
+export type ProjectMaterialActionLineScalarFieldEnum =
+  (typeof ProjectMaterialActionLineScalarFieldEnum)[keyof typeof ProjectMaterialActionLineScalarFieldEnum];
+
 export const RdHandoffOrderScalarFieldEnum = {
   id: "id",
   documentNo: "documentNo",
@@ -5322,6 +5606,45 @@ export const ProjectMaterialLineOrderByRelevanceFieldEnum = {
 export type ProjectMaterialLineOrderByRelevanceFieldEnum =
   (typeof ProjectMaterialLineOrderByRelevanceFieldEnum)[keyof typeof ProjectMaterialLineOrderByRelevanceFieldEnum];
 
+export const ProjectBomLineOrderByRelevanceFieldEnum = {
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type ProjectBomLineOrderByRelevanceFieldEnum =
+  (typeof ProjectBomLineOrderByRelevanceFieldEnum)[keyof typeof ProjectBomLineOrderByRelevanceFieldEnum];
+
+export const ProjectMaterialActionOrderByRelevanceFieldEnum = {
+  documentNo: "documentNo",
+  remark: "remark",
+  voidReason: "voidReason",
+  voidedBy: "voidedBy",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type ProjectMaterialActionOrderByRelevanceFieldEnum =
+  (typeof ProjectMaterialActionOrderByRelevanceFieldEnum)[keyof typeof ProjectMaterialActionOrderByRelevanceFieldEnum];
+
+export const ProjectMaterialActionLineOrderByRelevanceFieldEnum = {
+  materialCodeSnapshot: "materialCodeSnapshot",
+  materialNameSnapshot: "materialNameSnapshot",
+  materialSpecSnapshot: "materialSpecSnapshot",
+  unitCodeSnapshot: "unitCodeSnapshot",
+  sourceDocumentType: "sourceDocumentType",
+  remark: "remark",
+  createdBy: "createdBy",
+  updatedBy: "updatedBy",
+} as const;
+
+export type ProjectMaterialActionLineOrderByRelevanceFieldEnum =
+  (typeof ProjectMaterialActionLineOrderByRelevanceFieldEnum)[keyof typeof ProjectMaterialActionLineOrderByRelevanceFieldEnum];
+
 export const RdHandoffOrderOrderByRelevanceFieldEnum = {
   documentNo: "documentNo",
   handlerNameSnapshot: "handlerNameSnapshot",
@@ -5768,6 +6091,12 @@ export type EnumWorkshopMaterialOrderTypeFieldRefInput<$PrismaModel> =
   FieldRefInputType<$PrismaModel, "WorkshopMaterialOrderType">;
 
 /**
+ * Reference to a field of type 'ProjectMaterialActionType'
+ */
+export type EnumProjectMaterialActionTypeFieldRefInput<$PrismaModel> =
+  FieldRefInputType<$PrismaModel, "ProjectMaterialActionType">;
+
+/**
  * Reference to a field of type 'RdMaterialStatusEventType'
  */
 export type EnumRdMaterialStatusEventTypeFieldRefInput<$PrismaModel> =
@@ -5985,6 +6314,9 @@ export type GlobalOmitConfig = {
   workshopMaterialOrderLine?: Prisma.WorkshopMaterialOrderLineOmit;
   project?: Prisma.ProjectOmit;
   projectMaterialLine?: Prisma.ProjectMaterialLineOmit;
+  projectBomLine?: Prisma.ProjectBomLineOmit;
+  projectMaterialAction?: Prisma.ProjectMaterialActionOmit;
+  projectMaterialActionLine?: Prisma.ProjectMaterialActionLineOmit;
   rdHandoffOrder?: Prisma.RdHandoffOrderOmit;
   rdHandoffOrderLine?: Prisma.RdHandoffOrderLineOmit;
   rdProcurementRequest?: Prisma.RdProcurementRequestOmit;

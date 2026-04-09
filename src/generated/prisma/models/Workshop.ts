@@ -260,6 +260,7 @@ export type WorkshopWhereInput = {
   customerStockOrders?: Prisma.CustomerStockOrderListRelationFilter;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderListRelationFilter;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderListRelationFilter;
+  projectMaterialActions?: Prisma.ProjectMaterialActionListRelationFilter;
   defaultHandlerPersonnel?: Prisma.XOR<
     Prisma.PersonnelNullableScalarRelationFilter,
     Prisma.PersonnelWhereInput
@@ -287,6 +288,7 @@ export type WorkshopOrderByWithRelationInput = {
   customerStockOrders?: Prisma.CustomerStockOrderOrderByRelationAggregateInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderOrderByRelationAggregateInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderOrderByRelationAggregateInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionOrderByRelationAggregateInput;
   defaultHandlerPersonnel?: Prisma.PersonnelOrderByWithRelationInput;
   projects?: Prisma.ProjectOrderByRelationAggregateInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderOrderByRelationAggregateInput;
@@ -321,6 +323,7 @@ export type WorkshopWhereUniqueInput = Prisma.AtLeast<
     customerStockOrders?: Prisma.CustomerStockOrderListRelationFilter;
     stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderListRelationFilter;
     workshopMaterialOrders?: Prisma.WorkshopMaterialOrderListRelationFilter;
+    projectMaterialActions?: Prisma.ProjectMaterialActionListRelationFilter;
     defaultHandlerPersonnel?: Prisma.XOR<
       Prisma.PersonnelNullableScalarRelationFilter,
       Prisma.PersonnelWhereInput
@@ -393,6 +396,7 @@ export type WorkshopCreateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -417,6 +421,7 @@ export type WorkshopUncheckedCreateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -440,6 +445,7 @@ export type WorkshopUpdateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -469,6 +475,7 @@ export type WorkshopUncheckedUpdateInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -903,6 +910,33 @@ export type WorkshopUpdateOneRequiredWithoutProjectsNestedInput = {
   >;
 };
 
+export type WorkshopCreateNestedOneWithoutProjectMaterialActionsInput = {
+  create?: Prisma.XOR<
+    Prisma.WorkshopCreateWithoutProjectMaterialActionsInput,
+    Prisma.WorkshopUncheckedCreateWithoutProjectMaterialActionsInput
+  >;
+  connectOrCreate?: Prisma.WorkshopCreateOrConnectWithoutProjectMaterialActionsInput;
+  connect?: Prisma.WorkshopWhereUniqueInput;
+};
+
+export type WorkshopUpdateOneRequiredWithoutProjectMaterialActionsNestedInput =
+  {
+    create?: Prisma.XOR<
+      Prisma.WorkshopCreateWithoutProjectMaterialActionsInput,
+      Prisma.WorkshopUncheckedCreateWithoutProjectMaterialActionsInput
+    >;
+    connectOrCreate?: Prisma.WorkshopCreateOrConnectWithoutProjectMaterialActionsInput;
+    upsert?: Prisma.WorkshopUpsertWithoutProjectMaterialActionsInput;
+    connect?: Prisma.WorkshopWhereUniqueInput;
+    update?: Prisma.XOR<
+      Prisma.XOR<
+        Prisma.WorkshopUpdateToOneWithWhereWithoutProjectMaterialActionsInput,
+        Prisma.WorkshopUpdateWithoutProjectMaterialActionsInput
+      >,
+      Prisma.WorkshopUncheckedUpdateWithoutProjectMaterialActionsInput
+    >;
+  };
+
 export type WorkshopCreateNestedOneWithoutRdHandoffSourceOrdersInput = {
   create?: Prisma.XOR<
     Prisma.WorkshopCreateWithoutRdHandoffSourceOrdersInput,
@@ -1025,6 +1059,7 @@ export type WorkshopCreateWithoutDefaultHandlerPersonnelInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
@@ -1047,6 +1082,7 @@ export type WorkshopUncheckedCreateWithoutDefaultHandlerPersonnelInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1129,6 +1165,7 @@ export type WorkshopCreateWithoutInventoryBalancesInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1152,6 +1189,7 @@ export type WorkshopUncheckedCreateWithoutInventoryBalancesInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1202,6 +1240,7 @@ export type WorkshopUpdateWithoutInventoryBalancesInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1230,6 +1269,7 @@ export type WorkshopUncheckedUpdateWithoutInventoryBalancesInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1250,6 +1290,7 @@ export type WorkshopCreateWithoutInventoryLogsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1273,6 +1314,7 @@ export type WorkshopUncheckedCreateWithoutInventoryLogsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1323,6 +1365,7 @@ export type WorkshopUpdateWithoutInventoryLogsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1351,6 +1394,7 @@ export type WorkshopUncheckedUpdateWithoutInventoryLogsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1371,6 +1415,7 @@ export type WorkshopCreateWithoutFactoryNumberReservationsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1394,6 +1439,7 @@ export type WorkshopUncheckedCreateWithoutFactoryNumberReservationsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1445,6 +1491,7 @@ export type WorkshopUpdateWithoutFactoryNumberReservationsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1473,6 +1520,7 @@ export type WorkshopUncheckedUpdateWithoutFactoryNumberReservationsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1493,6 +1541,7 @@ export type WorkshopCreateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1516,6 +1565,7 @@ export type WorkshopUncheckedCreateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1566,6 +1616,7 @@ export type WorkshopUpdateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1594,6 +1645,7 @@ export type WorkshopUncheckedUpdateWithoutStockInOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1614,6 +1666,7 @@ export type WorkshopCreateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1637,6 +1690,7 @@ export type WorkshopUncheckedCreateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1687,6 +1741,7 @@ export type WorkshopUpdateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1715,6 +1770,7 @@ export type WorkshopUncheckedUpdateWithoutCustomerStockOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1735,6 +1791,7 @@ export type WorkshopCreateWithoutStockInPriceCorrectionOrdersInput = {
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1758,6 +1815,7 @@ export type WorkshopUncheckedCreateWithoutStockInPriceCorrectionOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1809,6 +1867,7 @@ export type WorkshopUpdateWithoutStockInPriceCorrectionOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1837,6 +1896,7 @@ export type WorkshopUncheckedUpdateWithoutStockInPriceCorrectionOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1857,6 +1917,7 @@ export type WorkshopCreateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -1880,6 +1941,7 @@ export type WorkshopUncheckedCreateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -1930,6 +1992,7 @@ export type WorkshopUpdateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -1958,6 +2021,7 @@ export type WorkshopUncheckedUpdateWithoutWorkshopMaterialOrdersInput = {
   stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -1979,6 +2043,7 @@ export type WorkshopCreateWithoutProjectsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
@@ -2002,6 +2067,7 @@ export type WorkshopUncheckedCreateWithoutProjectsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
   rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedCreateNestedManyWithoutWorkshopInput;
@@ -2052,6 +2118,7 @@ export type WorkshopUpdateWithoutProjectsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
@@ -2080,6 +2147,132 @@ export type WorkshopUncheckedUpdateWithoutProjectsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedUpdateManyWithoutWorkshopNestedInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+};
+
+export type WorkshopCreateWithoutProjectMaterialActionsInput = {
+  workshopName: string;
+  status?: $Enums.MasterDataStatus;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceCreateNestedManyWithoutWorkshopInput;
+  inventoryLogs?: Prisma.InventoryLogCreateNestedManyWithoutWorkshopInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationCreateNestedManyWithoutWorkshopInput;
+  stockInOrders?: Prisma.StockInOrderCreateNestedManyWithoutWorkshopInput;
+  customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
+  projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestCreateNestedManyWithoutWorkshopInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderCreateNestedManyWithoutWorkshopInput;
+};
+
+export type WorkshopUncheckedCreateWithoutProjectMaterialActionsInput = {
+  id?: number;
+  workshopName: string;
+  defaultHandlerPersonnelId?: number | null;
+  status?: $Enums.MasterDataStatus;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceUncheckedCreateNestedManyWithoutWorkshopInput;
+  inventoryLogs?: Prisma.InventoryLogUncheckedCreateNestedManyWithoutWorkshopInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInOrders?: Prisma.StockInOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedCreateNestedManyWithoutWorkshopInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+};
+
+export type WorkshopCreateOrConnectWithoutProjectMaterialActionsInput = {
+  where: Prisma.WorkshopWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.WorkshopCreateWithoutProjectMaterialActionsInput,
+    Prisma.WorkshopUncheckedCreateWithoutProjectMaterialActionsInput
+  >;
+};
+
+export type WorkshopUpsertWithoutProjectMaterialActionsInput = {
+  update: Prisma.XOR<
+    Prisma.WorkshopUpdateWithoutProjectMaterialActionsInput,
+    Prisma.WorkshopUncheckedUpdateWithoutProjectMaterialActionsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.WorkshopCreateWithoutProjectMaterialActionsInput,
+    Prisma.WorkshopUncheckedCreateWithoutProjectMaterialActionsInput
+  >;
+  where?: Prisma.WorkshopWhereInput;
+};
+
+export type WorkshopUpdateToOneWithWhereWithoutProjectMaterialActionsInput = {
+  where?: Prisma.WorkshopWhereInput;
+  data: Prisma.XOR<
+    Prisma.WorkshopUpdateWithoutProjectMaterialActionsInput,
+    Prisma.WorkshopUncheckedUpdateWithoutProjectMaterialActionsInput
+  >;
+};
+
+export type WorkshopUpdateWithoutProjectMaterialActionsInput = {
+  workshopName?: Prisma.StringFieldUpdateOperationsInput | string;
+  status?:
+    | Prisma.EnumMasterDataStatusFieldUpdateOperationsInput
+    | $Enums.MasterDataStatus;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceUpdateManyWithoutWorkshopNestedInput;
+  inventoryLogs?: Prisma.InventoryLogUpdateManyWithoutWorkshopNestedInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationUpdateManyWithoutWorkshopNestedInput;
+  stockInOrders?: Prisma.StockInOrderUpdateManyWithoutWorkshopNestedInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
+  projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
+  rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
+  rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
+  rdProcurementRequests?: Prisma.RdProcurementRequestUpdateManyWithoutWorkshopNestedInput;
+  rdStocktakeOrders?: Prisma.RdStocktakeOrderUpdateManyWithoutWorkshopNestedInput;
+};
+
+export type WorkshopUncheckedUpdateWithoutProjectMaterialActionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  workshopName?: Prisma.StringFieldUpdateOperationsInput | string;
+  defaultHandlerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  status?:
+    | Prisma.EnumMasterDataStatusFieldUpdateOperationsInput
+    | $Enums.MasterDataStatus;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  inventoryBalances?: Prisma.InventoryBalanceUncheckedUpdateManyWithoutWorkshopNestedInput;
+  inventoryLogs?: Prisma.InventoryLogUncheckedUpdateManyWithoutWorkshopNestedInput;
+  factoryNumberReservations?: Prisma.FactoryNumberReservationUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInOrders?: Prisma.StockInOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
   rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedUpdateManyWithoutWorkshopNestedInput;
@@ -2100,6 +2293,7 @@ export type WorkshopCreateWithoutRdHandoffSourceOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutTargetWorkshopInput;
@@ -2123,6 +2317,7 @@ export type WorkshopUncheckedCreateWithoutRdHandoffSourceOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
   rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedCreateNestedManyWithoutWorkshopInput;
@@ -2151,6 +2346,7 @@ export type WorkshopCreateWithoutRdHandoffTargetOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -2174,6 +2370,7 @@ export type WorkshopUncheckedCreateWithoutRdHandoffTargetOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedCreateNestedManyWithoutWorkshopInput;
@@ -2224,6 +2421,7 @@ export type WorkshopUpdateWithoutRdHandoffSourceOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
@@ -2252,6 +2450,7 @@ export type WorkshopUncheckedUpdateWithoutRdHandoffSourceOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
   rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedUpdateManyWithoutWorkshopNestedInput;
@@ -2294,6 +2493,7 @@ export type WorkshopUpdateWithoutRdHandoffTargetOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -2322,6 +2522,7 @@ export type WorkshopUncheckedUpdateWithoutRdHandoffTargetOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdProcurementRequests?: Prisma.RdProcurementRequestUncheckedUpdateManyWithoutWorkshopNestedInput;
@@ -2342,6 +2543,7 @@ export type WorkshopCreateWithoutRdProcurementRequestsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -2365,6 +2567,7 @@ export type WorkshopUncheckedCreateWithoutRdProcurementRequestsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -2415,6 +2618,7 @@ export type WorkshopUpdateWithoutRdProcurementRequestsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -2443,6 +2647,7 @@ export type WorkshopUncheckedUpdateWithoutRdProcurementRequestsInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -2463,6 +2668,7 @@ export type WorkshopCreateWithoutRdStocktakeOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutWorkshopInput;
   defaultHandlerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutDefaultHandlerWorkshopsInput;
   projects?: Prisma.ProjectCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderCreateNestedManyWithoutSourceWorkshopInput;
@@ -2486,6 +2692,7 @@ export type WorkshopUncheckedCreateWithoutRdStocktakeOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedCreateNestedManyWithoutWorkshopInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedCreateNestedManyWithoutWorkshopInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutWorkshopInput;
   projects?: Prisma.ProjectUncheckedCreateNestedManyWithoutWorkshopInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutSourceWorkshopInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedCreateNestedManyWithoutTargetWorkshopInput;
@@ -2536,6 +2743,7 @@ export type WorkshopUpdateWithoutRdStocktakeOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   defaultHandlerPersonnel?: Prisma.PersonnelUpdateOneWithoutDefaultHandlerWorkshopsNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
@@ -2564,6 +2772,7 @@ export type WorkshopUncheckedUpdateWithoutRdStocktakeOrdersInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -2596,6 +2805,7 @@ export type WorkshopUpdateWithoutDefaultHandlerPersonnelInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUpdateManyWithoutTargetWorkshopNestedInput;
@@ -2620,6 +2830,7 @@ export type WorkshopUncheckedUpdateWithoutDefaultHandlerPersonnelInput = {
   customerStockOrders?: Prisma.CustomerStockOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   stockInPriceCorrectionOrders?: Prisma.StockInPriceCorrectionOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
   workshopMaterialOrders?: Prisma.WorkshopMaterialOrderUncheckedUpdateManyWithoutWorkshopNestedInput;
+  projectMaterialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutWorkshopNestedInput;
   projects?: Prisma.ProjectUncheckedUpdateManyWithoutWorkshopNestedInput;
   rdHandoffSourceOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutSourceWorkshopNestedInput;
   rdHandoffTargetOrders?: Prisma.RdHandoffOrderUncheckedUpdateManyWithoutTargetWorkshopNestedInput;
@@ -2651,6 +2862,7 @@ export type WorkshopCountOutputType = {
   customerStockOrders: number;
   stockInPriceCorrectionOrders: number;
   workshopMaterialOrders: number;
+  projectMaterialActions: number;
   projects: number;
   rdHandoffSourceOrders: number;
   rdHandoffTargetOrders: number;
@@ -2679,6 +2891,9 @@ export type WorkshopCountOutputTypeSelect<
   workshopMaterialOrders?:
     | boolean
     | WorkshopCountOutputTypeCountWorkshopMaterialOrdersArgs;
+  projectMaterialActions?:
+    | boolean
+    | WorkshopCountOutputTypeCountProjectMaterialActionsArgs;
   projects?: boolean | WorkshopCountOutputTypeCountProjectsArgs;
   rdHandoffSourceOrders?:
     | boolean
@@ -2780,6 +2995,16 @@ export type WorkshopCountOutputTypeCountWorkshopMaterialOrdersArgs<
 /**
  * WorkshopCountOutputType without action
  */
+export type WorkshopCountOutputTypeCountProjectMaterialActionsArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.ProjectMaterialActionWhereInput;
+};
+
+/**
+ * WorkshopCountOutputType without action
+ */
 export type WorkshopCountOutputTypeCountProjectsArgs<
   ExtArgs extends
     runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
@@ -2857,6 +3082,9 @@ export type WorkshopSelect<
     workshopMaterialOrders?:
       | boolean
       | Prisma.Workshop$workshopMaterialOrdersArgs<ExtArgs>;
+    projectMaterialActions?:
+      | boolean
+      | Prisma.Workshop$projectMaterialActionsArgs<ExtArgs>;
     defaultHandlerPersonnel?:
       | boolean
       | Prisma.Workshop$defaultHandlerPersonnelArgs<ExtArgs>;
@@ -2922,6 +3150,9 @@ export type WorkshopInclude<
   workshopMaterialOrders?:
     | boolean
     | Prisma.Workshop$workshopMaterialOrdersArgs<ExtArgs>;
+  projectMaterialActions?:
+    | boolean
+    | Prisma.Workshop$projectMaterialActionsArgs<ExtArgs>;
   defaultHandlerPersonnel?:
     | boolean
     | Prisma.Workshop$defaultHandlerPersonnelArgs<ExtArgs>;
@@ -2952,6 +3183,7 @@ export type $WorkshopPayload<
     customerStockOrders: Prisma.$CustomerStockOrderPayload<ExtArgs>[];
     stockInPriceCorrectionOrders: Prisma.$StockInPriceCorrectionOrderPayload<ExtArgs>[];
     workshopMaterialOrders: Prisma.$WorkshopMaterialOrderPayload<ExtArgs>[];
+    projectMaterialActions: Prisma.$ProjectMaterialActionPayload<ExtArgs>[];
     defaultHandlerPersonnel: Prisma.$PersonnelPayload<ExtArgs> | null;
     projects: Prisma.$ProjectPayload<ExtArgs>[];
     rdHandoffSourceOrders: Prisma.$RdHandoffOrderPayload<ExtArgs>[];
@@ -3537,6 +3769,22 @@ export interface Prisma__WorkshopClient<
   ): Prisma.PrismaPromise<
     | runtime.Types.Result.GetResult<
         Prisma.$WorkshopMaterialOrderPayload<ExtArgs>,
+        T,
+        "findMany",
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  projectMaterialActions<
+    T extends Prisma.Workshop$projectMaterialActionsArgs<ExtArgs> = {},
+  >(
+    args?: Prisma.Subset<
+      T,
+      Prisma.Workshop$projectMaterialActionsArgs<ExtArgs>
+    >,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$ProjectMaterialActionPayload<ExtArgs>,
         T,
         "findMany",
         GlobalOmitOptions
@@ -4292,6 +4540,37 @@ export type Workshop$workshopMaterialOrdersArgs<
   distinct?:
     | Prisma.WorkshopMaterialOrderScalarFieldEnum
     | Prisma.WorkshopMaterialOrderScalarFieldEnum[];
+};
+
+/**
+ * Workshop.projectMaterialActions
+ */
+export type Workshop$projectMaterialActionsArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the ProjectMaterialAction
+   */
+  select?: Prisma.ProjectMaterialActionSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the ProjectMaterialAction
+   */
+  omit?: Prisma.ProjectMaterialActionOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProjectMaterialActionInclude<ExtArgs> | null;
+  where?: Prisma.ProjectMaterialActionWhereInput;
+  orderBy?:
+    | Prisma.ProjectMaterialActionOrderByWithRelationInput
+    | Prisma.ProjectMaterialActionOrderByWithRelationInput[];
+  cursor?: Prisma.ProjectMaterialActionWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.ProjectMaterialActionScalarFieldEnum
+    | Prisma.ProjectMaterialActionScalarFieldEnum[];
 };
 
 /**

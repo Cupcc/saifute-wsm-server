@@ -1,18 +1,30 @@
 import { Type } from "class-transformer";
 import {
-  ArrayMinSize,
   IsArray,
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
   Min,
   ValidateNested,
 } from "class-validator";
-import { UpdateProjectLineDto } from "./update-project-line.dto";
+import { ProjectBomLineDto } from "./project-bom-line.dto";
 
 export class UpdateProjectDto {
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @MaxLength(64)
+  projectCode?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  @MaxLength(128)
+  projectName?: string;
+
   @IsDateString()
   @IsOptional()
   bizDate?: string;
@@ -43,8 +55,8 @@ export class UpdateProjectDto {
   remark?: string;
 
   @IsArray()
-  @ArrayMinSize(1, { message: "lines must have at least one item" })
+  @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => UpdateProjectLineDto)
-  lines!: UpdateProjectLineDto[];
+  @Type(() => ProjectBomLineDto)
+  bomLines?: ProjectBomLineDto[];
 }

@@ -497,6 +497,8 @@ export type ProjectWhereInput = {
     Prisma.AllocationTargetWhereInput
   > | null;
   materialLines?: Prisma.ProjectMaterialLineListRelationFilter;
+  bomLines?: Prisma.ProjectBomLineListRelationFilter;
+  materialActions?: Prisma.ProjectMaterialActionListRelationFilter;
 };
 
 export type ProjectOrderByWithRelationInput = {
@@ -537,6 +539,8 @@ export type ProjectOrderByWithRelationInput = {
   workshop?: Prisma.WorkshopOrderByWithRelationInput;
   allocationTarget?: Prisma.AllocationTargetOrderByWithRelationInput;
   materialLines?: Prisma.ProjectMaterialLineOrderByRelationAggregateInput;
+  bomLines?: Prisma.ProjectBomLineOrderByRelationAggregateInput;
+  materialActions?: Prisma.ProjectMaterialActionOrderByRelationAggregateInput;
   _relevance?: Prisma.ProjectOrderByRelevanceInput;
 };
 
@@ -631,6 +635,8 @@ export type ProjectWhereUniqueInput = Prisma.AtLeast<
       Prisma.AllocationTargetWhereInput
     > | null;
     materialLines?: Prisma.ProjectMaterialLineListRelationFilter;
+    bomLines?: Prisma.ProjectBomLineListRelationFilter;
+    materialActions?: Prisma.ProjectMaterialActionListRelationFilter;
   },
   "id" | "projectCode" | "allocationTargetId"
 >;
@@ -806,6 +812,8 @@ export type ProjectCreateInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateInput = {
@@ -840,6 +848,8 @@ export type ProjectUncheckedCreateInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUpdateInput = {
@@ -908,6 +918,8 @@ export type ProjectUpdateInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateInput = {
@@ -983,6 +995,8 @@ export type ProjectUncheckedUpdateInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateManyInput = {
@@ -1858,6 +1872,58 @@ export type ProjectUpdateOneRequiredWithoutMaterialLinesNestedInput = {
   >;
 };
 
+export type ProjectCreateNestedOneWithoutBomLinesInput = {
+  create?: Prisma.XOR<
+    Prisma.ProjectCreateWithoutBomLinesInput,
+    Prisma.ProjectUncheckedCreateWithoutBomLinesInput
+  >;
+  connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutBomLinesInput;
+  connect?: Prisma.ProjectWhereUniqueInput;
+};
+
+export type ProjectUpdateOneRequiredWithoutBomLinesNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.ProjectCreateWithoutBomLinesInput,
+    Prisma.ProjectUncheckedCreateWithoutBomLinesInput
+  >;
+  connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutBomLinesInput;
+  upsert?: Prisma.ProjectUpsertWithoutBomLinesInput;
+  connect?: Prisma.ProjectWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.ProjectUpdateToOneWithWhereWithoutBomLinesInput,
+      Prisma.ProjectUpdateWithoutBomLinesInput
+    >,
+    Prisma.ProjectUncheckedUpdateWithoutBomLinesInput
+  >;
+};
+
+export type ProjectCreateNestedOneWithoutMaterialActionsInput = {
+  create?: Prisma.XOR<
+    Prisma.ProjectCreateWithoutMaterialActionsInput,
+    Prisma.ProjectUncheckedCreateWithoutMaterialActionsInput
+  >;
+  connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutMaterialActionsInput;
+  connect?: Prisma.ProjectWhereUniqueInput;
+};
+
+export type ProjectUpdateOneRequiredWithoutMaterialActionsNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.ProjectCreateWithoutMaterialActionsInput,
+    Prisma.ProjectUncheckedCreateWithoutMaterialActionsInput
+  >;
+  connectOrCreate?: Prisma.ProjectCreateOrConnectWithoutMaterialActionsInput;
+  upsert?: Prisma.ProjectUpsertWithoutMaterialActionsInput;
+  connect?: Prisma.ProjectWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.ProjectUpdateToOneWithWhereWithoutMaterialActionsInput,
+      Prisma.ProjectUpdateWithoutMaterialActionsInput
+    >,
+    Prisma.ProjectUncheckedUpdateWithoutMaterialActionsInput
+  >;
+};
+
 export type ProjectCreateWithoutCustomerInput = {
   projectCode: string;
   projectName: string;
@@ -1888,6 +1954,8 @@ export type ProjectCreateWithoutCustomerInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutCustomerInput = {
@@ -1921,6 +1989,8 @@ export type ProjectUncheckedCreateWithoutCustomerInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutCustomerInput = {
@@ -2048,6 +2118,8 @@ export type ProjectCreateWithoutSupplierInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutSupplierInput = {
@@ -2081,6 +2153,8 @@ export type ProjectUncheckedCreateWithoutSupplierInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutSupplierInput = {
@@ -2156,6 +2230,8 @@ export type ProjectCreateWithoutManagerPersonnelInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutManagerPersonnelInput = {
@@ -2189,6 +2265,8 @@ export type ProjectUncheckedCreateWithoutManagerPersonnelInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutManagerPersonnelInput = {
@@ -2264,6 +2342,8 @@ export type ProjectCreateWithoutWorkshopInput = {
   stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutWorkshopInput = {
@@ -2297,6 +2377,8 @@ export type ProjectUncheckedCreateWithoutWorkshopInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutWorkshopInput = {
@@ -2372,6 +2454,8 @@ export type ProjectCreateWithoutStockScopeInput = {
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutStockScopeInput = {
@@ -2405,6 +2489,8 @@ export type ProjectUncheckedCreateWithoutStockScopeInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutStockScopeInput = {
@@ -2480,6 +2566,8 @@ export type ProjectCreateWithoutAllocationTargetInput = {
   stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutAllocationTargetInput = {
@@ -2513,6 +2601,8 @@ export type ProjectUncheckedCreateWithoutAllocationTargetInput = {
   updatedBy?: string | null;
   updatedAt?: Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutAllocationTargetInput = {
@@ -2608,6 +2698,8 @@ export type ProjectUpdateWithoutAllocationTargetInput = {
   stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutAllocationTargetInput = {
@@ -2679,6 +2771,8 @@ export type ProjectUncheckedUpdateWithoutAllocationTargetInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateWithoutMaterialLinesInput = {
@@ -2711,6 +2805,8 @@ export type ProjectCreateWithoutMaterialLinesInput = {
   stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
   workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
   allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectUncheckedCreateWithoutMaterialLinesInput = {
@@ -2744,6 +2840,8 @@ export type ProjectUncheckedCreateWithoutMaterialLinesInput = {
   createdAt?: Date | string;
   updatedBy?: string | null;
   updatedAt?: Date | string;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
 };
 
 export type ProjectCreateOrConnectWithoutMaterialLinesInput = {
@@ -2839,6 +2937,8 @@ export type ProjectUpdateWithoutMaterialLinesInput = {
   stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutMaterialLinesInput = {
@@ -2913,6 +3013,492 @@ export type ProjectUncheckedUpdateWithoutMaterialLinesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectCreateWithoutBomLinesInput = {
+  projectCode: string;
+  projectName: string;
+  bizDate: Date | string;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  customerCodeSnapshot?: string | null;
+  customerNameSnapshot?: string | null;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  managerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  customer?: Prisma.CustomerCreateNestedOneWithoutProjectsInput;
+  supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
+  managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
+  workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
+  allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
+  materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectUncheckedCreateWithoutBomLinesInput = {
+  id?: number;
+  projectCode: string;
+  projectName: string;
+  bizDate: Date | string;
+  customerId?: number | null;
+  supplierId?: number | null;
+  managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
+  workshopId: number;
+  allocationTargetId?: number | null;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  customerCodeSnapshot?: string | null;
+  customerNameSnapshot?: string | null;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  managerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectCreateOrConnectWithoutBomLinesInput = {
+  where: Prisma.ProjectWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutBomLinesInput,
+    Prisma.ProjectUncheckedCreateWithoutBomLinesInput
+  >;
+};
+
+export type ProjectUpsertWithoutBomLinesInput = {
+  update: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutBomLinesInput,
+    Prisma.ProjectUncheckedUpdateWithoutBomLinesInput
+  >;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutBomLinesInput,
+    Prisma.ProjectUncheckedCreateWithoutBomLinesInput
+  >;
+  where?: Prisma.ProjectWhereInput;
+};
+
+export type ProjectUpdateToOneWithWhereWithoutBomLinesInput = {
+  where?: Prisma.ProjectWhereInput;
+  data: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutBomLinesInput,
+    Prisma.ProjectUncheckedUpdateWithoutBomLinesInput
+  >;
+};
+
+export type ProjectUpdateWithoutBomLinesInput = {
+  projectCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectName?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  customerCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  customerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  managerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
+  supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
+  managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
+  workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
+  allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
+  materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectUncheckedUpdateWithoutBomLinesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  projectCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectName?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  customerId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  supplierId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  managerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  allocationTargetId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  customerCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  customerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  managerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectCreateWithoutMaterialActionsInput = {
+  projectCode: string;
+  projectName: string;
+  bizDate: Date | string;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  customerCodeSnapshot?: string | null;
+  customerNameSnapshot?: string | null;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  managerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  customer?: Prisma.CustomerCreateNestedOneWithoutProjectsInput;
+  supplier?: Prisma.SupplierCreateNestedOneWithoutProjectsInput;
+  managerPersonnel?: Prisma.PersonnelCreateNestedOneWithoutManagedProjectsInput;
+  stockScope?: Prisma.StockScopeCreateNestedOneWithoutProjectsInput;
+  workshop: Prisma.WorkshopCreateNestedOneWithoutProjectsInput;
+  allocationTarget?: Prisma.AllocationTargetCreateNestedOneWithoutProjectInput;
+  materialLines?: Prisma.ProjectMaterialLineCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectUncheckedCreateWithoutMaterialActionsInput = {
+  id?: number;
+  projectCode: string;
+  projectName: string;
+  bizDate: Date | string;
+  customerId?: number | null;
+  supplierId?: number | null;
+  managerPersonnelId?: number | null;
+  stockScopeId?: number | null;
+  workshopId: number;
+  allocationTargetId?: number | null;
+  lifecycleStatus?: $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?: $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?: $Enums.InventoryEffectStatus;
+  revisionNo?: number;
+  customerCodeSnapshot?: string | null;
+  customerNameSnapshot?: string | null;
+  supplierCodeSnapshot?: string | null;
+  supplierNameSnapshot?: string | null;
+  managerNameSnapshot?: string | null;
+  workshopNameSnapshot: string;
+  totalQty?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  totalAmount?: runtime.Decimal | runtime.DecimalJsLike | number | string;
+  remark?: string | null;
+  voidReason?: string | null;
+  voidedBy?: string | null;
+  voidedAt?: Date | string | null;
+  createdBy?: string | null;
+  createdAt?: Date | string;
+  updatedBy?: string | null;
+  updatedAt?: Date | string;
+  materialLines?: Prisma.ProjectMaterialLineUncheckedCreateNestedManyWithoutProjectInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedCreateNestedManyWithoutProjectInput;
+};
+
+export type ProjectCreateOrConnectWithoutMaterialActionsInput = {
+  where: Prisma.ProjectWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutMaterialActionsInput,
+    Prisma.ProjectUncheckedCreateWithoutMaterialActionsInput
+  >;
+};
+
+export type ProjectUpsertWithoutMaterialActionsInput = {
+  update: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutMaterialActionsInput,
+    Prisma.ProjectUncheckedUpdateWithoutMaterialActionsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.ProjectCreateWithoutMaterialActionsInput,
+    Prisma.ProjectUncheckedCreateWithoutMaterialActionsInput
+  >;
+  where?: Prisma.ProjectWhereInput;
+};
+
+export type ProjectUpdateToOneWithWhereWithoutMaterialActionsInput = {
+  where?: Prisma.ProjectWhereInput;
+  data: Prisma.XOR<
+    Prisma.ProjectUpdateWithoutMaterialActionsInput,
+    Prisma.ProjectUncheckedUpdateWithoutMaterialActionsInput
+  >;
+};
+
+export type ProjectUpdateWithoutMaterialActionsInput = {
+  projectCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectName?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  customerCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  customerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  managerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  customer?: Prisma.CustomerUpdateOneWithoutProjectsNestedInput;
+  supplier?: Prisma.SupplierUpdateOneWithoutProjectsNestedInput;
+  managerPersonnel?: Prisma.PersonnelUpdateOneWithoutManagedProjectsNestedInput;
+  stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
+  workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
+  allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
+  materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+};
+
+export type ProjectUncheckedUpdateWithoutMaterialActionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number;
+  projectCode?: Prisma.StringFieldUpdateOperationsInput | string;
+  projectName?: Prisma.StringFieldUpdateOperationsInput | string;
+  bizDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  customerId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  supplierId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  managerPersonnelId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  stockScopeId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null;
+  workshopId?: Prisma.IntFieldUpdateOperationsInput | number;
+  allocationTargetId?:
+    | Prisma.NullableIntFieldUpdateOperationsInput
+    | number
+    | null;
+  lifecycleStatus?:
+    | Prisma.EnumDocumentLifecycleStatusFieldUpdateOperationsInput
+    | $Enums.DocumentLifecycleStatus;
+  auditStatusSnapshot?:
+    | Prisma.EnumAuditStatusSnapshotFieldUpdateOperationsInput
+    | $Enums.AuditStatusSnapshot;
+  inventoryEffectStatus?:
+    | Prisma.EnumInventoryEffectStatusFieldUpdateOperationsInput
+    | $Enums.InventoryEffectStatus;
+  revisionNo?: Prisma.IntFieldUpdateOperationsInput | number;
+  customerCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  customerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierCodeSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  supplierNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  managerNameSnapshot?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  workshopNameSnapshot?: Prisma.StringFieldUpdateOperationsInput | string;
+  totalQty?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  totalAmount?:
+    | Prisma.DecimalFieldUpdateOperationsInput
+    | runtime.Decimal
+    | runtime.DecimalJsLike
+    | number
+    | string;
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  voidedAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
+  createdBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectCreateManyCustomerInput = {
@@ -3012,6 +3598,8 @@ export type ProjectUpdateWithoutCustomerInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutCustomerInput = {
@@ -3086,6 +3674,8 @@ export type ProjectUncheckedUpdateWithoutCustomerInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateManyWithoutCustomerInput = {
@@ -3258,6 +3848,8 @@ export type ProjectUpdateWithoutSupplierInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutSupplierInput = {
@@ -3332,6 +3924,8 @@ export type ProjectUncheckedUpdateWithoutSupplierInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateManyWithoutSupplierInput = {
@@ -3504,6 +4098,8 @@ export type ProjectUpdateWithoutManagerPersonnelInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutManagerPersonnelInput = {
@@ -3575,6 +4171,8 @@ export type ProjectUncheckedUpdateWithoutManagerPersonnelInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateManyWithoutManagerPersonnelInput = {
@@ -3744,6 +4342,8 @@ export type ProjectUpdateWithoutWorkshopInput = {
   stockScope?: Prisma.StockScopeUpdateOneWithoutProjectsNestedInput;
   allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutWorkshopInput = {
@@ -3818,6 +4418,8 @@ export type ProjectUncheckedUpdateWithoutWorkshopInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateManyWithoutWorkshopInput = {
@@ -3990,6 +4592,8 @@ export type ProjectUpdateWithoutStockScopeInput = {
   workshop?: Prisma.WorkshopUpdateOneRequiredWithoutProjectsNestedInput;
   allocationTarget?: Prisma.AllocationTargetUpdateOneWithoutProjectNestedInput;
   materialLines?: Prisma.ProjectMaterialLineUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateWithoutStockScopeInput = {
@@ -4064,6 +4668,8 @@ export type ProjectUncheckedUpdateWithoutStockScopeInput = {
   updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   materialLines?: Prisma.ProjectMaterialLineUncheckedUpdateManyWithoutProjectNestedInput;
+  bomLines?: Prisma.ProjectBomLineUncheckedUpdateManyWithoutProjectNestedInput;
+  materialActions?: Prisma.ProjectMaterialActionUncheckedUpdateManyWithoutProjectNestedInput;
 };
 
 export type ProjectUncheckedUpdateManyWithoutStockScopeInput = {
@@ -4145,6 +4751,8 @@ export type ProjectUncheckedUpdateManyWithoutStockScopeInput = {
 
 export type ProjectCountOutputType = {
   materialLines: number;
+  bomLines: number;
+  materialActions: number;
 };
 
 export type ProjectCountOutputTypeSelect<
@@ -4152,6 +4760,8 @@ export type ProjectCountOutputTypeSelect<
     runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   materialLines?: boolean | ProjectCountOutputTypeCountMaterialLinesArgs;
+  bomLines?: boolean | ProjectCountOutputTypeCountBomLinesArgs;
+  materialActions?: boolean | ProjectCountOutputTypeCountMaterialActionsArgs;
 };
 
 /**
@@ -4175,6 +4785,26 @@ export type ProjectCountOutputTypeCountMaterialLinesArgs<
     runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.ProjectMaterialLineWhereInput;
+};
+
+/**
+ * ProjectCountOutputType without action
+ */
+export type ProjectCountOutputTypeCountBomLinesArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.ProjectBomLineWhereInput;
+};
+
+/**
+ * ProjectCountOutputType without action
+ */
+export type ProjectCountOutputTypeCountMaterialActionsArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.ProjectMaterialActionWhereInput;
 };
 
 export type ProjectSelect<
@@ -4219,6 +4849,8 @@ export type ProjectSelect<
     workshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
     allocationTarget?: boolean | Prisma.Project$allocationTargetArgs<ExtArgs>;
     materialLines?: boolean | Prisma.Project$materialLinesArgs<ExtArgs>;
+    bomLines?: boolean | Prisma.Project$bomLinesArgs<ExtArgs>;
+    materialActions?: boolean | Prisma.Project$materialActionsArgs<ExtArgs>;
     _count?: boolean | Prisma.ProjectCountOutputTypeDefaultArgs<ExtArgs>;
   },
   ExtArgs["result"]["project"]
@@ -4304,6 +4936,8 @@ export type ProjectInclude<
   workshop?: boolean | Prisma.WorkshopDefaultArgs<ExtArgs>;
   allocationTarget?: boolean | Prisma.Project$allocationTargetArgs<ExtArgs>;
   materialLines?: boolean | Prisma.Project$materialLinesArgs<ExtArgs>;
+  bomLines?: boolean | Prisma.Project$bomLinesArgs<ExtArgs>;
+  materialActions?: boolean | Prisma.Project$materialActionsArgs<ExtArgs>;
   _count?: boolean | Prisma.ProjectCountOutputTypeDefaultArgs<ExtArgs>;
 };
 
@@ -4320,6 +4954,8 @@ export type $ProjectPayload<
     workshop: Prisma.$WorkshopPayload<ExtArgs>;
     allocationTarget: Prisma.$AllocationTargetPayload<ExtArgs> | null;
     materialLines: Prisma.$ProjectMaterialLinePayload<ExtArgs>[];
+    bomLines: Prisma.$ProjectBomLinePayload<ExtArgs>[];
+    materialActions: Prisma.$ProjectMaterialActionPayload<ExtArgs>[];
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -4915,6 +5551,28 @@ export interface Prisma__ProjectClient<
   ): Prisma.PrismaPromise<
     | runtime.Types.Result.GetResult<
         Prisma.$ProjectMaterialLinePayload<ExtArgs>,
+        T,
+        "findMany",
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  bomLines<T extends Prisma.Project$bomLinesArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Project$bomLinesArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$ProjectBomLinePayload<ExtArgs>,
+        T,
+        "findMany",
+        GlobalOmitOptions
+      >
+    | Null
+  >;
+  materialActions<T extends Prisma.Project$materialActionsArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Project$materialActionsArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$ProjectMaterialActionPayload<ExtArgs>,
         T,
         "findMany",
         GlobalOmitOptions
@@ -5544,6 +6202,68 @@ export type Project$materialLinesArgs<
   distinct?:
     | Prisma.ProjectMaterialLineScalarFieldEnum
     | Prisma.ProjectMaterialLineScalarFieldEnum[];
+};
+
+/**
+ * Project.bomLines
+ */
+export type Project$bomLinesArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the ProjectBomLine
+   */
+  select?: Prisma.ProjectBomLineSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the ProjectBomLine
+   */
+  omit?: Prisma.ProjectBomLineOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProjectBomLineInclude<ExtArgs> | null;
+  where?: Prisma.ProjectBomLineWhereInput;
+  orderBy?:
+    | Prisma.ProjectBomLineOrderByWithRelationInput
+    | Prisma.ProjectBomLineOrderByWithRelationInput[];
+  cursor?: Prisma.ProjectBomLineWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.ProjectBomLineScalarFieldEnum
+    | Prisma.ProjectBomLineScalarFieldEnum[];
+};
+
+/**
+ * Project.materialActions
+ */
+export type Project$materialActionsArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the ProjectMaterialAction
+   */
+  select?: Prisma.ProjectMaterialActionSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the ProjectMaterialAction
+   */
+  omit?: Prisma.ProjectMaterialActionOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProjectMaterialActionInclude<ExtArgs> | null;
+  where?: Prisma.ProjectMaterialActionWhereInput;
+  orderBy?:
+    | Prisma.ProjectMaterialActionOrderByWithRelationInput
+    | Prisma.ProjectMaterialActionOrderByWithRelationInput[];
+  cursor?: Prisma.ProjectMaterialActionWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?:
+    | Prisma.ProjectMaterialActionScalarFieldEnum
+    | Prisma.ProjectMaterialActionScalarFieldEnum[];
 };
 
 /**

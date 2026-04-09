@@ -161,6 +161,15 @@ export const WorkshopMaterialOrderType = {
 export type WorkshopMaterialOrderType =
   (typeof WorkshopMaterialOrderType)[keyof typeof WorkshopMaterialOrderType];
 
+export const ProjectMaterialActionType = {
+  PICK: "PICK",
+  RETURN: "RETURN",
+  SCRAP: "SCRAP",
+} as const;
+
+export type ProjectMaterialActionType =
+  (typeof ProjectMaterialActionType)[keyof typeof ProjectMaterialActionType];
+
 export const DocumentRelationType = {
   SALES_RETURN_FROM_OUTBOUND: "SALES_RETURN_FROM_OUTBOUND",
   WORKSHOP_RETURN_FROM_PICK: "WORKSHOP_RETURN_FROM_PICK",

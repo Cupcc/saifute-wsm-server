@@ -94,9 +94,47 @@ export function createRdProject(data) {
   });
 }
 
+export function updateRdProject(projectId, data) {
+  return request({
+    url: `/api/projects/${projectId}`,
+    method: "patch",
+    data,
+  });
+}
+
 export function voidRdProject(projectId, data) {
   return request({
     url: `/api/projects/${projectId}/void`,
+    method: "post",
+    data,
+  });
+}
+
+export function listRdProjectMaterialActions(projectId) {
+  return request({
+    url: `/api/projects/${projectId}/material-actions`,
+    method: "get",
+  });
+}
+
+export function getRdProjectMaterialAction(actionId) {
+  return request({
+    url: `/api/projects/material-actions/${actionId}`,
+    method: "get",
+  });
+}
+
+export function createRdProjectMaterialAction(projectId, data) {
+  return request({
+    url: `/api/projects/${projectId}/material-actions`,
+    method: "post",
+    data,
+  });
+}
+
+export function voidRdProjectMaterialAction(actionId, data) {
+  return request({
+    url: `/api/projects/material-actions/${actionId}/void`,
     method: "post",
     data,
   });

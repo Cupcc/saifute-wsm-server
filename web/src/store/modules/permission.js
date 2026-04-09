@@ -129,7 +129,7 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     group: "rd",
     path: "project-consumption",
     component: "rd/project-consumption/index",
-    title: "项目领用",
+    title: "项目管理",
     icon: "education",
     visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
   },

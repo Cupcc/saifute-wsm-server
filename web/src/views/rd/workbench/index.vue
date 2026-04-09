@@ -43,7 +43,7 @@
           采购需求
         </el-button>
         <el-button type="primary" @click="goTo('/rd/project-consumption')">
-          项目领用
+          项目管理
         </el-button>
         <el-button @click="goTo('/rd/scrap-orders')">本仓报废</el-button>
         <el-button @click="goTo('/rd/inventory-summary')">查看库存</el-button>

@@ -162,6 +162,21 @@ export type Project = Prisma.ProjectModel;
  */
 export type ProjectMaterialLine = Prisma.ProjectMaterialLineModel;
 /**
+ * Model ProjectBomLine
+ *
+ */
+export type ProjectBomLine = Prisma.ProjectBomLineModel;
+/**
+ * Model ProjectMaterialAction
+ *
+ */
+export type ProjectMaterialAction = Prisma.ProjectMaterialActionModel;
+/**
+ * Model ProjectMaterialActionLine
+ *
+ */
+export type ProjectMaterialActionLine = Prisma.ProjectMaterialActionLineModel;
+/**
  * Model RdHandoffOrder
  *
  */

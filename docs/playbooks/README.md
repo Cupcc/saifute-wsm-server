@@ -59,10 +59,6 @@ docs/playbooks/
 │   ├── playbook.md                    # 经验条目
 │   ├── check-idempotency.ts           # 复用脚本示例
 │   └── ...
-├── ralph/
-│   ├── project-instructions.md
-│   ├── cli-project-bootstrap.md
-│   └── ...
 └── <domain>/
     ├── playbook.md
     └── ...

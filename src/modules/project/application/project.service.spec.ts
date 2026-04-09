@@ -1,38 +1,59 @@
-import { ConflictException, NotFoundException } from "@nestjs/common";
+import { ConflictException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   AuditStatusSnapshot,
   DocumentLifecycleStatus,
   InventoryEffectStatus,
   Prisma,
+  ProjectMaterialActionType,
 } from "../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import { RdProcurementRequestService } from "../../rd-subwarehouse/application/rd-procurement-request.service";
 import { ProjectRepository } from "../infrastructure/project.repository";
 import { ProjectService } from "./project.service";
 
 describe("ProjectService", () => {
-  const mockProject = {
+  let service: ProjectService;
+  let repository: jest.Mocked<ProjectRepository>;
+  let masterDataService: jest.Mocked<MasterDataService>;
+  let inventoryService: jest.Mocked<InventoryService>;
+  let rdProcurementRequestService: jest.Mocked<RdProcurementRequestService>;
+  let prisma: { runInTransaction: jest.Mock };
+
+  const stockScope = {
+    id: 2,
+    scopeCode: "RD_SUB",
+    scopeName: "研发小仓",
+    status: "ACTIVE",
+    createdBy: null,
+    createdAt: new Date(),
+    updatedBy: null,
+    updatedAt: new Date(),
+  } as const;
+
+  const baseProject = {
     id: 1,
     projectCode: "PRJ-001",
     projectName: "Project A",
-    bizDate: new Date("2025-03-14"),
-    customerId: 10,
-    supplierId: 20,
-    managerPersonnelId: 30,
+    bizDate: new Date("2026-04-01"),
+    customerId: null,
+    supplierId: null,
+    managerPersonnelId: null,
+    stockScopeId: 2,
     workshopId: 1,
-    allocationTargetId: null,
+    allocationTargetId: 5001,
     lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
     auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,
     inventoryEffectStatus: InventoryEffectStatus.POSTED,
     revisionNo: 1,
-    customerCodeSnapshot: "CUST001",
-    customerNameSnapshot: "Customer A",
-    supplierCodeSnapshot: "SUP001",
-    supplierNameSnapshot: "Supplier A",
-    managerNameSnapshot: "Manager A",
-    workshopNameSnapshot: "Workshop A",
+    customerCodeSnapshot: null,
+    customerNameSnapshot: null,
+    supplierCodeSnapshot: null,
+    supplierNameSnapshot: null,
+    managerNameSnapshot: null,
+    workshopNameSnapshot: "RD Workshop",
     totalQty: new Prisma.Decimal(100),
     totalAmount: new Prisma.Decimal(1000),
     remark: null,
@@ -43,21 +64,75 @@ describe("ProjectService", () => {
     createdAt: new Date(),
     updatedBy: "1",
     updatedAt: new Date(),
-    materialLines: [
+    stockScope,
+    bomLines: [
       {
-        id: 1,
+        id: 11,
         projectId: 1,
         lineNo: 1,
         materialId: 100,
-        materialCodeSnapshot: "MAT001",
-        materialNameSnapshot: "Material A",
+        materialCodeSnapshot: "MAT-100",
+        materialNameSnapshot: "Material 100",
         materialSpecSnapshot: "Spec",
         unitCodeSnapshot: "PCS",
         quantity: new Prisma.Decimal(100),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(1000),
-        costUnitPrice: null,
-        costAmount: null,
+        remark: null,
+        createdBy: "1",
+        createdAt: new Date(),
+        updatedBy: "1",
+        updatedAt: new Date(),
+      },
+    ],
+    materialLines: [],
+    materialActions: [],
+  };
+
+  const sourcePickAction = {
+    id: 41,
+    documentNo: "PJPK202604010001",
+    projectId: 1,
+    actionType: ProjectMaterialActionType.PICK,
+    bizDate: new Date("2026-04-01"),
+    stockScopeId: 2,
+    workshopId: 1,
+    lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+    inventoryEffectStatus: InventoryEffectStatus.POSTED,
+    totalQty: new Prisma.Decimal(10),
+    totalAmount: new Prisma.Decimal(100),
+    remark: null,
+    voidReason: null,
+    voidedBy: null,
+    voidedAt: null,
+    createdBy: "1",
+    createdAt: new Date(),
+    updatedBy: "1",
+    updatedAt: new Date(),
+    stockScope,
+    project: {
+      id: 1,
+      stockScopeId: 2,
+      workshopId: 1,
+    },
+    lines: [
+      {
+        id: 42,
+        actionId: 41,
+        lineNo: 1,
+        materialId: 100,
+        materialCodeSnapshot: "MAT-100",
+        materialNameSnapshot: "Material 100",
+        materialSpecSnapshot: "Spec",
+        unitCodeSnapshot: "PCS",
+        quantity: new Prisma.Decimal(10),
+        unitPrice: new Prisma.Decimal(10),
+        amount: new Prisma.Decimal(100),
+        costUnitPrice: new Prisma.Decimal(10),
+        costAmount: new Prisma.Decimal(100),
+        sourceDocumentType: null,
+        sourceDocumentId: null,
+        sourceDocumentLineId: null,
         remark: null,
         createdBy: "1",
         createdAt: new Date(),
@@ -66,33 +141,6 @@ describe("ProjectService", () => {
       },
     ],
   };
-
-  const mockMaterial = {
-    id: 100,
-    materialCode: "MAT001",
-    materialName: "Material A",
-    specModel: "Spec",
-    unitCode: "PCS",
-  };
-
-  const mockWorkshop = { id: 1, workshopName: "Workshop A" };
-  const mockCustomer = {
-    id: 10,
-    customerCode: "CUST001",
-    customerName: "Customer A",
-  };
-  const mockSupplier = {
-    id: 20,
-    supplierCode: "SUP001",
-    supplierName: "Supplier A",
-  };
-  const mockPersonnel = { id: 30, personnelName: "Manager A" };
-
-  let service: ProjectService;
-  let repository: jest.Mocked<ProjectRepository>;
-  let masterDataService: jest.Mocked<MasterDataService>;
-  let inventoryService: jest.Mocked<InventoryService>;
-  let prisma: { runInTransaction: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -116,33 +164,39 @@ describe("ProjectService", () => {
             findProjects: jest.fn(),
             createProject: jest.fn(),
             updateProject: jest.fn(),
-            createProjectLine: jest.fn(),
-            updateProjectLine: jest.fn(),
-            deleteProjectLine: jest.fn(),
-            findAllocationTargetBySource: jest.fn().mockResolvedValue(null),
-            createAllocationTarget: jest.fn().mockResolvedValue({
-              id: 5001,
-              targetType: "RD_PROJECT",
-              targetCode: "PRJ-001",
-              targetName: "Project A",
-            }),
+            replaceProjectBomLines: jest.fn(),
+            findAllocationTargetBySource: jest.fn(),
+            createAllocationTarget: jest.fn(),
             updateAllocationTarget: jest.fn(),
-            attachAllocationTargetToProject: jest.fn().mockResolvedValue({}),
+            attachAllocationTargetToProject: jest.fn(),
             hasActiveDownstreamDependencies: jest.fn().mockResolvedValue(false),
+            hasEffectiveMaterialActions: jest.fn().mockResolvedValue(false),
+            findMaterialActionsByProjectId: jest.fn().mockResolvedValue([]),
+            findMaterialActionById: jest.fn(),
+            createMaterialAction: jest.fn(),
+            updateMaterialAction: jest.fn(),
+            updateMaterialActionLineCost: jest.fn(),
+            hasActiveReturnDownstream: jest.fn().mockResolvedValue(false),
+            sumActiveReturnedQtyBySourceLine: jest
+              .fn()
+              .mockResolvedValue(new Map()),
           },
         },
         {
           provide: MasterDataService,
           useValue: {
-            getMaterialById: jest.fn(),
-            getWorkshopById: jest.fn(),
-            getStockScopeByCode: jest
-              .fn()
-              .mockImplementation(async (scopeCode: string) => ({
-                id: scopeCode === "RD_SUB" ? 2 : 1,
-                scopeCode,
-                scopeName: scopeCode === "RD_SUB" ? "研发小仓" : "主仓",
-              })),
+            getMaterialById: jest.fn().mockResolvedValue({
+              id: 100,
+              materialCode: "MAT-100",
+              materialName: "Material 100",
+              specModel: "Spec",
+              unitCode: "PCS",
+            }),
+            getWorkshopById: jest.fn().mockResolvedValue({
+              id: 1,
+              workshopName: "RD Workshop",
+            }),
+            getStockScopeByCode: jest.fn().mockResolvedValue(stockScope),
             getCustomerById: jest.fn(),
             getSupplierById: jest.fn(),
             getPersonnelById: jest.fn(),
@@ -151,21 +205,25 @@ describe("ProjectService", () => {
         {
           provide: InventoryService,
           useValue: {
-            decreaseStock: jest.fn().mockResolvedValue({ id: 1 }),
-            settleConsumerOut: jest.fn().mockResolvedValue({
-              outLog: { id: 1 },
-              settledUnitCost: new Prisma.Decimal(10),
-              settledCostAmount: new Prisma.Decimal(1000),
-              allocations: [],
+            settleConsumerOut: jest.fn(),
+            increaseStock: jest.fn(),
+            releaseAllSourceUsagesForConsumer: jest.fn(),
+            releaseInventorySource: jest.fn(),
+            reverseStock: jest.fn(),
+            getLogsForDocument: jest.fn().mockResolvedValue([]),
+            getBalanceSnapshot: jest.fn().mockResolvedValue({
+              quantityOnHand: new Prisma.Decimal(0),
             }),
-            reverseStock: jest.fn().mockResolvedValue({ id: 2 }),
-            getLogsForDocument: jest.fn().mockResolvedValue([{ id: 1 }]),
-            releaseAllSourceUsagesForConsumer: jest
-              .fn()
-              .mockResolvedValue(undefined),
-            releaseSourceUsagesForConsumerLine: jest
-              .fn()
-              .mockResolvedValue(undefined),
+            listSourceUsagesForConsumerLine: jest.fn().mockResolvedValue([]),
+          },
+        },
+        {
+          provide: RdProcurementRequestService,
+          useValue: {
+            listRequests: jest.fn().mockResolvedValue({
+              total: 0,
+              items: [],
+            }),
           },
         },
       ],
@@ -175,257 +233,521 @@ describe("ProjectService", () => {
     repository = moduleRef.get(ProjectRepository);
     masterDataService = moduleRef.get(MasterDataService);
     inventoryService = moduleRef.get(InventoryService);
-
-    (masterDataService.getMaterialById as jest.Mock).mockResolvedValue(
-      mockMaterial,
-    );
-    (masterDataService.getWorkshopById as jest.Mock).mockResolvedValue(
-      mockWorkshop,
-    );
-    (masterDataService.getCustomerById as jest.Mock).mockResolvedValue(
-      mockCustomer,
-    );
-    (masterDataService.getSupplierById as jest.Mock).mockResolvedValue(
-      mockSupplier,
-    );
-    (masterDataService.getPersonnelById as jest.Mock).mockResolvedValue(
-      mockPersonnel,
-    );
+    rdProcurementRequestService = moduleRef.get(RdProcurementRequestService);
   });
 
-  describe("createProject", () => {
-    it("should create project with inventory decrease (consumption)", async () => {
-      (repository.findProjectByCode as jest.Mock).mockResolvedValue(null);
-      (repository.createProject as jest.Mock).mockResolvedValue(mockProject);
-      (repository.findProjectById as jest.Mock).mockResolvedValue({
-        ...mockProject,
-        allocationTargetId: 5001,
-      });
+  it("creates a project master with BOM without posting inventory", async () => {
+    repository.findProjectByCode.mockResolvedValue(null);
+    repository.createProject.mockResolvedValue({
+      ...baseProject,
+      allocationTargetId: null,
+    } as never);
+    repository.findAllocationTargetBySource.mockResolvedValue(null);
+    repository.createAllocationTarget.mockResolvedValue({
+      id: 5001,
+      targetType: "RD_PROJECT",
+      targetCode: "PRJ-001",
+      targetName: "Project A",
+      sourceDocumentType: "Project",
+      sourceDocumentId: 1,
+      isSystemDefault: false,
+      remark: null,
+      createdBy: "1",
+      createdAt: new Date(),
+      updatedBy: "1",
+      updatedAt: new Date(),
+    } as never);
+    repository.attachAllocationTargetToProject.mockResolvedValue({} as never);
+    repository.findProjectById.mockResolvedValue(baseProject as never);
 
-      const dto = {
+    const result = await service.createProject(
+      {
         projectCode: "PRJ-001",
         projectName: "Project A",
-        bizDate: "2025-03-14",
-        customerId: 10,
-        supplierId: 20,
-        managerPersonnelId: 30,
+        bizDate: "2026-04-01",
         workshopId: 1,
-        lines: [{ materialId: 100, quantity: "100", unitPrice: "10" }],
-      };
+        bomLines: [
+          {
+            materialId: 100,
+            quantity: "100",
+            unitPrice: "10",
+          },
+        ],
+      },
+      "1",
+    );
 
-      const result = await service.createProject(dto, "1");
+    expect(repository.createProject).toHaveBeenCalled();
+    expect(inventoryService.settleConsumerOut).not.toHaveBeenCalled();
+    expect(result.summary.plannedQty.toString()).toBe("100");
+    expect(result.summary.plannedAmount.toString()).toBe("1000");
+  });
 
-      expect(result).toEqual({
-        ...mockProject,
-        allocationTargetId: 5001,
-      });
-      expect(repository.findProjectByCode).toHaveBeenCalledWith("PRJ-001");
-      expect(repository.createProject).toHaveBeenCalled();
-      expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
-        expect.objectContaining({
-          allocationTargetId: 5001,
+  it("rejects duplicate project codes", async () => {
+    repository.findProjectByCode.mockResolvedValue(baseProject as never);
+
+    await expect(
+      service.createProject(
+        {
+          projectCode: "PRJ-001",
+          projectName: "Duplicate",
+          bizDate: "2026-04-01",
+          workshopId: 1,
+        },
+        "1",
+      ),
+    ).rejects.toThrow(ConflictException);
+  });
+
+  it("builds ledger using BOM, legacy consumption, actions, stock, and replenishment", async () => {
+    repository.findProjectById.mockResolvedValue({
+      ...baseProject,
+      materialLines: [
+        {
+          id: 21,
+          projectId: 1,
+          lineNo: 1,
           materialId: 100,
-          stockScope: "RD_SUB",
-          operationType: "PROJECT_CONSUMPTION_OUT",
-          businessDocumentType: "Project",
-          businessDocumentId: 1,
-          businessDocumentNumber: "PRJ-001",
-        }),
-        expect.anything(),
-      );
-    });
+          materialCodeSnapshot: "MAT-100",
+          materialNameSnapshot: "Material 100",
+          materialSpecSnapshot: "Spec",
+          unitCodeSnapshot: "PCS",
+          quantity: new Prisma.Decimal(40),
+          unitPrice: new Prisma.Decimal(10),
+          amount: new Prisma.Decimal(400),
+          costUnitPrice: new Prisma.Decimal(10),
+          costAmount: new Prisma.Decimal(400),
+          remark: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+        },
+      ],
+      materialActions: [
+        {
+          id: 31,
+          documentNo: "PJRT202604020001",
+          projectId: 1,
+          actionType: ProjectMaterialActionType.RETURN,
+          bizDate: new Date("2026-04-02"),
+          stockScopeId: 2,
+          workshopId: 1,
+          lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+          inventoryEffectStatus: InventoryEffectStatus.POSTED,
+          totalQty: new Prisma.Decimal(10),
+          totalAmount: new Prisma.Decimal(100),
+          remark: null,
+          voidReason: null,
+          voidedBy: null,
+          voidedAt: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+          stockScope,
+          lines: [
+            {
+              id: 32,
+              actionId: 31,
+              lineNo: 1,
+              materialId: 100,
+              materialCodeSnapshot: "MAT-100",
+              materialNameSnapshot: "Material 100",
+              materialSpecSnapshot: "Spec",
+              unitCodeSnapshot: "PCS",
+              quantity: new Prisma.Decimal(10),
+              unitPrice: new Prisma.Decimal(10),
+              amount: new Prisma.Decimal(100),
+              costUnitPrice: new Prisma.Decimal(10),
+              costAmount: new Prisma.Decimal(100),
+              sourceDocumentType: "ProjectMaterialAction",
+              sourceDocumentId: 41,
+              sourceDocumentLineId: 42,
+              remark: null,
+              createdBy: "1",
+              createdAt: new Date(),
+              updatedBy: "1",
+              updatedAt: new Date(),
+            },
+          ],
+        },
+        {
+          id: 33,
+          documentNo: "PJSC202604030001",
+          projectId: 1,
+          actionType: ProjectMaterialActionType.SCRAP,
+          bizDate: new Date("2026-04-03"),
+          stockScopeId: 2,
+          workshopId: 1,
+          lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+          inventoryEffectStatus: InventoryEffectStatus.POSTED,
+          totalQty: new Prisma.Decimal(5),
+          totalAmount: new Prisma.Decimal(50),
+          remark: null,
+          voidReason: null,
+          voidedBy: null,
+          voidedAt: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+          stockScope,
+          lines: [
+            {
+              id: 34,
+              actionId: 33,
+              lineNo: 1,
+              materialId: 100,
+              materialCodeSnapshot: "MAT-100",
+              materialNameSnapshot: "Material 100",
+              materialSpecSnapshot: "Spec",
+              unitCodeSnapshot: "PCS",
+              quantity: new Prisma.Decimal(5),
+              unitPrice: new Prisma.Decimal(10),
+              amount: new Prisma.Decimal(50),
+              costUnitPrice: new Prisma.Decimal(10),
+              costAmount: new Prisma.Decimal(50),
+              sourceDocumentType: null,
+              sourceDocumentId: null,
+              sourceDocumentLineId: null,
+              remark: null,
+              createdBy: "1",
+              createdAt: new Date(),
+              updatedBy: "1",
+              updatedAt: new Date(),
+            },
+          ],
+        },
+      ],
+    } as never);
+    inventoryService.getBalanceSnapshot.mockResolvedValue({
+      quantityOnHand: new Prisma.Decimal(20),
+    } as never);
+    rdProcurementRequestService.listRequests.mockResolvedValue({
+      total: 1,
+      items: [
+        {
+          id: 88,
+          lines: [
+            {
+              materialId: 100,
+              statusLedger: {
+                pendingQty: new Prisma.Decimal(30),
+                inProcurementQty: new Prisma.Decimal(0),
+                acceptedQty: new Prisma.Decimal(0),
+                handedOffQty: new Prisma.Decimal(0),
+              },
+            },
+          ],
+        },
+      ],
+    } as never);
 
-    it("should throw ConflictException when projectCode exists", async () => {
-      (repository.findProjectByCode as jest.Mock).mockResolvedValue(
-        mockProject,
-      );
+    const result = await service.getProjectById(1);
+    const row = result.materialLedger[0];
 
-      const dto = {
-        projectCode: "PRJ-001",
-        projectName: "Project A",
-        bizDate: "2025-03-14",
-        workshopId: 1,
-        lines: [{ materialId: 100, quantity: "100" }],
-      };
-
-      await expect(service.createProject(dto, "1")).rejects.toThrow(
-        ConflictException,
-      );
-      expect(repository.createProject).not.toHaveBeenCalled();
-    });
+    expect(row.netUsedQty.toString()).toBe("35");
+    expect(row.shortageQty.toString()).toBe("15");
+    expect(row.netUsedCostAmount.toString()).toBe("350");
+    expect(result.hasShortage).toBe(true);
   });
 
-  describe("updateProject", () => {
-    it("should release source usages for removed line before reversal", async () => {
-      // Project has one line; update with empty lines → line deleted
-      (repository.findProjectById as jest.Mock)
-        .mockResolvedValueOnce(mockProject)
-        .mockResolvedValueOnce(mockProject)
-        .mockResolvedValueOnce({ ...mockProject, materialLines: [] });
-      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
-        { id: 1, businessDocumentLineId: 1 },
-      ]);
-      (repository.updateProject as jest.Mock).mockResolvedValue({
-        ...mockProject,
-        materialLines: [],
-      });
+  it("creates a pick action through inventory-core and persists settled cost", async () => {
+    repository.findProjectById.mockResolvedValue(baseProject as never);
+    repository.createMaterialAction.mockResolvedValue({
+      id: 51,
+      documentNo: "PJPK202604010001",
+      projectId: 1,
+      actionType: ProjectMaterialActionType.PICK,
+      bizDate: new Date("2026-04-01"),
+      stockScopeId: 2,
+      workshopId: 1,
+      lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+      inventoryEffectStatus: InventoryEffectStatus.POSTED,
+      totalQty: new Prisma.Decimal(10),
+      totalAmount: new Prisma.Decimal(90),
+      remark: null,
+      voidReason: null,
+      voidedBy: null,
+      voidedAt: null,
+      createdBy: "1",
+      createdAt: new Date(),
+      updatedBy: "1",
+      updatedAt: new Date(),
+      stockScope,
+      project: { id: 1, stockScopeId: 2, workshopId: 1 },
+      lines: [
+        {
+          id: 52,
+          actionId: 51,
+          lineNo: 1,
+          materialId: 100,
+          materialCodeSnapshot: "MAT-100",
+          materialNameSnapshot: "Material 100",
+          materialSpecSnapshot: "Spec",
+          unitCodeSnapshot: "PCS",
+          quantity: new Prisma.Decimal(10),
+          unitPrice: new Prisma.Decimal(9),
+          amount: new Prisma.Decimal(90),
+          costUnitPrice: null,
+          costAmount: null,
+          sourceDocumentType: null,
+          sourceDocumentId: null,
+          sourceDocumentLineId: null,
+          remark: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+        },
+      ],
+    } as never);
+    repository.findMaterialActionById.mockResolvedValue({
+      id: 51,
+      documentNo: "PJPK202604010001",
+      projectId: 1,
+      actionType: ProjectMaterialActionType.PICK,
+      bizDate: new Date("2026-04-01"),
+      stockScopeId: 2,
+      workshopId: 1,
+      lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+      inventoryEffectStatus: InventoryEffectStatus.POSTED,
+      totalQty: new Prisma.Decimal(10),
+      totalAmount: new Prisma.Decimal(90),
+      remark: null,
+      voidReason: null,
+      voidedBy: null,
+      voidedAt: null,
+      createdBy: "1",
+      createdAt: new Date(),
+      updatedBy: "1",
+      updatedAt: new Date(),
+      stockScope,
+      project: { id: 1, stockScopeId: 2, workshopId: 1 },
+      lines: [
+        {
+          id: 52,
+          actionId: 51,
+          lineNo: 1,
+          materialId: 100,
+          materialCodeSnapshot: "MAT-100",
+          materialNameSnapshot: "Material 100",
+          materialSpecSnapshot: "Spec",
+          unitCodeSnapshot: "PCS",
+          quantity: new Prisma.Decimal(10),
+          unitPrice: new Prisma.Decimal(9),
+          amount: new Prisma.Decimal(90),
+          costUnitPrice: new Prisma.Decimal(10),
+          costAmount: new Prisma.Decimal(100),
+          sourceDocumentType: null,
+          sourceDocumentId: null,
+          sourceDocumentLineId: null,
+          remark: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+        },
+      ],
+    } as never);
+    inventoryService.settleConsumerOut.mockResolvedValue({
+      outLog: { id: 901 },
+      settledUnitCost: new Prisma.Decimal(10),
+      settledCostAmount: new Prisma.Decimal(100),
+      allocations: [],
+    } as never);
 
-      await service.updateProject(1, { bizDate: "2025-03-15", lines: [] }, "1");
+    const result = await service.createMaterialAction(
+      1,
+      {
+        actionType: ProjectMaterialActionType.PICK,
+        bizDate: "2026-04-01",
+        lines: [
+          {
+            materialId: 100,
+            quantity: "10",
+            unitPrice: "9",
+          },
+        ],
+      },
+      "1",
+    );
 
-      // Release must be called before reverseStock
-      const releaseCalls = (
-        inventoryService.releaseSourceUsagesForConsumerLine as jest.Mock
-      ).mock.invocationCallOrder;
-      const reverseCalls = (inventoryService.reverseStock as jest.Mock).mock
-        .invocationCallOrder;
-      expect(releaseCalls.length).toBeGreaterThan(0);
-      expect(reverseCalls.length).toBeGreaterThan(0);
-      expect(releaseCalls[0]).toBeLessThan(reverseCalls[0]);
-
-      expect(
-        inventoryService.releaseSourceUsagesForConsumerLine,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          consumerDocumentType: "Project",
-          consumerDocumentId: 1,
-          consumerLineId: 1,
-        }),
-        expect.anything(),
-      );
-    });
-
-    it("should update project with line-aware inventory recalculation", async () => {
-      (repository.findProjectById as jest.Mock)
-        .mockResolvedValueOnce(mockProject)
-        .mockResolvedValueOnce(mockProject)
-        .mockResolvedValueOnce({ ...mockProject, materialLines: [] });
-      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
-        { id: 1, businessDocumentLineId: 1 },
-      ]);
-
-      const dto = {
-        bizDate: "2025-03-15",
-        lines: [{ id: 1, materialId: 100, quantity: "150", unitPrice: "10" }],
-      };
-
-      const updatedProject = {
-        ...mockProject,
-        totalQty: new Prisma.Decimal(150),
-      };
-      (repository.updateProject as jest.Mock).mockResolvedValue(updatedProject);
-      (repository.updateProjectLine as jest.Mock).mockResolvedValue({
-        ...mockProject.materialLines[0],
-        id: 1,
-        lineNo: 1,
-        quantity: new Prisma.Decimal(150),
-        amount: new Prisma.Decimal(1500),
-      });
-
-      await service.updateProject(1, dto, "1");
-
-      expect(inventoryService.reverseStock).toHaveBeenCalled();
-      expect(inventoryService.settleConsumerOut).toHaveBeenCalled();
-    });
+    expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stockScope: "RD_SUB",
+        operationType: "PROJECT_CONSUMPTION_OUT",
+        businessDocumentType: "ProjectMaterialAction",
+        businessDocumentId: 51,
+      }),
+      expect.anything(),
+    );
+    expect(repository.updateMaterialActionLineCost).toHaveBeenCalledWith(
+      52,
+      {
+        costUnitPrice: new Prisma.Decimal(10),
+        costAmount: new Prisma.Decimal(100),
+      },
+      expect.anything(),
+    );
+    expect(result.lines[0]?.costAmount?.toString()).toBe("100");
   });
 
-  describe("voidProject", () => {
-    it("should void project and reverse inventory", async () => {
-      (repository.findProjectById as jest.Mock).mockResolvedValue(mockProject);
-      (
-        repository.hasActiveDownstreamDependencies as jest.Mock
-      ).mockResolvedValue(false);
-      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
-        { id: 1 },
-      ]);
-      (repository.updateProject as jest.Mock).mockResolvedValue({
-        ...mockProject,
-        lifecycleStatus: DocumentLifecycleStatus.VOIDED,
-      });
-      (repository.findProjectById as jest.Mock)
-        .mockResolvedValueOnce(mockProject)
-        .mockResolvedValueOnce({
-          ...mockProject,
-          lifecycleStatus: DocumentLifecycleStatus.VOIDED,
-          inventoryEffectStatus: InventoryEffectStatus.REVERSED,
-        });
-
-      const result = await service.voidProject(1, "Test void", "1");
-
-      expect(inventoryService.reverseStock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          logIdToReverse: 1,
-          idempotencyKey: expect.stringContaining("void"),
-        }),
-        expect.anything(),
-      );
-      expect(repository.updateProject).toHaveBeenCalledWith(
-        1,
-        expect.objectContaining({
-          lifecycleStatus: DocumentLifecycleStatus.VOIDED,
-          inventoryEffectStatus: InventoryEffectStatus.REVERSED,
-          voidReason: "Test void",
-        }),
-        expect.anything(),
-      );
-      expect(result).not.toBeNull();
-      if (result) {
-        expect(result.lifecycleStatus).toBe(DocumentLifecycleStatus.VOIDED);
+  it("creates a return action by releasing source usages and increasing stock", async () => {
+    repository.findProjectById.mockResolvedValue(baseProject as never);
+    repository.findMaterialActionById.mockImplementation(async (id: number) => {
+      if (id === 41) {
+        return sourcePickAction as never;
       }
+      return {
+        id: 61,
+        documentNo: "PJRT202604020001",
+        projectId: 1,
+        actionType: ProjectMaterialActionType.RETURN,
+        bizDate: new Date("2026-04-02"),
+        stockScopeId: 2,
+        workshopId: 1,
+        lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+        inventoryEffectStatus: InventoryEffectStatus.POSTED,
+        totalQty: new Prisma.Decimal(5),
+        totalAmount: new Prisma.Decimal(50),
+        remark: null,
+        voidReason: null,
+        voidedBy: null,
+        voidedAt: null,
+        createdBy: "1",
+        createdAt: new Date(),
+        updatedBy: "1",
+        updatedAt: new Date(),
+        stockScope,
+        project: { id: 1, stockScopeId: 2, workshopId: 1 },
+        lines: [
+          {
+            id: 62,
+            actionId: 61,
+            lineNo: 1,
+            materialId: 100,
+            materialCodeSnapshot: "MAT-100",
+            materialNameSnapshot: "Material 100",
+            materialSpecSnapshot: "Spec",
+            unitCodeSnapshot: "PCS",
+            quantity: new Prisma.Decimal(5),
+            unitPrice: new Prisma.Decimal(10),
+            amount: new Prisma.Decimal(50),
+            costUnitPrice: new Prisma.Decimal(10),
+            costAmount: new Prisma.Decimal(50),
+            sourceDocumentType: "ProjectMaterialAction",
+            sourceDocumentId: 41,
+            sourceDocumentLineId: 42,
+            remark: null,
+            createdBy: "1",
+            createdAt: new Date(),
+            updatedBy: "1",
+            updatedAt: new Date(),
+          },
+        ],
+      } as never;
     });
+    repository.createMaterialAction.mockResolvedValue({
+      id: 61,
+      documentNo: "PJRT202604020001",
+      projectId: 1,
+      actionType: ProjectMaterialActionType.RETURN,
+      bizDate: new Date("2026-04-02"),
+      stockScopeId: 2,
+      workshopId: 1,
+      lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+      inventoryEffectStatus: InventoryEffectStatus.POSTED,
+      totalQty: new Prisma.Decimal(5),
+      totalAmount: new Prisma.Decimal(50),
+      remark: null,
+      voidReason: null,
+      voidedBy: null,
+      voidedAt: null,
+      createdBy: "1",
+      createdAt: new Date(),
+      updatedBy: "1",
+      updatedAt: new Date(),
+      stockScope,
+      project: { id: 1, stockScopeId: 2, workshopId: 1 },
+      lines: [
+        {
+          id: 62,
+          actionId: 61,
+          lineNo: 1,
+          materialId: 100,
+          materialCodeSnapshot: "MAT-100",
+          materialNameSnapshot: "Material 100",
+          materialSpecSnapshot: "Spec",
+          unitCodeSnapshot: "PCS",
+          quantity: new Prisma.Decimal(5),
+          unitPrice: new Prisma.Decimal(10),
+          amount: new Prisma.Decimal(50),
+          costUnitPrice: null,
+          costAmount: null,
+          sourceDocumentType: "ProjectMaterialAction",
+          sourceDocumentId: 41,
+          sourceDocumentLineId: 42,
+          remark: null,
+          createdBy: "1",
+          createdAt: new Date(),
+          updatedBy: "1",
+          updatedAt: new Date(),
+        },
+      ],
+    } as never);
+    inventoryService.listSourceUsagesForConsumerLine.mockResolvedValue([
+      {
+        sourceLogId: 1001,
+        allocatedQty: new Prisma.Decimal(10),
+        releasedQty: new Prisma.Decimal(0),
+        sourceLog: {
+          unitCost: new Prisma.Decimal(10),
+        },
+      },
+    ] as never);
+    inventoryService.increaseStock.mockResolvedValue({ id: 1002 } as never);
 
-    it("should throw when project not found", async () => {
-      (repository.findProjectById as jest.Mock).mockResolvedValue(null);
+    const result = await service.createMaterialAction(
+      1,
+      {
+        actionType: ProjectMaterialActionType.RETURN,
+        bizDate: "2026-04-02",
+        lines: [
+          {
+            materialId: 100,
+            quantity: "5",
+            unitPrice: "10",
+            sourceDocumentType: "ProjectMaterialAction",
+            sourceDocumentId: 41,
+            sourceDocumentLineId: 42,
+          },
+        ],
+      },
+      "1",
+    );
 
-      await expect(service.voidProject(999, undefined, "1")).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it("should block void when downstream dependencies exist", async () => {
-      (repository.findProjectById as jest.Mock).mockResolvedValue(mockProject);
-      (
-        repository.hasActiveDownstreamDependencies as jest.Mock
-      ).mockResolvedValue(true);
-
-      await expect(service.voidProject(1, "blocked", "1")).rejects.toThrow(
-        "存在下游依赖，不能作废",
-      );
-      expect(inventoryService.reverseStock).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("listProjects", () => {
-    it("should return paginated projects", async () => {
-      (repository.findProjects as jest.Mock).mockResolvedValue({
-        items: [mockProject],
-        total: 1,
-      });
-
-      const result = await service.listProjects({ limit: 10, offset: 0 });
-
-      expect(result.items).toHaveLength(1);
-      expect(result.total).toBe(1);
-      expect(repository.findProjects).toHaveBeenCalledWith(
-        expect.objectContaining({ limit: 10, offset: 0 }),
-      );
-    });
-  });
-
-  describe("getProjectById", () => {
-    it("should return project when found", async () => {
-      (repository.findProjectById as jest.Mock).mockResolvedValue(mockProject);
-
-      const result = await service.getProjectById(1);
-
-      expect(result).toEqual(mockProject);
-    });
-
-    it("should throw NotFoundException when not found", async () => {
-      (repository.findProjectById as jest.Mock).mockResolvedValue(null);
-
-      await expect(service.getProjectById(999)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
+    expect(inventoryService.releaseInventorySource).toHaveBeenCalledWith(
+      expect.objectContaining({
+        consumerDocumentType: "ProjectMaterialAction",
+        consumerDocumentId: 41,
+        consumerLineId: 42,
+        targetReleasedQty: new Prisma.Decimal(5),
+      }),
+      expect.anything(),
+    );
+    expect(inventoryService.increaseStock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stockScope: "RD_SUB",
+        operationType: "RETURN_IN",
+        businessDocumentType: "ProjectMaterialAction",
+        businessDocumentId: 61,
+        unitCost: new Prisma.Decimal(10),
+        costAmount: new Prisma.Decimal(50),
+      }),
+      expect.anything(),
+    );
+    expect(result.lines[0]?.costAmount?.toString()).toBe("50");
   });
 });

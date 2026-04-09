@@ -766,6 +766,33 @@ export type EnumWorkshopMaterialOrderTypeWithAggregatesFilter<
   _max?: Prisma.NestedEnumWorkshopMaterialOrderTypeFilter<$PrismaModel>;
 };
 
+export type EnumProjectMaterialActionTypeFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.ProjectMaterialActionType
+    | Prisma.EnumProjectMaterialActionTypeFieldRefInput<$PrismaModel>;
+  in?: $Enums.ProjectMaterialActionType[];
+  notIn?: $Enums.ProjectMaterialActionType[];
+  not?:
+    | Prisma.NestedEnumProjectMaterialActionTypeFilter<$PrismaModel>
+    | $Enums.ProjectMaterialActionType;
+};
+
+export type EnumProjectMaterialActionTypeWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.ProjectMaterialActionType
+    | Prisma.EnumProjectMaterialActionTypeFieldRefInput<$PrismaModel>;
+  in?: $Enums.ProjectMaterialActionType[];
+  notIn?: $Enums.ProjectMaterialActionType[];
+  not?:
+    | Prisma.NestedEnumProjectMaterialActionTypeWithAggregatesFilter<$PrismaModel>
+    | $Enums.ProjectMaterialActionType;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumProjectMaterialActionTypeFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumProjectMaterialActionTypeFilter<$PrismaModel>;
+};
+
 export type EnumRdMaterialStatusEventTypeFilter<$PrismaModel = never> = {
   equals?:
     | $Enums.RdMaterialStatusEventType
@@ -1933,6 +1960,33 @@ export type NestedEnumWorkshopMaterialOrderTypeWithAggregatesFilter<
   _count?: Prisma.NestedIntFilter<$PrismaModel>;
   _min?: Prisma.NestedEnumWorkshopMaterialOrderTypeFilter<$PrismaModel>;
   _max?: Prisma.NestedEnumWorkshopMaterialOrderTypeFilter<$PrismaModel>;
+};
+
+export type NestedEnumProjectMaterialActionTypeFilter<$PrismaModel = never> = {
+  equals?:
+    | $Enums.ProjectMaterialActionType
+    | Prisma.EnumProjectMaterialActionTypeFieldRefInput<$PrismaModel>;
+  in?: $Enums.ProjectMaterialActionType[];
+  notIn?: $Enums.ProjectMaterialActionType[];
+  not?:
+    | Prisma.NestedEnumProjectMaterialActionTypeFilter<$PrismaModel>
+    | $Enums.ProjectMaterialActionType;
+};
+
+export type NestedEnumProjectMaterialActionTypeWithAggregatesFilter<
+  $PrismaModel = never,
+> = {
+  equals?:
+    | $Enums.ProjectMaterialActionType
+    | Prisma.EnumProjectMaterialActionTypeFieldRefInput<$PrismaModel>;
+  in?: $Enums.ProjectMaterialActionType[];
+  notIn?: $Enums.ProjectMaterialActionType[];
+  not?:
+    | Prisma.NestedEnumProjectMaterialActionTypeWithAggregatesFilter<$PrismaModel>
+    | $Enums.ProjectMaterialActionType;
+  _count?: Prisma.NestedIntFilter<$PrismaModel>;
+  _min?: Prisma.NestedEnumProjectMaterialActionTypeFilter<$PrismaModel>;
+  _max?: Prisma.NestedEnumProjectMaterialActionTypeFilter<$PrismaModel>;
 };
 
 export type NestedEnumRdMaterialStatusEventTypeFilter<$PrismaModel = never> = {
