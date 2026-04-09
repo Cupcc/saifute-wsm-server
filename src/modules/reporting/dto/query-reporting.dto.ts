@@ -12,8 +12,10 @@ import {
 export enum ReportingTrendType {
   ALL = "ALL",
   INBOUND = "INBOUND",
-  OUTBOUND = "OUTBOUND",
+  SALES = "SALES",
   WORKSHOP_MATERIAL = "WORKSHOP_MATERIAL",
+  RD_PROJECT = "RD_PROJECT",
+  RD = "RD",
 }
 
 export enum ReportingExportType {
@@ -92,6 +94,13 @@ export class QueryTrendSeriesDto {
   @IsOptional()
   @IsEnum(ReportingTrendType)
   trendType?: ReportingTrendType = ReportingTrendType.ALL;
+
+  /** 按车间/部门筛选 */
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  workshopId?: number;
 
   /** 开始日期，格式为 YYYY-MM-DD */
   @IsOptional()

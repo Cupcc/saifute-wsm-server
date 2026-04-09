@@ -7,15 +7,15 @@ import { AiAssistantModule } from "./modules/ai-assistant/ai-assistant.module";
 import { ApprovalModule } from "./modules/approval/approval.module";
 import { AuditLogModule } from "./modules/audit-log/audit-log.module";
 import { AuthModule } from "./modules/auth/auth.module";
-import { CustomerModule } from "./modules/customer/customer.module";
 import { FileStorageModule } from "./modules/file-storage/file-storage.module";
 import { InboundModule } from "./modules/inbound/inbound.module";
 import { InventoryCoreModule } from "./modules/inventory-core/inventory-core.module";
 import { MasterDataModule } from "./modules/master-data/master-data.module";
-import { ProjectModule } from "./modules/project/project.module";
 import { RbacModule } from "./modules/rbac/rbac.module";
+import { RdProjectModule } from "./modules/rd-project/rd-project.module";
 import { RdSubwarehouseModule } from "./modules/rd-subwarehouse/rd-subwarehouse.module";
 import { ReportingModule } from "./modules/reporting/reporting.module";
+import { SalesModule } from "./modules/sales/sales.module";
 import { SchedulerModule } from "./modules/scheduler/scheduler.module";
 import { SessionModule } from "./modules/session/session.module";
 import { WorkshopMaterialModule } from "./modules/workshop-material/workshop-material.module";
@@ -44,9 +44,9 @@ import { RedisModule } from "./shared/redis/redis.module";
     InventoryCoreModule,
     ApprovalModule,
     InboundModule,
-    CustomerModule,
+    SalesModule,
     WorkshopMaterialModule,
-    ProjectModule,
+    RdProjectModule,
     RdSubwarehouseModule,
     ReportingModule,
     SchedulerModule,

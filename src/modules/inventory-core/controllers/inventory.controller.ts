@@ -56,8 +56,8 @@ export class InventoryController {
       businessDocumentType: query.businessDocumentType,
       businessDocumentNumber: query.businessDocumentNumber,
       operationType: query.operationType,
-      occurredAtFrom: query.occurredAtFrom,
-      occurredAtTo: query.occurredAtTo,
+      bizDateFrom: query.bizDateFrom,
+      bizDateTo: query.bizDateTo,
       limit: query.limit,
       offset: query.offset,
     });

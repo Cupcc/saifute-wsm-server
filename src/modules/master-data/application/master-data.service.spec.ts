@@ -673,7 +673,7 @@ describe("MasterDataService", () => {
         customerCode: "CUS-AUTO",
         status: "ACTIVE",
         creationMode: "AUTO_CREATED",
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 10,
       });
       const service = new MasterDataService(
@@ -684,7 +684,7 @@ describe("MasterDataService", () => {
         {
           customerCode: "CUS-AUTO",
           customerName: "自动补建客户",
-          sourceDocumentType: "CustomerStockOrder",
+          sourceDocumentType: "SalesStockOrder",
           sourceDocumentId: 10,
         },
         "1",

@@ -66,7 +66,7 @@ node ./scripts/knowledge/search-doc-catalog.mjs \
   "tags": ["schema_change", "contract_change"],
   "audiences": ["orchestrator", "planner", "coder", "code-reviewer"],
   "stages": ["discovery", "planning", "implementation", "review"],
-  "surfaces": ["prisma/schema.prisma", "src/generated/prisma/**"],
+  "surfaces": ["prisma/schema.prisma", "generated/prisma/**"],
   "when_to_read": ["schema changed", "field removed"],
   "source_path": "docs/playbooks/domain-refactor/playbook.md",
   "source_heading": "DR-001 动 schema 后先 generate 再继续写代码",

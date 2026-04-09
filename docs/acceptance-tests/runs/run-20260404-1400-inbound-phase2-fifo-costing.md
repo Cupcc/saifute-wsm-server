@@ -25,7 +25,7 @@
 
 | 命令 | 结果 |
 |------|------|
-| `pnpm test --no-coverage -- src/modules/inventory-core/application/inventory.service.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/customer/application/customer.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/project/application/project.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts` | **6 suites passed，91 tests passed** |
+| `pnpm test --no-coverage -- src/modules/inventory-core/application/inventory.service.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/sales/application/sales.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/rd-project/application/rd-project.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts` | **6 suites passed，91 tests passed** |
 
 ### 全量测试（参考，非本任务门禁）
 

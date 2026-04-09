@@ -30,9 +30,9 @@ const SUPPORTED_BACKEND_ROUTE_GROUPS = [
     icon: "edit",
   },
   {
-    key: "customer",
-    path: "/customer",
-    name: "CustomerBusiness",
+    key: "sales",
+    path: "/sales",
+    name: "SalesBusiness",
     title: "销售管理",
     icon: "guide",
   },
@@ -125,11 +125,11 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     icon: "form",
     visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
   },
-  RdProjectConsumption: {
+  RdProjectLedger: {
     group: "rd",
-    path: "project-consumption",
-    component: "rd/project-consumption/index",
-    title: "项目管理",
+    path: "projects",
+    component: "rd/projects/index",
+    title: "研发项目",
     icon: "education",
     visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
   },
@@ -304,31 +304,31 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     title: "编号区间",
     icon: "number",
   },
-  CustomerOrder: {
-    group: "customer",
+  SalesOrder: {
+    group: "sales",
     path: "order",
-    component: "customer/order/index",
+    component: "sales/order/index",
     title: "出库单",
     icon: "form",
   },
-  CustomerDetail: {
-    group: "customer",
+  SalesDetail: {
+    group: "sales",
     path: "detail",
-    component: "customer/detail/index",
+    component: "sales/detail/index",
     title: "出库明细",
     icon: "list",
   },
-  CustomerSalesReturnOrder: {
-    group: "customer",
+  SalesReturnOrder: {
+    group: "sales",
     path: "salesReturnOrder",
-    component: "customer/salesReturnOrder/index",
+    component: "sales/salesReturnOrder/index",
     title: "销售退货单",
     icon: "refresh",
   },
-  CustomerSalesReturnDetail: {
-    group: "customer",
+  SalesReturnDetail: {
+    group: "sales",
     path: "salesReturnDetail",
-    component: "customer/salesReturnDetail/index",
+    component: "sales/salesReturnDetail/index",
     title: "销售退货明细",
     icon: "list",
   },
@@ -448,10 +448,10 @@ const SUPPORTED_BACKEND_ROUTE_META = {
 
 const FRONTEND_ROUTE_PERMISSION_FALLBACK = {
   BaseMaterialCategory: ["master:material-category:list"],
-  CustomerOrder: ["customer:order:list"],
-  CustomerDetail: ["customer:order:list"],
-  CustomerSalesReturnOrder: ["customer:sales-return:list"],
-  CustomerSalesReturnDetail: ["customer:sales-return:list"],
+  SalesOrder: ["sales:order:list"],
+  SalesDetail: ["sales:order:list"],
+  SalesReturnOrder: ["sales:return:list"],
+  SalesReturnDetail: ["sales:return:list"],
 };
 
 function collectBackendRouteNames(routes, routeNames = new Set()) {

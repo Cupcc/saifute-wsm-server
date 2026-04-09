@@ -38,9 +38,13 @@
 四类事务单据家族（各家族内可含多种业务单据类型，共用领域表与模块边界）：
 
 - `inbound`：入库家族（验收单、生产入库单等）
-- `customer`：客户收发家族（出库单、销售退货单等；对外路由前缀为 `/customer`）
+- `sales`：销售业务家族（销售出库单、销售退货单等；对外路由前缀为 `/sales`）
 - `workshop-material`：车间物料家族（领料、退料、报废等）
-- `project`：项目/BOM、项目物料消耗等（默认轻审核或不走审核，以模块文档为准）
+- `rd-project`：研发项目家族（研发 BOM、项目物料动作、项目台账等）
+
+与事务单据并列的项目视图域：
+
+- `sales-project`：销售项目主档、项目维度库存 / 发货统计、可选项目分配 / 预留；真实库存动作仍统一通过 `sales`
 
 #### 分析与辅助域（不拥有事务写模型或仅只读/编排）
 
@@ -288,7 +292,7 @@ flowchart TD
 7. `inventory-core`
 8. `approval`
 9. `inbound`
-10. `customer`
+10. `sales`
 11. `workshop-material`
 12. `project`
 13. `reporting`

@@ -4,7 +4,7 @@ import {
   DocumentRelationType,
   Prisma,
   WorkshopMaterialOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
 

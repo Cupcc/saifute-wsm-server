@@ -12,7 +12,7 @@ import {
   InventoryOperationType,
   Prisma,
   WorkshopMaterialOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   buildCompactDocumentNo,
   createWithGeneratedDocumentNo,
@@ -332,6 +332,7 @@ export class WorkshopMaterialService {
               {
                 materialId: line.materialId,
                 stockScope: inventoryStockScope,
+                bizDate,
                 quantity: line.quantity,
                 operationType,
                 businessModule: BUSINESS_MODULE,
@@ -442,6 +443,7 @@ export class WorkshopMaterialService {
               {
                 materialId: line.materialId,
                 stockScope: inventoryStockScope,
+                bizDate,
                 quantity: line.quantity,
                 operationType,
                 businessModule: BUSINESS_MODULE,
@@ -599,6 +601,7 @@ export class WorkshopMaterialService {
           documentNo: currentOrder.documentNo,
           orderType: currentOrder.orderType,
           inventoryStockScope,
+          bizDate,
           lines: recreatedLines,
           inputLines: effectiveDto.lines,
           isRdScrapOrder,
@@ -787,6 +790,7 @@ export class WorkshopMaterialService {
       documentNo: string;
       orderType: WorkshopMaterialOrderType;
       inventoryStockScope: StockScopeCode;
+      bizDate: Date;
       lines: Array<
         Awaited<ReturnType<WorkshopMaterialRepository["createOrderLine"]>>
       >;
@@ -815,6 +819,7 @@ export class WorkshopMaterialService {
           {
             materialId: line.materialId,
             stockScope: params.inventoryStockScope,
+            bizDate: params.bizDate,
             quantity: line.quantity,
             operationType,
             businessModule: BUSINESS_MODULE,
@@ -867,6 +872,7 @@ export class WorkshopMaterialService {
         {
           materialId: line.materialId,
           stockScope: params.inventoryStockScope,
+          bizDate: params.bizDate,
           quantity: line.quantity,
           operationType,
           businessModule: BUSINESS_MODULE,

@@ -36,7 +36,7 @@
 | 来源图名 | 当前代码简图位置 | 状态 | 说明 |
 | --- | --- | --- | --- |
 | 系统全景与模块分层图 | `3.1` | 已覆盖 | 对应单体分层、共享核心、业务域、只读辅助层 |
-| 库存真实范围与归属维度分离图 | `3.2` | 已覆盖 | 冻结 `MAIN / RD_SUB` 与 `department / workshop / project` 的边界 |
+| 库存真实范围与归属维度分离图 | `3.2` | 已覆盖 | 冻结 `MAIN / RD_SUB` 与 `department / workshop / rd-project / sales-project` 的边界 |
 | RD 小仓协同与 RD handoff 图 | `3.5` | 已覆盖 | 明确 “先入 `MAIN`，再 `RD handoff`，最终在 `RD_SUB` 使用” |
 | 库存事务写路径图 | `3.4` | 已覆盖 | 冻结 `inventory-core` 为唯一库存写入口 |
 | 报表与 AI 只读聚合图 | `3.6` | 已覆盖 | 冻结 `reporting` / `ai-assistant` 的只读与受控辅助定位 |
@@ -59,7 +59,7 @@
 - 本图表达的是 `NestJS` 单体下的模块化分层，不是按模块独立部署的微服务架构。
 - 顶部是 `Web 管理端`，统一通过后端接口进入系统，不直接触达数据库或底层存储。
 - 中间的“平台与共享核心”承接认证、会话、权限、审计、主数据、库存与审核等横切能力，是所有业务模块的公共底座。
-- 下方的“业务域模块”承接入库、客户收发、车间领退料、项目、RD 小仓等具体业务流程，按领域拆分实现，但共享同一套核心能力。
+- 下方的“业务域模块”承接入库、销售业务、车间领退料、研发项目、RD 小仓等具体业务流程，按领域拆分实现，但共享同一套核心能力；销售项目当前仍处于独立真源设计阶段。
 - 右侧或下侧的“分析与辅助层”包括 `reporting` 与 `ai-assistant`，用于查询、导出、解释、导航与预填，不直接写业务事实。
 
 复核重点：
@@ -148,25 +148,25 @@ sequenceDiagram
     participant Rd as rd-subwarehouse
     participant Inbound as inbound
     participant Inv as inventory-core
-    participant Project as project
+    participant RdProject as rd-project
     participant Report as reporting
 
-    RdUser->>Rd: 提交 RD 采购需求 / 项目缺口
+    RdUser->>Rd: 提交 RD 采购需求 / 研发项目缺口
     Buyer->>Rd: 更新采购执行状态
     WhUser->>Inbound: 基于采购需求创建验收单
     Inbound->>Inv: MAIN 增加库存
     WhUser->>Rd: 创建 RD handoff
     Rd->>Inv: MAIN 减少 + RD_SUB 增加 + 来源桥接
-    RdUser->>Project: 在 RD_SUB 发起项目领用 / 退料 / 报废
-    Project->>Inv: RD_SUB 扣减或回补
-    RdUser->>Report: 查看 RD 自动入库结果 / 本仓库存 / 项目报表
+    RdUser->>RdProject: 在 RD_SUB 发起研发项目领料 / 退料 / 报废
+    RdProject->>Inv: RD_SUB 扣减或回补
+    RdUser->>Report: 查看 RD 自动入库结果 / 本仓库存 / 研发项目报表
 ```
 
 复核重点：
 
 - 外部实物到货仍统一先入主仓，`RD_SUB` 只通过主仓交接得到真实库存。
-- `RD handoff` 不只是数量搬运，还必须桥接来源与成本关系，确保后续项目成本不断链。
-- 项目实际使用仓别固定为 `RD_SUB`，这与“项目不是物理库存池”并不冲突。
+- `RD handoff` 不只是数量搬运，还必须桥接来源与成本关系，确保后续研发项目成本不断链。
+- 研发项目实际使用仓别固定为 `RD_SUB`，这与“项目不是物理库存池”并不冲突。
 
 ### 3.6 报表与 AI 的只读聚合图
 
@@ -174,9 +174,9 @@ sequenceDiagram
 flowchart LR
     subgraph Truth["事务真源"]
         inbound["inbound"]
-        customer["customer"]
+        customer["sales"]
         workshop["workshop-material"]
-        project["project"]
+        rdProject["rd-project"]
         rdw["rd-subwarehouse"]
         inv["inventory-core"]
         approval["approval"]
@@ -197,7 +197,7 @@ flowchart LR
     inbound --> reporting
     customer --> reporting
     workshop --> reporting
-    project --> reporting
+    rdProject --> reporting
     rdw --> reporting
     inv --> reporting
     approval --> reporting
@@ -217,7 +217,7 @@ flowchart LR
 
 - `reporting` 是从事务真源派生出的读模型，不拥有事务写模型。
 - `ai-assistant` 只能通过受控工具调用查询、解释、导航和预填，不直接提交库存或单据事实。
-- 月报、项目成本报表、RD 统计面都应在这个只读层内扩展，而不是回写业务真源。
+- 月报、销售项目报表、研发项目成本报表、RD 统计面都应在这个只读层内扩展，而不是回写业务真源。
 
 ### 3.7 月报结果生命周期图
 
@@ -248,9 +248,10 @@ flowchart LR
 ```mermaid
 flowchart TB
     inbound["inbound\n入库 / 验收"]
-    customer["customer\n客户收发"]
+    sales["sales\n销售业务"]
     workshop["workshop-material\n车间领退料"]
-    project["project\n项目领用 / 退料 / 报废"]
+    rdProject["rd-project\n研发项目领料 / 退料 / 报废"]
+    salesProject["sales-project\n销售项目视图 / 发货统计"]
     rdw["rd-subwarehouse\nRD 需求 / RD handoff"]
     reporting["reporting\n报表 / 月报 / 导出"]
 
@@ -259,19 +260,22 @@ flowchart TB
     main["MAIN\n主仓"]
     rdsub["RD_SUB\n研发小仓"]
 
-    projectDim["project / allocation_target\n项目归集语义，不是库存池"]
+    projectDim["rd-project / sales-project / project_target\n项目维度语义，不是库存池"]
 
     inbound --> inv
-    customer --> inv
+    sales --> inv
     workshop --> inv
-    project --> inv
+    rdProject --> inv
     rdw --> inv
+    salesProject -. "生成 customer 草稿 / 读取项目统计" .-> customer
+    salesProject -. "项目视图 / 月报依赖" .-> reporting
 
     inv --> main
     inv --> rdsub
     inv --> reporting
 
-    project -. "归集 / 成本语义" .-> projectDim
+    rdProject -. "研发项目维度" .-> projectDim
+    salesProject -. "销售项目维度" .-> projectDim
     rdw -. "RD handoff" .-> main
     rdw -. "RD handoff 后使用仓别" .-> rdsub
 ```
@@ -280,7 +284,7 @@ flowchart TB
 
 - 这张图面向老板、管理层或跨部门沟通，强调的是业务闭环和统一落账点，不展开实现细节。
 - 所有库存变化统一经过 `inventory-core`，真实库存实体仍只有 `MAIN` 与 `RD_SUB`。
-- `project` 是归集与成本语义，不是独立库存池；这条边界在对外汇报场景也不能为了“好懂”而被画错。
+- `rd-project` 与 `sales-project` 都不是独立库存池；这条边界在对外汇报场景也不能为了“好懂”而被画错。
 
 ## 4. 后续维护规则
 

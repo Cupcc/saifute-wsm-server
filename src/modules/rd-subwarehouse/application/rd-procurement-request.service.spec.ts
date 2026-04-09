@@ -4,7 +4,7 @@ import {
   AuditStatusSnapshot,
   DocumentLifecycleStatus,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { RdProcurementRequestRepository } from "../infrastructure/rd-procurement-request.repository";
@@ -39,7 +39,7 @@ describe("RdProcurementRequestService", () => {
     documentNo: "RDPUR-001",
     bizDate: new Date("2026-03-29"),
     projectCode: "RD-PJT-001",
-    projectName: "研发治具归集",
+    projectName: "研发治具项目",
     supplierId: 10,
     handlerPersonnelId: 20,
     stockScopeId: 2,
@@ -185,7 +185,7 @@ describe("RdProcurementRequestService", () => {
         documentNo: "RDPUR-001",
         bizDate: "2026-03-29",
         projectCode: "RD-PJT-001",
-        projectName: "研发治具归集",
+        projectName: "研发治具项目",
         supplierId: 10,
         handlerPersonnelId: 20,
         workshopId: 9,
@@ -224,7 +224,7 @@ describe("RdProcurementRequestService", () => {
       documentNo: "RDPUR-002",
       bizDate: "2026-03-29",
       projectCode: "RD-PJT-002",
-      projectName: "研发夹具归集",
+      projectName: "研发夹具项目",
       workshopId: 1,
       lines: [{ materialId: 100, quantity: "2" }],
     });

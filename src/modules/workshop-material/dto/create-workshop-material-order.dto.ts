@@ -12,7 +12,7 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
-import { WorkshopMaterialOrderType } from "../../../generated/prisma/client";
+import { WorkshopMaterialOrderType } from "../../../../generated/prisma/client";
 import { CreateWorkshopMaterialOrderLineDto } from "./create-workshop-material-order-line.dto";
 
 export class CreateWorkshopMaterialOrderDto {

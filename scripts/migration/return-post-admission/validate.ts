@@ -152,9 +152,9 @@ async function getChronologicallyInvalidRelationCount(connection: {
     `
       SELECT COUNT(*) AS total
       FROM document_line_relation dlr
-      INNER JOIN customer_stock_order upstream_order
+      INNER JOIN sales_stock_order upstream_order
         ON upstream_order.id = dlr.upstreamDocumentId
-      INNER JOIN customer_stock_order downstream_order
+      INNER JOIN sales_stock_order downstream_order
         ON downstream_order.id = dlr.downstreamDocumentId
       WHERE dlr.relationType = 'SALES_RETURN_FROM_OUTBOUND'
         AND upstream_order.bizDate > downstream_order.bizDate
@@ -186,8 +186,8 @@ async function getNullSourceReturnLineCounts(connection: {
   const salesRows = await connection.query<Array<{ total: number }>>(
     `
       SELECT COUNT(*) AS total
-      FROM customer_stock_order_line line_row
-      INNER JOIN customer_stock_order order_row ON order_row.id = line_row.orderId
+      FROM sales_stock_order_line line_row
+      INNER JOIN sales_stock_order order_row ON order_row.id = line_row.orderId
       WHERE order_row.orderType = 'SALES_RETURN'
         AND line_row.sourceDocumentId IS NULL
     `,

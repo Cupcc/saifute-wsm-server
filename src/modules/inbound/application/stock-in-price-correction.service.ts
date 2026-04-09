@@ -9,7 +9,7 @@ import {
   DocumentLifecycleStatus,
   InventoryOperationType,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   buildCompactDocumentNo,
   createWithGeneratedDocumentNo,
@@ -199,6 +199,7 @@ export class StockInPriceCorrectionService {
               {
                 materialId: sourceLog.materialId,
                 workshopId: sourceLog.workshopId ?? undefined,
+                bizDate,
                 quantity: remainingQtyAtCorrection,
                 operationType: InventoryOperationType.PRICE_CORRECTION_OUT,
                 businessModule: BUSINESS_MODULE,
@@ -219,6 +220,7 @@ export class StockInPriceCorrectionService {
               {
                 materialId: sourceLog.materialId,
                 workshopId: sourceLog.workshopId ?? undefined,
+                bizDate,
                 quantity: remainingQtyAtCorrection,
                 operationType: InventoryOperationType.PRICE_CORRECTION_IN,
                 businessModule: BUSINESS_MODULE,

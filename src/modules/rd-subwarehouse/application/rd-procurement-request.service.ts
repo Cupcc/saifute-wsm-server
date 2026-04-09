@@ -7,7 +7,7 @@ import {
   AuditStatusSnapshot,
   DocumentLifecycleStatus,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   buildDashedTimestampDocumentNo,
   createWithGeneratedDocumentNo,

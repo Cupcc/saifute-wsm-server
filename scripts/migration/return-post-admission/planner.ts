@@ -364,30 +364,30 @@ function buildSourceBackfillPlan(
     if (srStalePrelinkDiffers) {
       staleClearRecords.push({
         lineId: classification.lineId,
-        documentTable: "customer_stock_order_line",
+        documentTable: "sales_stock_order_line",
       });
     }
 
     if (returnLine.sourceDocumentId === null || srStalePrelinkDiffers) {
       backfillRecords.push({
         lineId: classification.lineId,
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: classification.provenUpstreamOrderId,
         sourceDocumentLineId: classification.provenUpstreamLineId,
       });
     }
 
-    const headerRelationKey = `CUSTOMER_STOCK::${upstreamLine.orderId}::${returnLine.orderId}`;
+    const headerRelationKey = `SALES_STOCK::${upstreamLine.orderId}::${returnLine.orderId}`;
 
     if (!seenHeaderRelations.has(headerRelationKey)) {
       seenHeaderRelations.add(headerRelationKey);
       documentRelations.push({
         relationType: "SALES_RETURN_FROM_OUTBOUND",
-        upstreamFamily: "CUSTOMER_STOCK",
-        upstreamDocumentType: "CustomerStockOrder",
+        upstreamFamily: "SALES_STOCK",
+        upstreamDocumentType: "SalesStockOrder",
         upstreamDocumentId: upstreamLine.orderId,
-        downstreamFamily: "CUSTOMER_STOCK",
-        downstreamDocumentType: "CustomerStockOrder",
+        downstreamFamily: "SALES_STOCK",
+        downstreamDocumentType: "SalesStockOrder",
         downstreamDocumentId: returnLine.orderId,
         isActive: returnLine.lifecycleStatus === "EFFECTIVE",
       });
@@ -395,12 +395,12 @@ function buildSourceBackfillPlan(
 
     documentLineRelations.push({
       relationType: "SALES_RETURN_FROM_OUTBOUND",
-      upstreamFamily: "CUSTOMER_STOCK",
-      upstreamDocumentType: "CustomerStockOrder",
+      upstreamFamily: "SALES_STOCK",
+      upstreamDocumentType: "SalesStockOrder",
       upstreamDocumentId: upstreamLine.orderId,
       upstreamLineId: upstreamLine.id,
-      downstreamFamily: "CUSTOMER_STOCK",
-      downstreamDocumentType: "CustomerStockOrder",
+      downstreamFamily: "SALES_STOCK",
+      downstreamDocumentType: "SalesStockOrder",
       downstreamDocumentId: returnLine.orderId,
       downstreamLineId: returnLine.id,
       linkedQty: returnLine.quantity,
@@ -480,7 +480,7 @@ function buildSourceBackfillPlan(
     ) {
       staleClearRecords.push({
         lineId: classification.lineId,
-        documentTable: "customer_stock_order_line",
+        documentTable: "sales_stock_order_line",
       });
     }
   }
@@ -567,10 +567,10 @@ function buildInventoryReplayPlan(
       materialId: line.materialId,
       workshopId: line.workshopId,
       quantity: line.quantity,
-      documentType: "CustomerStockOrder",
+      documentType: "SalesStockOrder",
       documentId: line.orderId,
       documentNumber: line.documentNo,
-      businessModule: "customer",
+      businessModule: "sales",
       direction: "OUT" as const,
       operationType: "OUTBOUND_OUT",
       lifecycleStatus: line.lifecycleStatus,
@@ -584,10 +584,10 @@ function buildInventoryReplayPlan(
       materialId: line.materialId,
       workshopId: line.workshopId,
       quantity: line.quantity,
-      documentType: "CustomerStockOrder",
+      documentType: "SalesStockOrder",
       documentId: line.orderId,
       documentNumber: line.documentNo,
-      businessModule: "customer",
+      businessModule: "sales",
       direction: "IN" as const,
       operationType: "SALES_RETURN_IN",
       lifecycleStatus: line.lifecycleStatus,
@@ -790,7 +790,7 @@ function buildInventoryReplayPlan(
 
     const sourceIdempotencyKey = buildIdempotencyKey(
       "replay",
-      "CustomerStockOrder",
+      "SalesStockOrder",
       upstreamLine.orderId,
       upstreamLine.id,
     );
@@ -808,7 +808,7 @@ function buildInventoryReplayPlan(
     sourceUsageInserts.push({
       materialId: line.materialId,
       sourceLogIdempotencyKey: sourceIdempotencyKey,
-      consumerDocumentType: "CustomerStockOrder",
+      consumerDocumentType: "SalesStockOrder",
       consumerDocumentId: line.orderId,
       consumerLineId: line.id,
       allocatedQty: line.quantity,
@@ -925,8 +925,8 @@ function buildAuditProjectionPlan(
   }
 
   addAuditRows(stockInOrders, "STOCK_IN", "StockInOrder");
-  addAuditRows(outboundOrders, "CUSTOMER_STOCK", "CustomerStockOrder");
-  addAuditRows(salesReturnOrders, "CUSTOMER_STOCK", "CustomerStockOrder");
+  addAuditRows(outboundOrders, "SALES_STOCK", "SalesStockOrder");
+  addAuditRows(salesReturnOrders, "SALES_STOCK", "SalesStockOrder");
   addAuditRows(pickOrders, "WORKSHOP_MATERIAL", "WorkshopMaterialOrder");
   addAuditRows(
     workshopReturnOrders,

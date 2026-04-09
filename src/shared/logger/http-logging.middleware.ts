@@ -18,8 +18,10 @@ export class HttpLoggingMiddleware implements NestMiddleware {
       const ip = this.resolveClientIp(request);
       const userAgent = this.resolveUserAgent(request);
       const contentLength = response.getHeader("content-length");
+      const level = this.resolveLogLevel(response.statusCode);
 
-      this.logger.info(
+      this.logger.log(
+        level,
         `${request.method} ${path} ${response.statusCode} ${durationMs}ms`,
         {
           context: "HTTP",
@@ -64,5 +66,15 @@ export class HttpLoggingMiddleware implements NestMiddleware {
     }
 
     return userAgent ?? "unknown";
+  }
+
+  private resolveLogLevel(statusCode: number): "info" | "warn" | "error" {
+    if (statusCode >= 500) {
+      return "error";
+    }
+    if (statusCode >= 400) {
+      return "warn";
+    }
+    return "info";
   }
 }

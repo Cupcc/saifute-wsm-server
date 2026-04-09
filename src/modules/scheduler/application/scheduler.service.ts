@@ -15,7 +15,7 @@ import {
   SchedulerJobLogStatus,
   SchedulerJobStatus,
   SchedulerMisfirePolicy,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import type { CreateSchedulerJobDto } from "../dto/create-scheduler-job.dto";
 import type { QuerySchedulerJobLogsDto } from "../dto/query-scheduler-job-logs.dto";

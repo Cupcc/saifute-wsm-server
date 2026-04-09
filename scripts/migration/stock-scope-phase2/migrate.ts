@@ -34,8 +34,60 @@ type WorkshopRefRow = {
   totalRows: number;
 };
 
+type ColumnPresenceRow = {
+  total: number;
+};
+
 const SCOPE_CODE_MAIN = "MAIN";
 const SCOPE_CODE_RD_SUB = "RD_SUB";
+
+async function ensureStockScopeTypeColumn(connection: Queryable): Promise<{
+  addedColumn: boolean;
+  normalizedRows: number;
+}> {
+  const rows = await connection.query<ColumnPresenceRow[]>(
+    `
+      SELECT COUNT(*) AS total
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'stock_scope'
+        AND COLUMN_NAME = 'scopeType'
+    `,
+  );
+  const hasColumn = Number(rows[0]?.total ?? 0) > 0;
+
+  if (!hasColumn) {
+    await connection.query(
+      `
+        ALTER TABLE stock_scope
+        ADD COLUMN scopeType ENUM('MAIN', 'RD_SUB') NOT NULL DEFAULT 'MAIN'
+        AFTER scopeName
+      `,
+    );
+  }
+
+  const normalizationResult = await connection.query<{ affectedRows?: number }>(
+    `
+      UPDATE stock_scope
+      SET scopeType =
+        CASE
+          WHEN scopeCode = ? THEN 'RD_SUB'
+          ELSE 'MAIN'
+        END
+      WHERE scopeType <>
+        CASE
+          WHEN scopeCode = ? THEN 'RD_SUB'
+          ELSE 'MAIN'
+        END
+    `,
+    [SCOPE_CODE_RD_SUB, SCOPE_CODE_RD_SUB],
+  );
+
+  return {
+    addedColumn: !hasColumn,
+    normalizedRows: Number(normalizationResult.affectedRows ?? 0),
+  };
+}
 
 async function ensureStockScopeSeed(connection: Queryable): Promise<void> {
   await connection.query(
@@ -101,14 +153,14 @@ async function getNullCounts(connection: Queryable): Promise<NullCountRow[]> {
       SELECT 'stock_in_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM stock_in_order
       UNION ALL
-      SELECT 'customer_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
-      FROM customer_stock_order
+      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      FROM sales_stock_order
       UNION ALL
       SELECT 'workshop_material_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM workshop_material_order
       UNION ALL
-      SELECT 'project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
-      FROM project
+      SELECT 'rd_project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      FROM rd_project
       UNION ALL
       SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN sourceStockScopeId IS NULL OR targetStockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_handoff_order
@@ -201,13 +253,13 @@ async function executeBackfill(
 
   const customerResult = await connection.query<{ affectedRows?: number }>(
     `
-      UPDATE customer_stock_order
+      UPDATE sales_stock_order
       SET stockScopeId = ?
       WHERE stockScopeId IS NULL
     `,
     [stockScopeIds.MAIN],
   );
-  updates.customerStockOrder = Number(customerResult.affectedRows ?? 0);
+  updates.salesStockOrder = Number(customerResult.affectedRows ?? 0);
 
   const workshopMaterialResult = await connection.query<{
     affectedRows?: number;
@@ -416,6 +468,8 @@ async function main(): Promise<void> {
 
       await connection.beginTransaction();
       try {
+        const stockScopeTypeColumn =
+          await ensureStockScopeTypeColumn(connection);
         await ensureStockScopeSeed(connection);
         const stockScopeIds = await readStockScopeIds(connection);
         const executionResult = await executeBackfill(
@@ -428,6 +482,7 @@ async function main(): Promise<void> {
           ...dryRunReport,
           executionRequested: true,
           allowBlockers: cliOptions.allowBlockers,
+          stockScopeTypeColumn,
           stockScopeIds,
           executionResult,
           postExecuteNullCounts: await getNullCounts(connection),
@@ -443,11 +498,11 @@ async function main(): Promise<void> {
       }
     });
 
+    const executeBlockers = (report as { executeBlockers?: unknown[] })
+      .executeBlockers;
     if (
-      Array.isArray(
-        (report as { executeBlockers?: unknown[] }).executeBlockers,
-      ) &&
-      (report as { executeBlockers?: unknown[] }).executeBlockers?.length > 0 &&
+      Array.isArray(executeBlockers) &&
+      executeBlockers.length > 0 &&
       !cliOptions.execute
     ) {
       process.exitCode = 1;

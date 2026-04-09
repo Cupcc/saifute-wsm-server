@@ -80,7 +80,7 @@ describe("InMemoryRbacRepository", () => {
         "dashboard:view",
         "inbound:order:list",
         "workshop-material:pick-order:create",
-        "customer:order:list",
+        "sales:order:list",
         "rd:procurement-request:list",
       ]),
     );
@@ -102,7 +102,7 @@ describe("InMemoryRbacRepository", () => {
       expect.arrayContaining(["dashboard:view", "rd:procurement-request:list"]),
     );
     expect(user?.permissions).not.toEqual(
-      expect.arrayContaining(["inbound:order:list", "customer:order:list"]),
+      expect.arrayContaining(["inbound:order:list", "sales:order:list"]),
     );
   });
 

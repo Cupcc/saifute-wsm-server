@@ -12,7 +12,7 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
-import { StockInOrderType } from "../../../generated/prisma/client";
+import { StockInOrderType } from "../../../../generated/prisma/client";
 import { CreateInboundOrderLineDto } from "./create-inbound-order-line.dto";
 
 export class CreateInboundOrderDto {

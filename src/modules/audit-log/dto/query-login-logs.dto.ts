@@ -10,7 +10,7 @@ import {
 import {
   LoginLogAction,
   LoginLogResult,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 
 export class QueryLoginLogsDto {
   @IsOptional()

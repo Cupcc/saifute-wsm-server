@@ -3,7 +3,7 @@
     "batch1Baseline": {
       "actualBlockedMaterialCount": 21,
       "actualMapCounts": {
-        "customer": 184,
+        "sales": 184,
         "material": 437,
         "materialCategory": 8,
         "personnel": 51,
@@ -12,7 +12,7 @@
       },
       "expectedBlockedMaterialCount": 21,
       "expectedMapCounts": {
-        "customer": 184,
+        "sales": 184,
         "material": 437,
         "materialCategory": 8,
         "personnel": 51,
@@ -49,7 +49,7 @@
   "dependencyBaseline": {
     "actualBlockedMaterialCount": 21,
     "actualMapCounts": {
-      "customer": 184,
+      "sales": 184,
       "material": 437,
       "materialCategory": 8,
       "personnel": 51,
@@ -58,7 +58,7 @@
     },
     "expectedBlockedMaterialCount": 21,
     "expectedMapCounts": {
-      "customer": 184,
+      "sales": 184,
       "material": 437,
       "materialCategory": 8,
       "personnel": 51,
@@ -107,13 +107,13 @@
       "batchMapRows": 108,
       "reason": "Target table rows and this batch's staging map rows differ, so execute would run against a dirty slice target.",
       "targetRows": 117,
-      "targetTable": "customer_stock_order"
+      "targetTable": "sales_stock_order"
     },
     {
       "batchMapRows": 137,
       "reason": "Target table rows and this batch's staging map rows differ, so execute would run against a dirty slice target.",
       "targetRows": 150,
-      "targetTable": "customer_stock_order_line"
+      "targetTable": "sales_stock_order_line"
     },
     {
       "downstreamConsumers": {
@@ -121,7 +121,7 @@
         "inventory_log": 154,
         "audit_document": 113
       },
-      "reason": "Outbound rerun is blocked because downstream tables already reference CustomerStockOrder rows or line ids."
+      "reason": "Outbound rerun is blocked because downstream tables already reference SalesStockOrder rows or line ids."
     }
   ],
   "executionRequested": true,

@@ -48,7 +48,7 @@
   - 用户显式要求 subagents 与 browser testing，因此执行方式必须体现：orchestrator 统一调度，coder / reviewer / acceptance QA 分角色顺序收口，不允许多人并行写同一批共享文件。
 - Acceptance criteria carried into this task:
   - `[AC-1]` `F1`~`F7` 当前已交付的基础资料管理页或等价用户可达浏览器入口，均完成至少一轮真实新增 / 修改 / 停用 / active-only 复验；若某能力当前没有已交付浏览器入口，必须先以路由 / 菜单 / 现有 acceptance 基线确认其“未交付浏览器面”事实，再决定是否记为阻塞或 evidence gap，不能擅自扩 scope 发明新页面。
-  - `[AC-2]` `F8` 必须通过真实消费者复验 `ACTIVE-only` 下拉与快照查询语义；消费者范围以当前已交付页面为准，至少覆盖入库、客户出库 / 退货、车间领退料、研发相关页面中实际依赖主数据的代表性路径。
+  - `[AC-2]` `F8` 必须通过真实消费者复验 `ACTIVE-only` 下拉与快照查询语义；消费者范围以当前已交付页面为准，至少覆盖入库、销售出库 / 退货、车间领退料、研发相关页面中实际依赖主数据的代表性路径。
   - `[AC-3]` 本 turn 中在 `F1`~`F8` 浏览器验收、联调、review 中发现的所有 in-scope 缺陷均已修复并复验通过；若有未关闭项，只允许是精确记录的环境阻塞，且需附绝对路径证据与下一步修复指引。
   - `[AC-4]` 三个已知 dirty 文件 `web/src/views/base/customer/index.vue`、`web/src/views/base/material/index.vue`、`web/src/views/base/personnel/index.vue` 若被触达，必须先读取现有改动并在其基础上做增量修复，不得覆盖、回退或重排用户既有修改。
   - `[AC-5]` review 必须对最终 diff 做独立检查；所有 actionable finding 关闭后才能进入 acceptance。

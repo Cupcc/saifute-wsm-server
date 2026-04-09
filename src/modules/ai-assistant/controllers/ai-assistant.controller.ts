@@ -9,7 +9,7 @@ import {
   Res,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { OperLogStatus } from "../../../generated/prisma/client";
+import { OperLogStatus } from "../../../../generated/prisma/client";
 import { SkipResponseEnvelope } from "../../../shared/common/interceptors/skip-response-envelope.decorator";
 import { CurrentUser } from "../../../shared/decorators/current-user.decorator";
 import { Permissions } from "../../../shared/decorators/permissions.decorator";

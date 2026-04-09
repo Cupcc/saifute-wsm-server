@@ -10,7 +10,7 @@ import {
   InventoryOperationType,
   Prisma,
   StockDirection,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   buildDashedTimestampDocumentNo,
   createWithGeneratedDocumentNo,
@@ -186,6 +186,7 @@ export class RdHandoffService {
             {
               materialId: line.materialId,
               stockScope: "MAIN",
+              bizDate,
               quantity: line.quantity,
               operationType: InventoryOperationType.RD_HANDOFF_OUT,
               businessModule: BUSINESS_MODULE,
@@ -232,6 +233,7 @@ export class RdHandoffService {
               {
                 materialId: line.materialId,
                 stockScope: "RD_SUB",
+                bizDate,
                 quantity: allocation.allocatedQty,
                 operationType: InventoryOperationType.RD_HANDOFF_IN,
                 businessModule: BUSINESS_MODULE,

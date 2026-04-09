@@ -54,7 +54,7 @@
 
 ### 跨单据边界口径
 
-- `inbound`、`customer`、`workshop-material` 等单据家族默认接入 `approval`；`project` 第一阶段默认不接。
+- `inbound`、`sales`、`workshop-material` 等单据家族默认接入 `approval`；`rd-project` 第一阶段默认不接，`sales-project` 作为未来目标模块单独评估。
 - `approval` 对各业务域暴露统一审核协作接口，但不直接与各单据表建立多态外键，避免反向强耦合。
 - 后续若新增需要审核的新单据家族，应先确认其“是否走审核、何时重置、作废阻塞规则”，再接入共享审核域。
 
@@ -82,7 +82,8 @@
 ## 待确认
 
 - 哪些单据类型应默认 `NOT_REQUIRED`，哪些必须强制进入 `PENDING`，是否需要整理成全局审核策略表。
-- `project` 域后续是否需要纳入轻审核，还是长期维持不接 `approval`。
+- `rd-project` 域后续是否需要纳入轻审核，还是长期维持不接 `approval`。
+- `sales-project` 若后续落地，是否需要独立轻审核，还是继续完全依赖 `sales` 审核链。
 - 审核拒绝时是否要求强制填写拒绝原因，以及该原因是否需要在前端列表页直接展示。
 
 ## 文档关系

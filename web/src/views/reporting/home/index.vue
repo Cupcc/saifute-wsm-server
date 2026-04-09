@@ -163,8 +163,10 @@ function formatTrendType(value) {
   const labelMap = {
     ALL: "全部",
     INBOUND: "入库",
-    OUTBOUND: "出库",
+    SALES: "销售出库",
     WORKSHOP_MATERIAL: "领退料",
+    RD_PROJECT: "研发项目",
+    RD: "研发协同",
   };
   return labelMap[value] || value;
 }

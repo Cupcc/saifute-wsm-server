@@ -7,7 +7,7 @@ import {
   MaxLength,
   Min,
 } from "class-validator";
-import { DocumentFamily } from "../../../generated/prisma/client";
+import { DocumentFamily } from "../../../../generated/prisma/client";
 
 export class CreateApprovalDocumentDto {
   @IsEnum(DocumentFamily)

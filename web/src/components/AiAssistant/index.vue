@@ -60,7 +60,7 @@ const contextMap = {
   "/take/scrapDetail": "生产车间 - 报废明细",
   "/rd/workbench": "研发小仓 - 研发工作台",
   "/rd/inbound-results": "研发协同 - 自动入库结果",
-  "/rd/project-consumption": "研发协同 - 项目管理",
+  "/rd/projects": "研发协同 - 研发项目",
   "/rd/inventory-logs": "研发协同 - 库存流水",
   "/base/customer": "基础数据 - 客户管理",
   "/base/material": "基础数据 - 物料管理",

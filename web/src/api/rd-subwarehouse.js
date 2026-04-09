@@ -73,7 +73,7 @@ export function applyRdProcurementStatusAction(requestId, data) {
 
 export function listRdProjects(params = {}) {
   return request({
-    url: "/api/projects",
+    url: "/api/rd-projects",
     method: "get",
     params,
   });
@@ -81,14 +81,14 @@ export function listRdProjects(params = {}) {
 
 export function getRdProject(projectId) {
   return request({
-    url: `/api/projects/${projectId}`,
+    url: `/api/rd-projects/${projectId}`,
     method: "get",
   });
 }
 
 export function createRdProject(data) {
   return request({
-    url: "/api/projects",
+    url: "/api/rd-projects",
     method: "post",
     data,
   });
@@ -96,7 +96,7 @@ export function createRdProject(data) {
 
 export function updateRdProject(projectId, data) {
   return request({
-    url: `/api/projects/${projectId}`,
+    url: `/api/rd-projects/${projectId}`,
     method: "patch",
     data,
   });
@@ -104,7 +104,7 @@ export function updateRdProject(projectId, data) {
 
 export function voidRdProject(projectId, data) {
   return request({
-    url: `/api/projects/${projectId}/void`,
+    url: `/api/rd-projects/${projectId}/void`,
     method: "post",
     data,
   });
@@ -112,21 +112,21 @@ export function voidRdProject(projectId, data) {
 
 export function listRdProjectMaterialActions(projectId) {
   return request({
-    url: `/api/projects/${projectId}/material-actions`,
+    url: `/api/rd-projects/${projectId}/material-actions`,
     method: "get",
   });
 }
 
 export function getRdProjectMaterialAction(actionId) {
   return request({
-    url: `/api/projects/material-actions/${actionId}`,
+    url: `/api/rd-projects/material-actions/${actionId}`,
     method: "get",
   });
 }
 
 export function createRdProjectMaterialAction(projectId, data) {
   return request({
-    url: `/api/projects/${projectId}/material-actions`,
+    url: `/api/rd-projects/${projectId}/material-actions`,
     method: "post",
     data,
   });
@@ -134,7 +134,7 @@ export function createRdProjectMaterialAction(projectId, data) {
 
 export function voidRdProjectMaterialAction(actionId, data) {
   return request({
-    url: `/api/projects/material-actions/${actionId}/void`,
+    url: `/api/rd-projects/material-actions/${actionId}/void`,
     method: "post",
     data,
   });

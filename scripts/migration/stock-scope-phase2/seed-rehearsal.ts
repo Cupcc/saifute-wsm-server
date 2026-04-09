@@ -32,11 +32,11 @@ async function getTableCounts(connection: Queryable) {
       UNION ALL
       SELECT 'stock_in_order' AS tableName, COUNT(*) AS total FROM stock_in_order
       UNION ALL
-      SELECT 'customer_stock_order' AS tableName, COUNT(*) AS total FROM customer_stock_order
+      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS total FROM sales_stock_order
       UNION ALL
       SELECT 'workshop_material_order' AS tableName, COUNT(*) AS total FROM workshop_material_order
       UNION ALL
-      SELECT 'project' AS tableName, COUNT(*) AS total FROM project
+      SELECT 'rd_project' AS tableName, COUNT(*) AS total FROM rd_project
       UNION ALL
       SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS total FROM rd_handoff_order
       UNION ALL
@@ -204,10 +204,10 @@ async function seed(connection: Queryable) {
     ],
   );
 
-  const customerStockOrderId = await insertOne(
+  const salesStockOrderId = await insertOne(
     connection,
     `
-      INSERT INTO customer_stock_order (
+      INSERT INTO sales_stock_order (
         documentNo, orderType, bizDate, customerId, handlerPersonnelId,
         workshopId, workshopNameSnapshot, totalQty, totalAmount,
         createdBy, createdAt, updatedBy, updatedAt
@@ -254,7 +254,7 @@ async function seed(connection: Queryable) {
   const projectId = await insertOne(
     connection,
     `
-      INSERT INTO project (
+      INSERT INTO rd_project (
         projectCode, projectName, bizDate, customerId, supplierId,
         managerPersonnelId, workshopId, workshopNameSnapshot, totalQty, totalAmount,
         createdBy, createdAt, updatedBy, updatedAt
@@ -395,7 +395,7 @@ async function seed(connection: Queryable) {
         materialId, workshopId, businessDocumentType, businessDocumentId, businessDocumentLineId,
         startNumber, endNumber, createdBy, createdAt, updatedBy, updatedAt
       )
-      VALUES (?, ?, 'CustomerStockOrder', ?, 1, 'A001', 'A005', ?, NOW(), ?, NOW())
+      VALUES (?, ?, 'SalesStockOrder', ?, 1, 'A001', 'A005', ?, NOW(), ?, NOW())
       ON DUPLICATE KEY UPDATE
         updatedBy = VALUES(updatedBy),
         id = LAST_INSERT_ID(id)
@@ -403,7 +403,7 @@ async function seed(connection: Queryable) {
     [
       materialId,
       mainWorkshopId,
-      customerStockOrderId,
+      salesStockOrderId,
       REHEARSAL_CREATED_BY,
       REHEARSAL_CREATED_BY,
     ],
@@ -418,7 +418,7 @@ async function seed(connection: Queryable) {
     workshopAttrId,
     materialId,
     stockInOrderId,
-    customerStockOrderId,
+    salesStockOrderId,
     workshopMaterialOrderId,
     projectId,
     rdProcurementRequestId,

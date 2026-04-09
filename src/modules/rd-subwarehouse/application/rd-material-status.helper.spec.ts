@@ -2,7 +2,7 @@ import {
   Prisma,
   RdMaterialStatus,
   RdMaterialStatusEventType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE,
   reverseStatusHistory,

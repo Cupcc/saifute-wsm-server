@@ -100,7 +100,7 @@
 
 - Allowed code paths:
   - `prisma/schema.prisma`
-  - `src/generated/prisma/**`
+  - `generated/prisma/**`
   - `src/modules/rbac/**`
   - `test/app.e2e-spec.ts`
   - `test/batch-d-slice.e2e-spec.ts`
@@ -168,7 +168,7 @@
   - 本 task doc
 - Owned paths:
   - `prisma/schema.prisma`
-  - `src/generated/prisma/**`
+  - `generated/prisma/**`
   - `src/modules/rbac/**`
   - `test/app.e2e-spec.ts`
   - `test/batch-d-slice.e2e-spec.ts`
@@ -236,7 +236,7 @@
 - Evidence pointers:
   - `prisma/schema.prisma`
   - `src/modules/rbac/**`
-  - `src/generated/prisma/**`
+  - `generated/prisma/**`
   - `src/modules/rbac/infrastructure/in-memory-rbac.repository.spec.ts`
   - `src/modules/rbac/application/rbac.service.spec.ts`
   - `test/app.e2e-spec.ts`
@@ -311,7 +311,7 @@
   - N/A
 - If not safe, list the shared files or contracts that require a single writer:
   - `prisma/schema.prisma`
-  - `src/generated/prisma/**`
+  - `generated/prisma/**`
   - `src/modules/rbac/infrastructure/in-memory-rbac.repository.ts`
   - `src/modules/rbac/domain/rbac.types.ts`
   - `src/modules/rbac/application/system-management.service.ts`

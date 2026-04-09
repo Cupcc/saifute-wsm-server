@@ -4,7 +4,7 @@
 
 作为所有事务型单据唯一可依赖的库存中心域，负责主仓 / RD 小仓库存现值、库存日志、来源追踪、预警和编号区间。任何业务模块不得直接改库存底表。
 
-当前已确认的 `F5` 第一版范围：预警只保留只读视图 / 报表提示；出厂编号区间能力只服务 `customer` 出库链路，不扩成多业务家族统一平台。
+当前已确认的 `F5` 第一版范围：预警只保留只读视图 / 报表提示；出厂编号区间能力只服务 `sales` 出库链路，不扩成多业务家族统一平台。
 
 ## 原 Java 来源与映射范围
 
@@ -32,7 +32,7 @@
 - `releaseInventorySource()`
 - `checkInventoryWarning()`
 - `reserveFactoryNumberInterval()`
-- `queryPriceLayerAvailability()` — 按 `物料 + 单价` 聚合可用来源层，供客户出库价格层选择（计划中）
+- `queryPriceLayerAvailability()` — 按 `物料 + 单价` 聚合可用来源层，供销售出库价格层选择（计划中）
 - `allocateInventorySourceByPriceLayer()` — 在指定价格层内按 FIFO 分配来源（计划中）
 
 ## Controller 接口草案
@@ -82,7 +82,8 @@
 ## 与其他模块的依赖关系
 
 - 依赖 `master-data` 获取物料等基础快照
-- 被 `inbound`、`customer`、`workshop-material`、`project` 依赖
+- 被 `inbound`、`sales`、`workshop-material`、`rd-project` 依赖
+- 未来将被 `sales-project` 以只读项目维度视图 / 草稿生成方式协作依赖
 - 与 `approval` 只通过业务模块协作，不直接耦合审核表
 
 ## 事务边界与一致性要求
@@ -91,7 +92,7 @@
 - 业务单据与库存副作用原则上同事务完成
 - 不允许只写主表不写日志，或只回滚主表不释放来源占用
 - `increaseStock()`、`decreaseStock()`、`reverseStock()`、`allocateInventorySource()`、`releaseInventorySource()` 默认可独立开启事务执行；若调用方已持有事务，应复用同一个事务上下文完成组合编排
-- `factory_number_reservation` 第一版仅支持 `customer` 出库链路的占用、释放与查询；其他业务家族如需接入，后续单独扩 scope
+- `factory_number_reservation` 第一版仅支持 `sales` 出库链路的占用、释放与查询；其他业务家族如需接入，后续单独扩 scope
 
 ## 权限点、数据权限、审计要求
 

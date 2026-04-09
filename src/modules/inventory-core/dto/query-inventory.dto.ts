@@ -68,11 +68,11 @@ export class QueryInventoryLogsDto {
 
   @IsOptional()
   @IsDateString()
-  occurredAtFrom?: string;
+  bizDateFrom?: string;
 
   @IsOptional()
   @IsDateString()
-  occurredAtTo?: string;
+  bizDateTo?: string;
 
   @IsOptional()
   @Type(() => Number)

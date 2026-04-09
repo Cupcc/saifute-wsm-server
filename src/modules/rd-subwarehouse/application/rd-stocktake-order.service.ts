@@ -9,7 +9,7 @@ import {
   InventoryEffectStatus,
   InventoryOperationType,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   buildDashedTimestampDocumentNo,
   createWithGeneratedDocumentNo,
@@ -152,6 +152,7 @@ export class RdStocktakeOrderService {
                 {
                   materialId: line.materialId,
                   stockScope: "RD_SUB",
+                  bizDate,
                   quantity: adjustmentQty,
                   operationType: InventoryOperationType.RD_STOCKTAKE_IN,
                   businessModule: BUSINESS_MODULE,
@@ -169,6 +170,7 @@ export class RdStocktakeOrderService {
                 {
                   materialId: line.materialId,
                   stockScope: "RD_SUB",
+                  bizDate,
                   quantity: adjustmentQty.abs(),
                   operationType: InventoryOperationType.RD_STOCKTAKE_OUT,
                   businessModule: BUSINESS_MODULE,

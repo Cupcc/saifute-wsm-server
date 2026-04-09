@@ -76,8 +76,10 @@ const rows = ref([]);
 const trendOptions = [
   { label: "全部", value: "ALL" },
   { label: "入库", value: "INBOUND" },
-  { label: "出库", value: "OUTBOUND" },
+  { label: "销售出库", value: "SALES" },
   { label: "领退料", value: "WORKSHOP_MATERIAL" },
+  { label: "研发项目", value: "RD_PROJECT" },
+  { label: "研发协同", value: "RD" },
 ];
 
 const filters = ref({
@@ -113,8 +115,10 @@ function formatTrendType(value) {
   const labelMap = {
     ALL: "全部",
     INBOUND: "入库",
-    OUTBOUND: "出库",
+    SALES: "销售出库",
     WORKSHOP_MATERIAL: "领退料",
+    RD_PROJECT: "研发项目",
+    RD: "研发协同",
   };
   return labelMap[value] || value;
 }

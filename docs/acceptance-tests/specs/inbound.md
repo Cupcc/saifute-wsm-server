@@ -33,7 +33,7 @@
   - **持久化与合同**：`prisma validate` / `prisma generate` 在注入 `.env.dev` 下通过；入库与消耗侧成本字段与 `inventory_source_usage` 合同与实现一致。
   - **写路径**：`inbound` 将来源成本以不可变快照写入 `inventory_log`（`unitCost`、`costAmount`）；已消耗来源层禁止被逆向静默破坏（与释放/回放语义一致）。
   - **规则收口**：`inventory-core` 集中默认 FIFO、手动来源校验、幂等重载、释放/恢复与恢复至零行为。
-  - **下游四类链路**：`customer`、`workshop-material`、`project`、`rd-subwarehouse`（RD handoff）统一走集中结算与行级来源使用；RD handoff 按分配写入 RD_SUB 的 IN 流水，保留桥接层而非单条合成平均来源层。
+  - **下游四类链路**：`sales`、`workshop-material`、`project`、`rd-subwarehouse`（RD handoff）统一走集中结算与行级来源使用；RD handoff 按分配写入 RD_SUB 的 IN 流水，保留桥接层而非单条合成平均来源层。
   - **读路径证据**：可追溯关系由持久化的 `inventory_source_usage`、`inventory_log.unitCost` / `costAmount` 与消费行 `costUnitPrice` / `costAmount` 共同支撑；与 focused 单测断言一致。
   - **回归**：Phase 2 约定范围内的 6 个 service 单测套件、91 条用例通过（见本文件验证摘要与 `docs/acceptance-tests/runs/` 冻结 run）。
   - **非本任务归因**：全仓库 `pnpm test --no-coverage` 曾报告 `audit-log` 下无关套件失败（`auth-audit.listener.spec.ts`），**不归因于** inbound Phase 2；本 scope 以 focused 回归 + Prisma 门禁为准。
@@ -55,9 +55,9 @@
 | prisma        | `set -a && source .env.dev && set +a && pnpm prisma generate`                 | pass                              |
 | unit          | `src/modules/inventory-core/application/inventory.service.spec.ts`            | pass                              |
 | unit          | `src/modules/inbound/application/inbound.service.spec.ts`                     | pass                              |
-| unit          | `src/modules/customer/application/customer.service.spec.ts`                   | pass                              |
+| unit          | `src/modules/sales/application/sales.service.spec.ts`                   | pass                              |
 | unit          | `src/modules/workshop-material/application/workshop-material.service.spec.ts` | pass                              |
-| unit          | `src/modules/project/application/project.service.spec.ts`                     | pass                              |
+| unit          | `src/modules/rd-project/application/rd-project.service.spec.ts`               | pass                              |
 | unit          | `src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`          | pass                              |
 | repo-wide（参考） | `pnpm test --no-coverage`（全量）                                                 | 存在与本 scope 无关的失败套件；见 Phase 2 总览说明 |
 
@@ -144,5 +144,4 @@
 | 时间         | 关联 task              | 环境           | 结果       |
 | ---------- | -------------------- | ------------ | -------- |
 | 2026-04-04 | `task-20260404-1315` | 同 Phase 2 总览 | `passed` |
-
 

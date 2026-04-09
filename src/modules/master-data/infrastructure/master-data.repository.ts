@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import type { Prisma } from "../../../generated/prisma/client";
+import { Injectable, Logger } from "@nestjs/common";
+import { Prisma } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type MaterialSuggestionField =
@@ -41,6 +41,7 @@ const CANONICAL_STOCK_SCOPES: Prisma.StockScopeCreateManyInput[] = [
   {
     scopeCode: "MAIN",
     scopeName: "主仓",
+    scopeType: "MAIN",
     status: "ACTIVE",
     createdBy: SYSTEM_BOOTSTRAP_ACTOR,
     updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
@@ -48,6 +49,7 @@ const CANONICAL_STOCK_SCOPES: Prisma.StockScopeCreateManyInput[] = [
   {
     scopeCode: "RD_SUB",
     scopeName: "研发小仓",
+    scopeType: "RD_SUB",
     status: "ACTIVE",
     createdBy: SYSTEM_BOOTSTRAP_ACTOR,
     updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
@@ -67,6 +69,8 @@ const WORKSHOP_WITH_DEFAULT_HANDLER_INCLUDE = {
 
 @Injectable()
 export class MasterDataRepository {
+  private readonly logger = new Logger(MasterDataRepository.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async ensureCanonicalWorkshops() {
@@ -90,9 +94,21 @@ export class MasterDataRepository {
   }
 
   async ensureCanonicalStockScopes() {
-    await this.prisma.stockScope.createMany({
-      data: CANONICAL_STOCK_SCOPES,
-      skipDuplicates: true,
+    await this.prisma.$transaction(async (tx) => {
+      for (const stockScope of CANONICAL_STOCK_SCOPES) {
+        await tx.stockScope.upsert({
+          where: {
+            scopeCode: stockScope.scopeCode,
+          },
+          update: {
+            scopeName: stockScope.scopeName,
+            scopeType: stockScope.scopeType,
+            status: stockScope.status,
+            updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
+          },
+          create: stockScope,
+        });
+      }
     });
   }
 
@@ -154,7 +170,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.customerStockOrderLine,
+              this.prisma.salesStockOrderLine,
               "materialCodeSnapshot",
               limit,
             ),
@@ -164,7 +180,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.projectMaterialLine,
+              this.prisma.rdProjectMaterialLine,
               "materialCodeSnapshot",
               limit,
             ),
@@ -200,7 +216,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.customerStockOrderLine,
+              this.prisma.salesStockOrderLine,
               "materialNameSnapshot",
               limit,
             ),
@@ -210,7 +226,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.projectMaterialLine,
+              this.prisma.rdProjectMaterialLine,
               "materialNameSnapshot",
               limit,
             ),
@@ -246,7 +262,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.customerStockOrderLine,
+              this.prisma.salesStockOrderLine,
               "materialSpecSnapshot",
               limit,
             ),
@@ -256,7 +272,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.projectMaterialLine,
+              this.prisma.rdProjectMaterialLine,
               "materialSpecSnapshot",
               limit,
             ),
@@ -292,7 +308,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.customerStockOrderLine,
+              this.prisma.salesStockOrderLine,
               "unitCodeSnapshot",
               limit,
             ),
@@ -302,7 +318,7 @@ export class MasterDataRepository {
               limit,
             ),
             this.createDistinctStringSource(
-              this.prisma.projectMaterialLine,
+              this.prisma.rdProjectMaterialLine,
               "unitCodeSnapshot",
               limit,
             ),
@@ -340,12 +356,12 @@ export class MasterDataRepository {
             limit,
           ),
           this.createDistinctStringSource(
-            this.prisma.customerStockOrder,
+            this.prisma.salesStockOrder,
             "customerCodeSnapshot",
             limit,
           ),
           this.createDistinctStringSource(
-            this.prisma.project,
+            this.prisma.rdProject,
             "customerCodeSnapshot",
             limit,
           ),
@@ -362,12 +378,12 @@ export class MasterDataRepository {
           limit,
         ),
         this.createDistinctStringSource(
-          this.prisma.customerStockOrder,
+          this.prisma.salesStockOrder,
           "customerNameSnapshot",
           limit,
         ),
         this.createDistinctStringSource(
-          this.prisma.project,
+          this.prisma.rdProject,
           "customerNameSnapshot",
           limit,
         ),
@@ -394,7 +410,7 @@ export class MasterDataRepository {
             limit,
           ),
           this.createDistinctStringSource(
-            this.prisma.project,
+            this.prisma.rdProject,
             "supplierCodeSnapshot",
             limit,
           ),
@@ -421,7 +437,7 @@ export class MasterDataRepository {
           limit,
         ),
         this.createDistinctStringSource(
-          this.prisma.project,
+          this.prisma.rdProject,
           "supplierNameSnapshot",
           limit,
         ),
@@ -452,7 +468,7 @@ export class MasterDataRepository {
           limit,
         ),
         this.createDistinctStringSource(
-          this.prisma.customerStockOrder,
+          this.prisma.salesStockOrder,
           "workshopNameSnapshot",
           limit,
         ),
@@ -462,7 +478,7 @@ export class MasterDataRepository {
           limit,
         ),
         this.createDistinctStringSource(
-          this.prisma.project,
+          this.prisma.rdProject,
           "workshopNameSnapshot",
           limit,
         ),
@@ -503,7 +519,7 @@ export class MasterDataRepository {
           limit,
         ),
         this.createDistinctStringSource(
-          this.prisma.customerStockOrder,
+          this.prisma.salesStockOrder,
           "handlerNameSnapshot",
           limit,
         ),
@@ -553,10 +569,33 @@ export class MasterDataRepository {
     limit: number,
   ): Promise<string[]> {
     const loadedSources = await Promise.all(
-      sources.map(async (source) => ({
-        field: source.field,
-        rows: await source.load(),
-      })),
+      sources.map(async (source) => {
+        try {
+          return {
+            field: source.field,
+            rows: await source.load(),
+          };
+        } catch (error) {
+          if (!this.isIgnorableSuggestionSourceError(error)) {
+            throw error;
+          }
+
+          const errorCode =
+            error instanceof Prisma.PrismaClientKnownRequestError
+              ? error.code
+              : "unknown";
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          this.logger.warn(
+            `Skipping field suggestion source "${source.field}" due to schema drift (${errorCode}): ${errorMessage}`,
+          );
+
+          return {
+            field: source.field,
+            rows: [],
+          };
+        }
+      }),
     );
 
     const values = new Set<string>();
@@ -577,6 +616,13 @@ export class MasterDataRepository {
     return [...values]
       .sort((left, right) => left.localeCompare(right, "zh-Hans-CN"))
       .slice(0, limit);
+  }
+
+  private isIgnorableSuggestionSourceError(error: unknown): boolean {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2021" || error.code === "P2022")
+    );
   }
 
   // ─── MaterialCategory ───────────────────────────────────────────────────────
@@ -769,7 +815,7 @@ export class MasterDataRepository {
       stockIn,
       customerStock,
       workshopMaterial,
-      project,
+      rdProject,
       rdHandoff,
       rdProcurement,
       rdStocktake,
@@ -777,14 +823,14 @@ export class MasterDataRepository {
       this.prisma.stockInOrderLine.count({
         where: { materialId, order: { lifecycleStatus: "EFFECTIVE" } },
       }),
-      this.prisma.customerStockOrderLine.count({
+      this.prisma.salesStockOrderLine.count({
         where: { materialId, order: { lifecycleStatus: "EFFECTIVE" } },
       }),
       this.prisma.workshopMaterialOrderLine.count({
         where: { materialId, order: { lifecycleStatus: "EFFECTIVE" } },
       }),
-      this.prisma.projectMaterialLine.count({
-        where: { materialId, project: { lifecycleStatus: "EFFECTIVE" } },
+      this.prisma.rdProjectMaterialLine.count({
+        where: { materialId, rdProject: { lifecycleStatus: "EFFECTIVE" } },
       }),
       this.prisma.rdHandoffOrderLine.count({
         where: { materialId, order: { lifecycleStatus: "EFFECTIVE" } },
@@ -801,7 +847,7 @@ export class MasterDataRepository {
       stockIn +
       customerStock +
       workshopMaterial +
-      project +
+      rdProject +
       rdHandoff +
       rdProcurement +
       rdStocktake

@@ -9,7 +9,7 @@ import type { Request } from "express";
 import type { Observable } from "rxjs";
 import { throwError } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
-import { OperLogStatus } from "../../../generated/prisma/client";
+import { OperLogStatus } from "../../../../generated/prisma/client";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { AuditLogService } from "../application/audit-log.service";
 import {

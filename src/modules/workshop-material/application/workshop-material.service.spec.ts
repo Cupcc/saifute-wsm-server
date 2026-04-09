@@ -7,7 +7,7 @@ import {
   InventoryEffectStatus,
   Prisma,
   WorkshopMaterialOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { ApprovalService } from "../../approval/application/approval.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";

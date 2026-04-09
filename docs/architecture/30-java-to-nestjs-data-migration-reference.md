@@ -134,7 +134,7 @@
 | ------------------- | ---------------------- |
 | `material_category` | 物料分类树                         |
 | `material`          | 物料主档；被库存、入库、出库、车间、项目复用        |
-| `customer`          | 客户主档；被客户收发和项目复用               |
+| `customer`       | 客户主档；被销售业务和项目复用               |
 | `supplier`          | 供应商主档；被入库和项目复用                |
 | `personnel`         | 人员主档；承接经办人、负责人等角色             |
 | `workshop`          | 车间主档；承接单据归属与成本核算，不再作为库存维度    |
@@ -160,9 +160,9 @@
 | 目标表组                                                       | 现在的作用                |
 | ---------------------------------------------------------- | -------------------- |
 | `stock_in_order` + `stock_in_order_line`                   | 统一承接验收单、生产入库单        |
-| `customer_stock_order` + `customer_stock_order_line`       | 统一承接出库单、销售退货单        |
+| `sales_stock_order` + `sales_stock_order_line`       | 统一承接出库单、销售退货单        |
 | `workshop_material_order` + `workshop_material_order_line` | 统一承接领料单、退料单、报废单      |
-| `project` + `project_material_line`                        | 承接项目及项目物料消耗，且保持库存副作用 |
+| `rd_project` + `rd_project_material_line`                  | 承接研发项目及项目物料消耗，且保持库存副作用 |
 
 ### 4.5 关系表
 
@@ -193,7 +193,7 @@
 | -------------------------------------------------------- | ------- | ------------------- | ------- | -------- | ------------------------------------- |
 | `sys_dict_data`（`dict_type='saifute_material_category'`） | 旧物料分类字典 | `material_category` | 独立物料分类树 | 转换生成     | 已迁入，`8 -> 8`                          |
 | `saifute_material`                                       | 物料主档    | `material`          | 标准物料主档  | 字段归一化迁移  | 已迁入 `437 / 458`，`21` 条因主数据问题被阻塞       |
-| `saifute_customer`                                       | 客户主档    | `customer`          | 客户主档    | 字段归一化迁移  | 已迁入，`184 / 184`                       |
+| `saifute_customer`                                       | 客户主档    | `customer`       | 客户主档    | 字段归一化迁移  | 已迁入，`184 / 184`                       |
 | `saifute_supplier`                                       | 供应商主档   | `supplier`          | 供应商主档   | 字段归一化迁移  | 已迁入，`93 / 93`                         |
 | `saifute_personnel`                                      | 人员主档    | `personnel`         | 人员主档    | 字段归一化迁移  | 已迁入，`51 / 51`                         |
 | `saifute_workshop`                                       | 车间主档    | `workshop`          | 车间主档（归属 / 核算维度）    | 字段归一化迁移 | 已迁入；后续不再把 `workshop` 当成库存范围兜底 |
@@ -212,12 +212,12 @@
 - 新库已迁入 `190` 单、`307` 行
 - `20` 张单据被排除，`286` 份遗留字段进入 `archived_field_payload`
 
-### 5.3 客户收发域：出库
+### 5.3 销售业务域：出库
 
 | 旧表组                                                  | 旧作用    | 新表组                                                                                   | 新作用                         | 迁移方式        | 当前状态     |
 | ---------------------------------------------------- | ------ | ------------------------------------------------------------------------------------- | --------------------------- | ----------- | -------- |
-| `saifute_outbound_order` + `saifute_outbound_detail` | 出库单    | `customer_stock_order` + `customer_stock_order_line`                                  | `orderType=OUTBOUND` 的客户出库单 | 直接收敛到客户收发家族 | 已迁入主单据   |
-| `saifute_interval`（`order_type=4`）                   | 出库编号区间 | `factory_number_reservation`，并按条件回填 `customer_stock_order_line.startNumber/endNumber` | 编号区间占用                      | 分流转换，不直拷    | 已迁入受支持部分 |
+| `saifute_outbound_order` + `saifute_outbound_detail` | 出库单    | `sales_stock_order` + `sales_stock_order_line`                                  | `orderType=OUTBOUND` 的销售出库单 | 直接收敛到销售业务家族 | 已迁入主单据   |
+| `saifute_interval`（`order_type=4`）                   | 出库编号区间 | `factory_number_reservation`，并按条件回填 `sales_stock_order_line.startNumber/endNumber` | 编号区间占用                      | 分流转换，不直拷    | 已迁入受支持部分 |
 
 当前状态：
 
@@ -226,11 +226,11 @@
 - 区间表 `161` 条旧记录中，`80` 条 `order_type=4` 进入 live reservation
 - 其余 `81` 条进入 `archived_intervals`，其中 `74` 条为 `order_type=2`，`5` 条为 `order_type=7`，`2` 条为归档的 `order_type=4`
 
-### 5.4 客户收发域：销售退货
+### 5.4 销售业务域：销售退货
 
 | 旧表组                                                          | 旧作用        | 新表组                                                            | 新作用                           | 迁移方式                        | 当前状态     |
 | ------------------------------------------------------------ | ---------- | -------------------------------------------------------------- | ----------------------------- | --------------------------- | -------- |
-| `saifute_sales_return_order` + `saifute_sales_return_detail` | 销售退货单      | `customer_stock_order` + `customer_stock_order_line`           | `orderType=SALES_RETURN` 的退货单 | formal admission 先入正式表，关系后补 | 已部分迁入    |
+| `saifute_sales_return_order` + `saifute_sales_return_detail` | 销售退货单      | `sales_stock_order` + `sales_stock_order_line`           | `orderType=SALES_RETURN` 的退货单 | formal admission 先入正式表，关系后补 | 已部分迁入    |
 | 旧头表 `source_id/source_type`、旧明细关系线索                          | 退货对出库的来源关系 | `document_relation`、`document_line_relation`、`sourceDocument*` | 退货上下游关系与行内来源                  | 恢复式迁移，不强造关系                 | 仍有后续增强空间 |
 
 当前状态：
@@ -280,7 +280,7 @@
 
 | 旧表组                                                      | 旧作用          | 新表组                                 | 新作用           | 迁移方式              | 当前状态    |
 | -------------------------------------------------------- | ------------ | ----------------------------------- | ------------- | ----------------- | ------- |
-| `saifute_composite_product` + `saifute_product_material` | 项目头与项目物料消耗明细 | `project` + `project_material_line` | 项目事务数据与项目物料消耗 | 事务型迁移，不是静态 BOM 复制 | 已迁入 |
+| `saifute_composite_product` + `saifute_product_material` | 项目头与项目物料消耗明细 | `rd_project` + `rd_project_material_line` | 研发项目事务数据与项目物料消耗 | 事务型迁移，不是静态 BOM 复制 | 已迁入 |
 
 当前状态：
 
@@ -372,7 +372,7 @@
 - `map_personnel`
 - `map_workshop`
 - `map_stock_in_order` / `_line`
-- `map_customer_stock_order` / `_line`
+- `map_sales_stock_order` / `_line`
 - `map_workshop_material_order` / `_line`
 - `map_project` / `_line`
 - `map_factory_number_reservation`

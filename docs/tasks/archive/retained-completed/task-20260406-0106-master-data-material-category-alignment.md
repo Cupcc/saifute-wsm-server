@@ -105,9 +105,9 @@
   - `docs/acceptance-tests/**`
   - `src/modules/inventory-core/**`
   - `src/modules/inbound/**`
-  - `src/modules/customer/**`
+  - `src/modules/sales/**`
   - `src/modules/workshop-material/**`
-  - `src/modules/project/**`
+  - `src/modules/rd-project/**`
   - `src/modules/rbac/**`
   - `web/src/router/**`
   - `web/src/layout/**`
@@ -167,9 +167,9 @@
   - `src/modules/rbac/**`
   - `src/modules/inventory-core/**`
   - `src/modules/inbound/**`
-  - `src/modules/customer/**`
+  - `src/modules/sales/**`
   - `src/modules/workshop-material/**`
-  - `src/modules/project/**`
+  - `src/modules/rd-project/**`
   - `web/src/router/**`
 - Constraints and non-goals:
   - 不引入新的跨模块写路径，不改 `inventory-core`、`audit`、`rbac` 语义。

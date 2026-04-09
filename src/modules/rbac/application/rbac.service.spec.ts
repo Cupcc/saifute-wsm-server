@@ -45,7 +45,7 @@ describe("RbacService", () => {
       "InboundBusiness",
       "WorkshopMaterialBusiness",
       "InventoryBusiness",
-      "CustomerBusiness",
+      "SalesBusiness",
       "RdSubwarehouse",
     ]);
     const rdRouteNames =
@@ -62,7 +62,7 @@ describe("RbacService", () => {
     expect(rdRouteNames).not.toEqual(
       expect.arrayContaining([
         "RdWorkbench",
-        "RdProjectConsumption",
+        "RdProjectLedger",
         "RdStocktakeOrders",
       ]),
     );

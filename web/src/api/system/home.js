@@ -61,7 +61,7 @@ function groupTrendRowsByDate(rows = []) {
 
     if (row.trendType === "INBOUND") {
       target.inboundCount += documentCount;
-    } else if (row.trendType === "OUTBOUND") {
+    } else if (row.trendType === "SALES") {
       target.outboundCount += documentCount;
     } else if (row.trendType === "WORKSHOP_MATERIAL") {
       target.workshopMaterialCount += documentCount;
@@ -97,11 +97,11 @@ export async function getHomeStatistics() {
     dateFrom,
     "INBOUND",
   );
-  const outboundToday = getDocumentCountByType(trendItems, dateTo, "OUTBOUND");
+  const outboundToday = getDocumentCountByType(trendItems, dateTo, "SALES");
   const outboundYesterday = getDocumentCountByType(
     trendItems,
     dateFrom,
-    "OUTBOUND",
+    "SALES",
   );
   const workshopMaterialToday = getDocumentCountByType(
     trendItems,

@@ -196,7 +196,7 @@
     "missingMaterialUnitCount": 21
   },
   "counts": {
-    "customer": {
+    "sales": {
       "archivedPayloads": 52,
       "blocked": 0,
       "planned": 184,
@@ -235,7 +235,7 @@
   },
   "duplicateRewrites": [
     {
-      "entity": "customer",
+      "entity": "sales",
       "keptLegacyId": 14,
       "originalCode": "2",
       "rewritten": [
@@ -486,14 +486,14 @@
     "workshop",
     "supplier",
     "personnel",
-    "customer",
+    "sales",
     "material"
   ],
   "executionRequested": true,
   "executionResult": {
     "archivedPayloadCount": 454,
     "insertedOrUpdatedCounts": {
-      "customer": 184,
+      "sales": 184,
       "material": 437,
       "materialCategory": 8,
       "personnel": 51,
@@ -501,7 +501,7 @@
       "workshop": 13
     },
     "skippedBlockedCounts": {
-      "customer": 0,
+      "sales": 0,
       "material": 21,
       "materialCategory": 0,
       "personnel": 0,
@@ -513,7 +513,7 @@
   "mode": "execute",
   "stagingReady": true,
   "targetCounts": {
-    "customer": {
+    "sales": {
       "mapRows": 0,
       "targetRows": 0
     },

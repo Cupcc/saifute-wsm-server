@@ -33,7 +33,7 @@ const TARGET_TABLES = [
   "workshop",
   "supplier",
   "personnel",
-  "customer",
+  "sales",
   "material",
 ] as const;
 

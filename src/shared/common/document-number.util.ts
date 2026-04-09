@@ -1,5 +1,5 @@
 import { ConflictException } from "@nestjs/common";
-import { Prisma } from "../../generated/prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
 
 const DEFAULT_MAX_ATTEMPTS = 8;
 

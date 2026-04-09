@@ -5,7 +5,7 @@ import {
   LoginLogResult,
   type OperLog,
   OperLogStatus,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import type { AuthAuditEvent } from "../../../shared/events/auth-audit.event";
 import { AuditLogRepository } from "../infrastructure/audit-log.repository";
 

@@ -7,7 +7,7 @@ import {
   AuditStatusSnapshot,
   DocumentFamily,
   type Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { ApprovalRepository } from "../infrastructure/approval.repository";
 

@@ -5,7 +5,7 @@
     "missingMaterialUnitCount": 21
   },
   "counts": {
-    "customer": {
+    "sales": {
       "archivedPayloads": 52,
       "blocked": 0,
       "planned": 184,
@@ -55,7 +55,7 @@
   },
   "targetDatabaseName": "saifute-wsm",
   "targetSummary": {
-    "customer": {
+    "sales": {
       "duplicateCodes": [],
       "expectedMigratedRows": 184,
       "mapRows": 184,

@@ -5,7 +5,7 @@ import type { Request } from "express";
 import {
   LoginLogAction,
   LoginLogResult,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import { AuthService } from "../../auth/application/auth.service";
 import { AuthStateRepository } from "../../auth/infrastructure/auth-state.repository";

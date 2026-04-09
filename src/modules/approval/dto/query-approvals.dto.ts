@@ -3,7 +3,7 @@ import { IsEnum, IsInt, IsOptional, Min } from "class-validator";
 import {
   AuditStatusSnapshot,
   DocumentFamily,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 
 export class QueryApprovalsDto {
   @IsOptional()

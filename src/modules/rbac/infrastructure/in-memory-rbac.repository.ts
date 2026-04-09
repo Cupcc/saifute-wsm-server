@@ -1,6 +1,6 @@
 import { Injectable, Optional } from "@nestjs/common";
+import type { Prisma } from "../../../../generated/prisma/client";
 import { createSystemManagementSeedState } from "../../../../prisma/system-management.seed";
-import type { Prisma } from "../../../generated/prisma/client";
 import {
   compareHash,
   hashText,
@@ -317,34 +317,34 @@ export class InMemoryRbacRepository {
       ],
     },
     {
-      name: "CustomerBusiness",
-      path: "/customer",
+      name: "SalesBusiness",
+      path: "/sales",
       component: "layout/index",
       permissions: [],
       children: [
         {
-          name: "CustomerOrder",
-          path: "/customer/order",
-          component: "customer/order/index",
-          permissions: ["customer:order:list"],
+          name: "SalesOrder",
+          path: "/sales/order",
+          component: "sales/order/index",
+          permissions: ["sales:order:list"],
         },
         {
-          name: "CustomerDetail",
-          path: "/customer/detail",
-          component: "customer/detail/index",
-          permissions: ["customer:order:list"],
+          name: "SalesDetail",
+          path: "/sales/detail",
+          component: "sales/detail/index",
+          permissions: ["sales:order:list"],
         },
         {
-          name: "CustomerSalesReturnOrder",
-          path: "/customer/salesReturnOrder",
-          component: "customer/salesReturnOrder/index",
-          permissions: ["customer:sales-return:list"],
+          name: "SalesReturnOrder",
+          path: "/sales/salesReturnOrder",
+          component: "sales/salesReturnOrder/index",
+          permissions: ["sales:return:list"],
         },
         {
-          name: "CustomerSalesReturnDetail",
-          path: "/customer/salesReturnDetail",
-          component: "customer/salesReturnDetail/index",
-          permissions: ["customer:sales-return:list"],
+          name: "SalesReturnDetail",
+          path: "/sales/salesReturnDetail",
+          component: "sales/salesReturnDetail/index",
+          permissions: ["sales:return:list"],
         },
       ],
     },
@@ -385,10 +385,10 @@ export class InMemoryRbacRepository {
           permissions: ["rd:handoff-order:list"],
         },
         {
-          name: "RdProjectConsumption",
-          path: "/rd/project-consumption",
-          component: "rd/project-consumption/index",
-          permissions: ["project:list"],
+          name: "RdProjectLedger",
+          path: "/rd/projects",
+          component: "rd/projects/index",
+          permissions: ["rd:project:list"],
         },
         {
           name: "RdScrapOrders",

@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -49,13 +49,18 @@ enum InventoryOperationType {
   PICK_OUT
   RETURN_IN
   SCRAP_OUT
-  PROJECT_CONSUMPTION_OUT
+  RD_PROJECT_OUT
   RD_HANDOFF_OUT
   RD_HANDOFF_IN
   RD_STOCKTAKE_IN
   RD_STOCKTAKE_OUT
   REVERSAL_IN
   REVERSAL_OUT
+}
+
+enum StockScopeType {
+  MAIN
+  RD_SUB
 }
 
 enum RdMaterialStatus {
@@ -94,9 +99,9 @@ enum FactoryNumberReservationStatus {
 
 enum DocumentFamily {
   STOCK_IN
-  CUSTOMER_STOCK
+  SALES_STOCK
   WORKSHOP_MATERIAL
-  PROJECT
+  RD_PROJECT
 }
 
 enum StockInOrderType {
@@ -104,7 +109,7 @@ enum StockInOrderType {
   PRODUCTION_RECEIPT
 }
 
-enum CustomerStockOrderType {
+enum SalesStockOrderType {
   OUTBOUND
   SALES_RETURN
 }
@@ -115,7 +120,7 @@ enum WorkshopMaterialOrderType {
   SCRAP
 }
 
-enum ProjectMaterialActionType {
+enum RdProjectMaterialActionType {
   PICK
   RETURN
   SCRAP
@@ -128,9 +133,9 @@ enum DocumentRelationType {
   TRACEABILITY_REFERENCE
 }
 
-enum AllocationTargetType {
+enum ProjectTargetType {
   RD_PROJECT
-  CUSTOMER_PROJECT
+  SALES_PROJECT
   PRODUCTION_ORDER
   WORKSHOP_COMMON
   OFFICE_COMMON
@@ -214,14 +219,15 @@ model Material {
   factoryNumberReservations  FactoryNumberReservation[]
   stockInOrderLines          StockInOrderLine[]
   stockInPriceCorrectionLines StockInPriceCorrectionOrderLine[]
-  customerStockOrderLines    CustomerStockOrderLine[]
+  salesStockOrderLines    SalesStockOrderLine[]
   workshopMaterialOrderLines WorkshopMaterialOrderLine[]
-  projectMaterialLines       ProjectMaterialLine[]
-  projectBomLines            ProjectBomLine[]
-  projectMaterialActionLines ProjectMaterialActionLine[]
+  rdProjectMaterialLines       RdProjectMaterialLine[]
+  rdProjectBomLines            RdProjectBomLine[]
+  rdProjectMaterialActionLines RdProjectMaterialActionLine[]
   rdHandoffOrderLines        RdHandoffOrderLine[]
   rdProcurementRequestLines  RdProcurementRequestLine[]
   rdStocktakeOrderLines      RdStocktakeOrderLine[]
+  monthlySnapshots           InventoryMonthlySnapshot[]
 
   @@index([categoryId])
   @@map("material")
@@ -242,8 +248,8 @@ model Customer {
   updatedAt           DateTime             @updatedAt
   parent              Customer?            @relation("CustomerTree", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   children            Customer[]           @relation("CustomerTree")
-  customerStockOrders CustomerStockOrder[]
-  projects            Project[]
+  salesStockOrders SalesStockOrder[]
+  rdProjects            RdProject[]
 
   @@index([parentId])
   @@map("customer")
@@ -262,7 +268,7 @@ model Supplier {
   updatedBy             String?                @db.VarChar(64)
   updatedAt             DateTime               @updatedAt
   stockInOrders         StockInOrder[]
-  projects              Project[]
+  rdProjects              RdProject[]
   rdProcurementRequests RdProcurementRequest[]
 
   @@map("supplier")
@@ -277,10 +283,10 @@ model Personnel {
   updatedBy              String?                 @db.VarChar(64)
   updatedAt              DateTime                @updatedAt
   stockInOrders          StockInOrder[]          @relation("StockInOrderHandler")
-  customerStockOrders    CustomerStockOrder[]    @relation("CustomerStockOrderHandler")
+  salesStockOrders    SalesStockOrder[]    @relation("SalesStockOrderHandler")
   workshopMaterialOrders WorkshopMaterialOrder[] @relation("WorkshopMaterialOrderHandler")
   defaultHandlerWorkshops Workshop[]             @relation("WorkshopDefaultHandler")
-  managedProjects        Project[]               @relation("ProjectManager")
+  managedRdProjects        RdProject[]               @relation("RdProjectManager")
   rdHandoffOrders        RdHandoffOrder[]        @relation("RdHandoffOrderHandler")
   rdProcurementRequests  RdProcurementRequest[]  @relation("RdProcurementRequestHandler")
 
@@ -296,16 +302,15 @@ model Workshop {
   createdAt                 DateTime                   @default(now())
   updatedBy                 String?                    @db.VarChar(64)
   updatedAt                 DateTime                   @updatedAt
-  inventoryBalances         InventoryBalance[]
   inventoryLogs             InventoryLog[]
   factoryNumberReservations FactoryNumberReservation[]
   stockInOrders             StockInOrder[]
-  customerStockOrders       CustomerStockOrder[]
+  salesStockOrders       SalesStockOrder[]
   stockInPriceCorrectionOrders StockInPriceCorrectionOrder[]
   workshopMaterialOrders    WorkshopMaterialOrder[]
-  projectMaterialActions    ProjectMaterialAction[]
+  rdProjectMaterialActions    RdProjectMaterialAction[]
   defaultHandlerPersonnel   Personnel?                 @relation("WorkshopDefaultHandler", fields: [defaultHandlerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  projects                  Project[]
+  rdProjects                  RdProject[]
   rdHandoffSourceOrders     RdHandoffOrder[]           @relation("RdHandoffSourceWorkshop")
   rdHandoffTargetOrders     RdHandoffOrder[]           @relation("RdHandoffTargetWorkshop")
   rdProcurementRequests     RdProcurementRequest[]
@@ -319,6 +324,7 @@ model StockScope {
   id                        Int                        @id @default(autoincrement())
   scopeCode                 String                     @unique @db.VarChar(64)
   scopeName                 String                     @db.VarChar(128)
+  scopeType                 StockScopeType             @default(MAIN)
   status                    MasterDataStatus           @default(ACTIVE)
   createdBy                 String?                    @db.VarChar(64)
   createdAt                 DateTime                   @default(now())
@@ -328,15 +334,16 @@ model StockScope {
   inventoryLogs             InventoryLog[]
   factoryNumberReservations FactoryNumberReservation[]
   stockInOrders             StockInOrder[]
-  customerStockOrders       CustomerStockOrder[]
+  salesStockOrders       SalesStockOrder[]
   stockInPriceCorrectionOrders StockInPriceCorrectionOrder[]
   workshopMaterialOrders    WorkshopMaterialOrder[]
-  projectMaterialActions    ProjectMaterialAction[]
-  projects                  Project[]
+  rdProjectMaterialActions    RdProjectMaterialAction[]
+  rdProjects                  RdProject[]
   rdHandoffSourceOrders     RdHandoffOrder[]           @relation("RdHandoffSourceStockScope")
   rdHandoffTargetOrders     RdHandoffOrder[]           @relation("RdHandoffTargetStockScope")
   rdProcurementRequests     RdProcurementRequest[]
   rdStocktakeOrders         RdStocktakeOrder[]
+  monthlySnapshots          InventoryMonthlySnapshot[]
 
   @@map("stock_scope")
 }
@@ -345,7 +352,6 @@ model InventoryBalance {
   id             Int            @id @default(autoincrement())
   materialId     Int
   stockScopeId   Int?
-  workshopId     Int?
   quantityOnHand Decimal        @default(0) @db.Decimal(18, 6)
   rowVersion     Int            @default(0)
   createdBy      String?        @db.VarChar(64)
@@ -354,18 +360,16 @@ model InventoryBalance {
   updatedAt      DateTime       @updatedAt
   material       Material       @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   stockScope     StockScope?    @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  workshop       Workshop?      @relation(fields: [workshopId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   logs           InventoryLog[]
 
   @@unique([materialId, stockScopeId])
   @@index([stockScopeId])
-  @@index([workshopId])
   @@map("inventory_balance")
 }
 
-model AllocationTarget {
+model ProjectTarget {
   id                 Int                  @id @default(autoincrement())
-  targetType         AllocationTargetType
+  targetType         ProjectTargetType
   targetCode         String               @unique @db.VarChar(64)
   targetName         String               @db.VarChar(128)
   sourceDocumentType String?              @db.VarChar(64)
@@ -376,12 +380,12 @@ model AllocationTarget {
   createdAt          DateTime             @default(now())
   updatedBy          String?              @db.VarChar(64)
   updatedAt          DateTime             @updatedAt
-  project            Project?
+  rdProject       RdProject?
   inventoryLogs      InventoryLog[]
 
   @@unique([targetType, sourceDocumentType, sourceDocumentId])
   @@index([targetType])
-  @@map("allocation_target")
+  @@map("project_target")
 }
 
 model InventoryLog {
@@ -390,7 +394,8 @@ model InventoryLog {
   materialId                Int
   stockScopeId              Int?
   workshopId                Int?
-  allocationTargetId        Int?
+  projectTargetId        Int?
+  bizDate                   DateTime                  @db.Date
   direction                 StockDirection
   operationType             InventoryOperationType
   businessModule            String                    @db.VarChar(64)
@@ -412,7 +417,7 @@ model InventoryLog {
   material                  Material                  @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   stockScope                StockScope?               @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   workshop                  Workshop?                 @relation(fields: [workshopId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  allocationTarget          AllocationTarget?         @relation(fields: [allocationTargetId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  projectTarget          ProjectTarget?         @relation(fields: [projectTargetId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   reversalOfLog             InventoryLog?             @relation("InventoryLogReversal", fields: [reversalOfLogId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   reversedByLogs            InventoryLog[]            @relation("InventoryLogReversal")
   allocatedSourceUsages     InventorySourceUsage[]
@@ -424,10 +429,14 @@ model InventoryLog {
 
   @@index([balanceId])
   @@index([stockScopeId])
-  @@index([allocationTargetId])
+  @@index([projectTargetId])
   @@index([businessDocumentType, businessDocumentId])
   @@index([businessDocumentType, businessDocumentId, businessDocumentLineId])
   @@index([occurredAt])
+  @@index([bizDate, direction])
+  @@index([bizDate, operationType])
+  @@index([stockScopeId, bizDate])
+  @@index([workshopId, operationType, bizDate])
   @@map("inventory_log")
 }
 
@@ -452,6 +461,29 @@ model InventorySourceUsage {
   @@index([materialId])
   @@index([consumerDocumentType, consumerDocumentId])
   @@map("inventory_source_usage")
+}
+
+model InventoryMonthlySnapshot {
+  id             Int         @id @default(autoincrement())
+  yearMonth      String      @db.Char(7)
+  materialId     Int
+  stockScopeId   Int?
+
+  openingQty     Decimal     @default(0) @db.Decimal(18, 6)
+  closingQty     Decimal     @default(0) @db.Decimal(18, 6)
+  totalInQty     Decimal     @default(0) @db.Decimal(18, 6)
+  totalInAmount  Decimal     @default(0) @db.Decimal(18, 2)
+  totalOutQty    Decimal     @default(0) @db.Decimal(18, 6)
+  totalOutAmount Decimal     @default(0) @db.Decimal(18, 2)
+
+  snapshotAt     DateTime    @default(now())
+  material       Material    @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  stockScope     StockScope? @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([yearMonth, materialId, stockScopeId])
+  @@index([yearMonth])
+  @@index([stockScopeId, yearMonth])
+  @@map("inventory_monthly_snapshot")
 }
 
 model FactoryNumberReservation {
@@ -583,10 +615,10 @@ model StockInOrderLine {
   @@map("stock_in_order_line")
 }
 
-model CustomerStockOrder {
+model SalesStockOrder {
   id                    Int                      @id @default(autoincrement())
   documentNo            String                   @unique @db.VarChar(64)
-  orderType             CustomerStockOrderType
+  orderType             SalesStockOrderType
   bizDate               DateTime                 @db.Date
   customerId            Int?
   handlerPersonnelId    Int?
@@ -611,19 +643,19 @@ model CustomerStockOrder {
   updatedBy             String?                  @db.VarChar(64)
   updatedAt             DateTime                 @updatedAt
   customer              Customer?                @relation(fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  handlerPersonnel      Personnel?               @relation("CustomerStockOrderHandler", fields: [handlerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  handlerPersonnel      Personnel?               @relation("SalesStockOrderHandler", fields: [handlerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   stockScope            StockScope?              @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   workshop              Workshop                 @relation(fields: [workshopId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  lines                 CustomerStockOrderLine[]
+  lines                 SalesStockOrderLine[]
 
   @@index([bizDate, orderType])
   @@index([customerId])
   @@index([stockScopeId])
   @@index([workshopId])
-  @@map("customer_stock_order")
+  @@map("sales_stock_order")
 }
 
-model CustomerStockOrderLine {
+model SalesStockOrderLine {
   id                   Int                @id @default(autoincrement())
   orderId              Int
   lineNo               Int
@@ -648,13 +680,13 @@ model CustomerStockOrderLine {
   createdAt            DateTime           @default(now())
   updatedBy            String?            @db.VarChar(64)
   updatedAt            DateTime           @updatedAt
-  order                CustomerStockOrder @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  order                SalesStockOrder @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   material             Material           @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([orderId, lineNo])
   @@index([materialId])
   @@index([sourceDocumentType, sourceDocumentId, sourceDocumentLineId])
-  @@map("customer_stock_order_line")
+  @@map("sales_stock_order_line")
 }
 
 model StockInPriceCorrectionOrder {
@@ -787,7 +819,7 @@ model WorkshopMaterialOrderLine {
   @@map("workshop_material_order_line")
 }
 
-model Project {
+model RdProject {
   id                    Int                     @id @default(autoincrement())
   projectCode           String                  @unique @db.VarChar(64)
   projectName           String                  @db.VarChar(128)
@@ -797,7 +829,7 @@ model Project {
   managerPersonnelId    Int?
   stockScopeId          Int?
   workshopId            Int
-  allocationTargetId    Int?                    @unique
+  projectTargetId       Int?                    @unique
   lifecycleStatus       DocumentLifecycleStatus @default(EFFECTIVE)
   auditStatusSnapshot   AuditStatusSnapshot     @default(NOT_REQUIRED)
   inventoryEffectStatus InventoryEffectStatus   @default(POSTED)
@@ -820,23 +852,23 @@ model Project {
   updatedAt             DateTime                @updatedAt
   customer              Customer?               @relation(fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   supplier              Supplier?               @relation(fields: [supplierId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  managerPersonnel      Personnel?              @relation("ProjectManager", fields: [managerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  managerPersonnel      Personnel?              @relation("RdProjectManager", fields: [managerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   stockScope            StockScope?             @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   workshop              Workshop                @relation(fields: [workshopId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  allocationTarget      AllocationTarget?       @relation(fields: [allocationTargetId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  materialLines         ProjectMaterialLine[]
-  bomLines              ProjectBomLine[]
-  materialActions       ProjectMaterialAction[]
+  projectTarget         ProjectTarget?       @relation(fields: [projectTargetId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  materialLines         RdProjectMaterialLine[]
+  bomLines              RdProjectBomLine[]
+  materialActions       RdProjectMaterialAction[]
 
   @@index([bizDate])
   @@index([customerId])
   @@index([supplierId])
   @@index([stockScopeId])
   @@index([workshopId])
-  @@map("project")
+  @@map("rd_project")
 }
 
-model ProjectMaterialLine {
+model RdProjectMaterialLine {
   id                   Int      @id @default(autoincrement())
   projectId            Int
   lineNo               Int
@@ -855,15 +887,15 @@ model ProjectMaterialLine {
   createdAt            DateTime @default(now())
   updatedBy            String?  @db.VarChar(64)
   updatedAt            DateTime @updatedAt
-  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  material             Material @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rdProject             RdProject @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  material             Material     @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([projectId, lineNo])
   @@index([materialId])
-  @@map("project_material_line")
+  @@map("rd_project_material_line")
 }
 
-model ProjectBomLine {
+model RdProjectBomLine {
   id                   Int      @id @default(autoincrement())
   projectId            Int
   lineNo               Int
@@ -880,19 +912,19 @@ model ProjectBomLine {
   createdAt            DateTime @default(now())
   updatedBy            String?  @db.VarChar(64)
   updatedAt            DateTime @updatedAt
-  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  material             Material @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rdProject             RdProject @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  material             Material     @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([projectId, lineNo])
   @@index([materialId])
-  @@map("project_bom_line")
+  @@map("rd_project_bom_line")
 }
 
-model ProjectMaterialAction {
+model RdProjectMaterialAction {
   id                    Int                       @id @default(autoincrement())
   documentNo            String                    @unique @db.VarChar(64)
   projectId             Int
-  actionType            ProjectMaterialActionType
+  actionType            RdProjectMaterialActionType
   bizDate               DateTime                  @db.Date
   stockScopeId          Int?
   workshopId            Int
@@ -908,18 +940,18 @@ model ProjectMaterialAction {
   createdAt             DateTime                  @default(now())
   updatedBy             String?                   @db.VarChar(64)
   updatedAt             DateTime                  @updatedAt
-  project               Project                   @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  rdProject             RdProject              @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   stockScope            StockScope?               @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   workshop              Workshop                  @relation(fields: [workshopId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  lines                 ProjectMaterialActionLine[]
+  lines                 RdProjectMaterialActionLine[]
 
   @@index([projectId, bizDate])
   @@index([stockScopeId])
   @@index([workshopId])
-  @@map("project_material_action")
+  @@map("rd_project_material_action")
 }
 
-model ProjectMaterialActionLine {
+model RdProjectMaterialActionLine {
   id                   Int                   @id @default(autoincrement())
   actionId             Int
   lineNo               Int
@@ -941,13 +973,13 @@ model ProjectMaterialActionLine {
   createdAt            DateTime              @default(now())
   updatedBy            String?               @db.VarChar(64)
   updatedAt            DateTime              @updatedAt
-  action               ProjectMaterialAction @relation(fields: [actionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  action               RdProjectMaterialAction @relation(fields: [actionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   material             Material              @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([actionId, lineNo])
   @@index([materialId])
   @@index([sourceDocumentType, sourceDocumentId, sourceDocumentLineId])
-  @@map("project_material_action_line")
+  @@map("rd_project_material_action_line")
 }
 
 model RdHandoffOrder {

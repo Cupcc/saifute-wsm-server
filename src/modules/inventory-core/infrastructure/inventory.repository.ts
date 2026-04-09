@@ -4,7 +4,7 @@ import {
   InventoryOperationType,
   Prisma,
   StockDirection,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type InventoryDbClient = Prisma.TransactionClient | PrismaService;
@@ -32,7 +32,7 @@ export class InventoryRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        include: { material: true, stockScope: true, workshop: true },
+        include: { material: true, stockScope: true },
       }),
       this.prisma.inventoryBalance.count({ where }),
     ]);
@@ -62,8 +62,8 @@ export class InventoryRepository {
     businessDocumentType?: string;
     businessDocumentNumber?: string;
     operationType?: string;
-    occurredAtFrom?: Date;
-    occurredAtTo?: Date;
+    bizDateFrom?: Date;
+    bizDateTo?: Date;
     limit: number;
     offset: number;
   }) {
@@ -87,13 +87,13 @@ export class InventoryRepository {
       where.operationType =
         params.operationType as Prisma.EnumInventoryOperationTypeFilter;
     }
-    if (params.occurredAtFrom || params.occurredAtTo) {
-      where.occurredAt = {};
-      if (params.occurredAtFrom) {
-        where.occurredAt.gte = params.occurredAtFrom;
+    if (params.bizDateFrom || params.bizDateTo) {
+      where.bizDate = {};
+      if (params.bizDateFrom) {
+        where.bizDate.gte = params.bizDateFrom;
       }
-      if (params.occurredAtTo) {
-        where.occurredAt.lte = params.occurredAtTo;
+      if (params.bizDateTo) {
+        where.bizDate.lte = params.bizDateTo;
       }
     }
 
@@ -102,7 +102,7 @@ export class InventoryRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        orderBy: { occurredAt: "desc" },
+        orderBy: [{ bizDate: "desc" }, { occurredAt: "desc" }, { id: "desc" }],
         include: { material: true, stockScope: true, workshop: true },
       }),
       this.prisma.inventoryLog.count({ where }),
@@ -210,7 +210,7 @@ export class InventoryRepository {
           businessDocumentId: params.businessDocumentId,
           reversalOfLogId: null,
         },
-        orderBy: { occurredAt: "asc" },
+        orderBy: [{ bizDate: "asc" }, { occurredAt: "asc" }, { id: "asc" }],
       }),
       db.inventoryLog.findMany({
         where: {
@@ -320,7 +320,7 @@ export class InventoryRepository {
           select: { allocatedQty: true, releasedQty: true },
         },
       },
-      orderBy: [{ occurredAt: "asc" }, { id: "asc" }],
+      orderBy: [{ bizDate: "asc" }, { occurredAt: "asc" }, { id: "asc" }],
     });
 
     return logs

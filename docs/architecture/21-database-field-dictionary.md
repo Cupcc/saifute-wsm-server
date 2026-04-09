@@ -26,7 +26,7 @@
 
 ### 2.2 作废字段
 
-可作废的单据主表（`stock_in_order`、`customer_stock_order`、`workshop_material_order`、`project`、`rd_handoff_order`、`rd_procurement_request`、`rd_stocktake_order`）额外包含：
+可作废的单据主表（`stock_in_order`、`sales_stock_order`、`workshop_material_order`、`rd_project`、`rd_handoff_order`、`rd_procurement_request`、`rd_stocktake_order`）额外包含：
 
 
 | 字段名          | 数据类型         | 必填  | 默认值 | 说明    |
@@ -190,17 +190,17 @@
 | `id`             | INT           | 是   | 自增  | PK  | 主键                                |
 | `materialId`     | INT           | 是   | —   | 联合① | 物料 ID → `material.id`             |
 | `stockScopeId`   | INT           | 否   | —   | 联合① | 库存范围 ID → `stock_scope.id`        |
-| `workshopId`     | INT           | 是   | —   | 联合② | 车间 ID → `workshop.id`，用于归属与成本核算维度 |
 | `quantityOnHand` | DECIMAL(18,6) | 是   | `0` | —   | 当前库存数量                            |
 | `rowVersion`     | INT           | 是   | `0` | —   | 乐观锁版本号，每次更新递增                     |
 
 
+> 说明：`inventory_balance` 仅以 `stockScopeId` 作为库存轴，车间归属转而通过 `inventory_log.workshopId` 以及关联单据字段承载。
+
 唯一约束：
 
 - ① `materialId + stockScopeId`
-- ② `materialId + workshopId`
 
-索引：`stockScopeId`、`workshopId`
+索引：`stockScopeId`
 
 ### 4.2 `inventory_log` — 库存流水
 
@@ -211,24 +211,25 @@
 | `balanceId`              | INT               | 是   | —       | —   | 关联的库存现值记录 → `inventory_balance.id` |
 | `materialId`             | INT               | 是   | —       | —   | 物料 ID → `material.id`              |
 | `stockScopeId`           | INT               | 否   | —       | —   | 库存范围 ID → `stock_scope.id`         |
-| `workshopId`             | INT               | 是   | —       | —   | 车间 ID → `workshop.id`              |
-| `allocationTargetId`     | INT               | 否   | —       | —   | 统一归集对象 ID → `allocation_target.id` |
-| `direction`              | ENUM(`IN`, `OUT`) | 是   | —       | —   | 库存方向：入库 / 出库                       |
-| `operationType`          | ENUM(见下文)         | 是   | —       | —   | 操作类型，标识具体业务动作                      |
-| `businessModule`         | VARCHAR(64)       | 是   | —       | —   | 来源业务模块标识（如 `inbound`、`customer`）   |
-| `businessDocumentType`   | VARCHAR(64)       | 是   | —       | —   | 来源单据类型（如 `ACCEPTANCE`、`OUTBOUND`）  |
-| `businessDocumentId`     | INT               | 是   | —       | —   | 来源单据主表 ID                          |
-| `businessDocumentNumber` | VARCHAR(64)       | 是   | —       | —   | 来源单据编号快照                           |
-| `businessDocumentLineId` | INT               | 否   | —       | —   | 来源单据明细行 ID                         |
+| `bizDate`                | DATE              | 是   | —       | —   | 业务归属日期；月度 / 区间统计以此为准          |
+| `workshopId`             | INT               | 否   | —       | —   | 车间 ID → `workshop.id`，用于归属与成本核算维度 |
+| `projectTargetId`        | INT               | 否   | —       | —   | 统一目标维度 ID → `project_target.id` |
+| `direction`              | ENUM(`IN`, `OUT`) | 是   | —       | —   | 库存增减方向真源；与始终为正的 `changeQty` 一起表达结果 |
+| `operationType`          | ENUM(见下文)         | 是   | —       | —   | 库存动作语义；用于动作分类、报表口径与部分来源层规则 |
+| `businessModule`         | VARCHAR(64)       | 是   | —       | —   | 来源业务模块标识；用于来源分类与审计，不作单据关联键 |
+| `businessDocumentType`   | VARCHAR(64)       | 是   | —       | —   | 来源单据类型（如 `StockInOrder`、`SalesStockOrder`、`WorkshopMaterialOrder`） |
+| `businessDocumentId`     | INT               | 是   | —       | —   | 来源单据主表 ID；与 `businessDocumentType` 共同定位单据 |
+| `businessDocumentNumber` | VARCHAR(64)       | 是   | —       | —   | 来源单据编号快照；用于展示 / 搜索，不作真实关联键 |
+| `businessDocumentLineId` | INT               | 否   | —       | —   | 来源单据明细行 ID；存在时用于行级追溯，字段可空且不保证唯一 |
 | `changeQty`              | DECIMAL(18,6)     | 是   | —       | —   | 变动数量（始终为正值，方向由 `direction` 决定）     |
 | `beforeQty`              | DECIMAL(18,6)     | 是   | —       | —   | 变动前库存数量                            |
 | `afterQty`               | DECIMAL(18,6)     | 是   | —       | —   | 变动后库存数量                            |
 | `unitCost`               | DECIMAL(18,2)     | 否   | —       | —   | 单位成本                               |
 | `costAmount`             | DECIMAL(18,2)     | 否   | —       | —   | 成本金额                               |
 | `operatorId`             | VARCHAR(64)       | 否   | —       | —   | 操作人标识                              |
-| `occurredAt`             | DATETIME          | 是   | `now()` | —   | 业务发生时间                             |
-| `reversalOfLogId`        | INT               | 否   | —       | 是   | 所冲销的原始流水 ID（逆操作时填写），自关联 `id`       |
-| `idempotencyKey`         | VARCHAR(128)      | 是   | —       | 是   | 幂等键，防止重复写库存                        |
+| `occurredAt`             | DATETIME          | 是   | `now()` | —   | 流水实际落库时间戳；当前实现通常等同写入时间 |
+| `reversalOfLogId`        | INT               | 否   | —       | 是   | 所冲销的原始流水 ID；一条原流水最多对应一条逆操作，自关联 `id` |
+| `idempotencyKey`         | VARCHAR(128)      | 是   | —       | 是   | 幂等键；按单次库存副作用写入意图去重，保障重试不重复落账 |
 | `note`                   | VARCHAR(500)      | 否   | —       | —   | 备注                                 |
 
 
@@ -239,12 +240,12 @@
 | ------------------------- | --- | ------- |
 | `ACCEPTANCE_IN`           | IN  | 验收入库    |
 | `PRODUCTION_RECEIPT_IN`   | IN  | 生产入库    |
-| `OUTBOUND_OUT`            | OUT | 客户出库    |
+| `OUTBOUND_OUT`            | OUT | 销售出库    |
 | `SALES_RETURN_IN`         | IN  | 销售退货入库  |
 | `PICK_OUT`                | OUT | 车间领料出库  |
 | `RETURN_IN`               | IN  | 车间退料入库  |
 | `SCRAP_OUT`               | OUT | 报废出库    |
-| `PROJECT_CONSUMPTION_OUT` | OUT | 项目消耗出库  |
+| `RD_PROJECT_OUT`      | OUT | 研发项目出库  |
 | `RD_HANDOFF_OUT`          | OUT | 研发交接出库  |
 | `RD_HANDOFF_IN`           | IN  | 研发交接入库  |
 | `RD_STOCKTAKE_IN`         | IN  | 研发盘盈入库  |
@@ -254,8 +255,10 @@
 | `REVERSAL_IN`             | IN  | 逆操作冲回入库 |
 | `REVERSAL_OUT`            | OUT | 逆操作冲回出库 |
 
+> 说明：`balanceId` / `stockScopeId` 承载真实库存轴；`workshopId` / `projectTargetId` 只承载归属或目标维度，不参与库存余额唯一键。`bizDate` 是业务归属日期，`occurredAt` 是流水实际落库时间戳，补录历史单据时两者可不同。`direction` 是增减方向真源，`changeQty` 始终记录正值。`businessDocumentType` + `businessDocumentId` + `businessDocumentLineId` 用于把流水回连到具体单据行，`businessDocumentNumber` 仅保留编号快照。`operationType` 表示库存动作语义，不等同 `businessDocumentType`；同一单据类型可对应多个动作，逆操作也会沿用原单据类型但把动作改为 `REVERSAL_IN` / `REVERSAL_OUT`。`idempotencyKey` 用于防重复写入，`reversalOfLogId` 用于逆操作闭环。
 
-索引：`balanceId`、`stockScopeId`、`businessDocumentType + businessDocumentId`、`businessDocumentType + businessDocumentId + businessDocumentLineId`、`occurredAt`
+
+索引：`balanceId`、`stockScopeId`、`bizDate + direction`、`bizDate + operationType`、`stockScopeId + bizDate`、`workshopId + operationType + bizDate`、`businessDocumentType + businessDocumentId`、`businessDocumentType + businessDocumentId + businessDocumentLineId`、`occurredAt`
 
 ### 4.3 `inventory_source_usage` — 来源分配追踪
 
@@ -310,7 +313,7 @@
 | 字段名              | 数据类型                                                               | 必填  | 默认值       | 唯一  | 说明                              |
 | ---------------- | ------------------------------------------------------------------ | --- | --------- | --- | ------------------------------- |
 | `id`             | INT                                                                | 是   | 自增        | PK  | 主键                              |
-| `documentFamily` | ENUM(`STOCK_IN`, `CUSTOMER_STOCK`, `WORKSHOP_MATERIAL`, `PROJECT`) | 是   | —         | —   | 单据家族                            |
+| `documentFamily` | ENUM(`STOCK_IN`, `SALES_STOCK`, `WORKSHOP_MATERIAL`, `PROJECT`) | 是   | —         | —   | 单据家族                            |
 | `documentType`   | VARCHAR(64)                                                        | 是   | —         | 联合  | 单据类型（如 `ACCEPTANCE`、`OUTBOUND`） |
 | `documentId`     | INT                                                                | 是   | —         | 联合  | 单据主表 ID                         |
 | `documentNumber` | VARCHAR(64)                                                        | 是   | —         | —   | 单据编号（快照）                        |
@@ -443,9 +446,9 @@
 
 ---
 
-## 7. `customer` 客户收发家族表
+## 7. `sales` 销售业务家族表
 
-### 7.1 `customer_stock_order` — 客户收发主表
+### 7.1 `sales_stock_order` — 销售业务主表
 
 承载出库单（`OUTBOUND`）和销售退货单（`SALES_RETURN`）。
 
@@ -474,13 +477,13 @@
 
 索引：`bizDate + orderType`、`customerId`、`stockScopeId`、`workshopId`
 
-### 7.2 `customer_stock_order_line` — 客户收发明细
+### 7.2 `sales_stock_order_line` — 销售业务明细
 
 
 | 字段名                    | 数据类型          | 必填  | 默认值 | 唯一  | 说明                                          |
 | ---------------------- | ------------- | --- | --- | --- | ------------------------------------------- |
 | `id`                   | INT           | 是   | 自增  | PK  | 主键                                          |
-| `orderId`              | INT           | 是   | —   | 联合  | 主表 ID → `customer_stock_order.id`，主表删除时级联删除 |
+| `orderId`              | INT           | 是   | —   | 联合  | 主表 ID → `sales_stock_order.id`，主表删除时级联删除 |
 | `lineNo`               | INT           | 是   | —   | 联合  | 行号，同一主表内唯一                                  |
 | `materialId`           | INT           | 是   | —   | —   | 物料 ID → `material.id`                       |
 | `quantity`             | DECIMAL(18,6) | 是   | —   | —   | 数量                                          |
@@ -565,29 +568,29 @@
 
 ---
 
-## 9. `project` 项目家族表
+## 9. `rd_project*` 研发项目家族表
 
-### 9.1 `project` — 项目主表
+### 9.1 `RdProject` 逻辑模型 / `rd_project` 物理表
 
 
 | 字段名                    | 数据类型          | 必填  | 默认值 | 唯一  | 说明                         |
 | ---------------------- | ------------- | --- | --- | --- | -------------------------- |
 | `id`                   | INT           | 是   | 自增  | PK  | 主键                         |
-| `projectCode`          | VARCHAR(64)   | 是   | —   | 是   | 项目编码，全局唯一                  |
-| `projectName`          | VARCHAR(128)  | 是   | —   | —   | 项目名称                       |
+| `projectCode`       | VARCHAR(64)   | 是   | —   | 是   | 研发项目编码，全局唯一 |
+| `projectName`       | VARCHAR(128)  | 是   | —   | —   | 研发项目名称      |
 | `bizDate`              | DATE          | 是   | —   | —   | 业务日期                       |
 | `customerId`           | INT           | 否   | —   | —   | 客户 ID → `customer.id`      |
 | `supplierId`           | INT           | 否   | —   | —   | 供应商 ID → `supplier.id`     |
 | `managerPersonnelId`   | INT           | 否   | —   | —   | 项目负责人 ID → `personnel.id`  |
 | `stockScopeId`         | INT           | 否   | —   | —   | 库存范围 ID → `stock_scope.id` |
 | `workshopId`           | INT           | 是   | —   | —   | 车间 ID → `workshop.id`      |
-| `allocationTargetId`   | INT           | 否   | —   | 是   | 统一归集对象 ID → `allocation_target.id` |
+| `projectTargetId`   | INT           | 否   | —   | 是   | 统一目标维度 ID → `project_target.id` |
 | `revisionNo`           | INT           | 是   | `1` | —   | 修订版本号                      |
 | `customerCodeSnapshot` | VARCHAR(64)   | 否   | —   | —   | 客户编码快照                     |
 | `customerNameSnapshot` | VARCHAR(128)  | 否   | —   | —   | 客户名称快照                     |
 | `supplierCodeSnapshot` | VARCHAR(64)   | 否   | —   | —   | 供应商编码快照                    |
 | `supplierNameSnapshot` | VARCHAR(128)  | 否   | —   | —   | 供应商名称快照                    |
-| `managerNameSnapshot`  | VARCHAR(128)  | 否   | —   | —   | 项目负责人姓名快照                  |
+| `managerNameSnapshot`  | VARCHAR(128)  | 否   | —   | —   | 研发项目负责人姓名快照                |
 | `workshopNameSnapshot` | VARCHAR(128)  | 是   | —   | —   | 车间名称快照                     |
 | `totalQty`             | DECIMAL(18,6) | 是   | `0` | —   | 明细合计数量                     |
 | `totalAmount`          | DECIMAL(18,2) | 是   | `0` | —   | 明细合计金额                     |
@@ -596,17 +599,17 @@
 
 > 系统生命周期字段、作废字段、审计字段参见第 2 节。这里的 `lifecycleStatus` / `auditStatusSnapshot` / `inventoryEffectStatus` 用于系统控制与追溯，不代表项目业务阶段。`auditStatusSnapshot` 默认值为 `NOT_REQUIRED`（项目默认不接审核）。
 
-> 当前最小实现中，项目主档会自动生成一条 `allocation_target(targetType = RD_PROJECT)` 并通过 `allocationTargetId` 一对一绑定；不引入自由 `label` 作为核算真源。
+> 当前实现中，研发项目主档会自动生成一条 `project_target(targetType = RD_PROJECT)` 并通过 `projectTargetId` 一对一绑定；逻辑模型名为 `RdProject*`，物理层为 `rd_project*` 表。
 
 索引：`bizDate`、`customerId`、`supplierId`、`stockScopeId`、`workshopId`
 
-### 9.2 `project_material_line` — 项目物料明细
+### 9.2 `RdProjectMaterialLine` 逻辑模型 / `rd_project_material_line` 物理表
 
 
 | 字段名             | 数据类型          | 必填  | 默认值 | 唯一  | 说明                               |
 | --------------- | ------------- | --- | --- | --- | -------------------------------- |
 | `id`            | INT           | 是   | 自增  | PK  | 主键                               |
-| `projectId`     | INT           | 是   | —   | 联合  | 项目主表 ID → `project.id`，主表删除时级联删除 |
+| `projectId`  | INT           | 是   | —   | 联合  | 研发项目主表 ID |
 | `lineNo`        | INT           | 是   | —   | 联合  | 行号，同一项目内唯一                       |
 | `materialId`    | INT           | 是   | —   | —   | 物料 ID → `material.id`            |
 | `quantity`      | DECIMAL(18,6) | 是   | —   | —   | 数量                               |
@@ -687,8 +690,8 @@
 | `id`                   | INT           | 是   | 自增  | PK  | 主键                         |
 | `documentNo`           | VARCHAR(64)   | 是   | —   | 是   | 单据编号，全局唯一                  |
 | `bizDate`              | DATE          | 是   | —   | —   | 业务日期                       |
-| `projectCode`          | VARCHAR(64)   | 是   | —   | —   | 关联项目编码（冗余快照，不建外键）          |
-| `projectName`          | VARCHAR(128)  | 是   | —   | —   | 关联项目名称                     |
+| `projectCode`       | VARCHAR(64)   | 是   | —   | —   | 关联研发项目编码（冗余快照，不建外键；物理列映射 `projectCode`） |
+| `projectName`       | VARCHAR(128)  | 是   | —   | —   | 关联研发项目名称（物理列映射 `projectName`） |
 | `supplierId`           | INT           | 否   | —   | —   | 供应商 ID → `supplier.id`     |
 | `handlerPersonnelId`   | INT           | 否   | —   | —   | 经办人 ID → `personnel.id`    |
 | `stockScopeId`         | INT           | 否   | —   | —   | 库存范围 ID → `stock_scope.id` |
@@ -864,7 +867,7 @@
 | ------------------------ | ------------------------------------------------------------------ | --- | ------ | --- | -------------- |
 | `id`                     | INT                                                                | 是   | 自增     | PK  | 主键             |
 | `relationType`           | ENUM(见下文)                                                          | 是   | —      | 联合  | 关系类型           |
-| `upstreamFamily`         | ENUM(`STOCK_IN`, `CUSTOMER_STOCK`, `WORKSHOP_MATERIAL`, `PROJECT`) | 是   | —      | 联合  | 上游单据家族         |
+| `upstreamFamily`         | ENUM(`STOCK_IN`, `SALES_STOCK`, `WORKSHOP_MATERIAL`, `PROJECT`) | 是   | —      | 联合  | 上游单据家族         |
 | `upstreamDocumentType`   | VARCHAR(64)                                                        | 是   | —      | —   | 上游单据类型         |
 | `upstreamDocumentId`     | INT                                                                | 是   | —      | 联合  | 上游单据主表 ID      |
 | `downstreamFamily`       | ENUM(同上)                                                           | 是   | —      | 联合  | 下游单据家族         |

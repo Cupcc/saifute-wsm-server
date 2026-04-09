@@ -122,7 +122,7 @@
   - 修复后 re-review 通过，`Review status` 收口为 `reviewed-clean`。
 - Focused validation that passed:
   - `pnpm test -- src/modules/master-data/application/master-data.service.spec.ts src/modules/master-data/infrastructure/master-data.repository.spec.ts src/modules/master-data/controllers/master-data.controller.spec.ts`
-  - `pnpm test -- src/modules/inbound/application/inbound.service.spec.ts src/modules/customer/application/customer.service.spec.ts src/modules/project/application/project.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/rd-subwarehouse/application/rd-procurement-request.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts src/modules/rbac/application/rbac.service.spec.ts src/modules/rbac/application/workshop-scope.service.spec.ts`
+  - `pnpm test -- src/modules/inbound/application/inbound.service.spec.ts src/modules/sales/application/sales.service.spec.ts src/modules/rd-project/application/rd-project.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/rd-subwarehouse/application/rd-procurement-request.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts src/modules/rbac/application/rbac.service.spec.ts src/modules/rbac/application/workshop-scope.service.spec.ts`
 
 ## Parallelization Safety
 

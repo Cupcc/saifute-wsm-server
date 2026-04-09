@@ -36,7 +36,7 @@
           <el-input
             v-model="filters.projectName"
             clearable
-            placeholder="请输入项目名称或归集项"
+            placeholder="请输入项目名称"
             style="width: 220px"
             @keyup.enter="handleSearch"
           />
@@ -149,7 +149,7 @@
             <el-form-item label="项目名称" prop="projectName">
               <el-input
                 v-model="form.projectName"
-                placeholder="请输入项目名称或项目式归集项"
+                placeholder="请输入项目名称"
               />
             </el-form-item>
           </el-col>

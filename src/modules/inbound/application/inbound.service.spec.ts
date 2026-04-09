@@ -8,7 +8,7 @@ import {
   InventoryOperationType,
   Prisma,
   StockInOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { ApprovalService } from "../../approval/application/approval.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";
@@ -102,7 +102,7 @@ describe("InboundService", () => {
     id: 9,
     documentNo: "RDPUR-001",
     projectCode: "RD-PJT-001",
-    projectName: "研发治具归集",
+    projectName: "研发治具项目",
     supplierId: 10,
     lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
     lines: [
@@ -331,7 +331,7 @@ describe("InboundService", () => {
           rdProcurementRequestId: 9,
           rdProcurementRequestNoSnapshot: "RDPUR-001",
           rdProcurementProjectCodeSnapshot: "RD-PJT-001",
-          rdProcurementProjectNameSnapshot: "研发治具归集",
+          rdProcurementProjectNameSnapshot: "研发治具项目",
           workshopId: 1,
         }),
         expect.arrayContaining([

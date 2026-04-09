@@ -11,7 +11,7 @@ import {
   InventoryOperationType,
   Prisma,
   StockInOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   buildCompactDocumentNo,
   createWithGeneratedDocumentNo,
@@ -200,6 +200,7 @@ export class InboundService {
             {
               materialId: line.materialId,
               stockScope: "MAIN",
+              bizDate,
               quantity: line.quantity,
               operationType,
               businessModule: BUSINESS_MODULE,
@@ -473,6 +474,7 @@ export class InboundService {
               {
                 materialId: updatedLine.materialId,
                 stockScope: "MAIN",
+                bizDate,
                 quantity: updatedLine.quantity,
                 operationType,
                 businessModule: BUSINESS_MODULE,
@@ -530,6 +532,7 @@ export class InboundService {
           {
             materialId: createdLine.materialId,
             stockScope: "MAIN",
+            bizDate,
             quantity: createdLine.quantity,
             operationType,
             businessModule: BUSINESS_MODULE,

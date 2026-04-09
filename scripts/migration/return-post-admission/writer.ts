@@ -14,11 +14,11 @@ import type {
 async function applySourceBackfill(
   connection: MigrationConnectionLike,
   record: SourceBackfillRecord,
-  documentType: "CustomerStockOrder" | "WorkshopMaterialOrder",
+  documentType: "SalesStockOrder" | "WorkshopMaterialOrder",
 ): Promise<void> {
   const targetTable =
-    documentType === "CustomerStockOrder"
-      ? "customer_stock_order_line"
+    documentType === "SalesStockOrder"
+      ? "sales_stock_order_line"
       : "workshop_material_order_line";
 
   await connection.query(
@@ -407,8 +407,8 @@ export async function executePostAdmissionPlan(
 
     for (const record of plan.backfill.backfillRecords) {
       const docType =
-        record.sourceDocumentType === "CustomerStockOrder"
-          ? "CustomerStockOrder"
+        record.sourceDocumentType === "SalesStockOrder"
+          ? "SalesStockOrder"
           : "WorkshopMaterialOrder";
       await applySourceBackfill(connection, record, docType);
       sourceBackfillsApplied += 1;

@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope:
-  - 完成 `docs/requirements/domain/inbound-business-module.md` 的 `Phase 2` 能力 `F4/F5`：把入库价格沉淀为不可变来源成本快照，在 `inventory-core` 收口默认 FIFO 与手动来源指定规则，并将该规则贯通到 `customer`、`workshop-material`、`project`、`rd-subwarehouse` 的消耗、逆操作与追溯读路径；本 task 是真实实现交付，不是文档补充切片。
+  - 完成 `docs/requirements/domain/inbound-business-module.md` 的 `Phase 2` 能力 `F4/F5`：把入库价格沉淀为不可变来源成本快照，在 `inventory-core` 收口默认 FIFO 与手动来源指定规则，并将该规则贯通到 `sales`、`workshop-material`、`rd-project`、`rd-subwarehouse` 的消耗、逆操作与追溯读路径；本 task 是真实实现交付，不是文档补充切片。
 - Related requirement: `docs/requirements/domain/inbound-business-module.md (F4/F5)`
 - Status: `completed`
 - Review status: `reviewed`
@@ -31,9 +31,9 @@
   - `src/modules/inventory-core/application/inventory.service.ts`
   - `src/modules/inventory-core/infrastructure/inventory.repository.ts`
   - `src/modules/inbound/**`
-  - `src/modules/customer/**`
+  - `src/modules/sales/**`
   - `src/modules/workshop-material/**`
-  - `src/modules/project/**`
+  - `src/modules/rd-project/**`
   - `src/modules/rd-subwarehouse/**`
   - `src/modules/reporting/**`
   - `test/**`
@@ -48,7 +48,7 @@
   - 既有探索已确认最佳落点是沿用 `InventoryLog + InventorySourceUsage` 演进为 FIFO 成本层模型，由 `inventory-core` 作为共享写路径收口规则，`inbound` 负责创建来源成本层，下游消耗域统一复用该规则。
 - Acceptance criteria carried into this task:
   - `[AC-1]` 每条生效入库明细都要把来源成本快照稳定写入入库侧库存流水 / 成本层，使后续成本结转不再依赖可变的物料主档价格或后续改单回查。
-  - `[AC-2]` `customer`、`workshop-material`、`project`、`rd-subwarehouse` 的消耗链在未显式指定来源时默认走 `inventory-core` FIFO 分配，并把分配结果与成本快照稳定落库。
+  - `[AC-2]` `sales`、`workshop-material`、`rd-project`、`rd-subwarehouse` 的消耗链在未显式指定来源时默认走 `inventory-core` FIFO 分配，并把分配结果与成本快照稳定落库。
   - `[AC-3]` 当业务明确指定 `sourceLogId` 或等价来源标识时，系统必须尊重手动来源指定，同时保留可审计的来源分配记录、操作者与幂等语义，不能把手动指定偷偷折叠回“默认 FIFO 推断值”。
   - `[AC-4]` 作废、逆操作、销售退货、车间退料、RD 反向桥接等返回链必须优先释放或回放原已分配来源，而不是重新计算新的 FIFO 路径，以保证历史成本追溯稳定。
   - `[AC-5]` 读路径 / 报表证据必须能从至少一条下游消费行稳定追溯到其入库来源层，并通过测试与验收材料证明 `F4/F5` 已闭环。
@@ -64,7 +64,7 @@
 - Phase progress:
   - `inbound-business-module` `Phase 2`（`F4`/`F5`）已通过本 task 完成交付、review 与 full acceptance；任务文档 lifecycle 已置为 `retained-completed`。
 - Current state:
-  - Phase 2 `F4/F5` 已交付：`inbound` 写入 `inventory_log` 成本快照；`inventory-core` 收口 FIFO / 手动来源 / 释放恢复；`customer`、`workshop-material`、`project`、`rd-handoff` 贯通；RD handoff 按分配保留桥接入库层；full acceptance 已记录在 `docs/acceptance-tests/specs/inbound.md` 与 run 文档。
+  - Phase 2 `F4/F5` 已交付：`inbound` 写入 `inventory_log` 成本快照；`inventory-core` 收口 FIFO / 手动来源 / 释放恢复；`sales`、`workshop-material`、`rd-project`、`rd-handoff` 贯通；RD handoff 按分配保留桥接入库层；full acceptance 已记录在 `docs/acceptance-tests/specs/inbound.md` 与 run 文档。
 - Acceptance state:
   - `accepted`（见 Acceptance 节与 `docs/acceptance-tests/runs/run-20260404-1400-inbound-phase2-fifo-costing.md`）
 - Blockers:
@@ -78,7 +78,7 @@
   - 在不升级为完整批次 / 库位系统的前提下，完成 `inbound` 领域 `Phase 2` 的端到端交付：让入库价格成为不可变来源成本真源，让所有 in-scope 消耗链默认遵循 FIFO 或按显式业务依据手动指定来源，并在逆操作与读模型中保持可审计、可回放、可验证的来源追溯闭环。
 - Acceptance criteria:
   - `[AC-1]` `inbound` 创建 / 修改 / 作废路径会为有效入库层写入稳定成本快照；已被消费的来源层不会因后续改单而静默漂移历史成本结果。
-  - `[AC-2]` `customer`、`workshop-material`、`project`、`rd-subwarehouse` 在未手动指定来源时统一走 `inventory-core` 默认 FIFO 分配，且每条消费行都能查到对应 `inventory_source_usage` 记录与成本汇总结果。
+  - `[AC-2]` `sales`、`workshop-material`、`rd-project`、`rd-subwarehouse` 在未手动指定来源时统一走 `inventory-core` 默认 FIFO 分配，且每条消费行都能查到对应 `inventory_source_usage` 记录与成本汇总结果。
   - `[AC-3]` 手动来源指定在允许场景下优先生效，并把指定结果完整保存在来源分配记录和消费侧成本快照中；`workshop-material` 现有手工来源能力不得回归。
   - `[AC-4]` 作废、退货、退料、桥接回退等反向流程会优先释放原来源分配，不会通过“重新跑一遍新的 FIFO”破坏原始成本链。
   - `[AC-5]` 至少一条代表性的“入库 -> 下游消耗 / 桥接 -> 逆操作 / 返回 -> 读路径追溯”证据链可由 automated tests 与 acceptance spec 共同支撑。
@@ -90,9 +90,9 @@
   - generated Prisma client / types
   - `src/modules/inventory-core/**`
   - `src/modules/inbound/**`
-  - `src/modules/customer/**`
+  - `src/modules/sales/**`
   - `src/modules/workshop-material/**`
-  - `src/modules/project/**`
+  - `src/modules/rd-project/**`
   - `src/modules/rd-subwarehouse/**`
   - `src/modules/reporting/**`（仅当读路径证据确需新增或修正查询面时）
   - `test/**`
@@ -116,7 +116,7 @@
 - [x] Step 1: 先冻结 `prisma` / 持久化合同，明确入库侧成本快照、消费侧成本快照、来源分配与手动来源指定所需字段，并生成对应 Prisma 类型。
 - [x] Step 2: 在 `inventory-core` 收口 FIFO 成本层能力，扩展 `increaseStock()` / `decreaseStock()` / `reverseStock()` 及 repository 查询，支持默认 FIFO、手动来源指定、幂等分配 / 释放与禁止负库存的共享约束。
 - [x] Step 3: 接入 `inbound` 写路径，使有效入库行在创建、修改补偿、作废逆操作中稳定维护来源成本层，并对“已被消费的来源层如何改价 / 回退”执行受控约束。
-- [x] Step 4: 接入 `customer`、`workshop-material`、`project`、`rd-subwarehouse` 写路径，统一改为默认 FIFO；保留并规范手动来源模式，确保 RD 交接承担成本桥接职责而不是断链重建新来源。
+- [x] Step 4: 接入 `sales`、`workshop-material`、`rd-project`、`rd-subwarehouse` 写路径，统一改为默认 FIFO；保留并规范手动来源模式，确保 RD 交接承担成本桥接职责而不是断链重建新来源。
 - [x] Step 5: 补齐反向流程与读路径证据，验证销售退货、车间退料、项目 / RD 逆操作能够释放原来源分配，并让查询 / 报表面能够回溯“消费行 -> 来源入库层”。
 - [x] Step 6: 完成 focused tests、review 修复回环与 full acceptance 证据更新，最终把 `F4/F5` 收口到可签收状态。
 
@@ -125,7 +125,7 @@
 - Execution brief:
   - 以 `inventory-core` 为单一规则中心实现“入库建层、出库分配、逆操作释放”闭环，不在各业务模块各写一套 FIFO。
   - `inbound` 必须负责把入库单价固化为来源层成本快照；下游消费模块负责把本次结转结果和来源分配关系稳定落库。
-  - `workshop-material` 已有手工 `sourceLogId` 能力必须保留并上收为统一共享语义；`customer`、`project`、`rd-subwarehouse` 需补齐默认 FIFO 与必要的手动 / 桥接行为。
+  - `workshop-material` 已有手工 `sourceLogId` 能力必须保留并上收为统一共享语义；`sales`、`rd-project`、`rd-subwarehouse` 需补齐默认 FIFO 与必要的手动 / 桥接行为。
   - 读路径 / 报表面至少要提供一条可验证的“消费追溯到来源入库层”的证据链，不能只停留在写模型自证。
 - Required source docs or files:
   - `docs/requirements/domain/inbound-business-module.md`
@@ -142,9 +142,9 @@
   - generated Prisma client / types
   - `src/modules/inventory-core/**`
   - `src/modules/inbound/**`
-  - `src/modules/customer/**`
+  - `src/modules/sales/**`
   - `src/modules/workshop-material/**`
-  - `src/modules/project/**`
+  - `src/modules/rd-project/**`
   - `src/modules/rd-subwarehouse/**`
   - `src/modules/reporting/**`（仅在 AC-5 读路径证据确需时）
   - `test/**`
@@ -162,7 +162,7 @@
 - Validation command for this scope:
   - `pnpm prisma:validate`
   - `pnpm prisma:generate`
-  - `pnpm test -- src/modules/inventory-core/application/inventory.service.spec.ts src/modules/inventory-core/infrastructure/inventory.repository.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/customer/application/customer.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/project/application/project.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`
+  - `pnpm test -- src/modules/inventory-core/application/inventory.service.spec.ts src/modules/inventory-core/infrastructure/inventory.repository.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/sales/application/sales.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/rd-project/application/rd-project.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`
   - `pnpm test:e2e -- <focused fifo / reverse coverage if added>`
   - `pnpm verify`（若本轮改动已纳入仓库 verify 覆盖）
 
@@ -170,7 +170,7 @@
 
 - Review focus:
   - `prisma` / Prisma client / runtime contract 是否完整承载来源成本快照与来源分配字段，且没有把业务价格与成本价格混用。
-  - 默认 FIFO 是否真的在 `inventory-core` 收口，而不是在 `customer`、`project`、`workshop-material`、`rd-subwarehouse` 各自复制一套近似实现。
+  - 默认 FIFO 是否真的在 `inventory-core` 收口，而不是在 `sales`、`rd-project`、`workshop-material`、`rd-subwarehouse` 各自复制一套近似实现。
   - 手动来源指定是否优先生效且留痕完整，特别是 `workshop-material` 既有 `sourceLogId` 能力是否保持兼容。
   - 退货 / 退料 / 作废 / 桥接回退是否释放原来源分配，而不是重新分配新来源层。
   - 读路径证据是否足以支撑 `F4/F5`，并能证明至少一条消费行真实追溯到入库来源层。
@@ -181,7 +181,7 @@
   - `pnpm prisma:validate`
   - `pnpm prisma:generate`
   - `pnpm test -- src/modules/inventory-core/application/inventory.service.spec.ts src/modules/inventory-core/infrastructure/inventory.repository.spec.ts`
-  - `pnpm test -- src/modules/inbound/application/inbound.service.spec.ts src/modules/customer/application/customer.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/project/application/project.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`
+  - `pnpm test -- src/modules/inbound/application/inbound.service.spec.ts src/modules/sales/application/sales.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/rd-project/application/rd-project.service.spec.ts src/modules/rd-subwarehouse/application/rd-handoff.service.spec.ts`
   - `pnpm test:e2e -- <focused fifo / reverse / traceability suites if present>`
   - `pnpm verify`（若 verify 能覆盖本轮改动面）
 - Required doc updates:
@@ -199,7 +199,7 @@
 - Evidence pointers:
   - `prisma/schema.prisma` 与生成类型的变更记录
   - `inventory-core` focused tests，证明 FIFO 分配、幂等与释放逻辑
-  - `inbound` + `customer` + `workshop-material` + `project` + `rd-handoff` 的 focused service / e2e regression
+  - `inbound` + `sales` + `workshop-material` + `rd-project` + `rd-handoff` 的 focused service / e2e regression
   - 至少一条代表性查询 / 报表 / API 证据，展示“消费行 -> 来源入库层”的回溯结果
   - `docs/acceptance-tests/specs/inbound.md` 中 `F4/F5` 的 AC 矩阵与结论
 - Evidence gaps, if any:
@@ -237,7 +237,7 @@
   - `src/modules/inventory-core/application/inventory.service.ts`
   - `src/modules/inventory-core/infrastructure/inventory.repository.ts`
   - `inventory_log` / `inventory_source_usage` 的字段与唯一键合同
-  - 幂等键、逆操作释放、默认 FIFO 选择顺序这些共享运行时真相会同时影响 `inbound`、`customer`、`workshop-material`、`project`、`rd-subwarehouse`
+  - 幂等键、逆操作释放、默认 FIFO 选择顺序这些共享运行时真相会同时影响 `inbound`、`sales`、`workshop-material`、`rd-project`、`rd-subwarehouse`
 
 ## Review Log
 
@@ -265,7 +265,7 @@
 > Acceptance QA 在验收时逐条填写。每条应对应 domain capability 的用户需求或 task doc 的 `[AC-*]` 条目。
 
 - [x] `[AC-1]` 入库来源成本快照稳定落库，历史成本不因后续改单静默漂移 — Evidence: `inventory_log.unitCost` / `costAmount`；已消耗来源层阻断不当 reversal；`inbound.service.spec.ts` + `inventory.service.spec.ts`；Prisma validate/generate — Verdict: `✓ met`
-- [x] `[AC-2]` 四类下游链路默认 FIFO 分配并保留来源分配记录与成本快照 — Evidence: `inventory_source_usage` + 各域 `*.service.spec.ts`（customer / workshop-material / project / rd-handoff）+ `inventory.service.spec.ts` — Verdict: `✓ met`
+- [x] `[AC-2]` 四类下游链路默认 FIFO 分配并保留来源分配记录与成本快照 — Evidence: `inventory_source_usage` + 各域 `*.service.spec.ts`（customer / workshop-material / rd-project / rd-handoff）+ `inventory.service.spec.ts` — Verdict: `✓ met`
 - [x] `[AC-3]` 手动来源指定优先生效且留痕完整，`workshop-material` 既有能力无回归 — Evidence: core 手动来源校验 + `workshop-material.service.spec.ts` — Verdict: `✓ met`
 - [x] `[AC-4]` 退货 / 退料 / 作废 / 桥接回退释放原来源分配，不重跑新 FIFO — Evidence: `inventory-core` release/restore/幂等 reload 与各域逆向用例 — Verdict: `✓ met`
 - [x] `[AC-5]` 存在可签收的读路径 / 报表追溯证据与完整测试报告 — Evidence: 持久化断言：`inventory_source_usage` + log/line 成本字段；`docs/acceptance-tests/specs/inbound.md`；run 文档 — Verdict: `✓ met`

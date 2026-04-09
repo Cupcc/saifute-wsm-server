@@ -326,7 +326,7 @@ describe("return-post-admission inventory replay", () => {
       );
 
       expect(outboundLogs.length).toBeGreaterThan(0);
-      expect(outboundLogs.every((l) => l.businessModule === "customer")).toBe(
+      expect(outboundLogs.every((l) => l.businessModule === "sales")).toBe(
         true,
       );
 
@@ -336,9 +336,9 @@ describe("return-post-admission inventory replay", () => {
       ).toBe(true);
 
       expect(salesReturnLogs.length).toBeGreaterThan(0);
-      expect(
-        salesReturnLogs.every((l) => l.businessModule === "customer"),
-      ).toBe(true);
+      expect(salesReturnLogs.every((l) => l.businessModule === "sales")).toBe(
+        true,
+      );
 
       expect(workshopReturnLogs.length).toBeGreaterThan(0);
       expect(
@@ -358,7 +358,7 @@ describe("return-post-admission inventory replay", () => {
       const plan = buildPostAdmissionMigrationPlan(baseline);
       const forbiddenLabels = new Set([
         "STOCK_IN",
-        "CUSTOMER_STOCK",
+        "SALES_STOCK",
         "WORKSHOP_MATERIAL",
       ]);
 
@@ -600,7 +600,7 @@ describe("return-post-admission inventory replay", () => {
       expect(plan.replay.sourceUsageInserts.length).toBeGreaterThan(0);
 
       for (const usage of plan.replay.sourceUsageInserts) {
-        expect(usage.consumerDocumentType).toBe("CustomerStockOrder");
+        expect(usage.consumerDocumentType).toBe("SalesStockOrder");
         expect(usage.status).toBe("RELEASED");
         expect(usage.allocatedQty).not.toBe("0.000000");
       }
@@ -785,7 +785,7 @@ describe("return-post-admission inventory replay", () => {
       expect(stockInAuditDocs).toHaveLength(0);
     });
 
-    it("should create audit documents for CUSTOMER_STOCK and WORKSHOP_MATERIAL families", () => {
+    it("should create audit documents for SALES_STOCK and WORKSHOP_MATERIAL families", () => {
       const salesReturnOrders: AdmittedOrderRow[] = Array.from(
         { length: 9 },
         (_, i) => ({
@@ -914,7 +914,7 @@ describe("return-post-admission inventory replay", () => {
       const plan = buildPostAdmissionMigrationPlan(baseline);
 
       const customerStockDocs = plan.audit.auditDocumentInserts.filter(
-        (d) => d.documentFamily === "CUSTOMER_STOCK",
+        (d) => d.documentFamily === "SALES_STOCK",
       );
 
       const workshopMaterialDocs = plan.audit.auditDocumentInserts.filter(

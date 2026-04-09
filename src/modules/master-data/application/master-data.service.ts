@@ -5,7 +5,7 @@ import {
   NotFoundException,
   type OnModuleInit,
 } from "@nestjs/common";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
 import type { CreateCustomerDto } from "../dto/create-customer.dto";
 import type { CreateMaterialDto } from "../dto/create-material.dto";
 import type { CreateMaterialCategoryDto } from "../dto/create-material-category.dto";
@@ -398,7 +398,7 @@ export class MasterDataService implements OnModuleInit {
         createdBy,
       );
     } catch (error) {
-      this.throwCodeConflict(error, "customer", dto.customerCode);
+      this.throwCodeConflict(error, "sales", dto.customerCode);
     }
   }
 

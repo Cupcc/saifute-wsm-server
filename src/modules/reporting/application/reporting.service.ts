@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import { StockScopeCompatibilityService } from "../../inventory-core/application/stock-scope-compatibility.service";
 import { type StockScopeCode } from "../../session/domain/user-session";
@@ -27,8 +27,6 @@ export interface InventorySummaryItem {
   categoryName: string | null;
   stockScope: StockScopeCode | null;
   stockScopeName: string | null;
-  workshopId: number | null;
-  workshopName: string | null;
   quantityOnHand: string;
   warningMinQty: string | null;
   warningMaxQty: string | null;
@@ -200,10 +198,13 @@ export class ReportingService {
       query.dateTo,
     );
     const trendType = query.trendType ?? ReportingTrendType.ALL;
+    const inventoryStockScopeIds =
+      await this.resolveInventoryStockScopeIds(stockScope);
     const documents = await this.repository.findTrendDocuments({
       dateFrom,
       dateTo,
-      stockScope,
+      inventoryStockScopeIds,
+      workshopId: query.workshopId,
     });
 
     const filtered = documents.filter(
@@ -335,8 +336,6 @@ export class ReportingService {
       stockScope:
         (item.stockScope?.scopeCode as StockScopeCode | undefined) ?? null,
       stockScopeName: item.stockScope?.scopeName ?? null,
-      workshopId: item.workshop?.id ?? null,
-      workshopName: item.workshop?.workshopName ?? null,
       quantityOnHand: item.quantityOnHand.toFixed(6),
       warningMinQty: warningMinQty ? warningMinQty.toFixed(6) : null,
       warningMaxQty: warningMaxQty ? warningMaxQty.toFixed(6) : null,

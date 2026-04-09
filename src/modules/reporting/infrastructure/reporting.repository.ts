@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import {
-  CustomerStockOrderType,
   DocumentLifecycleStatus,
+  InventoryOperationType,
   MasterDataStatus,
   Prisma,
+  SalesStockOrderType,
   WorkshopMaterialOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
 
@@ -32,17 +33,21 @@ export interface InventoryBalanceSnapshot {
       categoryName: string;
     } | null;
   };
-  workshop: {
-    id: number;
-    workshopName: string;
-  } | null;
 }
 
 export interface TrendDocumentSnapshot {
-  sourceType: "INBOUND" | "OUTBOUND" | "WORKSHOP_MATERIAL";
+  sourceType: "INBOUND" | "SALES" | "WORKSHOP_MATERIAL" | "RD_PROJECT" | "RD";
   bizDate: Date;
   totalQty: Prisma.Decimal;
   totalAmount: Prisma.Decimal;
+}
+
+interface InventoryLogTrendGroup {
+  bizDate: Date;
+  _sum: {
+    changeQty: Prisma.Decimal | null;
+    costAmount: Prisma.Decimal | null;
+  } | null;
 }
 
 @Injectable()
@@ -137,7 +142,7 @@ export class ReportingRepository {
           })
         : Promise.resolve(0),
       outboundTodayWhere
-        ? this.prisma.customerStockOrder.count({
+        ? this.prisma.salesStockOrder.count({
             where: outboundTodayWhere,
           })
         : Promise.resolve(0),
@@ -153,7 +158,7 @@ export class ReportingRepository {
           })
         : Promise.resolve(emptyDocumentAggregate),
       outboundAggregateWhere
-        ? this.prisma.customerStockOrder.aggregate({
+        ? this.prisma.salesStockOrder.aggregate({
             where: outboundAggregateWhere,
             _sum: { totalQty: true, totalAmount: true },
           })
@@ -219,7 +224,6 @@ export class ReportingRepository {
             category: true,
           },
         },
-        workshop: true,
       },
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     });
@@ -228,73 +232,96 @@ export class ReportingRepository {
   async findTrendDocuments(params: {
     dateFrom: Date;
     dateTo: Date;
-    stockScope?: StockScopeCode;
+    inventoryStockScopeIds: number[];
+    workshopId?: number;
   }): Promise<TrendDocumentSnapshot[]> {
-    const inboundWhere = this.buildInboundWhere(params.stockScope, {
+    if (params.inventoryStockScopeIds.length === 0) {
+      return [];
+    }
+
+    const baseWhere: Prisma.InventoryLogWhereInput = {
       bizDate: { gte: params.dateFrom, lte: params.dateTo },
-    });
-    const outboundWhere = this.buildOutboundWhere(params.stockScope, {
-      bizDate: { gte: params.dateFrom, lte: params.dateTo },
-    });
-    const workshopMaterialWhere = this.buildWorkshopMaterialWhere(
-      params.stockScope,
-      {
-        bizDate: { gte: params.dateFrom, lte: params.dateTo },
-      },
+      stockScopeId: { in: params.inventoryStockScopeIds },
+      ...(params.workshopId ? { workshopId: params.workshopId } : {}),
+    };
+
+    const inboundTypes = [
+      InventoryOperationType.ACCEPTANCE_IN,
+      InventoryOperationType.PRODUCTION_RECEIPT_IN,
+    ];
+    const salesTypes = [InventoryOperationType.OUTBOUND_OUT];
+    const workshopMaterialTypes = [
+      InventoryOperationType.PICK_OUT,
+      InventoryOperationType.RETURN_IN,
+      InventoryOperationType.SCRAP_OUT,
+    ];
+    const rdProjectTypes = [InventoryOperationType.RD_PROJECT_OUT];
+    const rdTypes = [
+      InventoryOperationType.RD_HANDOFF_OUT,
+      InventoryOperationType.RD_HANDOFF_IN,
+      InventoryOperationType.RD_STOCKTAKE_IN,
+      InventoryOperationType.RD_STOCKTAKE_OUT,
+    ];
+
+    const groupByBizDate = (where: Prisma.InventoryLogWhereInput) =>
+      this.prisma.inventoryLog.groupBy({
+        by: ["bizDate"],
+        where,
+        _sum: { changeQty: true, costAmount: true },
+      });
+
+    const [inbound, sales, workshopMaterial, rdProject, rd] = await Promise.all(
+      [
+        groupByBizDate({
+          ...baseWhere,
+          businessDocumentType: "StockInOrder",
+          operationType: { in: inboundTypes },
+        }),
+        groupByBizDate({
+          ...baseWhere,
+          businessDocumentType: "SalesStockOrder",
+          operationType: { in: salesTypes },
+        }),
+        groupByBizDate({
+          ...baseWhere,
+          businessDocumentType: "WorkshopMaterialOrder",
+          operationType: { in: workshopMaterialTypes },
+        }),
+        groupByBizDate({
+          ...baseWhere,
+          businessDocumentType: "RdProjectMaterialAction",
+          operationType: { in: rdProjectTypes },
+        }),
+        groupByBizDate({
+          ...baseWhere,
+          operationType: { in: rdTypes },
+        }),
+      ],
     );
-    const [inbound, outbound, workshopMaterial] = await Promise.all([
-      inboundWhere
-        ? this.prisma.stockInOrder.findMany({
-            where: inboundWhere,
-            select: {
-              bizDate: true,
-              totalQty: true,
-              totalAmount: true,
-            },
-          })
-        : Promise.resolve([]),
-      outboundWhere
-        ? this.prisma.customerStockOrder.findMany({
-            where: outboundWhere,
-            select: {
-              bizDate: true,
-              totalQty: true,
-              totalAmount: true,
-            },
-          })
-        : Promise.resolve([]),
-      workshopMaterialWhere
-        ? this.prisma.workshopMaterialOrder.findMany({
-            where: workshopMaterialWhere,
-            select: {
-              bizDate: true,
-              totalQty: true,
-              totalAmount: true,
-            },
-          })
-        : Promise.resolve([]),
-    ]);
 
     return [
-      ...inbound.map((item) => ({
-        sourceType: "INBOUND" as const,
-        bizDate: item.bizDate,
-        totalQty: item.totalQty,
-        totalAmount: item.totalAmount,
-      })),
-      ...outbound.map((item) => ({
-        sourceType: "OUTBOUND" as const,
-        bizDate: item.bizDate,
-        totalQty: item.totalQty,
-        totalAmount: item.totalAmount,
-      })),
-      ...workshopMaterial.map((item) => ({
-        sourceType: "WORKSHOP_MATERIAL" as const,
-        bizDate: item.bizDate,
-        totalQty: item.totalQty,
-        totalAmount: item.totalAmount,
-      })),
+      ...inbound.map((item) => this.mapLogGroupToSnapshot(item, "INBOUND")),
+      ...sales.map((item) => this.mapLogGroupToSnapshot(item, "SALES")),
+      ...workshopMaterial.map((item) =>
+        this.mapLogGroupToSnapshot(item, "WORKSHOP_MATERIAL"),
+      ),
+      ...rdProject.map((item) =>
+        this.mapLogGroupToSnapshot(item, "RD_PROJECT"),
+      ),
+      ...rd.map((item) => this.mapLogGroupToSnapshot(item, "RD")),
     ];
+  }
+
+  private mapLogGroupToSnapshot(
+    group: InventoryLogTrendGroup,
+    sourceType: TrendDocumentSnapshot["sourceType"],
+  ): TrendDocumentSnapshot {
+    return {
+      sourceType,
+      bizDate: group.bizDate,
+      totalQty: group._sum?.changeQty ?? new Prisma.Decimal(0),
+      totalAmount: group._sum?.costAmount ?? new Prisma.Decimal(0),
+    };
   }
 
   private buildInventoryStockScopeFilter(stockScopeIds: number[]) {
@@ -329,16 +356,16 @@ export class ReportingRepository {
   private buildOutboundWhere(
     stockScope?: StockScopeCode,
     extra?: Omit<
-      Prisma.CustomerStockOrderWhereInput,
+      Prisma.SalesStockOrderWhereInput,
       "lifecycleStatus" | "orderType"
     >,
-  ): Prisma.CustomerStockOrderWhereInput | null {
+  ): Prisma.SalesStockOrderWhereInput | null {
     if (stockScope === "RD_SUB") {
       return null;
     }
 
     return {
-      orderType: CustomerStockOrderType.OUTBOUND,
+      orderType: SalesStockOrderType.OUTBOUND,
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
       ...(stockScope
         ? {

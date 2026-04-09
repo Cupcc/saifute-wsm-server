@@ -10,7 +10,7 @@ import {
   Prisma,
   SourceUsageStatus,
   StockDirection,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { type StockScopeCode } from "../../session/domain/user-session";
@@ -29,7 +29,8 @@ export interface IncreaseStockCommand {
   materialId: number;
   stockScope?: StockScopeCode;
   workshopId?: number;
-  allocationTargetId?: number;
+  projectTargetId?: number;
+  bizDate: Date;
   quantity: Prisma.Decimal | number | string;
   operationType: InventoryOperationTypeEnum;
   businessModule: string;
@@ -50,7 +51,8 @@ export interface DecreaseStockCommand {
   materialId: number;
   stockScope?: StockScopeCode;
   workshopId?: number;
-  allocationTargetId?: number;
+  projectTargetId?: number;
+  bizDate: Date;
   quantity: Prisma.Decimal | number | string;
   operationType: InventoryOperationTypeEnum;
   businessModule: string;
@@ -191,7 +193,6 @@ export class InventoryService {
             data: {
               materialId: cmd.materialId,
               stockScopeId: scope.stockScopeId,
-              workshopId: null,
               quantityOnHand: 0,
               createdBy: cmd.operatorId,
               updatedBy: cmd.operatorId,
@@ -222,7 +223,8 @@ export class InventoryService {
               materialId: cmd.materialId,
               stockScopeId: scope.stockScopeId,
               workshopId: cmd.workshopId ?? null,
-              allocationTargetId: cmd.allocationTargetId,
+              projectTargetId: cmd.projectTargetId,
+              bizDate: cmd.bizDate,
               direction: StockDirection.IN,
               operationType: cmd.operationType,
               businessModule: cmd.businessModule,
@@ -300,7 +302,8 @@ export class InventoryService {
             materialId: cmd.materialId,
             stockScopeId: scope.stockScopeId,
             workshopId: cmd.workshopId ?? null,
-            allocationTargetId: cmd.allocationTargetId,
+            projectTargetId: cmd.projectTargetId,
+            bizDate: cmd.bizDate,
             direction: StockDirection.OUT,
             operationType: cmd.operationType,
             businessModule: cmd.businessModule,
@@ -383,7 +386,8 @@ export class InventoryService {
             materialId: sourceLog.materialId,
             stockScopeId: sourceLog.stockScopeId,
             workshopId: sourceLog.workshopId,
-            allocationTargetId: sourceLog.allocationTargetId,
+            projectTargetId: sourceLog.projectTargetId,
+            bizDate: sourceLog.bizDate,
             direction: reverseDirection,
             operationType: isIn
               ? InventoryOperationType.REVERSAL_OUT
@@ -682,7 +686,8 @@ export class InventoryService {
             materialId: cmd.materialId,
             stockScopeId: scope.stockScopeId,
             workshopId: cmd.workshopId ?? null,
-            allocationTargetId: cmd.allocationTargetId,
+            projectTargetId: cmd.projectTargetId,
+            bizDate: cmd.bizDate,
             direction: StockDirection.OUT,
             operationType: cmd.operationType,
             businessModule: cmd.businessModule,
@@ -1087,8 +1092,8 @@ export class InventoryService {
     businessDocumentType?: string;
     businessDocumentNumber?: string;
     operationType?: string;
-    occurredAtFrom?: string;
-    occurredAtTo?: string;
+    bizDateFrom?: string;
+    bizDateTo?: string;
     limit?: number;
     offset?: number;
   }) {
@@ -1102,11 +1107,11 @@ export class InventoryService {
       businessDocumentType: params.businessDocumentType,
       businessDocumentNumber: params.businessDocumentNumber,
       operationType: params.operationType,
-      occurredAtFrom: params.occurredAtFrom
-        ? new Date(params.occurredAtFrom)
+      bizDateFrom: params.bizDateFrom
+        ? new Date(params.bizDateFrom)
         : undefined,
-      occurredAtTo: params.occurredAtTo
-        ? this.toInclusiveEndDate(params.occurredAtTo)
+      bizDateTo: params.bizDateTo
+        ? this.toInclusiveEndDate(params.bizDateTo)
         : undefined,
       limit,
       offset,

@@ -35,7 +35,7 @@
 ```text
 请生成一张企业级仓储管理系统架构信息图。16:9 横版，浅色背景，蓝灰色系，少量强调色。整体简洁、专业、分层清楚，适合架构评审和汇报。
 
-图中术语必须贴合本系统：MAIN 主仓、RD_SUB 研发小仓、inventory-core、approval、project、reporting、ai-assistant、RD handoff。不要擅自发明新的仓库、模块或基础设施。
+图中术语必须贴合本系统：MAIN 主仓、RD_SUB 研发小仓、inventory-core、approval、rd-project、sales-project、reporting、ai-assistant、RD handoff。不要擅自发明新的仓库、模块或基础设施。
 
 如果文字渲染不稳定，优先保证构图关系、层级和箭头方向正确。
 ```
@@ -55,7 +55,7 @@
   - `Web 管理端`
   - `NestJS 单体服务`
   - 平台与共享核心：`auth / session / rbac / system-management / audit-log / master-data / inventory-core / approval`
-  - 业务域：`inbound / customer / workshop-material / project / rd-subwarehouse`
+  - 业务域：`inbound / customer / workshop-material / rd-project / rd-subwarehouse / sales-project`
   - 分析与辅助：`reporting / ai-assistant`
 - 建议构图：
   - 上到下三层或左到右三层。
@@ -70,31 +70,31 @@
 - Nanobanana 提示词：
 
 ```text
-生成“Saifute WMS NestJS 单体系统全景与模块分层图”。顶部是 Web 管理端，向下连接 NestJS 单体服务。单体内部清晰分为三组：平台与共享核心（auth, session, rbac, system-management, audit-log, master-data, inventory-core, approval），业务域（inbound, customer, workshop-material, project, rd-subwarehouse），分析与辅助（reporting, ai-assistant）。请突出 inventory-core 是所有库存写入的唯一入口，approval 是轻量审核共享域；reporting 和 ai-assistant 放在右侧或下侧，表达为只读辅助层，不直接写业务事实。不要画成微服务架构。
+生成“Saifute WMS NestJS 单体系统全景与模块分层图”。顶部是 Web 管理端，向下连接 NestJS 单体服务。单体内部清晰分为三组：平台与共享核心（auth, session, rbac, system-management, audit-log, master-data, inventory-core, approval），业务域（inbound, customer, workshop-material, rd-project, rd-subwarehouse, sales-project），分析与辅助（reporting, ai-assistant）。请突出 inventory-core 是所有库存写入的唯一入口，approval 是轻量审核共享域；reporting 和 ai-assistant 放在右侧或下侧，表达为只读辅助层，不直接写业务事实。不要画成微服务架构。
 ```
 
 ### 4.2 库存真实范围与归属维度分离图
 
-- 用途：这是最重要的一张边界图，专门防止把 `workshop`、`project`、`department` 错画成库存池。
+- 用途：这是最重要的一张边界图，专门防止把 `workshop`、`rd-project`、`sales-project`、`department` 错画成库存池。
 - 必须包含：
   - 两个真实库存范围：`MAIN`、`RD_SUB`
   - `inventory-core` 作为唯一库存写入口
-  - 业务单据家族：`inbound / customer / workshop-material / project / rd-subwarehouse`
-  - 归属维度：`department`、`workshop`、`project / allocation_target`
+  - 业务单据家族：`inbound / customer / workshop-material / rd-project / rd-subwarehouse`
+  - 归属维度：`department`、`workshop`、`rd-project / sales-project / project_target`
 - 建议构图：
   - 左边“业务单据”，中间“inventory-core”，右边“真实库存范围”。
   - 底部或侧边单独放“归属/组织/核算维度”，用虚线或淡色表达“附加维度，不进入库存唯一键”。
 - 风格要求：
   - 这是规则图，不是业务流程图。
-  - 必须让 `MAIN / RD_SUB` 在视觉上比 `workshop / project` 更像真实库存落点。
+  - 必须让 `MAIN / RD_SUB` 在视觉上比 `workshop / rd-project / sales-project` 更像真实库存落点。
 - 避免误导：
   - 不要出现第三个物理仓。
-  - 不要让 `project` 看起来像独立仓库。
+  - 不要让 `rd-project` 或 `sales-project` 看起来像独立仓库。
   - 不要画出车间库存余额。
 - Nanobanana 提示词：
 
 ```text
-生成一张“真实库存范围 vs 归属维度分离”架构规则图。左侧是一组业务单据模块：inbound、customer、workshop-material、project、rd-subwarehouse，所有箭头汇聚到中央的 inventory-core，inventory-core 再只连接到右侧两个真实库存范围 MAIN 主仓 和 RD_SUB 研发小仓。请在画面下方或侧边单独放一个淡色区域，标注 department、workshop、project / allocation_target，这些只是组织、归属、核算维度，不是库存池，不进入库存唯一键。请明确表达 MAIN 和 RD_SUB 才是真实库存落点，workshop 和 project 只是附加语义。不要出现第三个物理仓或车间库存池。
+生成一张“真实库存范围 vs 归属维度分离”架构规则图。左侧是一组业务单据模块：inbound、customer、workshop-material、rd-project、rd-subwarehouse，所有箭头汇聚到中央的 inventory-core，inventory-core 再只连接到右侧两个真实库存范围 MAIN 主仓 和 RD_SUB 研发小仓。请在画面下方或侧边单独放一个淡色区域，标注 department、workshop、rd-project / sales-project / project_target，这些只是组织、归属、核算维度，不是库存池，不进入库存唯一键。请明确表达 MAIN 和 RD_SUB 才是真实库存落点，workshop、rd-project 和 sales-project 只是附加语义。不要出现第三个物理仓或车间库存池。
 ```
 
 ### 4.3 RD 小仓协同与 RD handoff 图
@@ -110,17 +110,17 @@
   - `项目领用发生在 RD_SUB`
 - 建议构图：
   - 横向业务链最清楚：`需求 -> 采购 -> 主仓验收 -> RD handoff -> RD_SUB 使用`
-  - 关键节点上方可放角色，下方可放系统模块：`rd-subwarehouse / inbound / inventory-core / project`
+  - 关键节点上方可放角色，下方可放系统模块：`rd-subwarehouse / inbound / inventory-core / rd-project`
 - 风格要求：
   - 这张图应兼顾业务和系统，不要只画 IT 方框。
   - 可以少量使用强调色突出 `RD handoff` 与“来源桥接”。
 - 避免误导：
   - 不要画成 RD 直接外部采购入小仓。
-  - 不要画成项目直接从 `MAIN` 使用物料。
+  - 不要画成研发项目直接从 `MAIN` 使用物料。
 - Nanobanana 提示词：
 
 ```text
-生成一张“RD 小仓协同与 RD handoff”业务架构图。画面横向展开：研发小仓管理员提出 RD 采购需求，采购人员推进采购，仓库管理员基于需求完成主仓验收入 MAIN，随后创建 RD handoff，由 inventory-core 完成 MAIN 减少、RD_SUB 增加，并保持来源桥接和成本不断链，最后项目领用发生在 RD_SUB。请在关键节点旁标注 rd-subwarehouse、inbound、inventory-core、project。必须明确：外部到货先入 MAIN，不允许直接进入 RD_SUB；项目实际使用仓别固定在 RD_SUB。
+生成一张“RD 小仓协同与 RD handoff”业务架构图。画面横向展开：研发小仓管理员提出 RD 采购需求，采购人员推进采购，仓库管理员基于需求完成主仓验收入 MAIN，随后创建 RD handoff，由 inventory-core 完成 MAIN 减少、RD_SUB 增加，并保持来源桥接和成本不断链，最后研发项目领用发生在 RD_SUB。请在关键节点旁标注 rd-subwarehouse、inbound、inventory-core、rd-project。必须明确：外部到货先入 MAIN，不允许直接进入 RD_SUB；研发项目实际使用仓别固定在 RD_SUB。
 ```
 
 ### 4.4 库存事务写路径图
@@ -155,7 +155,7 @@
 
 - 用途：防止后续把 `reporting` 或 `ai-assistant` 误做成写模型。
 - 必须包含：
-  - 事务真源：`inbound / customer / workshop-material / project / rd-subwarehouse / inventory-core / approval / master-data`
+  - 事务真源：`inbound / customer / workshop-material / rd-project / rd-subwarehouse / inventory-core / approval / master-data`
   - 只读层：`reporting`
   - 受控辅助层：`ai-assistant`
   - 输出：`首页 / 月报 / Excel 导出 / AI 问答`
@@ -170,7 +170,7 @@
 - Nanobanana 提示词：
 
 ```text
-生成一张“报表与 AI 只读聚合”企业架构图。左侧是一组事务真源模块：inbound、customer、workshop-material、project、rd-subwarehouse、inventory-core、approval、master-data；中间是 reporting 和 ai-assistant，其中 reporting 是只读聚合层，ai-assistant 是受控查询、解释、导航和预填辅助层；右侧是输出结果：首页看板、库存报表、月报、Excel 导出、AI 问答。请明确画出 reporting 从事务真源读取，ai-assistant 只能通过 reporting、master-data、inventory-core 做受控查询，不能直接写业务数据。不要把 AI 画成系统控制中心。
+生成一张“报表与 AI 只读聚合”企业架构图。左侧是一组事务真源模块：inbound、customer、workshop-material、rd-project、rd-subwarehouse、inventory-core、approval、master-data；中间是 reporting 和 ai-assistant，其中 reporting 是只读聚合层，ai-assistant 是受控查询、解释、导航和预填辅助层；右侧是输出结果：首页看板、库存报表、月报、Excel 导出、AI 问答。请明确画出 reporting 从事务真源读取，ai-assistant 只能通过 reporting、master-data、inventory-core 做受控查询，不能直接写业务数据。不要把 AI 画成系统控制中心。
 ```
 
 ### 4.6 运行时容器与基础设施图
@@ -204,9 +204,9 @@
 - 必须包含：
   - 主仓 `MAIN`
   - 研发小仓 `RD_SUB`
-  - 入库、客户收发、车间物料、项目 / RD、报表
+  - 入库、销售业务、车间物料、研发项目 / 销售项目 / RD、报表
   - “所有库存统一经过 `inventory-core`”
-  - “项目不是库存池”
+  - “研发项目和销售项目都不是库存池”
 - 建议构图：
   - 中心放 `inventory-core`
   - 周围是几类业务主题
@@ -220,7 +220,7 @@
 - Nanobanana 提示词：
 
 ```text
-请生成一张适合老板和管理层查看的“Saifute WMS 业务闭环总览架构图”。画面中央是 inventory-core，强调所有库存变化统一从这里落账。周围环绕几个主题：inbound 入库、customer 客户收发、workshop-material 车间物料、project / rd-subwarehouse 项目与研发小仓、reporting 报表与分析。请把 MAIN 主仓 和 RD_SUB 研发小仓作为两个真实库存实体清楚放在画面中，并明确 project 不是库存池，只是归集与成本语义。整体要易懂、简洁，适合管理汇报；不要错误暗示复杂 BPM 或多仓网络。
+请生成一张适合老板和管理层查看的“Saifute WMS 业务闭环总览架构图”。画面中央是 inventory-core，强调所有库存变化统一从这里落账。周围环绕几个主题：inbound 入库、sales 销售业务、workshop-material 车间物料、rd-project 研发项目、sales-project 销售项目、rd-subwarehouse 研发小仓、reporting 报表与分析。请把 MAIN 主仓 和 RD_SUB 研发小仓作为两个真实库存实体清楚放在画面中，并明确 rd-project 和 sales-project 都不是库存池，只是项目维度语义。整体要易懂、简洁，适合管理汇报；不要错误暗示复杂 BPM 或多仓网络。
 ```
 
 ## 6. 不建议直接用 Nanobanana 生成的图

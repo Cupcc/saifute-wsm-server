@@ -1,5 +1,5 @@
 import { Test } from "@nestjs/testing";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import { StockScopeCompatibilityService } from "../../inventory-core/application/stock-scope-compatibility.service";
 import {
@@ -118,10 +118,6 @@ describe("ReportingService", () => {
             categoryName: "类别A",
           },
         },
-        workshop: {
-          id: 1,
-          workshopName: "主仓",
-        },
       },
       {
         id: 2,
@@ -146,10 +142,6 @@ describe("ReportingService", () => {
             categoryName: "类别A",
           },
         },
-        workshop: {
-          id: 1,
-          workshopName: "主仓",
-        },
       },
     ]);
 
@@ -170,7 +162,7 @@ describe("ReportingService", () => {
         totalAmount: new Prisma.Decimal("100"),
       },
       {
-        sourceType: "OUTBOUND",
+        sourceType: "SALES",
         bizDate: new Date("2026-03-02T00:00:00Z"),
         totalQty: new Prisma.Decimal("8"),
         totalAmount: new Prisma.Decimal("80"),
@@ -178,7 +170,7 @@ describe("ReportingService", () => {
     ]);
 
     const result = await service.getTrendSeries({
-      trendType: ReportingTrendType.OUTBOUND,
+      trendType: ReportingTrendType.SALES,
       dateFrom: "2026-03-01",
       dateTo: "2026-03-02",
     });
@@ -186,10 +178,34 @@ describe("ReportingService", () => {
     expect(repository.findTrendDocuments).toHaveBeenCalledWith({
       dateFrom: new Date("2026-02-28T16:00:00.000Z"),
       dateTo: new Date("2026-03-02T15:59:59.999Z"),
-      stockScope: undefined,
+      inventoryStockScopeIds: [1, 2],
     });
+    expect(
+      stockScopeCompatibilityService.listRealStockScopeIds,
+    ).toHaveBeenCalled();
     expect(result.items).toHaveLength(1);
-    expect(result.items[0]?.trendType).toBe("OUTBOUND");
+    expect(result.items[0]?.trendType).toBe("SALES");
+    expect(result.items[0]?.date).toBe("2026-03-02");
+  });
+
+  it("should return RD_PROJECT trend queries without aliases", async () => {
+    repository.findTrendDocuments.mockResolvedValue([
+      {
+        sourceType: "RD_PROJECT",
+        bizDate: new Date("2026-03-02T00:00:00Z"),
+        totalQty: new Prisma.Decimal("3"),
+        totalAmount: new Prisma.Decimal("30"),
+      },
+    ]);
+
+    const result = await service.getTrendSeries({
+      trendType: ReportingTrendType.RD_PROJECT,
+      dateFrom: "2026-03-01",
+      dateTo: "2026-03-02",
+    });
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.trendType).toBe("RD_PROJECT");
     expect(result.items[0]?.date).toBe("2026-03-02");
   });
 
@@ -213,10 +229,6 @@ describe("ReportingService", () => {
           warningMinQty: null,
           warningMaxQty: null,
           category: null,
-        },
-        workshop: {
-          id: 1,
-          workshopName: "主仓",
         },
       },
     ]);

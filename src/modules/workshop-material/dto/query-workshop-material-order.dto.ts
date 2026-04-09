@@ -8,7 +8,7 @@ import {
   MaxLength,
   Min,
 } from "class-validator";
-import { WorkshopMaterialOrderType } from "../../../generated/prisma/client";
+import { WorkshopMaterialOrderType } from "../../../../generated/prisma/client";
 
 export class QueryWorkshopMaterialOrderDto {
   @IsString()

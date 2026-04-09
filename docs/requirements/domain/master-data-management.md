@@ -238,7 +238,8 @@
 - Out of scope / non-goals:
   - 物料版本化（不追踪物料历史变更记录）
   - 批量导入优化（归入 `F10`）
-  - BOM / 物料组合拆解（归属 `project` 模块）
+  - 研发项目 BOM / 物料组合拆解（归属 `rd-project` 模块）
+  - 销售项目物料计划与可供货视图（归属 `sales-project` 模块）
 - Completion criteria:
   - `[TC-1]` 新增物料时，编码不为空且全局唯一；重复编码时返回明确错误提示。
   - `[TC-2]` 停用物料时，若该物料在任一库存范围下有余额 > 0，拦截并返回提示。
@@ -319,7 +320,7 @@
   - `[TC-1]` 新增车间时，车间名称全局唯一。
   - `[TC-2]` 停用车间后，新建单据时车间下拉列表中不再出现该车间。
   - `[TC-3]` 可为车间配置默认经办人；领料时自动带出但不强制锁定。
-  - `[TC-4]` 不存在以车间维度独立计算的库存余额表；车间仅作为 `inventory_balance` 中的归属维度字段存在。
+- `[TC-4]` 不存在以车间维度独立计算的库存余额表；`inventory_balance` 只按 `stockScopeId` 聚合，车间归属由 `inventory_log.workshopId` 与单据快照维度承载。
 - Evidence expectation:
   - 接口联调可通过，停用后下拉不出现有测试覆盖。
 - Default derived slice acceptance mode: `light`

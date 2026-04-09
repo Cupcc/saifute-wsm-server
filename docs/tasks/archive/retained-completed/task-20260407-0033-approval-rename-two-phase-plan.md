@@ -117,7 +117,7 @@
   - Phase 1:
     - `pnpm prisma:validate`
     - `pnpm typecheck`
-    - `pnpm test -- --runInBand src/modules/audit/application/audit.service.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/customer/application/customer.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/rbac/application/rbac.service.spec.ts`
+    - `pnpm test -- --runInBand src/modules/audit/application/audit.service.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/sales/application/sales.service.spec.ts src/modules/workshop-material/application/workshop-material.service.spec.ts src/modules/rbac/application/rbac.service.spec.ts`
     - 新增或更新针对 `/approval/documents/**` 与 legacy `/audit/documents/**` 双入口的 focused controller/e2e 覆盖
   - Phase 2:
     - `pnpm prisma:validate`
@@ -195,12 +195,12 @@
   - `src/app.module.ts`
   - `src/modules/rbac/application/rbac.service.ts`
   - `src/modules/audit/**` 与未来 `src/modules/approval/**` 的搬迁边界
-  - 跨 `inbound` / `customer` / `workshop-material` 的 shared approval contract
+  - 跨 `inbound` / `sales` / `workshop-material` 的 shared approval contract
 
 ## Review Log
 
 - Validation results:
-  - `pnpm exec jest --runInBand src/modules/audit/application/audit.service.spec.ts src/modules/approval/controllers/approval.controller.spec.ts src/modules/customer/application/customer.service.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/inbound/application/stock-in-price-correction.service.spec.ts src/modules/rbac/application/rbac.service.spec.ts` ✅ `6` suites / `53` tests passed
+  - `pnpm exec jest --runInBand src/modules/audit/application/audit.service.spec.ts src/modules/approval/controllers/approval.controller.spec.ts src/modules/sales/application/sales.service.spec.ts src/modules/inbound/application/inbound.service.spec.ts src/modules/inbound/application/stock-in-price-correction.service.spec.ts src/modules/rbac/application/rbac.service.spec.ts` ✅ `6` suites / `53` tests passed
   - `pnpm exec biome check ...`（Phase 1 新增与兼容层文件）✅ passed
   - `DATABASE_URL='mysql://placeholder:placeholder@127.0.0.1:3306/saifute-wsm' pnpm prisma:generate` ✅ passed
   - `DATABASE_URL='mysql://placeholder:placeholder@127.0.0.1:3306/saifute-wsm' pnpm prisma:validate` ✅ schema valid

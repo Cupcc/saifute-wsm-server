@@ -9,7 +9,7 @@ export type RelationClassification = "proven" | "unresolved" | "ambiguous";
 
 export type DocumentFamilyValue =
   | "STOCK_IN"
-  | "CUSTOMER_STOCK"
+  | "SALES_STOCK"
   | "WORKSHOP_MATERIAL"
   | "PROJECT";
 
@@ -179,7 +179,7 @@ export interface SourceBackfillRecord {
 
 export interface StaleClearRecord {
   lineId: number;
-  documentTable: "customer_stock_order_line" | "workshop_material_order_line";
+  documentTable: "sales_stock_order_line" | "workshop_material_order_line";
 }
 
 export interface InventoryLogInsert {

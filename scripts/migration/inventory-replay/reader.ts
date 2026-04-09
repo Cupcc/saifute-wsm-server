@@ -72,8 +72,8 @@ async function readCustomerEvents(
       o.id AS orderId, o.documentNo, o.orderType, o.bizDate, o.workshopId,
       l.id AS lineId, l.materialId, l.quantity,
       o.createdBy, o.createdAt
-    FROM customer_stock_order o
-    JOIN customer_stock_order_line l ON l.orderId = o.id
+    FROM sales_stock_order o
+    JOIN sales_stock_order_line l ON l.orderId = o.id
     WHERE o.lifecycleStatus = 'EFFECTIVE'
     ORDER BY o.bizDate ASC, o.id ASC, l.id ASC
   `);
@@ -86,15 +86,15 @@ async function readCustomerEvents(
       operationType: isSalesReturn
         ? ("SALES_RETURN_IN" as const)
         : ("OUTBOUND_OUT" as const),
-      businessModule: "customer",
-      businessDocumentType: "CustomerStockOrder",
+      businessModule: "sales",
+      businessDocumentType: "SalesStockOrder",
       businessDocumentId: row.orderId,
       businessDocumentNumber: row.documentNo,
       businessDocumentLineId: row.lineId,
       materialId: row.materialId,
       workshopId: row.workshopId,
       changeQty: String(row.quantity),
-      idempotencyKey: `CustomerStockOrder:${row.orderId}:line:${row.lineId}`,
+      idempotencyKey: `SalesStockOrder:${row.orderId}:line:${row.lineId}`,
       operatorId: row.createdBy,
       occurredAt: toDateTimeString(row.createdAt),
       sortPriority: isSalesReturn
@@ -167,8 +167,8 @@ async function readProjectEvents(
       p.id AS projectId, p.projectCode, p.bizDate, p.workshopId,
       l.id AS lineId, l.materialId, l.quantity,
       p.createdBy, p.createdAt
-    FROM project p
-    JOIN project_material_line l ON l.projectId = p.id
+    FROM rd_project p
+    JOIN rd_project_material_line l ON l.projectId = p.id
     WHERE p.lifecycleStatus = 'EFFECTIVE'
     ORDER BY p.bizDate ASC, p.id ASC, l.id ASC
   `);
@@ -176,16 +176,16 @@ async function readProjectEvents(
   return rows.map((row) => ({
     bizDate: toDateString(row.bizDate),
     direction: "OUT" as const,
-    operationType: "PROJECT_CONSUMPTION_OUT" as const,
-    businessModule: "project",
-    businessDocumentType: "Project",
+    operationType: "RD_PROJECT_OUT" as const,
+    businessModule: "rd-project",
+    businessDocumentType: "RdProject",
     businessDocumentId: row.projectId,
     businessDocumentNumber: row.projectCode,
     businessDocumentLineId: row.lineId,
     materialId: row.materialId,
     workshopId: row.workshopId,
     changeQty: String(row.quantity),
-    idempotencyKey: `Project:${row.projectId}:line:${row.lineId}`,
+    idempotencyKey: `RdProject:${row.projectId}:line:${row.lineId}`,
     operatorId: row.createdBy,
     occurredAt: toDateTimeString(row.createdAt),
     sortPriority: DIRECTION_PRIORITY_OUT,
