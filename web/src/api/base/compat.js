@@ -2,6 +2,7 @@ import request from "@/utils/request";
 
 const DEFAULT_PAGE_NUM = 1;
 const DEFAULT_PAGE_SIZE = 30;
+const DEFAULT_UNCATEGORIZED_LABEL = "未分类";
 
 function toPositiveNumber(value, fallback) {
   const parsed = Number(value);
@@ -82,7 +83,7 @@ export function mapMaterial(item, extras = {}) {
     materialName: item.materialName,
     specification: item.specModel ?? "",
     category: item.category?.id ?? item.categoryId ?? null,
-    categoryName: item.category?.categoryName ?? "",
+    categoryName: item.category?.categoryName ?? DEFAULT_UNCATEGORIZED_LABEL,
     unit: item.unitCode ?? "",
     stockMin: toNumberOrNull(item.warningMinQty),
     stockMax: toNumberOrNull(item.warningMaxQty),
@@ -135,18 +136,19 @@ export function mapWorkshop(item) {
     item.defaultHandlerPersonnel && typeof item.defaultHandlerPersonnel === "object"
       ? item.defaultHandlerPersonnel
       : null;
+  const defaultHandlerPersonnelName =
+    defaultHandler?.personnelName ?? item.defaultHandlerPersonnelName ?? "";
 
   return {
     workshopId: item.id,
     workshopName: item.workshopName,
     defaultHandlerPersonnelId:
       defaultHandler?.id ?? item.defaultHandlerPersonnelId ?? null,
-    defaultHandlerPersonnelName:
-      defaultHandler?.personnelName ?? item.defaultHandlerPersonnelName ?? "",
+    defaultHandlerPersonnelName,
     status: item.status ?? "ACTIVE",
-    contactPerson: "",
-    chargeBy:
-      defaultHandler?.personnelName ?? item.defaultHandlerPersonnelName ?? "",
+    // Keep legacy aliases populated while pages finish migrating.
+    contactPerson: defaultHandlerPersonnelName,
+    chargeBy: defaultHandlerPersonnelName,
   };
 }
 

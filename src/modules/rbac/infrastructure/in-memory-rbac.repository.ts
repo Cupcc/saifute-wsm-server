@@ -206,6 +206,12 @@ export class InMemoryRbacRepository {
           component: "base/stock-scope/index",
           permissions: ["master:stock-scope:list"],
         },
+        {
+          name: "StockInventory",
+          path: "/stock/inventory",
+          component: "stock/inventory/index",
+          permissions: ["inventory:balance:list"],
+        },
       ],
     },
     {
@@ -279,12 +285,6 @@ export class InMemoryRbacRepository {
       permissions: [],
       children: [
         {
-          name: "StockInventory",
-          path: "/stock/inventory",
-          component: "stock/inventory/index",
-          permissions: ["inventory:balance:list"],
-        },
-        {
           name: "StockLog",
           path: "/stock/log",
           component: "stock/log/index",
@@ -345,6 +345,12 @@ export class InMemoryRbacRepository {
           path: "/sales/salesReturnDetail",
           component: "sales/salesReturnDetail/index",
           permissions: ["sales:return:list"],
+        },
+        {
+          name: "SalesProjectLedger",
+          path: "/sales/project",
+          component: "sales-project/index",
+          permissions: ["sales:project:list"],
         },
       ],
     },
@@ -550,7 +556,7 @@ export class InMemoryRbacRepository {
       phone: d.phone,
       email: d.email,
       status: d.status as "0" | "1",
-      createTime: d.createdAt.toISOString(),
+      createdAt: d.createdAt.toISOString(),
     }));
 
     this.posts = dbPosts.map((p) => ({
@@ -560,7 +566,7 @@ export class InMemoryRbacRepository {
       postSort: p.postSort,
       status: p.status as "0" | "1",
       remark: p.remark,
-      createTime: p.createdAt.toISOString(),
+      createdAt: p.createdAt.toISOString(),
     }));
 
     this.menus = dbMenus.map((m) => ({
@@ -597,7 +603,7 @@ export class InMemoryRbacRepository {
         .filter((rd) => rd.roleId === r.roleId)
         .map((rd) => rd.deptId),
       remark: r.remark,
-      createTime: r.createdAt.toISOString(),
+      createdAt: r.createdAt.toISOString(),
     }));
 
     this.dictTypes = dbDictTypes.map((dt) => ({
@@ -606,7 +612,7 @@ export class InMemoryRbacRepository {
       dictType: dt.dictType,
       status: dt.status as "0" | "1",
       remark: dt.remark,
-      createTime: dt.createdAt.toISOString(),
+      createdAt: dt.createdAt.toISOString(),
     }));
 
     this.dictData = dbDictData.map((dd) => ({
@@ -620,7 +626,7 @@ export class InMemoryRbacRepository {
       isDefault: dd.isDefault as "Y" | "N",
       status: dd.status as "0" | "1",
       remark: dd.remark,
-      createTime: dd.createdAt.toISOString(),
+      createdAt: dd.createdAt.toISOString(),
     }));
 
     this.configs = dbConfigs.map((c) => ({
@@ -630,7 +636,7 @@ export class InMemoryRbacRepository {
       configValue: c.configValue,
       configType: c.configType as "Y" | "N",
       remark: c.remark,
-      createTime: c.createdAt.toISOString(),
+      createdAt: c.createdAt.toISOString(),
     }));
 
     this.notices = dbNotices.map((n) => ({
@@ -640,7 +646,7 @@ export class InMemoryRbacRepository {
       noticeContent: n.noticeContent,
       status: n.status as "0" | "1",
       remark: n.remark,
-      createTime: n.createdAt.toISOString(),
+      createdAt: n.createdAt.toISOString(),
     }));
 
     this.users = dbUsers.map((u) => ({
@@ -655,7 +661,7 @@ export class InMemoryRbacRepository {
       status: u.status as "0" | "1",
       deleted: u.deleted,
       remark: u.remark,
-      createTime: u.createdAt.toISOString(),
+      createdAt: u.createdAt.toISOString(),
       postIds: dbUserPosts
         .filter((up) => up.userId === u.userId)
         .map((up) => up.postId),
@@ -712,7 +718,7 @@ export class InMemoryRbacRepository {
             phone: d.phone,
             email: d.email,
             status: d.status,
-            createdAt: new Date(d.createTime),
+            createdAt: new Date(d.createdAt),
             updatedAt: now,
           })),
         });
@@ -727,7 +733,7 @@ export class InMemoryRbacRepository {
             postSort: p.postSort,
             status: p.status,
             remark: p.remark,
-            createdAt: new Date(p.createTime),
+            createdAt: new Date(p.createdAt),
             updatedAt: now,
           })),
         });
@@ -768,7 +774,7 @@ export class InMemoryRbacRepository {
             menuCheckStrictly: r.menuCheckStrictly,
             deptCheckStrictly: r.deptCheckStrictly,
             remark: r.remark,
-            createdAt: new Date(r.createTime),
+            createdAt: new Date(r.createdAt),
             updatedAt: now,
           })),
         });
@@ -782,7 +788,7 @@ export class InMemoryRbacRepository {
             dictType: dt.dictType,
             status: dt.status,
             remark: dt.remark,
-            createdAt: new Date(dt.createTime),
+            createdAt: new Date(dt.createdAt),
             updatedAt: now,
           })),
         });
@@ -801,7 +807,7 @@ export class InMemoryRbacRepository {
             isDefault: dd.isDefault,
             status: dd.status,
             remark: dd.remark,
-            createdAt: new Date(dd.createTime),
+            createdAt: new Date(dd.createdAt),
             updatedAt: now,
           })),
         });
@@ -816,7 +822,7 @@ export class InMemoryRbacRepository {
             configValue: c.configValue,
             configType: c.configType,
             remark: c.remark,
-            createdAt: new Date(c.createTime),
+            createdAt: new Date(c.createdAt),
             updatedAt: now,
           })),
         });
@@ -831,7 +837,7 @@ export class InMemoryRbacRepository {
             noticeContent: n.noticeContent,
             status: n.status,
             remark: n.remark,
-            createdAt: new Date(n.createTime),
+            createdAt: new Date(n.createdAt),
             updatedAt: now,
           })),
         });
@@ -857,7 +863,7 @@ export class InMemoryRbacRepository {
             workshopScope: u.workshopScope as unknown as Prisma.InputJsonValue,
             extraPermissions:
               u.extraPermissions as unknown as Prisma.InputJsonValue,
-            createdAt: new Date(u.createTime),
+            createdAt: new Date(u.createdAt),
             updatedAt: now,
           })),
         });
@@ -1008,7 +1014,7 @@ export class InMemoryRbacRepository {
       status: this.normalizeStatus(data.status),
       deleted: false,
       remark: String(data.remark ?? ""),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       postIds: this.normalizeNumberList(data.postIds),
       roleIds: this.normalizeNumberList(data.roleIds),
       passwordHash: hashText(String(data.password ?? "ChangeMe123")),
@@ -1198,7 +1204,7 @@ export class InMemoryRbacRepository {
       menuIds: this.normalizeNumberList(data.menuIds),
       deptIds: this.normalizeNumberList(data.deptIds),
       remark: String(data.remark ?? ""),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     this.roles.push(role);
     this.queuePersistence();
@@ -1431,7 +1437,7 @@ export class InMemoryRbacRepository {
       phone: String(data.phone ?? ""),
       email: String(data.email ?? ""),
       status: this.normalizeStatus(data.status),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     this.depts.push(dept);
     this.queuePersistence();
@@ -1539,7 +1545,7 @@ export class InMemoryRbacRepository {
       postSort: this.requireNumber(data.postSort ?? 0),
       status: this.normalizeStatus(data.status),
       remark: String(data.remark ?? ""),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     this.posts.push(post);
     this.queuePersistence();
@@ -1602,7 +1608,7 @@ export class InMemoryRbacRepository {
       dictType: String(data.dictType ?? "").trim(),
       status: this.normalizeStatus(data.status),
       remark: String(data.remark ?? ""),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     this.dictTypes.push(record);
     this.queuePersistence();
@@ -1697,7 +1703,7 @@ export class InMemoryRbacRepository {
       isDefault: this.normalizeYesNoFlag(data.isDefault, "N"),
       status: this.normalizeStatus(data.status),
       remark: String(data.remark ?? ""),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     this.dictData.push(record);
     this.queuePersistence();
@@ -1770,7 +1776,7 @@ export class InMemoryRbacRepository {
       configValue: String(data.configValue ?? ""),
       configType: this.normalizeYesNoFlag(data.configType, "N"),
       remark: String(data.remark ?? ""),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     this.configs.push(record);
     this.queuePersistence();
@@ -1836,7 +1842,7 @@ export class InMemoryRbacRepository {
       noticeContent: String(data.noticeContent ?? ""),
       status: this.normalizeStatus(data.status),
       remark: String(data.remark ?? ""),
-      createTime: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
     this.notices.push(record);
     this.queuePersistence();
@@ -2007,7 +2013,7 @@ export class InMemoryRbacRepository {
       phonenumber: user.phonenumber,
       sex: user.sex,
       status: user.status,
-      createTime: user.createTime,
+      createdAt: user.createdAt,
       remark: user.remark,
       dept: user.deptId ? this.toDeptReference(user.deptId) : null,
       postIds: [...user.postIds],

@@ -13,6 +13,7 @@ import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { ApprovalService } from "../../approval/application/approval.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import { SalesProjectService } from "../../sales-project/application/sales-project.service";
 import { SalesRepository } from "../infrastructure/sales.repository";
 import { SalesService } from "./sales.service";
 
@@ -49,6 +50,9 @@ describe("SalesService", () => {
         orderId: 1,
         lineNo: 1,
         materialId: 100,
+        salesProjectId: 300,
+        salesProjectCodeSnapshot: "SP-001",
+        salesProjectNameSnapshot: "Sales Project A",
         materialCodeSnapshot: "MAT001",
         materialNameSnapshot: "Material A",
         materialSpecSnapshot: "Spec",
@@ -84,6 +88,9 @@ describe("SalesService", () => {
         orderId: 2,
         lineNo: 1,
         materialId: 100,
+        salesProjectId: 300,
+        salesProjectCodeSnapshot: "SP-001",
+        salesProjectNameSnapshot: "Sales Project A",
         materialCodeSnapshot: "MAT001",
         materialNameSnapshot: "Material A",
         materialSpecSnapshot: "Spec",
@@ -122,12 +129,22 @@ describe("SalesService", () => {
     customerName: "Customer A",
   };
   const mockPersonnel = { id: 20, personnelName: "Handler A" };
+  const mockSalesProjectReference = {
+    id: 300,
+    salesProjectCode: "SP-001",
+    salesProjectName: "Sales Project A",
+    customerId: 10,
+    workshopId: 1,
+    projectTargetId: 7001,
+    lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+  };
 
   let service: SalesService;
   let repository: jest.Mocked<SalesRepository>;
   let masterDataService: jest.Mocked<MasterDataService>;
   let inventoryService: jest.Mocked<InventoryService>;
   let approvalService: jest.Mocked<ApprovalService>;
+  let salesProjectService: jest.Mocked<SalesProjectService>;
   let prisma: {
     runInTransaction: jest.Mock;
     stockInPriceCorrectionOrderLine: { findMany: jest.Mock };
@@ -228,6 +245,14 @@ describe("SalesService", () => {
           },
         },
         {
+          provide: SalesProjectService,
+          useValue: {
+            listProjectReferencesByIds: jest
+              .fn()
+              .mockResolvedValue(new Map([[300, mockSalesProjectReference]])),
+          },
+        },
+        {
           provide: ApprovalService,
           useValue: {
             createOrRefreshApprovalDocument: jest.fn().mockResolvedValue({}),
@@ -242,6 +267,7 @@ describe("SalesService", () => {
     masterDataService = moduleRef.get(MasterDataService);
     inventoryService = moduleRef.get(InventoryService);
     approvalService = moduleRef.get(ApprovalService);
+    salesProjectService = moduleRef.get(SalesProjectService);
 
     (masterDataService.getMaterialById as jest.Mock).mockResolvedValue(
       mockMaterial,
@@ -273,6 +299,7 @@ describe("SalesService", () => {
         lines: [
           {
             materialId: 100,
+            salesProjectId: 300,
             quantity: "100",
             selectedUnitCost: "10",
             unitPrice: "10",
@@ -290,6 +317,7 @@ describe("SalesService", () => {
         expect.objectContaining({
           materialId: 100,
           stockScope: "MAIN",
+          projectTargetId: 7001,
           selectedUnitCost: mockOutboundOrder.lines[0].selectedUnitCost,
           businessDocumentType: "SalesStockOrder",
           businessDocumentId: 1,
@@ -317,6 +345,9 @@ describe("SalesService", () => {
         }),
         expect.anything(),
       );
+      expect(
+        salesProjectService.listProjectReferencesByIds,
+      ).toHaveBeenCalledWith([300], undefined);
     });
 
     it("should reject duplicate material and selected-unit-cost combinations", async () => {
@@ -664,6 +695,7 @@ describe("SalesService", () => {
         expect.objectContaining({
           materialId: 100,
           stockScope: "MAIN",
+          projectTargetId: 7001,
           businessDocumentType: "SalesStockOrder",
           businessDocumentId: 2,
           businessDocumentNumber: "SR-001",

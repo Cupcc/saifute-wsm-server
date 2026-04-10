@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -149,6 +150,8 @@ export interface ReleaseFactoryNumberReservationsCommand {
   operatorId?: string;
 }
 
+const INVENTORY_BALANCE_CONFLICT_MESSAGE = "库存余额已被并发更新，请重试";
+
 @Injectable()
 export class InventoryService {
   constructor(
@@ -179,26 +182,12 @@ export class InventoryService {
 
     try {
       return await this.withTransaction(tx, async (db) => {
-        let balance = await db.inventoryBalance.findUnique({
-          where: {
-            materialId_stockScopeId: {
-              materialId: cmd.materialId,
-              stockScopeId: scope.stockScopeId,
-            },
-          },
-        });
-
-        if (!balance) {
-          balance = await db.inventoryBalance.create({
-            data: {
-              materialId: cmd.materialId,
-              stockScopeId: scope.stockScopeId,
-              quantityOnHand: 0,
-              createdBy: cmd.operatorId,
-              updatedBy: cmd.operatorId,
-            },
-          });
-        }
+        const balance = await this.findOrCreateBalance(
+          cmd.materialId,
+          scope.stockScopeId,
+          cmd.operatorId,
+          db,
+        );
 
         const beforeQty = new Prisma.Decimal(balance.quantityOnHand);
         const afterQty = beforeQty.add(changeQty);
@@ -209,14 +198,15 @@ export class InventoryService {
           cmd.costAmount != null ? new Prisma.Decimal(cmd.costAmount) : null;
 
         const [, log] = await Promise.all([
-          db.inventoryBalance.update({
-            where: { id: balance.id },
-            data: {
-              quantityOnHand: afterQty,
-              rowVersion: { increment: 1 },
+          this.updateBalanceOptimistically(
+            {
+              balanceId: balance.id,
+              expectedRowVersion: balance.rowVersion,
+              nextQuantityOnHand: afterQty,
               updatedBy: cmd.operatorId,
             },
-          }),
+            db,
+          ),
           db.inventoryLog.create({
             data: {
               balanceId: balance.id,
@@ -320,14 +310,15 @@ export class InventoryService {
           },
         });
 
-        await db.inventoryBalance.update({
-          where: { id: balance.id },
-          data: {
-            quantityOnHand: afterQty,
-            rowVersion: { increment: 1 },
+        await this.updateBalanceOptimistically(
+          {
+            balanceId: balance.id,
+            expectedRowVersion: balance.rowVersion,
+            nextQuantityOnHand: afterQty,
             updatedBy: cmd.operatorId,
           },
-        });
+          db,
+        );
 
         return log;
       });
@@ -407,14 +398,15 @@ export class InventoryService {
           },
         });
 
-        await db.inventoryBalance.update({
-          where: { id: balance.id },
-          data: {
-            quantityOnHand: afterQty,
-            rowVersion: { increment: 1 },
+        await this.updateBalanceOptimistically(
+          {
+            balanceId: balance.id,
+            expectedRowVersion: balance.rowVersion,
+            nextQuantityOnHand: afterQty,
             updatedBy: sourceLog.operatorId ?? undefined,
           },
-        });
+          db,
+        );
 
         return log;
       });
@@ -706,14 +698,15 @@ export class InventoryService {
           },
         });
 
-        await db.inventoryBalance.update({
-          where: { id: balance.id },
-          data: {
-            quantityOnHand: afterQty,
-            rowVersion: { increment: 1 },
+        await this.updateBalanceOptimistically(
+          {
+            balanceId: balance.id,
+            expectedRowVersion: balance.rowVersion,
+            nextQuantityOnHand: afterQty,
             updatedBy: cmd.operatorId,
           },
-        });
+          db,
+        );
 
         return {
           outLog: outLog as SettleConsumerOutResult["outLog"],
@@ -1182,6 +1175,8 @@ export class InventoryService {
   async listSourceUsages(
     params: {
       materialId?: number;
+      stockScope?: StockScopeCode;
+      workshopId?: number;
       consumerDocumentType?: string;
       consumerDocumentId?: number;
       limit?: number;
@@ -1191,9 +1186,11 @@ export class InventoryService {
   ) {
     const limit = Math.min(params.limit ?? 50, 100);
     const offset = params.offset ?? 0;
+    const stockScopeIds = await this.resolveInventoryStockScopeIds(params);
     return this.repository.findSourceUsages(
       {
         materialId: params.materialId,
+        stockScopeIds,
         consumerDocumentType: params.consumerDocumentType,
         consumerDocumentId: params.consumerDocumentId,
         limit,
@@ -1427,6 +1424,86 @@ export class InventoryService {
     }
 
     throw error;
+  }
+
+  private async findOrCreateBalance(
+    materialId: number,
+    stockScopeId: number,
+    operatorId: string | undefined,
+    db: Prisma.TransactionClient,
+  ) {
+    const existing = await db.inventoryBalance.findUnique({
+      where: {
+        materialId_stockScopeId: {
+          materialId,
+          stockScopeId,
+        },
+      },
+    });
+    if (existing) {
+      return existing;
+    }
+
+    try {
+      return await db.inventoryBalance.create({
+        data: {
+          materialId,
+          stockScopeId,
+          quantityOnHand: 0,
+          createdBy: operatorId,
+          updatedBy: operatorId,
+        },
+      });
+    } catch (error) {
+      if (this.isUniqueConstraintError(error)) {
+        const concurrent = await db.inventoryBalance.findUnique({
+          where: {
+            materialId_stockScopeId: {
+              materialId,
+              stockScopeId,
+            },
+          },
+        });
+        if (concurrent) {
+          return concurrent;
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  private async updateBalanceOptimistically(
+    params: {
+      balanceId: number;
+      expectedRowVersion: number;
+      nextQuantityOnHand: Prisma.Decimal;
+      updatedBy?: string;
+    },
+    db: Prisma.TransactionClient,
+  ) {
+    const result = await db.inventoryBalance.updateMany({
+      where: {
+        id: params.balanceId,
+        rowVersion: params.expectedRowVersion,
+      },
+      data: {
+        quantityOnHand: params.nextQuantityOnHand,
+        rowVersion: { increment: 1 },
+        updatedBy: params.updatedBy,
+      },
+    });
+
+    if (result.count !== 1) {
+      throw new ConflictException(INVENTORY_BALANCE_CONFLICT_MESSAGE);
+    }
+  }
+
+  private isUniqueConstraintError(error: unknown) {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    );
   }
 
   private async resolveInventoryStockScopeIds(params: {

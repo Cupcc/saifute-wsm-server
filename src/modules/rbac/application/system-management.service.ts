@@ -43,7 +43,7 @@ export class SystemManagementService {
         { header: "手机号码", value: (row) => row.phonenumber },
         { header: "邮箱", value: (row) => row.email },
         { header: "状态", value: (row) => row.status },
-        { header: "创建时间", value: (row) => row.createTime },
+        { header: "创建时间", value: (row) => row.createdAt },
       ],
     );
   }
@@ -159,7 +159,7 @@ export class SystemManagementService {
         { header: "显示顺序", value: (row) => row.roleSort },
         { header: "状态", value: (row) => row.status },
         { header: "数据范围", value: (row) => row.dataScope },
-        { header: "创建时间", value: (row) => row.createTime },
+        { header: "创建时间", value: (row) => row.createdAt },
       ],
     );
   }
@@ -350,7 +350,7 @@ export class SystemManagementService {
         { header: "岗位排序", value: (row) => row.postSort },
         { header: "状态", value: (row) => row.status },
         { header: "备注", value: (row) => row.remark },
-        { header: "创建时间", value: (row) => row.createTime },
+        { header: "创建时间", value: (row) => row.createdAt },
       ],
     );
   }
@@ -394,7 +394,7 @@ export class SystemManagementService {
         { header: "字典类型", value: (row) => row.dictType },
         { header: "状态", value: (row) => row.status },
         { header: "备注", value: (row) => row.remark },
-        { header: "创建时间", value: (row) => row.createTime },
+        { header: "创建时间", value: (row) => row.createdAt },
       ],
     );
   }
@@ -451,7 +451,7 @@ export class SystemManagementService {
         { header: "默认", value: (row) => row.isDefault },
         { header: "状态", value: (row) => row.status },
         { header: "备注", value: (row) => row.remark },
-        { header: "创建时间", value: (row) => row.createTime },
+        { header: "创建时间", value: (row) => row.createdAt },
       ],
     );
   }
@@ -504,7 +504,7 @@ export class SystemManagementService {
         { header: "参数键值", value: (row) => row.configValue },
         { header: "系统内置", value: (row) => row.configType },
         { header: "备注", value: (row) => row.remark },
-        { header: "创建时间", value: (row) => row.createTime },
+        { header: "创建时间", value: (row) => row.createdAt },
       ],
     );
   }

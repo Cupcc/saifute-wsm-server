@@ -80,7 +80,7 @@ export class InboundRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        orderBy: { bizDate: "desc" },
+        orderBy: [{ bizDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         include: { lines: true },
       }),
       client.stockInOrder.count({ where }),

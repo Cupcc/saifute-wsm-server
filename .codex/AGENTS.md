@@ -1,0 +1,1 @@
+- code must be clarity, consistency, and maintainability

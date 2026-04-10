@@ -2,7 +2,7 @@
   <el-dialog
     :model-value="modelValue"
     :title="title"
-    width="980px"
+    width="1180px"
     append-to-body
     draggable
     @update:model-value="handleVisibleChange"
@@ -41,17 +41,20 @@
         <el-descriptions-item label="总金额">
           {{ formatAmount(detailData.totalAmount) }}
         </el-descriptions-item>
+        <el-descriptions-item label="关联项目" :span="2">
+          {{ detailData.salesProjectSummary || "-" }}
+        </el-descriptions-item>
         <el-descriptions-item label="创建人">
           {{ detailData.createBy || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">
-          {{ formatDateTime(detailData.createTime) }}
+          {{ formatDateTime(detailData.createdAt) }}
         </el-descriptions-item>
         <el-descriptions-item label="更新人">
           {{ detailData.updateBy || "-" }}
         </el-descriptions-item>
         <el-descriptions-item label="更新时间">
-          {{ formatDateTime(detailData.updateTime) }}
+          {{ formatDateTime(detailData.updatedAt) }}
         </el-descriptions-item>
         <el-descriptions-item label="备注" :span="2">
           {{ detailData.remark || "-" }}
@@ -71,9 +74,23 @@
         <el-table-column label="物料编码" prop="materialCode" min-width="120" />
         <el-table-column label="物料名称" prop="materialName" min-width="160" />
         <el-table-column label="规格型号" prop="specification" min-width="140" />
+        <el-table-column label="销售项目" prop="salesProjectName" min-width="180">
+          <template #default="scope">
+            {{
+              scope.row.salesProjectName ||
+              scope.row.salesProjectCode ||
+              "-"
+            }}
+          </template>
+        </el-table-column>
         <el-table-column label="数量" prop="quantity" width="100" align="right">
           <template #default="scope">
             {{ formatNumber(scope.row.quantity) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="成本价层" prop="selectedUnitCost" width="110" align="right">
+          <template #default="scope">
+            {{ formatAmount(scope.row.selectedUnitCost) }}
           </template>
         </el-table-column>
         <el-table-column label="单价" prop="unitPrice" width="110" align="right">
@@ -84,6 +101,11 @@
         <el-table-column label="金额" prop="amount" width="110" align="right">
           <template #default="scope">
             {{ formatAmount(scope.row.amount) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="成本金额" prop="costAmount" width="110" align="right">
+          <template #default="scope">
+            {{ formatAmount(scope.row.costAmount) }}
           </template>
         </el-table-column>
         <el-table-column label="起始编号" prop="startNumber" min-width="120" />

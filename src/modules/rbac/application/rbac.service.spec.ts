@@ -66,6 +66,18 @@ describe("RbacService", () => {
         "RdStocktakeOrders",
       ]),
     );
+
+    const masterDataRouteNames =
+      routes
+        .find((route) => route.name === "MasterData")
+        ?.children?.map((route) => route.name) ?? [];
+    expect(masterDataRouteNames).toContain("StockInventory");
+
+    const inventoryRouteNames =
+      routes
+        .find((route) => route.name === "InventoryBusiness")
+        ?.children?.map((route) => route.name) ?? [];
+    expect(inventoryRouteNames).not.toContain("StockInventory");
   });
 
   it("should only return rd console routes for rd users", async () => {

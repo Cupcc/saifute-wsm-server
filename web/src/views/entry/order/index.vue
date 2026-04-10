@@ -101,10 +101,24 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="验收日期" align="center" prop="inboundDate" width="180" v-if="columns[1].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="验收日期"
+        align="center"
+        prop="inboundDate"
+        width="200"
+        :sort-method="compareInboundDateRows"
+        v-if="columns[1].visible"
+      >
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
-            {{ parseTime(scope.row.inboundDate, '{y}-{m}-{d}') }}
+            <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+              <span>{{ formatDocumentDate(scope.row.inboundDate) }}</span>
+              <span style="font-size: 12px; color: #909399;">
+                创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+              </span>
+            </span>
           </el-button>
         </template>
       </el-table-column>
@@ -231,7 +245,7 @@
 	          </el-form-item>
           </el-col>
         </el-row>
-        <el-row>
+	      <el-row>
           <el-col :span="12">
 	          <el-form-item label="负责人" prop="chargeBy">
 		          <combo-input v-model="form.chargeBy" scope="personnel" field="personnelName" placeholder="请选择或输入负责人" :disabled="form.inboundId != null" />
@@ -366,8 +380,8 @@
               <el-descriptions-item label="经办人">{{ detailData.attn }}</el-descriptions-item>
               <el-descriptions-item label="关联部门">{{ detailData.workshopName }}</el-descriptions-item>
               <el-descriptions-item label="创建人">{{ detailData.createBy }}</el-descriptions-item>
-              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
-              <el-descriptions-item label="更新时间">{{ parseTime(detailData.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
+              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createdAt, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
+              <el-descriptions-item label="更新时间">{{ parseTime(detailData.updatedAt, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
               <el-descriptions-item label="审核结果">
                 <span v-if="detailData.auditStatus === '0' || detailData.auditStatus === 0" style="color: #E6A23C;">未审核</span>
                 <span v-else-if="detailData.auditStatus === '1' || detailData.auditStatus === 1" style="color: #67C23A;">审核通过</span>
@@ -563,6 +577,63 @@ const columns = ref([
   { key: 7, label: `创建人`, visible: false },
   { key: 8, label: `审核结果`, visible: true },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function compareInboundDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.inboundDate).localeCompare(
+    formatDocumentDate(right?.inboundDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.inboundId ?? 0) - Number(right?.inboundId ?? 0);
+}
 
 /** 查询验收单列表 */
 function getList() {

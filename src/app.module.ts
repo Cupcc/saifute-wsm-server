@@ -16,6 +16,7 @@ import { RdProjectModule } from "./modules/rd-project/rd-project.module";
 import { RdSubwarehouseModule } from "./modules/rd-subwarehouse/rd-subwarehouse.module";
 import { ReportingModule } from "./modules/reporting/reporting.module";
 import { SalesModule } from "./modules/sales/sales.module";
+import { SalesProjectModule } from "./modules/sales-project/sales-project.module";
 import { SchedulerModule } from "./modules/scheduler/scheduler.module";
 import { SessionModule } from "./modules/session/session.module";
 import { WorkshopMaterialModule } from "./modules/workshop-material/workshop-material.module";
@@ -45,6 +46,7 @@ import { RedisModule } from "./shared/redis/redis.module";
     ApprovalModule,
     InboundModule,
     SalesModule,
+    SalesProjectModule,
     WorkshopMaterialModule,
     RdProjectModule,
     RdSubwarehouseModule,

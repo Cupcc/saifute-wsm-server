@@ -156,6 +156,9 @@ function mapOrderLine(line, config, order, audit = null) {
     auditStatus: toAuditStatus(order.auditStatusSnapshot),
     auditor: audit?.decidedBy ?? null,
     auditTime: audit?.decidedAt ?? null,
+    createBy: order.createdBy ?? "",
+    createdAt: order.createdAt ?? null,
+    updatedAt: order.updatedAt ?? null,
     material,
   };
 
@@ -209,8 +212,8 @@ function mapOrder(
     chargeBy: order.handlerNameSnapshot ?? "",
     createBy: order.createdBy ?? "",
     updateBy: order.updatedBy ?? "",
-    createTime: order.createdAt,
-    updateTime: order.updatedAt,
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
     totalAmount: toNumber(order.totalAmount).toFixed(2),
     totalQty: toNumber(order.totalQty),
     auditStatus: toAuditStatus(order.auditStatusSnapshot),

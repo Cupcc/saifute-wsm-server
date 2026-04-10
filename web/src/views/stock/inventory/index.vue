@@ -1,93 +1,190 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-	    <el-form-item label="物料分类" prop="category">
-		    <el-select v-model="queryParams.category" placeholder="请选择类型" clearable multiple collapse-tags collapse-tags-tooltip style="width: 200px">
-			    <el-option
-				    v-for="dict in saifute_material_category"
-				    :key="dict.value"
-				    :label="dict.label"
-				    :value="dict.value" />
-		    </el-select>
-	    </el-form-item>
-      <el-form-item label="物料" prop="materialId">
+    <el-form
+      ref="queryRef"
+      :model="queryParams"
+      :inline="true"
+      v-show="showSearch"
+      label-width="68px"
+    >
+      <el-form-item label="物料分类" prop="category">
         <el-select
-          v-model="queryParams.materialId"
-          filterable
-          remote
-          reserve-keyword
-          placeholder="请输入物料名称或规格型号搜索"
-          :remote-method="searchMaterial"
-          :loading="materialLoading"
+          v-model="queryParams.category"
+          placeholder="请选择类型"
           clearable
-          style="width: 240px"
-          @change="handleQuery">
+          multiple
+          collapse-tags
+          collapse-tags-tooltip
+          style="width: 200px"
+        >
           <el-option
-            v-for="item in materialOptions"
-            :key="item.materialId"
-            :label="item.materialName + ' ' + item.specification"
-            :value="item.materialId">
-            <span style="float: left; color: #ff7171;">{{ item.materialCode }}</span>
-            <span style="float: left; color: #6985ff; margin-left: 10px;">{{ item.materialName }}</span>
-            <span style="float: right; color: #37a62c; font-size: 13px; margin-left: 20px;">{{ item.specification }}</span>
-          </el-option>
+            v-for="dict in saifute_material_category"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
         </el-select>
       </el-form-item>
-	    
-	    <el-form-item label="物料编码" prop="materialCode2">
-		    <el-input v-model="queryParams.materialCode2" placeholder="请输入物料编码" clearable style="width: 200px" @keyup.enter="handleQuery" />
-	    </el-form-item>
-	    
-	    <el-form-item label="物料名称" prop="materialName">
-		    <el-input v-model="queryParams.materialName" placeholder="请输入物料名称" clearable style="width: 200px" @keyup.enter="handleQuery" />
-	    </el-form-item>
-	    
-	    <el-form-item label="规格型号" prop="specification">
-		    <el-input v-model="queryParams.specification" placeholder="请输入规格型号" clearable style="width: 200px" @keyup.enter="handleQuery" />
-	    </el-form-item>
+      <el-form-item label="仓库范围" prop="stockScope">
+        <el-select
+          v-model="queryParams.stockScope"
+          placeholder="请选择范围"
+          clearable
+          style="width: 180px"
+          @change="handleQuery"
+        >
+          <el-option
+            v-for="option in stockScopeOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="物料" prop="keyword">
+        <el-autocomplete
+          :model-value="queryParams.keyword ?? ''"
+          :fetch-suggestions="queryMaterialSuggestions"
+          placeholder="请输入物料编码、名称或规格型号"
+          clearable
+          style="width: 260px"
+          :trigger-on-focus="false"
+          :debounce="250"
+          @update:model-value="handleMaterialKeywordInput"
+          @select="handleMaterialSuggestionSelect"
+          @clear="handleMaterialKeywordClear"
+          @keyup.enter="handleQuery"
+        >
+          <template #default="{ item }">
+            <div class="material-search-suggestion">
+              <template v-if="item.suggestionType === 'material'">
+                <span class="material-search-suggestion__code">
+                  {{ item.materialCode }}
+                </span>
+                <span class="material-search-suggestion__name">
+                  {{ item.materialName }}
+                </span>
+                <span class="material-search-suggestion__spec">
+                  {{ item.specification || "无规格" }}
+                </span>
+              </template>
+              <template v-else>
+                <span class="material-search-suggestion__spec-tag">规格</span>
+                <span class="material-search-suggestion__spec-only">
+                  {{ item.specification }}
+                </span>
+              </template>
+            </div>
+          </template>
+        </el-autocomplete>
+      </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+        <el-button type="primary" icon="Search" @click="handleQuery">
+          搜索
+        </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="Plus"
-          @click="handleAdd"
-          v-hasPermi="['stock:inventory:add']"
-        >新增</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
+      <right-toolbar
+        v-model:showSearch="showSearch"
+        @queryTable="getList"
+        :columns="columns"
+      />
     </el-row>
 
     <adaptive-table border stripe v-loading="loading" :data="inventoryList">
       <el-table-column type="index" width="50" align="center" />
-      <el-table-column sortable show-overflow-tooltip label="物料编码" align="center" v-if="columns[0].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="物料编码"
+        align="center"
+        v-if="columns[0].visible"
+      >
         <template #default="scope">
-          <el-button link type="primary" @click="handleViewDetail(scope.row.materialId)">
+          <el-button
+            link
+            type="primary"
+            @click="handleViewDetail(scope.row.materialId)"
+          >
             {{ scope.row.materialCode }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="物料名称" align="center" v-if="columns[1].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="物料名称"
+        align="center"
+        v-if="columns[1].visible"
+      >
         <template #default="scope">
-          <el-button link type="primary" @click="handleViewDetail(scope.row.materialId)">
+          <el-button
+            link
+            type="primary"
+            @click="handleViewDetail(scope.row.materialId)"
+          >
             {{ scope.row.materialName }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="规格型号" align="center" prop="specification" v-if="columns[2].visible">
-	      <template #default="scope">
-		      <el-button link type="primary" @click="handleViewDetail(scope.row.materialId)">
-			      {{ scope.row.specification }}
-		      </el-button>
-	      </template>
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="规格型号"
+        align="center"
+        prop="specification"
+        v-if="columns[2].visible"
+      >
+        <template #default="scope">
+          <el-button
+            link
+            type="primary"
+            @click="handleViewDetail(scope.row.materialId)"
+          >
+            {{ scope.row.specification }}
+          </el-button>
+        </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="当前库存" align="center" prop="currentQty" v-if="columns[3].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="物料分类"
+        align="center"
+        prop="category"
+        v-if="columns[3].visible"
+      >
+        <template #default="scope">
+          <dict-tag :options="saifute_material_category" :value="scope.row.category" />
+        </template>
+      </el-table-column>
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="仓库范围"
+        align="center"
+        prop="stockScopeName"
+        v-if="columns[4].visible"
+      >
+        <template #default="scope">
+          <el-tag
+            size="small"
+            :type="scope.row.stockScope === 'RD_SUB' ? 'warning' : 'success'"
+          >
+            {{ scope.row.stockScopeName }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="当前库存"
+        align="center"
+        prop="currentQty"
+        v-if="columns[5].visible"
+      >
         <template #default="scope">
           <el-button
             link
@@ -100,82 +197,44 @@
         </template>
       </el-table-column>
     </adaptive-table>
-    
+
     <pagination
-      v-show="total>0"
+      v-show="total > 0"
       :total="total"
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
       @pagination="getList"
     />
 
-    <!-- 添加或修改库存对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body draggable v-loading="dialogLoading">
-      <el-form ref="inventoryRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="物料编码" prop="materialId">
-          <el-select
-            v-model="form.materialId"
-            filterable
-            remote
-            reserve-keyword
-            placeholder="请输入物料名称或规格型号搜索"
-            :remote-method="searchMaterial"
-            :loading="materialLoading"
-            @change="handleMaterialChange">
-            <el-option
-              v-for="item in materialOptions"
-              :key="item.materialId"
-              :label="item.materialName + ' ' + item.specification"
-              :value="item.materialId">
-              <span style="float: left">{{ item.materialCode }}</span>
-              <span style="float: left; margin-left: 10px;">{{ item.materialName }}</span>
-              <span style="float: right; color: #8492a6; font-size: 13px; margin-left: 20px;">{{ item.specification }}</span>
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="当前库存" prop="currentQty">
-          <el-input v-model="form.currentQty" placeholder="请输入当前库存" />
-        </el-form-item>
-        <el-form-item label="盘点时间" prop="lastStocktake">
-          <el-date-picker clearable
-            v-model="form.lastStocktake"
-            type="date"
-            value-format="YYYY-MM-DD"
-            placeholder="请选择上次盘点时间">
-          </el-date-picker>
-        </el-form-item>
-        
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button v-if="!isView" type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- 详情查看对话框 -->
     <el-dialog title="详情" v-model="materialViewOpen" width="500px" append-to-body>
-	    <el-row :gutter="10">
-		    <el-col :span="24">
-			    <el-card class="box-card">
-				    <template #header>
-					    <div class="card-header">
-						    <span>物料信息</span>
-					    </div>
-				    </template>
-			      <el-descriptions :column="1" border>
-			        <el-descriptions-item label="物料编码">{{ materialViewForm.materialCode }}</el-descriptions-item>
-			        <el-descriptions-item label="物料名称">{{ materialViewForm.materialName }}</el-descriptions-item>
-			        <el-descriptions-item label="规格型号">{{ materialViewForm.specification }}</el-descriptions-item>
-			        <el-descriptions-item label="分类">
-			          {{ getCategoryLabel(materialViewForm.category) }}
-			        </el-descriptions-item>
-			        <el-descriptions-item label="单位">{{ materialViewForm.unit }}</el-descriptions-item>
-			      </el-descriptions>
-			    </el-card>
-		    </el-col>
-	    </el-row>
+      <el-row :gutter="10">
+        <el-col :span="24">
+          <el-card class="box-card">
+            <template #header>
+              <div class="card-header">
+                <span>物料信息</span>
+              </div>
+            </template>
+            <el-descriptions :column="1" border>
+              <el-descriptions-item label="物料编码">
+                {{ materialViewForm.materialCode }}
+              </el-descriptions-item>
+              <el-descriptions-item label="物料名称">
+                {{ materialViewForm.materialName }}
+              </el-descriptions-item>
+              <el-descriptions-item label="规格型号">
+                {{ materialViewForm.specification }}
+              </el-descriptions-item>
+              <el-descriptions-item label="分类">
+                {{ getCategoryLabel(materialViewForm.category) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="单位">
+                {{ materialViewForm.unit }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </el-card>
+        </el-col>
+      </el-row>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="materialViewOpen = false">关 闭</el-button>
@@ -186,132 +245,206 @@
 </template>
 
 <script setup name="Inventory">
+import { getFieldSuggestions } from "@/api/base/suggestions";
 import { getMaterial, listMaterialByCodeOrName } from "@/api/base/material";
-import {
-  addInventory,
-  delInventory,
-  getInventory,
-  listInventory,
-  updateInventory,
-} from "@/api/stock/inventory";
+import { listInventory } from "@/api/stock/inventory";
 import { useDict } from "@/utils/dict";
 
 const { proxy } = getCurrentInstance();
-
-// 获取物料分类字典数据
 const { saifute_material_category } = useDict("saifute_material_category");
 
 const inventoryList = ref([]);
-const open = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
-const ids = ref([]);
-const single = ref(true);
-const multiple = ref(true);
 const total = ref(0);
-const title = ref("");
-const dialogLoading = ref(false);
-const materialLoading = ref(false);
-const materialOptions = ref([]);
 const materialViewOpen = ref(false);
-const materialViewForm = ref([]);
-const isView = ref(false); // 添加查看模式标识
+const materialViewForm = ref({});
+const specSuggestionValues = ref([]);
+const specSuggestionsLoaded = ref(false);
+const materialSuggestionRequestId = ref(0);
+const selectedMaterialKeyword = ref("");
 
-const data = reactive({
-  form: {},
-  queryParams: {
-    pageNum: 1,
-    pageSize: 30,
-    materialId: null,
-    category: null,
-    materialCode2: null,
-    materialName: null,
-    specification: null,
-  },
-  rules: {
-    materialId: [{ required: true, message: "物料不能为空", trigger: "blur" }],
-    currentQty: [
-      { required: true, message: "当前库存不能为空", trigger: "blur" },
-    ],
-  },
+const queryParams = ref({
+  pageNum: 1,
+  pageSize: 30,
+  materialId: null,
+  category: null,
+  stockScope: null,
+  keyword: null,
 });
 
-const { queryParams, form, rules } = toRefs(data);
+const stockScopeOptions = [
+  { label: "主仓", value: "MAIN" },
+  { label: "研发小仓", value: "RD_SUB" },
+];
 
-// 添加columns数组定义
 const columns = ref([
-  { key: 0, label: `物料编码`, visible: false },
-  { key: 1, label: `物料名称`, visible: true },
-  { key: 2, label: `规格型号`, visible: true },
-  { key: 3, label: `当前库存`, visible: true },
+  { key: 0, label: "物料编码", visible: true },
+  { key: 1, label: "物料名称", visible: true },
+  { key: 2, label: "规格型号", visible: true },
+  { key: 3, label: "物料分类", visible: true },
+  { key: 4, label: "仓库范围", visible: true },
+  { key: 5, label: "当前库存", visible: true },
 ]);
 
-/** 查询库存列表 */
 function getList() {
   loading.value = true;
-  listInventory(queryParams.value).then((response) => {
-    inventoryList.value = response.rows;
-    total.value = response.total;
-    loading.value = false;
-  });
-}
-
-/** 重置按钮操作 */
-function resetQuery() {
-  proxy.resetForm("queryRef");
-  handleQuery();
-}
-
-// 取消按钮
-function cancel() {
-  open.value = false;
-  isView.value = false; // 重置查看模式标识
-  reset();
-}
-
-// 表单重置
-function reset() {
-  form.value = {
-    inventoryId: null,
-    materialId: null,
-    currentQty: null,
-    updateTime: null,
-    lastStocktake: null,
-    updateBy: null,
-    remark: null,
-  };
-  materialOptions.value = [];
-  isView.value = false; // 重置查看模式标识
-  proxy.resetForm("inventoryRef");
-}
-
-/** 搜索物料 */
-function searchMaterial(query) {
-  materialLoading.value = true;
-  listMaterialByCodeOrName({
-    materialCode: query,
-  })
+  listInventory(queryParams.value)
     .then((response) => {
-      materialOptions.value = response.rows;
-      materialLoading.value = false;
+      inventoryList.value = response.rows || [];
+      total.value = response.total || 0;
     })
-    .catch(() => {
-      materialLoading.value = false;
+    .finally(() => {
+      loading.value = false;
     });
 }
 
-/** 物料选择变更 */
-function handleMaterialChange(val) {
-  // 可以在这里添加选择物料后的处理逻辑
-}
-
-/** 搜索按钮操作 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
   getList();
 }
 
-/** 查看物料详情 */
+function resetQuery() {
+  proxy.resetForm("queryRef");
+  queryParams.value.materialId = null;
+  selectedMaterialKeyword.value = "";
+  handleQuery();
+}
+
+function normalizeKeyword(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function buildMaterialSuggestion(item) {
+  return {
+    value: item.materialCode || item.materialName || item.specification || "",
+    materialId: item.materialId,
+    materialCode: item.materialCode || "",
+    materialName: item.materialName || "",
+    specification: item.specification || "",
+    suggestionType: "material",
+  };
+}
+
+function buildSpecSuggestion(specification) {
+  return {
+    value: specification,
+    materialId: null,
+    materialCode: "",
+    materialName: "",
+    specification,
+    suggestionType: "spec",
+  };
+}
+
+function dedupeSuggestions(items) {
+  const seen = new Set();
+
+  return items.filter((item) => {
+    const key = item.materialId
+      ? `material:${item.materialId}`
+      : `spec:${item.value}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+async function ensureSpecSuggestionsLoaded() {
+  if (specSuggestionsLoaded.value) {
+    return specSuggestionValues.value;
+  }
+
+  try {
+    specSuggestionValues.value = await getFieldSuggestions("material", "specModel");
+  } catch {
+    specSuggestionValues.value = [];
+  } finally {
+    specSuggestionsLoaded.value = true;
+  }
+
+  return specSuggestionValues.value;
+}
+
+async function queryMaterialSuggestions(queryString, callback) {
+  const requestId = ++materialSuggestionRequestId.value;
+  const keyword = normalizeKeyword(queryString);
+  if (!keyword) {
+    callback([]);
+    return;
+  }
+
+  try {
+    const [materialResponse, specValues] = await Promise.all([
+      listMaterialByCodeOrName({
+        materialCode: keyword,
+        materialName: keyword,
+        pageNum: 1,
+        pageSize: 8,
+      }).catch(() => ({ rows: [] })),
+      ensureSpecSuggestionsLoaded(),
+    ]);
+
+    if (requestId !== materialSuggestionRequestId.value) {
+      return;
+    }
+
+    const normalizedKeyword = keyword.toLowerCase();
+    const materialSuggestions = (materialResponse.rows || [])
+      .filter((item) =>
+        [item.materialCode, item.materialName, item.specification].some((field) =>
+          String(field || "")
+            .toLowerCase()
+            .includes(normalizedKeyword),
+        ),
+      )
+      .map(buildMaterialSuggestion);
+    const specSuggestions = specValues
+      .filter((item) =>
+        String(item || "")
+          .toLowerCase()
+          .includes(normalizedKeyword),
+      )
+      .slice(0, 5)
+      .map(buildSpecSuggestion);
+
+    callback(dedupeSuggestions([...materialSuggestions, ...specSuggestions]).slice(0, 10));
+  } catch {
+    if (requestId === materialSuggestionRequestId.value) {
+      callback([]);
+    }
+  }
+}
+
+function handleMaterialKeywordInput(value) {
+  materialSuggestionRequestId.value += 1;
+  queryParams.value.keyword = value || null;
+  if (!value || value !== selectedMaterialKeyword.value) {
+    queryParams.value.materialId = null;
+    selectedMaterialKeyword.value = "";
+  }
+}
+
+function handleMaterialKeywordClear() {
+  materialSuggestionRequestId.value += 1;
+  queryParams.value.keyword = null;
+  queryParams.value.materialId = null;
+  selectedMaterialKeyword.value = "";
+}
+
+function handleMaterialSuggestionSelect(item) {
+  queryParams.value.keyword = item.value || null;
+  queryParams.value.materialId = item.materialId ?? null;
+  selectedMaterialKeyword.value = item.materialId ? item.value : "";
+  handleQuery();
+}
+
 function handleViewDetail(materialId) {
   getMaterial(materialId).then((response) => {
     materialViewForm.value = response.data;
@@ -319,108 +452,52 @@ function handleViewDetail(materialId) {
   });
 }
 
-/** 根据分类值获取分类标签 */
 function getCategoryLabel(value) {
-  if (!value) return "";
+  if (!value) {
+    return "";
+  }
+
   const category = saifute_material_category.value.find(
     (item) => item.value === value.toString(),
   );
   return category ? category.label : value;
 }
 
-// 多选框选中数据
-function handleSelectionChange(selection) {
-  ids.value = selection.map((item) => item.inventoryId);
-  single.value = selection.length !== 1;
-  multiple.value = !selection.length;
-}
-
-/** 修改按钮操作 */
-function handleUpdate(row) {
-  reset();
-  const _inventoryId = row.inventoryId || ids.value;
-  open.value = true;
-  title.value = "修改库存";
-  dialogLoading.value = true;
-  getInventory(_inventoryId)
-    .then((response) => {
-      form.value = response.data;
-      form.value.materialCode = response.data.materialCode;
-      isView.value = false;
-
-      if (form.value.inventoryId != null) {
-        rules.value.remark = [
-          { required: true, message: "备注不能为空", trigger: "blur" },
-        ];
-      }
-    })
-    .finally(() => {
-      dialogLoading.value = false;
-    });
-}
-
-/** 新增按钮操作 */
-function handleAdd() {
-  reset();
-  open.value = true;
-  title.value = "添加库存";
-  isView.value = false; // 设置为新增模式
-  // 新增时移除备注验证规则
-  delete rules.value.remark;
-}
-
-/** 提交按钮 */
-function submitForm() {
-  proxy.$refs["inventoryRef"].validate((valid) => {
-    if (valid) {
-      if (form.value.inventoryId != null) {
-        // 修改时提交数量、盘点时间和备注
-        const updateData = {
-          inventoryId: form.value.inventoryId,
-          currentQty: form.value.currentQty,
-          lastStocktake: form.value.lastStocktake,
-          remark: form.value.remark,
-        };
-        updateInventory(updateData).then((response) => {
-          proxy.$modal.msgSuccess("修改成功");
-          open.value = false;
-          getList();
-        });
-      } else {
-        // 新增时提交所有字段
-        addInventory(form.value).then((response) => {
-          proxy.$modal.msgSuccess("新增成功");
-          open.value = false;
-          getList();
-        });
-      }
-    }
-  });
-}
-
-/** 作废按钮操作 */
-function handleDelete(row) {
-  const _inventoryIds = row.inventoryId || ids.value;
-  proxy.$modal
-    .confirm("是否确认作废库存？")
-    .then(() => delInventory(_inventoryIds))
-    .then(() => {
-      getList();
-      proxy.$modal.msgSuccess("作废成功");
-    })
-    .catch(() => {});
-}
-
-/** 导出按钮操作 */
-function handleExport() {
-  proxy.download(
-    "stock/inventory/export",
-    {
-      ...queryParams.value,
-    },
-    `inventory_${new Date().getTime()}.xlsx`,
-  );
-}
-
 getList();
 </script>
+
+<style scoped>
+.material-search-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.material-search-suggestion__code {
+  color: #ff7171;
+  white-space: nowrap;
+}
+
+.material-search-suggestion__name {
+  color: #6985ff;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.material-search-suggestion__spec,
+.material-search-suggestion__spec-only {
+  color: #37a62c;
+  margin-left: auto;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.material-search-suggestion__spec-tag {
+  color: #909399;
+  font-size: 12px;
+  white-space: nowrap;
+}
+</style>

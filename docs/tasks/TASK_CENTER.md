@@ -29,6 +29,7 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
+| `archive/retained-completed/task-20260410-1700-sales-project-phase1-phase2-delivery.md` | `accepted` | 销售项目 `Phase 1/2` 已完成实现、local review fix loop、focused 自动化验证、`agent-browser` full acceptance 与归档收口；`F5` 项目分配 / 预留继续保留为后续阶段能力。 |
 | `archive/retained-completed/task-20260409-0056-rd-project-phase1-phase2-delivery.md` | `accepted` | `rd-project` `Phase 1/2` 已完成实现、review、full acceptance 与归档收口；当前研发项目真源以 `docs/requirements/domain/rd-project-management.md` 为准，销售项目真源独立维护在 `docs/requirements/domain/sales-project-management.md`。 |
 | `archive/retained-completed/task-20260407-0033-approval-rename-two-phase-plan.md` | `accepted` | `approval` 语义重命名与最终清理已完成并归档：代码/API/权限/模块统一收口到 `approval`，target DB 只保留 `approval_document` 真源，业务审核 `audit` 兼容层已移除。 |
 | `archive/retained-completed/task-20260408-1842-master-data-f6-workshop-runtime-compatibility.md` | `accepted` | `master-data` `F6` 车间管理回归修复已完成：运行时合同恢复到 accepted `workshopCode + workshopName` 基线，review clean，targeted `F6/F8` QA run 已冻结。 |

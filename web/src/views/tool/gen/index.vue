@@ -97,8 +97,8 @@
       <el-table-column label="表名称" align="center" prop="tableName" :show-overflow-tooltip="true" />
       <el-table-column label="表描述" align="center" prop="tableComment" :show-overflow-tooltip="true" />
       <el-table-column label="实体" align="center" prop="className" :show-overflow-tooltip="true" />
-      <el-table-column label="创建时间" align="center" prop="createTime" width="160" sortable="custom" :sort-orders="['descending', 'ascending']" />
-      <el-table-column label="更新时间" align="center" prop="updateTime" width="160" sortable="custom" :sort-orders="['descending', 'ascending']" />
+      <el-table-column label="创建时间" align="center" prop="createdAt" width="160" sortable="custom" :sort-orders="['descending', 'ascending']" />
+      <el-table-column label="更新时间" align="center" prop="updatedAt" width="160" sortable="custom" :sort-orders="['descending', 'ascending']" />
       <el-table-column label="操作" align="center" width="330" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-tooltip content="预览" placement="top">
@@ -170,7 +170,7 @@ const total = ref(0);
 const tableNames = ref([]);
 const dateRange = ref([]);
 const uniqueId = ref("");
-const defaultSort = ref({ prop: "createTime", order: "descending" });
+const defaultSort = ref({ prop: "createdAt", order: "descending" });
 
 const data = reactive({
   queryParams: {

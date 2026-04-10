@@ -112,9 +112,9 @@
                <dict-tag :options="sys_common_status" :value="scope.row.status" />
             </template>
          </el-table-column>
-         <el-table-column label="执行时间" align="center" prop="createTime" width="180">
+         <el-table-column label="执行时间" align="center" prop="startedAt" width="180">
             <template #default="scope">
-               <span>{{ parseTime(scope.row.createTime) }}</span>
+               <span>{{ parseTime(scope.row.startedAt) }}</span>
             </template>
          </el-table-column>
          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -142,7 +142,7 @@
                </el-col>
                <el-col :span="12">
                   <el-form-item label="任务分组：">{{ form.jobGroup }}</el-form-item>
-                  <el-form-item label="执行时间：">{{ form.createTime }}</el-form-item>
+                  <el-form-item label="执行时间：">{{ form.startedAt }}</el-form-item>
                </el-col>
                <el-col :span="24">
                   <el-form-item label="调用方法：">{{ form.invokeTarget }}</el-form-item>

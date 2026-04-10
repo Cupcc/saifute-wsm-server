@@ -62,7 +62,7 @@
       <el-table-column sortable show-overflow-tooltip label="规格型号" align="center" prop="specification" v-if="columns[2].visible" />
       <el-table-column sortable show-overflow-tooltip label="分类" align="center" prop="category" v-if="columns[3].visible">
         <template #default="scope">
-          <dict-tag :options="saifute_material_category" :value="scope.row.category"/>
+          <span>{{ scope.row.categoryName || "未分类" }}</span>
         </template>
       </el-table-column>
       <el-table-column sortable show-overflow-tooltip label="单位" align="center" prop="unit" v-if="columns[4].visible" />
@@ -138,7 +138,7 @@
             </el-table-column>
 	          <el-table-column show-overflow-tooltip label="分类" align="center" width="60" prop="category">
 		          <template #default="scope">
-			          <dict-tag :options="saifute_material_category" :value="scope.row.category"/>
+			          <span>{{ scope.row.categoryName || "未分类" }}</span>
 		          </template>
 	          </el-table-column>
             <el-table-column prop="unit" label="单位" width="80" show-overflow-tooltip />

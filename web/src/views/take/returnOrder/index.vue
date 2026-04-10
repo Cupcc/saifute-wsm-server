@@ -132,10 +132,23 @@
 					</el-button>
 				</template>
 			</el-table-column>
-			<el-table-column sortable show-overflow-tooltip label="退料日期" align="center" prop="returnDate" width="180" v-if="columns[1].visible">
+			<el-table-column
+				sortable
+				show-overflow-tooltip
+				label="退料日期"
+				align="center"
+				prop="returnDate"
+				width="200"
+				:sort-method="compareReturnDateRows"
+				v-if="columns[1].visible">
 				<template #default="scope">
 					<el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
-						<span>{{ parseTime(scope.row.returnDate, '{y}-{m}-{d}') }}</span>
+						<span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+							<span>{{ formatDocumentDate(scope.row.returnDate) }}</span>
+							<span style="font-size: 12px; color: #909399;">
+								创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+							</span>
+						</span>
 					</el-button>
 				</template>
 			</el-table-column>
@@ -149,10 +162,9 @@
 			</el-table-column>
 			<el-table-column sortable show-overflow-tooltip label="领料单号" align="center" prop="pickNo" v-if="columns[4].visible" />
 			<el-table-column sortable show-overflow-tooltip label="退料人" align="center" prop="returnBy" v-if="columns[5].visible" />
-			<el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[6].visible" />
-			<el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[7].visible" />
-			<el-table-column sortable show-overflow-tooltip label="总金额" align="center" prop="totalAmount" v-if="columns[8].visible" />
-			<el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[9].visible">
+			<el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[6].visible" />
+			<el-table-column sortable show-overflow-tooltip label="总金额" align="center" prop="totalAmount" v-if="columns[7].visible" />
+			<el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[8].visible">
 				<template #default="scope">
 					<el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
 						<span v-if="scope.row.auditStatus === '0' || scope.row.auditStatus === 0" style="color: #E6A23C;">未审核</span>
@@ -254,11 +266,6 @@
 							<combo-input v-model="form.returnBy" scope="personnel" field="personnelName" placeholder="请选择或输入退料人" />
 						</el-form-item>
 					</el-col>
-					<el-col :span="8">
-						<el-form-item label="负责人" prop="chargeBy">
-							<combo-input v-model="form.chargeBy" scope="personnel" field="personnelName" placeholder="请选择或输入负责人" />
-						</el-form-item>
-					</el-col>
 				</el-row>
 				<el-row>
 					<el-col :span="24">
@@ -352,7 +359,6 @@
 							</el-descriptions-item>
 							<el-descriptions-item label="领料单号">{{ detailData.pickNo }}</el-descriptions-item>
 							<el-descriptions-item label="退料人">{{ detailData.returnBy }}</el-descriptions-item>
-							<el-descriptions-item label="负责人">{{ detailData.chargeBy }}</el-descriptions-item>
 							<el-descriptions-item label="创建人">{{ detailData.createBy }}</el-descriptions-item>
 							<el-descriptions-item label="总金额">{{ detailData.totalAmount }}</el-descriptions-item>
 							<el-descriptions-item label="审核结果">
@@ -611,11 +617,67 @@ const columns = ref([
   { key: 3, label: `退料类型`, visible: true },
   { key: 4, label: `领料单号`, visible: true },
   { key: 5, label: `退料人`, visible: true },
-  { key: 6, label: `负责人`, visible: false },
-  { key: 7, label: `创建人`, visible: false },
-  { key: 8, label: `总金额`, visible: true },
-  { key: 9, label: `审核结果`, visible: true },
+  { key: 6, label: `创建人`, visible: false },
+  { key: 7, label: `总金额`, visible: true },
+  { key: 8, label: `审核结果`, visible: true },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function compareReturnDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.returnDate).localeCompare(
+    formatDocumentDate(right?.returnDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.returnId ?? 0) - Number(right?.returnId ?? 0);
+}
 
 /** 查询退料单列表 */
 function getList() {
@@ -779,15 +841,14 @@ function reset() {
     sourceType: 1,
     sourceId: null,
     returnBy: null,
-    chargeBy: null,
     totalAmount: null,
     remark: null,
     delFlag: null,
     voidDescription: null,
     createBy: null,
-    createTime: null,
+    createdAt: null,
     updateBy: null,
-    updateTime: null,
+    updatedAt: null,
     details: [],
   };
   detailList.value = [

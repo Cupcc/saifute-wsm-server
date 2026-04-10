@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   InventoryOperationType,
@@ -107,9 +111,7 @@ describe("InventoryService", () => {
       inventoryBalance: {
         findUnique: jest.fn().mockResolvedValue(mockBalance),
         create: jest.fn().mockResolvedValue(mockBalance),
-        update: jest
-          .fn()
-          .mockResolvedValue({ ...mockBalance, quantityOnHand: 150 }),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       inventoryLog: {
         create: jest.fn().mockResolvedValue(mockLog),
@@ -170,6 +172,159 @@ describe("InventoryService", () => {
     expect(Number(log.afterQty)).toBe(150);
   });
 
+  it("should throw when increaseStock loses optimistic lock on balance update", async () => {
+    const mockTx = {
+      inventoryBalance: {
+        findUnique: jest.fn().mockResolvedValue(mockBalance),
+        create: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+      },
+      inventoryLog: {
+        create: jest.fn().mockResolvedValue(mockLog),
+      },
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        InventoryService,
+        {
+          provide: MasterDataService,
+          useValue: {
+            getMaterialById: jest.fn().mockResolvedValue({ id: 10 }),
+            getWorkshopById: jest.fn().mockResolvedValue({ id: 20 }),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            runInTransaction: jest.fn((handler) => handler(mockTx)),
+          },
+        },
+        {
+          provide: InventoryRepository,
+          useValue: {
+            findLogByIdempotencyKey: jest.fn().mockResolvedValue(null),
+            findLogById: jest.fn(),
+            findReversalLogBySourceLogId: jest.fn(),
+          },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(InventoryService);
+
+    await expect(
+      service.increaseStock({
+        materialId: 10,
+        workshopId: 20,
+        bizDate: new Date("2026-04-09"),
+        quantity: 50,
+        operationType: InventoryOperationType.ACCEPTANCE_IN,
+        businessModule: "inbound",
+        businessDocumentType: "StockInOrder",
+        businessDocumentId: 100,
+        businessDocumentNumber: "SI-001",
+        idempotencyKey: "optimistic-lock-fail-1",
+        operatorId: "1",
+      }),
+    ).rejects.toThrow(ConflictException);
+  });
+
+  it("should recover from concurrent first-balance creation before applying optimistic update", async () => {
+    const duplicateBalanceError = new Prisma.PrismaClientKnownRequestError(
+      "duplicate",
+      {
+        code: "P2002",
+        clientVersion: "test",
+      },
+    );
+    const zeroBalance = {
+      ...mockBalance,
+      quantityOnHand: new Prisma.Decimal(0),
+      rowVersion: 0,
+    };
+    const createdLog = {
+      ...mockLog,
+      beforeQty: new Prisma.Decimal(0),
+      afterQty: new Prisma.Decimal(50),
+    };
+    const mockTx = {
+      inventoryBalance: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(zeroBalance),
+        create: jest.fn().mockRejectedValueOnce(duplicateBalanceError),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      inventoryLog: {
+        create: jest.fn().mockResolvedValue(createdLog),
+      },
+    };
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        InventoryService,
+        {
+          provide: MasterDataService,
+          useValue: {
+            getMaterialById: jest.fn().mockResolvedValue({ id: 10 }),
+            getWorkshopById: jest.fn().mockResolvedValue({ id: 20 }),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            runInTransaction: jest.fn((handler) => handler(mockTx)),
+          },
+        },
+        {
+          provide: InventoryRepository,
+          useValue: {
+            findLogByIdempotencyKey: jest.fn().mockResolvedValue(null),
+            findLogById: jest.fn(),
+            findReversalLogBySourceLogId: jest.fn(),
+          },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useFactory: createStockScopeCompatibilityServiceMock,
+        },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(InventoryService);
+    const log = await service.increaseStock({
+      materialId: 10,
+      workshopId: 20,
+      bizDate: new Date("2026-04-09"),
+      quantity: 50,
+      operationType: InventoryOperationType.ACCEPTANCE_IN,
+      businessModule: "inbound",
+      businessDocumentType: "StockInOrder",
+      businessDocumentId: 100,
+      businessDocumentNumber: "SI-001",
+      idempotencyKey: "optimistic-lock-create-race-1",
+      operatorId: "1",
+    });
+
+    expect(log).toEqual(createdLog);
+    expect(mockTx.inventoryBalance.findUnique).toHaveBeenCalledTimes(2);
+    expect(mockTx.inventoryBalance.create).toHaveBeenCalledTimes(1);
+    expect(mockTx.inventoryBalance.updateMany).toHaveBeenCalledWith({
+      where: { id: zeroBalance.id, rowVersion: zeroBalance.rowVersion },
+      data: {
+        quantityOnHand: new Prisma.Decimal(50),
+        rowVersion: { increment: 1 },
+        updatedBy: "1",
+      },
+    });
+  });
+
   it("should return existing log when idempotencyKey is duplicated", async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -225,7 +380,7 @@ describe("InventoryService", () => {
           ...mockBalance,
           quantityOnHand: 10,
         }),
-        update: jest.fn(),
+        updateMany: jest.fn(),
       },
       inventoryLog: {
         create: jest.fn(),
@@ -339,9 +494,7 @@ describe("InventoryService", () => {
           ...mockBalance,
           quantityOnHand: 150,
         }),
-        update: jest
-          .fn()
-          .mockResolvedValue({ ...mockBalance, quantityOnHand: 100 }),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       inventoryLog: {
         create: jest.fn().mockResolvedValue(reversedLog),
@@ -785,10 +938,7 @@ describe("InventoryService", () => {
       const mockTx = {
         inventoryBalance: {
           findUnique: jest.fn().mockResolvedValue(mockOutBalance),
-          update: jest.fn().mockResolvedValue({
-            ...mockOutBalance,
-            quantityOnHand: new Prisma.Decimal(80),
-          }),
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
         inventoryLog: {
           create: jest
@@ -1299,9 +1449,7 @@ describe("InventoryService", () => {
     const mockTx = {
       inventoryBalance: {
         findUnique: jest.fn().mockResolvedValue(mockBalance),
-        update: jest
-          .fn()
-          .mockResolvedValue({ ...mockBalance, quantityOnHand: 150 }),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       inventoryLog: {
         create: jest
@@ -1437,5 +1585,63 @@ describe("InventoryService", () => {
     const service = moduleRef.get(InventoryService);
     const result = await service.hasUnreleasedAllocations(1);
     expect(result).toBe(false);
+  });
+
+  it("should constrain source usages by resolved inventory stock scope", async () => {
+    const findSourceUsages = jest
+      .fn()
+      .mockResolvedValue({ items: [], total: 0 });
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        InventoryService,
+        {
+          provide: MasterDataService,
+          useValue: {},
+        },
+        {
+          provide: PrismaService,
+          useValue: {},
+        },
+        {
+          provide: InventoryRepository,
+          useValue: {
+            findSourceUsages,
+          },
+        },
+        {
+          provide: StockScopeCompatibilityService,
+          useValue: {
+            ...createStockScopeCompatibilityServiceMock(),
+            resolveOptional: jest.fn().mockResolvedValue({
+              stockScope: "RD_SUB",
+              stockScopeId: 2,
+              stockScopeName: "研发小仓",
+            }),
+          },
+        },
+      ],
+    }).compile();
+
+    const service = moduleRef.get(InventoryService);
+
+    await service.listSourceUsages({
+      stockScope: "RD_SUB",
+      materialId: 10,
+      limit: 20,
+      offset: 5,
+    });
+
+    expect(findSourceUsages).toHaveBeenCalledWith(
+      {
+        materialId: 10,
+        stockScopeIds: [2],
+        consumerDocumentType: undefined,
+        consumerDocumentId: undefined,
+        limit: 20,
+        offset: 5,
+      },
+      undefined,
+    );
   });
 });

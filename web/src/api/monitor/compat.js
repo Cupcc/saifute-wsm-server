@@ -137,7 +137,7 @@ export function mapSchedulerJob(item) {
     concurrent: item.concurrencyPolicy === "ALLOW" ? "0" : "1",
     misfirePolicy: item.misfirePolicy === "SKIP" ? "3" : "1",
     remark: item.remark ?? "",
-    createTime: item.createdAt,
+    createdAt: item.createdAt,
     nextValidTime: null,
   };
 }
@@ -150,7 +150,7 @@ export function mapSchedulerJobLog(item) {
     invokeTarget: item.invokeTarget,
     jobMessage: item.message ?? "",
     status: item.status === "SUCCESS" ? "0" : "1",
-    createTime: item.startedAt,
+    startedAt: item.startedAt,
     exceptionInfo: item.errorMessage ?? "",
   };
 }

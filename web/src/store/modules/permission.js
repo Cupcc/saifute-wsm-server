@@ -23,6 +23,13 @@ const SUPPORTED_BACKEND_ROUTE_GROUPS = [
     icon: "tree",
   },
   {
+    key: "stock",
+    path: "/stock",
+    name: "Stock",
+    title: "库存管理",
+    icon: "build",
+  },
+  {
     key: "entry",
     path: "/entry",
     name: "Entry",
@@ -42,13 +49,6 @@ const SUPPORTED_BACKEND_ROUTE_GROUPS = [
     name: "WorkshopBusiness",
     title: "生产车间",
     icon: "guide",
-  },
-  {
-    key: "stock",
-    path: "/stock",
-    name: "Stock",
-    title: "库存管理",
-    icon: "build",
   },
   {
     key: "rd",
@@ -331,6 +331,13 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     component: "sales/salesReturnDetail/index",
     title: "销售退货明细",
     icon: "list",
+  },
+  SalesProjectLedger: {
+    group: "sales",
+    path: "project",
+    component: "sales-project/index",
+    title: "销售项目",
+    icon: "education",
   },
   SystemUser: {
     group: "system",

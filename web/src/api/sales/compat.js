@@ -83,6 +83,12 @@ function mapOrderLine(line, order, audit = null) {
     quantity: toNumber(line.quantity),
     unitPrice: toNumber(line.unitPrice),
     amount: toNumber(line.amount),
+    selectedUnitCost: toNumber(line.selectedUnitCost),
+    costUnitPrice: toNumber(line.costUnitPrice),
+    costAmount: toNumber(line.costAmount),
+    salesProjectId: line.salesProjectId ?? null,
+    salesProjectCode: line.salesProjectCodeSnapshot ?? "",
+    salesProjectName: line.salesProjectNameSnapshot ?? "",
     startNumber: line.startNumber ?? "",
     endNumber: line.endNumber ?? "",
     sourceDocumentId: line.sourceDocumentId ?? null,
@@ -91,11 +97,24 @@ function mapOrderLine(line, order, audit = null) {
     auditStatus: toAuditStatus(order.auditStatusSnapshot),
     auditor: audit?.decidedBy ?? null,
     auditTime: audit?.decidedAt ?? null,
+    createBy: order.createdBy ?? "",
+    createdAt: order.createdAt ?? null,
+    updatedAt: order.updatedAt ?? null,
   };
 }
 
 function mapSalesOrder(order, audit = null) {
   const firstLine = order.lines?.[0];
+  const projectSnapshots = [
+    ...new Set(
+      (order.lines ?? [])
+        .map(
+          (line) =>
+            line.salesProjectNameSnapshot || line.salesProjectCodeSnapshot || "",
+        )
+        .filter(Boolean),
+    ),
+  ];
   return {
     orderId: order.id,
     documentNo: order.documentNo,
@@ -116,11 +135,12 @@ function mapSalesOrder(order, audit = null) {
     auditor: audit?.decidedBy ?? null,
     auditTime: audit?.decidedAt ?? null,
     createBy: order.createdBy ?? "",
-    createTime: order.createdAt ?? null,
+    createdAt: order.createdAt ?? null,
     updateBy: order.updatedBy ?? "",
-    updateTime: order.updatedAt ?? null,
+    updatedAt: order.updatedAt ?? null,
     voidReason: order.voidReason ?? "",
     sourceOutboundOrderId: firstLine?.sourceDocumentId ?? null,
+    salesProjectSummary: projectSnapshots.join(" / "),
     details: Array.isArray(order.lines)
       ? order.lines.map((line) => mapOrderLine(line, order, audit))
       : [],
@@ -190,7 +210,9 @@ function buildCustomerPayload(data, mode, handlerPersonnelId) {
       ...(line.detailId ? { id: line.detailId } : {}),
       materialId: line.materialId,
       quantity: toDecimalString(line.quantity),
+      selectedUnitCost: toDecimalString(line.selectedUnitCost),
       unitPrice: toDecimalString(line.unitPrice),
+      salesProjectId: line.salesProjectId,
       startNumber: line.startNumber,
       endNumber: line.endNumber,
       remark: line.remark,

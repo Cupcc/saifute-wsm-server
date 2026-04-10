@@ -17,6 +17,11 @@ export class UpdateOutboundOrderLineDto {
   @Min(1)
   materialId!: number;
 
+  @IsInt()
+  @IsOptional()
+  @Min(1)
+  salesProjectId?: number;
+
   @IsString()
   @Matches(/^(?!0+(\.0+)?$)\d+(\.\d{1,6})?$/, {
     message: "quantity must be a positive decimal string",

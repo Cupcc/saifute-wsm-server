@@ -21,7 +21,11 @@ import type { UpdatePersonnelDto } from "../dto/update-personnel.dto";
 import type { UpdateStockScopeDto } from "../dto/update-stock-scope.dto";
 import type { UpdateSupplierDto } from "../dto/update-supplier.dto";
 import type { UpdateWorkshopDto } from "../dto/update-workshop.dto";
-import { MasterDataRepository } from "../infrastructure/master-data.repository";
+import {
+  DEFAULT_MATERIAL_CATEGORY_CODE,
+  DEFAULT_MATERIAL_CATEGORY_NAME,
+  MasterDataRepository,
+} from "../infrastructure/master-data.repository";
 
 type FieldSuggestionScope =
   | "material"
@@ -62,6 +66,11 @@ export class MasterDataService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.repository.ensureCanonicalWorkshops();
     await this.repository.ensureCanonicalStockScopes();
+    const defaultMaterialCategory =
+      await this.repository.ensureDefaultMaterialCategory();
+    await this.repository.assignDefaultCategoryToUncategorizedMaterials(
+      defaultMaterialCategory.id,
+    );
   }
 
   // ─── Field Suggestions ──────────────────────────────────────────────────────
@@ -168,6 +177,17 @@ export class MasterDataService implements OnModuleInit {
     if (!existing) {
       throw new NotFoundException(`物料分类不存在: ${id}`);
     }
+    if (existing.categoryCode === DEFAULT_MATERIAL_CATEGORY_CODE) {
+      if (
+        dto.categoryName !== undefined &&
+        dto.categoryName !== DEFAULT_MATERIAL_CATEGORY_NAME
+      ) {
+        throw new BadRequestException("系统默认分类“未分类”不允许修改名称");
+      }
+      if (dto.parentId !== undefined && dto.parentId !== null) {
+        throw new BadRequestException("系统默认分类“未分类”必须保留为顶级分类");
+      }
+    }
 
     if (dto.parentId !== undefined && dto.parentId !== null) {
       if (dto.parentId === id) {
@@ -199,6 +219,9 @@ export class MasterDataService implements OnModuleInit {
     const existing = await this.repository.findMaterialCategoryById(id);
     if (!existing) {
       throw new NotFoundException(`物料分类不存在: ${id}`);
+    }
+    if (existing.categoryCode === DEFAULT_MATERIAL_CATEGORY_CODE) {
+      throw new BadRequestException("系统默认分类“未分类”不能停用");
     }
     if (existing.status === "DISABLED") {
       return existing;
@@ -253,14 +276,14 @@ export class MasterDataService implements OnModuleInit {
     if (existing) {
       throw new ConflictException(`物料编码已存在: ${dto.materialCode}`);
     }
-    await this.assertCategoryIdIsActive(dto.categoryId);
+    const categoryId = await this.resolveMaterialCategoryId(dto.categoryId);
 
     return this.repository.createMaterial(
       {
         materialCode: dto.materialCode,
         materialName: dto.materialName,
         specModel: dto.specModel,
-        categoryId: dto.categoryId,
+        categoryId,
         unitCode: dto.unitCode,
         warningMinQty: dto.warningMinQty,
         warningMaxQty: dto.warningMaxQty,
@@ -274,14 +297,14 @@ export class MasterDataService implements OnModuleInit {
     if (!existing) {
       throw new NotFoundException(`物料不存在: ${id}`);
     }
-    await this.assertCategoryIdIsActive(dto.categoryId);
+    const categoryId = await this.resolveMaterialCategoryIdForUpdate(dto);
 
     return this.repository.updateMaterial(
       id,
       {
         materialName: dto.materialName,
         specModel: dto.specModel,
-        categoryId: dto.categoryId,
+        categoryId,
         unitCode: dto.unitCode,
         warningMinQty: dto.warningMinQty,
         warningMaxQty: dto.warningMaxQty,
@@ -346,6 +369,7 @@ export class MasterDataService implements OnModuleInit {
         "自动补建物料必须提供来源单据类型和来源单据 ID",
       );
     }
+    const categoryId = await this.resolveMaterialCategoryId(params.categoryId);
 
     return this.repository.createAutoMaterial(
       {
@@ -353,7 +377,7 @@ export class MasterDataService implements OnModuleInit {
         materialName: params.materialName,
         unitCode: params.unitCode,
         specModel: params.specModel,
-        categoryId: params.categoryId,
+        categoryId,
         sourceDocumentType: params.sourceDocumentType,
         sourceDocumentId: params.sourceDocumentId,
       },
@@ -921,6 +945,25 @@ export class MasterDataService implements OnModuleInit {
 
     const normalized = value.trim();
     return normalized.length > 0 ? normalized : null;
+  }
+
+  private async resolveMaterialCategoryId(categoryId?: number | null) {
+    if (typeof categoryId === "number") {
+      await this.assertCategoryIdIsActive(categoryId);
+      return categoryId;
+    }
+
+    const defaultCategory =
+      await this.repository.ensureDefaultMaterialCategory();
+    return defaultCategory.id;
+  }
+
+  private async resolveMaterialCategoryIdForUpdate(dto: UpdateMaterialDto) {
+    if (!Object.hasOwn(dto, "categoryId")) {
+      return undefined;
+    }
+
+    return this.resolveMaterialCategoryId(dto.categoryId);
   }
 
   private async assertCategoryIdIsActive(categoryId?: number | null) {

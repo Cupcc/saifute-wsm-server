@@ -114,6 +114,7 @@ export class InventoryRepository {
   async findSourceUsages(
     params: {
       materialId?: number;
+      stockScopeIds?: number[];
       consumerDocumentType?: string;
       consumerDocumentId?: number;
       limit: number;
@@ -123,6 +124,13 @@ export class InventoryRepository {
   ) {
     const where: Prisma.InventorySourceUsageWhereInput = {};
     if (params.materialId) where.materialId = params.materialId;
+    if (params.stockScopeIds?.length === 1) {
+      where.sourceLog = { stockScopeId: params.stockScopeIds[0] };
+    } else if (params.stockScopeIds?.length) {
+      where.sourceLog = {
+        stockScopeId: { in: params.stockScopeIds },
+      };
+    }
     if (params.consumerDocumentType)
       where.consumerDocumentType = params.consumerDocumentType;
     if (params.consumerDocumentId)

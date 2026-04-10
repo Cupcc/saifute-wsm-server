@@ -246,6 +246,35 @@
             </template>
           </el-table-column>
 
+          <el-table-column label="销售项目" min-width="220">
+            <template #default="{ row }">
+              <template v-if="isSalesReturnMode">
+                {{ row.salesProjectName || row.salesProjectCode || "-" }}
+              </template>
+              <template v-else>
+                <el-select
+                  v-model="row.salesProjectId"
+                  filterable
+                  remote
+                  reserve-keyword
+                  clearable
+                  placeholder="请输入项目名称或编码"
+                  style="width: 100%"
+                  :remote-method="searchSalesProjectOptions"
+                  :loading="salesProjectLoading"
+                  @change="handleSalesProjectChange(row)"
+                >
+                  <el-option
+                    v-for="item in salesProjectOptions"
+                    :key="item.projectId"
+                    :label="`${item.salesProjectCode} / ${item.salesProjectName}`"
+                    :value="item.projectId"
+                  />
+                </el-select>
+              </template>
+            </template>
+          </el-table-column>
+
           <el-table-column label="数量" width="130">
             <template #default="{ row }">
               <el-input
@@ -253,6 +282,29 @@
                 placeholder="数量"
                 @input="normalizeDecimalField(row, 'quantity', 6)"
               />
+            </template>
+          </el-table-column>
+
+          <el-table-column
+            v-if="!isSalesReturnMode"
+            label="成本价层"
+            width="150"
+          >
+            <template #default="{ row }">
+              <el-select
+                v-model="row.selectedUnitCost"
+                filterable
+                clearable
+                placeholder="请选择"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="item in row.priceLayerOptions"
+                  :key="item.unitCost"
+                  :label="`${item.unitCost} / 可用 ${item.availableQty}`"
+                  :value="item.unitCost"
+                />
+              </el-select>
             </template>
           </el-table-column>
 
@@ -330,6 +382,7 @@ import { computed, getCurrentInstance, reactive, ref, watch } from "vue";
 import { listCustomerByKeyword } from "@/api/base/customer";
 import { listMaterialByCodeOrName } from "@/api/base/material";
 import { listPersonnel } from "@/api/base/personnel";
+import { listSalesProjects } from "@/api/sales-project";
 import { listByNameOrContact } from "@/api/base/workshop";
 import {
   addOrder,
@@ -340,6 +393,7 @@ import {
 import {
   addSalesReturnOrder,
 } from "@/api/sales/salesReturnOrder";
+import request from "@/utils/request";
 import { formatDateToYYYYMMDD } from "@/utils/orderNumber";
 
 const props = defineProps({
@@ -355,6 +409,10 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  draftPayload: {
+    type: Object,
+    default: null,
+  },
 });
 
 const emit = defineEmits(["update:modelValue", "submitted"]);
@@ -368,6 +426,7 @@ const customerOptions = ref([]);
 const personnelOptions = ref([]);
 const workshopOptions = ref([]);
 const materialOptions = ref([]);
+const salesProjectOptions = ref([]);
 const sourceOrderOptions = ref([]);
 const sourceLineOptions = ref([]);
 
@@ -375,6 +434,7 @@ const customerLoading = ref(false);
 const personnelLoading = ref(false);
 const workshopLoading = ref(false);
 const materialLoading = ref(false);
+const salesProjectLoading = ref(false);
 const sourceOrderLoading = ref(false);
 
 const form = reactive(buildEmptyForm());
@@ -414,6 +474,20 @@ watch(
   },
 );
 
+watch(
+  () => form.workshopId,
+  async (workshopId, previousWorkshopId) => {
+    if (
+      isSalesReturnMode.value ||
+      !workshopId ||
+      workshopId === previousWorkshopId
+    ) {
+      return;
+    }
+    await Promise.all(form.details.map((detail) => loadPriceLayerOptions(detail)));
+  },
+);
+
 function buildEmptyLine() {
   return {
     detailId: undefined,
@@ -421,10 +495,15 @@ function buildEmptyLine() {
     materialCode: "",
     materialName: "",
     specification: "",
+    salesProjectId: undefined,
+    salesProjectCode: "",
+    salesProjectName: "",
     quantity: "",
+    selectedUnitCost: "",
     unitPrice: "",
     startNumber: "",
     endNumber: "",
+    priceLayerOptions: [],
     sourceOutboundLineId: undefined,
     remark: "",
   };
@@ -453,6 +532,7 @@ function resetFormState() {
   personnelOptions.value = [];
   workshopOptions.value = [];
   materialOptions.value = [];
+  salesProjectOptions.value = [];
   sourceOrderOptions.value = [];
   sourceLineOptions.value = [];
   formRef.value?.clearValidate();
@@ -465,6 +545,9 @@ async function initializeDialog() {
     if (isOrderEditMode.value) {
       await loadOrderForEdit(props.orderId);
       return;
+    }
+    if (!isSalesReturnMode.value && props.draftPayload) {
+      await applyDraftPayload(props.draftPayload);
     }
   } finally {
     dialogLoading.value = false;
@@ -507,6 +590,10 @@ async function loadOrderForEdit(orderId) {
 
   for (const detail of form.details) {
     ensureMaterialOption(detail);
+    ensureSalesProjectOption(detail);
+    if (!isSalesReturnMode.value) {
+      await loadPriceLayerOptions(detail);
+    }
   }
 }
 
@@ -517,10 +604,15 @@ function mapOrderDetailToLine(detail) {
     materialCode: detail.materialCode || "",
     materialName: detail.materialName || "",
     specification: detail.specification || "",
+    salesProjectId: detail.salesProjectId ?? undefined,
+    salesProjectCode: detail.salesProjectCode || "",
+    salesProjectName: detail.salesProjectName || "",
     quantity: toInputString(detail.quantity),
+    selectedUnitCost: toInputString(detail.selectedUnitCost),
     unitPrice: toInputString(detail.unitPrice),
     startNumber: detail.startNumber || "",
     endNumber: detail.endNumber || "",
+    priceLayerOptions: [],
     sourceOutboundLineId: detail.sourceDocumentLineId ?? undefined,
     remark: detail.remark || "",
   };
@@ -614,6 +706,77 @@ function ensureMaterialOption(item) {
   });
 }
 
+function ensureSalesProjectOption(item) {
+  if (!item?.salesProjectId) {
+    return;
+  }
+
+  if (
+    salesProjectOptions.value.some(
+      (option) => option.projectId === item.salesProjectId,
+    )
+  ) {
+    return;
+  }
+
+  salesProjectOptions.value.unshift({
+    projectId: item.salesProjectId,
+    salesProjectCode: item.salesProjectCode || "",
+    salesProjectName: item.salesProjectName || "",
+  });
+}
+
+async function applyDraftPayload(draft) {
+  form.bizDate = draft.bizDate || form.bizDate;
+  form.customerId = draft.customerId ?? undefined;
+  form.customerName = draft.customerName || "";
+  form.handlerPersonnelId = draft.handlerPersonnelId ?? undefined;
+  form.handlerName = draft.handlerName || "";
+  form.workshopId = draft.workshopId ?? undefined;
+  form.workshopName = draft.workshopName || "";
+  form.remark = draft.remark || "";
+  form.details =
+    Array.isArray(draft.lines) && draft.lines.length > 0
+      ? draft.lines.map((line) => ({
+          ...buildEmptyLine(),
+          materialId: line.materialId,
+          materialCode: line.materialCode || "",
+          materialName: line.materialName || "",
+          specification: line.specification || "",
+          salesProjectId: line.salesProjectId ?? draft.salesProjectId ?? undefined,
+          salesProjectCode:
+            line.salesProjectCode || draft.salesProjectCode || "",
+          salesProjectName:
+            line.salesProjectName || draft.salesProjectName || "",
+          quantity: toInputString(line.quantity),
+          selectedUnitCost: toInputString(line.selectedUnitCost),
+          unitPrice: toInputString(line.unitPrice),
+          remark: line.remark || "",
+        }))
+      : [buildEmptyLine()];
+
+  ensureCustomerOption({
+    customerId: form.customerId,
+    customerName: form.customerName,
+    customerCode: draft.customerCode,
+  });
+  ensureWorkshopOption({
+    workshopId: form.workshopId,
+    workshopName: form.workshopName,
+  });
+  ensurePersonnelOption({
+    personnelId: form.handlerPersonnelId,
+    name: form.handlerName,
+    code: "",
+  });
+
+  for (const detail of form.details) {
+    ensureMaterialOption(detail);
+    ensureSalesProjectOption(detail);
+    await loadPriceLayerOptions(detail);
+  }
+}
+
 function handleVisibleChange(value) {
   emit("update:modelValue", value);
 }
@@ -629,7 +792,7 @@ function handleRemoveLine(index) {
   }
 }
 
-function handleMaterialChange(row) {
+async function handleMaterialChange(row) {
   const material = materialOptions.value.find(
     (item) => item.materialId === row.materialId,
   );
@@ -640,6 +803,8 @@ function handleMaterialChange(row) {
   row.materialCode = material.materialCode || "";
   row.materialName = material.materialName || "";
   row.specification = material.specification || "";
+  row.selectedUnitCost = "";
+  await loadPriceLayerOptions(row);
 }
 
 function buildSourceLineLabel(item) {
@@ -685,14 +850,22 @@ async function handleSourceOrderChange(orderId) {
             materialCode: detail.materialCode || "",
             materialName: detail.materialName || "",
             specification: detail.specification || "",
+            salesProjectId: detail.salesProjectId ?? undefined,
+            salesProjectCode: detail.salesProjectCode || "",
+            salesProjectName: detail.salesProjectName || "",
             quantity: toInputString(detail.quantity),
+            selectedUnitCost: toInputString(detail.selectedUnitCost),
             unitPrice: toInputString(detail.unitPrice),
             startNumber: "",
             endNumber: "",
+            priceLayerOptions: [],
             sourceOutboundLineId: detail.detailId,
             remark: "",
           }))
         : [buildEmptyLine()];
+    for (const detail of form.details) {
+      ensureSalesProjectOption(detail);
+    }
   } finally {
     dialogLoading.value = false;
   }
@@ -710,6 +883,11 @@ function handleSourceLineChange(row) {
   row.materialCode = sourceLine.materialCode || "";
   row.materialName = sourceLine.materialName || "";
   row.specification = sourceLine.specification || "";
+  row.salesProjectId = sourceLine.salesProjectId ?? undefined;
+  row.salesProjectCode = sourceLine.salesProjectCode || "";
+  row.salesProjectName = sourceLine.salesProjectName || "";
+  row.selectedUnitCost = toInputString(sourceLine.selectedUnitCost);
+  ensureSalesProjectOption(row);
   if (!row.quantity) {
     row.quantity = toInputString(sourceLine.quantity);
   }
@@ -799,6 +977,70 @@ async function searchMaterials(keyword) {
   }
 }
 
+async function searchSalesProjectOptions(keyword) {
+  salesProjectLoading.value = true;
+  try {
+    const response = await listSalesProjects({
+      salesProjectCode: keyword,
+      salesProjectName: keyword,
+      pageNum: 1,
+      pageSize: 100,
+    });
+    salesProjectOptions.value = response.rows || [];
+  } finally {
+    salesProjectLoading.value = false;
+  }
+}
+
+function handleSalesProjectChange(row) {
+  const project = salesProjectOptions.value.find(
+    (item) => item.projectId === row.salesProjectId,
+  );
+  if (!project) {
+    row.salesProjectCode = "";
+    row.salesProjectName = "";
+    return;
+  }
+
+  row.salesProjectCode = project.salesProjectCode || "";
+  row.salesProjectName = project.salesProjectName || "";
+}
+
+async function loadPriceLayerOptions(row) {
+  if (!row.materialId) {
+    row.priceLayerOptions = [];
+    row.selectedUnitCost = "";
+    return;
+  }
+
+  const response = await request({
+    url: "/api/inventory/price-layers",
+    method: "get",
+    params: {
+      materialId: row.materialId,
+      stockScope: "MAIN",
+    },
+  }).catch(() => ({ data: [] }));
+
+  const layers = Array.isArray(response.data) ? response.data : [];
+  row.priceLayerOptions = layers.map((item) => ({
+    unitCost: toInputString(item.unitCost),
+    availableQty: toInputString(item.availableQty),
+  }));
+  if (
+    row.selectedUnitCost &&
+    row.priceLayerOptions.some(
+      (item) => item.unitCost === toInputString(row.selectedUnitCost),
+    )
+  ) {
+    row.selectedUnitCost = toInputString(row.selectedUnitCost);
+    return;
+  }
+
+  row.selectedUnitCost =
+    row.priceLayerOptions.length === 1 ? row.priceLayerOptions[0].unitCost : "";
+}
+
 async function searchSourceOrders(keyword) {
   sourceOrderLoading.value = true;
   try {
@@ -837,6 +1079,10 @@ async function validateForm() {
       proxy.$modal.msgError(`第 ${index + 1} 行数量不能为空`);
       return false;
     }
+    if (!isSalesReturnMode.value && !line.selectedUnitCost) {
+      proxy.$modal.msgError(`第 ${index + 1} 行成本价层不能为空`);
+      return false;
+    }
   }
 
   return true;
@@ -856,7 +1102,9 @@ function buildSubmitPayload() {
       detailId: line.detailId,
       materialId: line.materialId,
       quantity: line.quantity,
+      selectedUnitCost: line.selectedUnitCost,
       unitPrice: line.unitPrice,
+      salesProjectId: line.salesProjectId,
       startNumber: line.startNumber,
       endNumber: line.endNumber,
       sourceOutboundLineId: line.sourceOutboundLineId,
@@ -900,12 +1148,14 @@ void [
   personnelOptions,
   workshopOptions,
   materialOptions,
+  salesProjectOptions,
   sourceOrderOptions,
   sourceLineOptions,
   customerLoading,
   personnelLoading,
   workshopLoading,
   materialLoading,
+  salesProjectLoading,
   sourceOrderLoading,
   handleVisibleChange,
   handleAddLine,
@@ -921,7 +1171,9 @@ void [
   searchPersonnelOptions,
   searchWorkshops,
   searchMaterials,
+  searchSalesProjectOptions,
   searchSourceOrders,
+  handleSalesProjectChange,
   submitForm,
 ];
 </script>

@@ -11,6 +11,7 @@ import {
   type ResolvedStockScopeContext,
   type SessionUserSnapshot,
   type SessionWorkshopScopeSnapshot,
+  type StockScopeCode,
 } from "../../session/domain/user-session";
 
 @Injectable()
@@ -89,8 +90,37 @@ export class WorkshopScopeService {
   async resolveInventoryQueryScope(
     user: SessionUserSnapshot | undefined,
     _requestedWorkshopId?: number,
+    requestedStockScope?: StockScopeCode,
   ): Promise<ResolvedStockScopeContext | null> {
-    return this.getResolvedStockScope(user);
+    const fixedScope = await this.getResolvedStockScope(user);
+    if (fixedScope) {
+      if (
+        requestedStockScope &&
+        requestedStockScope !== fixedScope.stockScope
+      ) {
+        throw new ForbiddenException("当前用户只能访问绑定库存范围数据");
+      }
+      return fixedScope;
+    }
+
+    if (!requestedStockScope) {
+      return null;
+    }
+
+    try {
+      const stockScopeRecord =
+        await this.masterDataService.getStockScopeByCode(requestedStockScope);
+      return {
+        stockScopeId: stockScopeRecord.id,
+        stockScope: requestedStockScope,
+        stockScopeName: stockScopeRecord.scopeName,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new BadRequestException("指定的库存范围不存在");
+      }
+      throw error;
+    }
   }
 
   async resolveInventoryQueryWorkshopId(

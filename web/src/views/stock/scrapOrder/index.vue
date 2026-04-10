@@ -84,9 +84,25 @@
           <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.scrapNo }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="报废日期" align="center" prop="scrapDate" width="180" v-if="columns[1].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="报废日期"
+        align="center"
+        prop="scrapDate"
+        width="200"
+        :sort-method="compareScrapDateRows"
+        v-if="columns[1].visible"
+      >
         <template #default="scope">
-          <el-button link type="primary" @click="handleDetail(scope.row)">{{ parseTime(scope.row.scrapDate, '{y}-{m}-{d}') }}</el-button>
+          <el-button link type="primary" @click="handleDetail(scope.row)">
+            <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+              <span>{{ formatDocumentDate(scope.row.scrapDate) }}</span>
+              <span style="font-size: 12px; color: #909399;">
+                创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+              </span>
+            </span>
+          </el-button>
         </template>
       </el-table-column>
       <el-table-column sortable show-overflow-tooltip label="处理方式" align="center" prop="disposalMethod" v-if="columns[2].visible">
@@ -96,17 +112,12 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[3].visible">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.chargeBy }}</el-button>
-        </template>
-      </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[4].visible">
+      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[3].visible">
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.attn }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[5].visible">
+      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[4].visible">
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.createBy }}</el-button>
         </template>
@@ -158,11 +169,6 @@
                   :value="parseInt(dict.value)"
                 ></el-option>
               </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="负责人" prop="chargeBy">
-              <combo-input v-model="form.chargeBy" scope="personnel" field="personnelName" placeholder="请选择或输入负责人" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -289,10 +295,9 @@
             <el-descriptions-item label="处理方式">
               <dict-tag :options="saifute_disposal_method" :value="detailData.disposalMethod"/>
             </el-descriptions-item>
-            <el-descriptions-item label="负责人">{{ detailData.chargeBy }}</el-descriptions-item>
             <el-descriptions-item label="经办人">{{ detailData.attn }}</el-descriptions-item>
             <el-descriptions-item label="创建者">{{ detailData.createBy }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ parseTime(detailData.createTime) }}</el-descriptions-item>
+            <el-descriptions-item label="创建时间">{{ parseTime(detailData.createdAt) }}</el-descriptions-item>
             <el-descriptions-item label="备注" :span="2">{{ detailData.remark }}</el-descriptions-item>
           </el-descriptions>
         </el-tab-pane>
@@ -423,10 +428,66 @@ const columns = ref([
   { key: 0, label: `报废单号`, visible: true },
   { key: 1, label: `报废日期`, visible: true },
   { key: 2, label: `处理方式`, visible: true },
-  { key: 3, label: `负责人`, visible: false },
-  { key: 4, label: `经办人`, visible: true },
-  { key: 5, label: `创建者`, visible: false },
+  { key: 3, label: `经办人`, visible: true },
+  { key: 4, label: `创建者`, visible: false },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function compareScrapDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.scrapDate).localeCompare(
+    formatDocumentDate(right?.scrapDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.scrapId ?? 0) - Number(right?.scrapId ?? 0);
+}
 
 /** 查询报废单列表 */
 function getList() {
@@ -460,14 +521,13 @@ function reset() {
     scrapDate: null,
     workshopId: null,
     disposalMethod: 1,
-    chargeBy: null,
     attn: null,
     remark: null,
     delFlag: null,
     voidDescription: null,
     createBy: null,
-    createTime: null,
-    updateTime: null,
+    createdAt: null,
+    updatedAt: null,
   };
   detailList.value = [
     {

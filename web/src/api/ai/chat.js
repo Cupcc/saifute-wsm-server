@@ -51,7 +51,7 @@ export const WMS_SYSTEM_PROMPT = `你是一个专业的 WMS（仓库管理系统
 - /entry/detail → 验收明细
 - /entry/intoOrder → 入库单
 - /entry/intoDetail → 入库明细
-- /stock/inventory → 库存查询
+- /stock/inventory → 库存管理 / 库存查询
 - /stock/warning → 库存预警
 - /take/pickOrder → 生产领料单
 - /take/returnOrder → 生产退料单

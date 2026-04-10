@@ -88,7 +88,7 @@ export class WorkshopMaterialRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        orderBy: { bizDate: "desc" },
+        orderBy: [{ bizDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         include: {
           stockScope: true,
           lines: { orderBy: { lineNo: "asc" } },

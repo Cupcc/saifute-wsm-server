@@ -11,6 +11,15 @@ describe("MasterDataService", () => {
     return {
       ensureCanonicalWorkshops: jest.fn().mockResolvedValue(undefined),
       ensureCanonicalStockScopes: jest.fn().mockResolvedValue(undefined),
+      ensureDefaultMaterialCategory: jest.fn().mockResolvedValue({
+        id: 99,
+        categoryCode: "UNCATEGORIZED",
+        categoryName: "未分类",
+        status: "ACTIVE",
+      }),
+      assignDefaultCategoryToUncategorizedMaterials: jest
+        .fn()
+        .mockResolvedValue({ count: 0 }),
       // Field suggestions
       findMaterialSuggestionValues: jest.fn(),
       findCustomerSuggestionValues: jest.fn(),
@@ -80,6 +89,10 @@ describe("MasterDataService", () => {
 
     expect(repository.ensureCanonicalWorkshops).toHaveBeenCalledTimes(1);
     expect(repository.ensureCanonicalStockScopes).toHaveBeenCalledTimes(1);
+    expect(repository.ensureDefaultMaterialCategory).toHaveBeenCalledTimes(1);
+    expect(
+      repository.assignDefaultCategoryToUncategorizedMaterials,
+    ).toHaveBeenCalledWith(99);
   });
 
   describe("FieldSuggestions", () => {
@@ -265,6 +278,44 @@ describe("MasterDataService", () => {
       );
 
       await expect(service.deactivateMaterialCategory(1, "1")).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(repository.updateMaterialCategory).not.toHaveBeenCalled();
+    });
+
+    it("blocks renaming the default uncategorized category", async () => {
+      const repository = createRepositoryMock();
+      repository.findMaterialCategoryById.mockResolvedValue({
+        id: 99,
+        categoryCode: "UNCATEGORIZED",
+        categoryName: "未分类",
+        status: "ACTIVE",
+        children: [],
+      });
+      const service = new MasterDataService(
+        repository as unknown as MasterDataRepository,
+      );
+
+      await expect(
+        service.updateMaterialCategory(99, { categoryName: "其它分类" }, "1"),
+      ).rejects.toThrow(BadRequestException);
+      expect(repository.updateMaterialCategory).not.toHaveBeenCalled();
+    });
+
+    it("blocks deactivating the default uncategorized category", async () => {
+      const repository = createRepositoryMock();
+      repository.findMaterialCategoryById.mockResolvedValue({
+        id: 99,
+        categoryCode: "UNCATEGORIZED",
+        categoryName: "未分类",
+        status: "ACTIVE",
+        children: [],
+      });
+      const service = new MasterDataService(
+        repository as unknown as MasterDataRepository,
+      );
+
+      await expect(service.deactivateMaterialCategory(99, "1")).rejects.toThrow(
         BadRequestException,
       );
       expect(repository.updateMaterialCategory).not.toHaveBeenCalled();
@@ -481,14 +532,14 @@ describe("MasterDataService", () => {
       expect(repository.updateMaterial).not.toHaveBeenCalled();
     });
 
-    it("allows material create without category", async () => {
+    it("assigns the default uncategorized category on material create", async () => {
       const repository = createRepositoryMock();
       repository.findMaterialByCode.mockResolvedValue(null);
       repository.createMaterial.mockResolvedValue({
         id: 1,
         materialCode: "MAT-OPTIONAL-CAT",
         materialName: "可空分类物料",
-        categoryId: null,
+        categoryId: 99,
         status: "ACTIVE",
       });
       const service = new MasterDataService(
@@ -502,7 +553,48 @@ describe("MasterDataService", () => {
       });
 
       expect(repository.findMaterialCategoryById).not.toHaveBeenCalled();
-      expect(repository.createMaterial).toHaveBeenCalled();
+      expect(repository.ensureDefaultMaterialCategory).toHaveBeenCalledTimes(1);
+      expect(repository.createMaterial).toHaveBeenCalledWith(
+        expect.objectContaining({
+          categoryId: 99,
+        }),
+        undefined,
+      );
+    });
+
+    it("assigns the default uncategorized category when material update clears category", async () => {
+      const repository = createRepositoryMock();
+      repository.findMaterialById.mockResolvedValue({
+        id: 1,
+        materialCode: "MAT-001",
+        materialName: "测试物料",
+        status: "ACTIVE",
+      });
+      repository.updateMaterial.mockResolvedValue({
+        id: 1,
+        categoryId: 99,
+        status: "ACTIVE",
+      });
+      const service = new MasterDataService(
+        repository as unknown as MasterDataRepository,
+      );
+
+      await service.updateMaterial(
+        1,
+        { categoryId: null } as unknown as Parameters<
+          MasterDataService["updateMaterial"]
+        >[1],
+        "1",
+      );
+
+      expect(repository.ensureDefaultMaterialCategory).toHaveBeenCalledTimes(1);
+      expect(repository.updateMaterial).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          categoryId: 99,
+        }),
+        "1",
+      );
     });
 
     it("creates AUTO_CREATED materials only when provenance is complete", async () => {
@@ -534,6 +626,7 @@ describe("MasterDataService", () => {
       expect(repository.createAutoMaterial).toHaveBeenCalledWith(
         expect.objectContaining({
           materialCode: "M-AUTO",
+          categoryId: 99,
           sourceDocumentType: "StockInOrder",
           sourceDocumentId: 5,
         }),

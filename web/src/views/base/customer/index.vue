@@ -381,9 +381,9 @@ function reset() {
     delFlag: null,
     voidDescription: null,
     createBy: null,
-    createTime: null,
+    createdAt: null,
     updateBy: null,
-    updateTime: null,
+    updatedAt: null,
   };
   proxy.resetForm("customerRef");
 }

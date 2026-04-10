@@ -54,6 +54,7 @@ export async function setupApp(
 ): Promise<AppConfigService> {
   const appConfigService = app.get(AppConfigService);
 
+  app.set("trust proxy", appConfigService.httpTrustProxy);
   app.setGlobalPrefix(appConfigService.apiGlobalPrefix);
   app.useGlobalPipes(
     new ValidationPipe({

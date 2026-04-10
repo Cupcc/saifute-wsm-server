@@ -19,7 +19,7 @@ export class UpdateMaterialDto {
 
   @IsNumber()
   @IsOptional()
-  categoryId?: number;
+  categoryId?: number | null;
 
   @IsString()
   @IsOptional()

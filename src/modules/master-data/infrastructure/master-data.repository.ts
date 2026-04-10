@@ -19,6 +19,8 @@ type SuggestionSource = {
 
 const SYSTEM_BOOTSTRAP_ACTOR = "system-bootstrap";
 const LEGACY_BOOTSTRAP_WORKSHOP_NAMES = ["主仓", "研发小仓"] as const;
+export const DEFAULT_MATERIAL_CATEGORY_CODE = "UNCATEGORIZED";
+export const DEFAULT_MATERIAL_CATEGORY_NAME = "未分类";
 
 const CANONICAL_WORKSHOPS = [
   {
@@ -55,6 +57,16 @@ const CANONICAL_STOCK_SCOPES: Prisma.StockScopeCreateManyInput[] = [
     updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
   },
 ];
+
+const DEFAULT_MATERIAL_CATEGORY: Prisma.MaterialCategoryUncheckedCreateInput = {
+  categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE,
+  categoryName: DEFAULT_MATERIAL_CATEGORY_NAME,
+  parentId: null,
+  sortOrder: 9999,
+  status: "ACTIVE",
+  createdBy: SYSTEM_BOOTSTRAP_ACTOR,
+  updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
+};
 
 type CanonicalWorkshop = (typeof CANONICAL_WORKSHOPS)[number];
 
@@ -109,6 +121,34 @@ export class MasterDataRepository {
           create: stockScope,
         });
       }
+    });
+  }
+
+  async ensureDefaultMaterialCategory() {
+    return this.prisma.materialCategory.upsert({
+      where: {
+        categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE,
+      },
+      update: {
+        categoryName: DEFAULT_MATERIAL_CATEGORY_NAME,
+        parentId: null,
+        sortOrder: DEFAULT_MATERIAL_CATEGORY.sortOrder,
+        status: "ACTIVE",
+        updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
+      },
+      create: DEFAULT_MATERIAL_CATEGORY,
+    });
+  }
+
+  async assignDefaultCategoryToUncategorizedMaterials(categoryId: number) {
+    return this.prisma.material.updateMany({
+      where: {
+        categoryId: null,
+      },
+      data: {
+        categoryId,
+        updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
+      },
     });
   }
 

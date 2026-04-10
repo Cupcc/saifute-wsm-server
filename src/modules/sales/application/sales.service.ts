@@ -24,6 +24,10 @@ import {
   InventoryService,
 } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import {
+  type SalesProjectBindingReference,
+  SalesProjectService,
+} from "../../sales-project/application/sales-project.service";
 import type { CreateOutboundOrderDto } from "../dto/create-outbound-order.dto";
 import type { CreateSalesReturnDto } from "../dto/create-sales-return.dto";
 import type { QueryOutboundOrderDto } from "../dto/query-outbound-order.dto";
@@ -40,6 +44,9 @@ const OUTBOUND_SOURCE_OPERATION_TYPES = FIFO_SOURCE_OPERATION_TYPES.filter(
 type OutboundLineWriteData = {
   lineNo: number;
   materialId: number;
+  salesProjectId: number | null;
+  salesProjectCodeSnapshot: string | null;
+  salesProjectNameSnapshot: string | null;
   materialCodeSnapshot: string;
   materialNameSnapshot: string;
   materialSpecSnapshot: string;
@@ -48,6 +55,7 @@ type OutboundLineWriteData = {
   unitPrice: Prisma.Decimal;
   amount: Prisma.Decimal;
   selectedUnitCost: Prisma.Decimal;
+  projectTargetId: number | null;
   startNumber: string | null;
   endNumber: string | null;
   remark?: string;
@@ -61,6 +69,7 @@ export class SalesService {
     private readonly masterDataService: MasterDataService,
     private readonly inventoryService: InventoryService,
     private readonly approvalService: ApprovalService,
+    private readonly salesProjectService: SalesProjectService,
   ) {}
 
   async listOrders(query: QueryOutboundOrderDto) {
@@ -103,11 +112,20 @@ export class SalesService {
     const workshop = await this.masterDataService.getWorkshopById(
       dto.workshopId,
     );
+    const salesProjectById = await this.resolveSalesProjectReferencesForLines(
+      dto.lines,
+    );
 
     const linesWithSnapshots = await Promise.all(
       dto.lines.map((line, idx) =>
-        this.buildOutboundLineWriteData(line, idx + 1),
+        this.buildOutboundLineWriteData(line, idx + 1, salesProjectById, {
+          customerId: dto.customerId,
+          workshopId: dto.workshopId,
+        }),
       ),
+    );
+    const projectTargetByLineNo = new Map(
+      linesWithSnapshots.map((line) => [line.lineNo, line.projectTargetId]),
     );
     this.assertNoDuplicateOutboundPriceLayers(linesWithSnapshots);
     await this.assertOutboundPriceLayerAvailability(
@@ -147,8 +165,8 @@ export class SalesService {
             createdBy,
             updatedBy: createdBy,
           },
-          linesWithSnapshots.map((l) => ({
-            ...l,
+          linesWithSnapshots.map(({ projectTargetId, ...line }) => ({
+            ...line,
             createdBy,
             updatedBy: createdBy,
           })),
@@ -169,6 +187,8 @@ export class SalesService {
               businessDocumentId: order.id,
               businessDocumentNumber: order.documentNo,
               businessDocumentLineId: line.id,
+              projectTargetId:
+                projectTargetByLineNo.get(line.lineNo) ?? undefined,
               operatorId: createdBy,
               idempotencyKey: `SalesStockOrder:${order.id}:line:${line.id}`,
               consumerLineId: line.id,
@@ -266,10 +286,19 @@ export class SalesService {
     const workshop = dto.workshopId
       ? await this.masterDataService.getWorkshopById(dto.workshopId)
       : { workshopName: existing.workshopNameSnapshot };
+    const salesProjectById = await this.resolveSalesProjectReferencesForLines(
+      dto.lines,
+    );
     const plannedLines = await Promise.all(
       dto.lines.map((line, idx) =>
-        this.buildOutboundLineWriteData(line, idx + 1),
+        this.buildOutboundLineWriteData(line, idx + 1, salesProjectById, {
+          customerId: finalCustomerId,
+          workshopId: dto.workshopId ?? existing.workshopId,
+        }),
       ),
+    );
+    const projectTargetByLineNo = new Map(
+      plannedLines.map((line) => [line.lineNo, line.projectTargetId]),
     );
     this.assertNoDuplicateOutboundPriceLayers(plannedLines);
 
@@ -364,6 +393,7 @@ export class SalesService {
 
           const inventoryNeedsRepost =
             currentLine.materialId !== lineData.materialId ||
+            (currentLine.salesProjectId ?? null) !== lineData.salesProjectId ||
             !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity) ||
             !new Prisma.Decimal(currentLine.selectedUnitCost).eq(
               lineData.selectedUnitCost,
@@ -422,6 +452,9 @@ export class SalesService {
             {
               lineNo: lineData.lineNo,
               materialId: lineData.materialId,
+              salesProjectId: lineData.salesProjectId,
+              salesProjectCodeSnapshot: lineData.salesProjectCodeSnapshot,
+              salesProjectNameSnapshot: lineData.salesProjectNameSnapshot,
               materialCodeSnapshot: lineData.materialCodeSnapshot,
               materialNameSnapshot: lineData.materialNameSnapshot,
               materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -453,6 +486,8 @@ export class SalesService {
                   businessDocumentId: id,
                   businessDocumentNumber: existing.documentNo,
                   businessDocumentLineId: updatedLine.id,
+                  projectTargetId:
+                    projectTargetByLineNo.get(lineData.lineNo) ?? undefined,
                   operatorId: updatedBy,
                   idempotencyKey: `SalesStockOrder:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
                   consumerLineId: updatedLine.id,
@@ -498,6 +533,9 @@ export class SalesService {
             orderId: id,
             lineNo: lineData.lineNo,
             materialId: lineData.materialId,
+            salesProjectId: lineData.salesProjectId,
+            salesProjectCodeSnapshot: lineData.salesProjectCodeSnapshot,
+            salesProjectNameSnapshot: lineData.salesProjectNameSnapshot,
             materialCodeSnapshot: lineData.materialCodeSnapshot,
             materialNameSnapshot: lineData.materialNameSnapshot,
             materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -528,6 +566,8 @@ export class SalesService {
             businessDocumentId: id,
             businessDocumentNumber: existing.documentNo,
             businessDocumentLineId: createdLine.id,
+            projectTargetId:
+              projectTargetByLineNo.get(lineData.lineNo) ?? undefined,
             operatorId: updatedBy,
             idempotencyKey: `SalesStockOrder:${id}:rev:${nextRevision}:line:${createdLine.id}`,
             consumerLineId: createdLine.id,
@@ -772,6 +812,13 @@ export class SalesService {
     const outboundLinesById = new Map(
       sourceOutbound.lines.map((l) => [l.id, l]),
     );
+    const salesProjectById =
+      await this.salesProjectService.listProjectReferencesByIds(
+        sourceOutbound.lines
+          .map((line) => line.salesProjectId)
+          .filter((value): value is number => value != null),
+        { allowVoided: true },
+      );
 
     // Enforce cumulative active return limit per source outbound line.
     // Aggregate (a) existing non-voided downstream returns from DB and (b) all
@@ -836,9 +883,16 @@ export class SalesService {
         const selectedUnitCost = new Prisma.Decimal(
           sourceLine.selectedUnitCost,
         );
+        const salesProjectReference =
+          sourceLine.salesProjectId != null
+            ? (salesProjectById.get(sourceLine.salesProjectId) ?? null)
+            : null;
         return {
           lineNo: idx + 1,
           materialId: material.id,
+          salesProjectId: sourceLine.salesProjectId ?? null,
+          salesProjectCodeSnapshot: sourceLine.salesProjectCodeSnapshot ?? null,
+          salesProjectNameSnapshot: sourceLine.salesProjectNameSnapshot ?? null,
           materialCodeSnapshot: material.materialCode,
           materialNameSnapshot: material.materialName,
           materialSpecSnapshot: material.specModel ?? "",
@@ -847,6 +901,7 @@ export class SalesService {
           unitPrice,
           amount,
           selectedUnitCost,
+          projectTargetId: salesProjectReference?.projectTargetId ?? null,
           sourceDocumentType: DOCUMENT_TYPE,
           sourceDocumentId: dto.sourceOutboundOrderId,
           sourceDocumentLineId: line.sourceOutboundLineId,
@@ -862,6 +917,9 @@ export class SalesService {
     const totalAmount = linesWithSnapshots.reduce(
       (sum, l) => sum.add(l.amount),
       new Prisma.Decimal(0),
+    );
+    const projectTargetByLineNo = new Map(
+      linesWithSnapshots.map((line) => [line.lineNo, line.projectTargetId]),
     );
 
     return createWithGeneratedDocumentNo((attempt) => {
@@ -887,8 +945,8 @@ export class SalesService {
             createdBy,
             updatedBy: createdBy,
           },
-          linesWithSnapshots.map((l) => ({
-            ...l,
+          linesWithSnapshots.map(({ projectTargetId, ...line }) => ({
+            ...line,
             createdBy,
             updatedBy: createdBy,
           })),
@@ -940,6 +998,8 @@ export class SalesService {
               businessDocumentId: order.id,
               businessDocumentNumber: order.documentNo,
               businessDocumentLineId: line.id,
+              projectTargetId:
+                projectTargetByLineNo.get(line.lineNo) ?? undefined,
               operatorId: createdBy,
               idempotencyKey: `SalesStockOrder:${order.id}:line:${line.id}`,
             },
@@ -1500,9 +1560,46 @@ export class SalesService {
     };
   }
 
+  private async resolveSalesProjectReferencesForLines(
+    lines: Array<{ salesProjectId?: number | null }>,
+    options?: { allowVoided?: boolean },
+  ) {
+    const projectIds = lines
+      .map((line) => line.salesProjectId)
+      .filter((value): value is number => value != null);
+    return this.salesProjectService.listProjectReferencesByIds(
+      projectIds,
+      options,
+    );
+  }
+
+  private assertSalesProjectBindingContext(
+    project: SalesProjectBindingReference,
+    context: {
+      customerId?: number;
+      workshopId: number;
+    },
+  ) {
+    if (project.workshopId !== context.workshopId) {
+      throw new BadRequestException(
+        `销售项目与出库车间不一致: salesProjectId=${project.id}`,
+      );
+    }
+    if (
+      context.customerId &&
+      project.customerId &&
+      context.customerId !== project.customerId
+    ) {
+      throw new BadRequestException(
+        `销售项目与出库客户不一致: salesProjectId=${project.id}`,
+      );
+    }
+  }
+
   private async buildOutboundLineWriteData(
     line: {
       materialId: number;
+      salesProjectId?: number;
       quantity: string;
       selectedUnitCost: string;
       unitPrice?: string;
@@ -1511,10 +1608,25 @@ export class SalesService {
       remark?: string;
     },
     lineNo: number,
+    salesProjectById: Map<number, SalesProjectBindingReference>,
+    context: {
+      customerId?: number;
+      workshopId: number;
+    },
   ): Promise<OutboundLineWriteData> {
     const material = await this.masterDataService.getMaterialById(
       line.materialId,
     );
+    const salesProject =
+      line.salesProjectId != null
+        ? (salesProjectById.get(line.salesProjectId) ?? null)
+        : null;
+    if (line.salesProjectId != null && !salesProject) {
+      throw new NotFoundException(`销售项目不存在: ${line.salesProjectId}`);
+    }
+    if (salesProject) {
+      this.assertSalesProjectBindingContext(salesProject, context);
+    }
     const quantity = new Prisma.Decimal(line.quantity);
     const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
     const amount = quantity.mul(unitPrice);
@@ -1523,6 +1635,9 @@ export class SalesService {
     return {
       lineNo,
       materialId: material.id,
+      salesProjectId: salesProject?.id ?? null,
+      salesProjectCodeSnapshot: salesProject?.salesProjectCode ?? null,
+      salesProjectNameSnapshot: salesProject?.salesProjectName ?? null,
       materialCodeSnapshot: material.materialCode,
       materialNameSnapshot: material.materialName,
       materialSpecSnapshot: material.specModel ?? "",
@@ -1531,6 +1646,7 @@ export class SalesService {
       unitPrice,
       amount,
       selectedUnitCost,
+      projectTargetId: salesProject?.projectTargetId ?? null,
       startNumber: line.startNumber ?? null,
       endNumber: line.endNumber ?? null,
       remark: line.remark,

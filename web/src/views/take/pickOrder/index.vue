@@ -98,10 +98,24 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="领料日期" align="center" prop="pickDate" width="180" v-if="columns[1].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="领料日期"
+        align="center"
+        prop="pickDate"
+        width="200"
+        :sort-method="comparePickDateRows"
+        v-if="columns[1].visible"
+      >
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">
-            <span>{{ parseTime(scope.row.pickDate, '{y}-{m}-{d}') }}</span>
+            <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+              <span>{{ formatDocumentDate(scope.row.pickDate) }}</span>
+              <span style="font-size: 12px; color: #909399;">
+                创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+              </span>
+            </span>
           </el-button>
         </template>
       </el-table-column>
@@ -112,21 +126,14 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[3].visible">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleDetail(scope.row)">
-            {{ scope.row.chargeBy }}
-          </el-button>
-        </template>
-      </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[4].visible">
+      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[3].visible">
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">
             {{ scope.row.createBy }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[5].visible">
+      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[4].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             <span v-if="scope.row.auditStatus === '0' || scope.row.auditStatus === 0" style="color: #E6A23C;">未审核</span>
@@ -177,11 +184,6 @@
           <el-col :span="12">
             <el-form-item label="领料人" prop="picker">
               <combo-input v-model="form.picker" scope="personnel" field="personnelName" placeholder="请选择或输入领料人" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="负责人" prop="chargeBy">
-              <combo-input v-model="form.chargeBy" scope="personnel" field="personnelName" placeholder="请选择或输入负责人" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -315,13 +317,12 @@
               <el-descriptions-item label="领料单号">{{ detailData.pickNo }}</el-descriptions-item>
               <el-descriptions-item label="领料日期">{{ parseTime(detailData.pickDate, '{y}-{m}-{d}') }}</el-descriptions-item>
               <el-descriptions-item label="领料人">{{ detailData.picker }}</el-descriptions-item>
-              <el-descriptions-item label="负责人">{{ detailData.chargeBy }}</el-descriptions-item>
               <el-descriptions-item label="部门">{{ detailData.workshopName }}</el-descriptions-item>
               <el-descriptions-item label="总金额">{{ detailData.totalAmount }}</el-descriptions-item>
               <el-descriptions-item label="创建人">{{ detailData.createBy }}</el-descriptions-item>
-              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
+              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createdAt, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
               <el-descriptions-item label="更新人">{{ detailData.updateBy }}</el-descriptions-item>
-              <el-descriptions-item label="更新时间">{{ parseTime(detailData.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
+              <el-descriptions-item label="更新时间">{{ parseTime(detailData.updatedAt, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
               <el-descriptions-item label="审核结果">
                 <span v-if="detailData.auditStatus === '0' || detailData.auditStatus === 0" style="color: #E6A23C;">未审核</span>
                 <span v-else-if="detailData.auditStatus === '1' || detailData.auditStatus === 1" style="color: #67C23A;">审核通过</span>
@@ -486,10 +487,66 @@ const columns = ref([
   { key: 0, label: `领料单号`, visible: true },
   { key: 1, label: `领料日期`, visible: true },
   { key: 2, label: `领料人`, visible: true },
-  { key: 3, label: `负责人`, visible: false },
-  { key: 4, label: `创建人`, visible: false },
-  { key: 5, label: `审核结果`, visible: true },
+  { key: 3, label: `创建人`, visible: false },
+  { key: 4, label: `审核结果`, visible: true },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function comparePickDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.pickDate).localeCompare(
+    formatDocumentDate(right?.pickDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.pickId ?? 0) - Number(right?.pickId ?? 0);
+}
 
 /** 查询领料单列表 */
 function getList() {
@@ -525,14 +582,13 @@ function reset() {
     pickDate: null,
     picker: null,
     workshopId: null,
-    chargeBy: null,
     remark: null,
     delFlag: null,
     voidDescription: null,
     createBy: null,
-    createTime: null,
+    createdAt: null,
     updateBy: null,
-    updateTime: null,
+    updatedAt: null,
     totalAmount: null,
     details: [],
   };
@@ -625,9 +681,9 @@ function handleUpdate(row) {
         delFlag: orderData.delFlag,
         voidDescription: orderData.voidDescription,
         createBy: orderData.createBy,
-        createTime: orderData.createTime,
+        createdAt: orderData.createdAt,
         updateBy: orderData.updateBy,
-        updateTime: orderData.updateTime,
+        updatedAt: orderData.updatedAt,
         totalAmount: orderData.totalAmount,
         details: [],
       };
@@ -924,7 +980,6 @@ function handleWorkshopChange(workshopId) {
     selectedWorkshop?.defaultHandlerPersonnelName || null;
 
   form.value.picker = defaultHandlerName;
-  form.value.chargeBy = defaultHandlerName;
 }
 
 /**
@@ -1091,7 +1146,6 @@ async function handleAiPrefill(formData) {
   await handleAdd();
   await nextTick();
 
-  if (formData.chargeBy) form.value.chargeBy = formData.chargeBy;
   if (formData.remark) form.value.remark = formData.remark;
 
   // 领料人

@@ -1,12 +1,47 @@
 import request from "@/utils/request";
 
+function mapGenOrderByColumn(orderByColumn) {
+  if (orderByColumn === "createdAt") {
+    return "createTime";
+  }
+  if (orderByColumn === "updatedAt") {
+    return "updateTime";
+  }
+  return orderByColumn;
+}
+
+function normalizeGenTableRow(row) {
+  if (!row) {
+    return row;
+  }
+  return {
+    ...row,
+    createdAt: row.createdAt ?? row.createTime ?? null,
+    updatedAt: row.updatedAt ?? row.updateTime ?? null,
+  };
+}
+
+function normalizeGenTableListResponse(response) {
+  if (!response || !Array.isArray(response.rows)) {
+    return response;
+  }
+  return {
+    ...response,
+    rows: response.rows.map(normalizeGenTableRow),
+  };
+}
+
 // 查询生成表数据
 export function listTable(query) {
+  const params = {
+    ...query,
+    orderByColumn: mapGenOrderByColumn(query?.orderByColumn),
+  };
   return request({
     url: "/tool/gen/list",
     method: "get",
-    params: query,
-  });
+    params,
+  }).then(normalizeGenTableListResponse);
 }
 // 查询db数据库列表
 export function listDbTable(query) {
@@ -14,7 +49,7 @@ export function listDbTable(query) {
     url: "/tool/gen/db/list",
     method: "get",
     params: query,
-  });
+  }).then(normalizeGenTableListResponse);
 }
 
 // 查询表详细信息

@@ -1,6 +1,7 @@
 import { Type } from "class-transformer";
 import {
   IsDateString,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -92,6 +93,10 @@ export class QueryInventoryPriceLayersDto {
   @IsInt()
   @Min(1)
   materialId!: number;
+
+  @IsOptional()
+  @IsIn(["MAIN", "RD_SUB"])
+  stockScope?: "MAIN" | "RD_SUB";
 
   @IsOptional()
   @Type(() => Number)
