@@ -41,6 +41,13 @@ const BUSINESS_MODULE = "sales";
 const OUTBOUND_SOURCE_OPERATION_TYPES = FIFO_SOURCE_OPERATION_TYPES.filter(
   (type) => type !== InventoryOperationType.RD_HANDOFF_IN,
 );
+const DEFAULT_MATERIAL_CATEGORY_CODE = "UNCATEGORIZED";
+
+type MaterialCategorySnapshotNode = {
+  id: number;
+  categoryCode: string;
+  categoryName: string;
+};
 
 type OutboundLineWriteData = {
   lineNo: number;
@@ -48,6 +55,10 @@ type OutboundLineWriteData = {
   salesProjectId: number | null;
   salesProjectCodeSnapshot: string | null;
   salesProjectNameSnapshot: string | null;
+  materialCategoryIdSnapshot: number;
+  materialCategoryCodeSnapshot: string;
+  materialCategoryNameSnapshot: string;
+  materialCategoryPathSnapshot: Prisma.JsonArray;
   materialCodeSnapshot: string;
   materialNameSnapshot: string;
   materialSpecSnapshot: string;
@@ -456,6 +467,13 @@ export class SalesService {
               salesProjectId: lineData.salesProjectId,
               salesProjectCodeSnapshot: lineData.salesProjectCodeSnapshot,
               salesProjectNameSnapshot: lineData.salesProjectNameSnapshot,
+              materialCategoryIdSnapshot: lineData.materialCategoryIdSnapshot,
+              materialCategoryCodeSnapshot:
+                lineData.materialCategoryCodeSnapshot,
+              materialCategoryNameSnapshot:
+                lineData.materialCategoryNameSnapshot,
+              materialCategoryPathSnapshot:
+                lineData.materialCategoryPathSnapshot,
               materialCodeSnapshot: lineData.materialCodeSnapshot,
               materialNameSnapshot: lineData.materialNameSnapshot,
               materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -537,6 +555,12 @@ export class SalesService {
             salesProjectId: lineData.salesProjectId,
             salesProjectCodeSnapshot: lineData.salesProjectCodeSnapshot,
             salesProjectNameSnapshot: lineData.salesProjectNameSnapshot,
+            materialCategoryIdSnapshot: lineData.materialCategoryIdSnapshot,
+            materialCategoryCodeSnapshot:
+              lineData.materialCategoryCodeSnapshot,
+            materialCategoryNameSnapshot:
+              lineData.materialCategoryNameSnapshot,
+            materialCategoryPathSnapshot: lineData.materialCategoryPathSnapshot,
             materialCodeSnapshot: lineData.materialCodeSnapshot,
             materialNameSnapshot: lineData.materialNameSnapshot,
             materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -879,6 +903,8 @@ export class SalesService {
         const material = await this.masterDataService.getMaterialById(
           line.materialId,
         );
+        const materialCategorySnapshot =
+          await this.buildMaterialCategorySnapshot(material);
         const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
         const amount = returnQty.mul(unitPrice);
         const selectedUnitCost = new Prisma.Decimal(
@@ -894,6 +920,10 @@ export class SalesService {
           salesProjectId: sourceLine.salesProjectId ?? null,
           salesProjectCodeSnapshot: sourceLine.salesProjectCodeSnapshot ?? null,
           salesProjectNameSnapshot: sourceLine.salesProjectNameSnapshot ?? null,
+          materialCategoryIdSnapshot: materialCategorySnapshot.id,
+          materialCategoryCodeSnapshot: materialCategorySnapshot.code,
+          materialCategoryNameSnapshot: materialCategorySnapshot.name,
+          materialCategoryPathSnapshot: materialCategorySnapshot.path,
           materialCodeSnapshot: material.materialCode,
           materialNameSnapshot: material.materialName,
           materialSpecSnapshot: material.specModel ?? "",
@@ -1620,6 +1650,8 @@ export class SalesService {
     const material = await this.masterDataService.getMaterialById(
       line.materialId,
     );
+    const materialCategorySnapshot =
+      await this.buildMaterialCategorySnapshot(material);
     const salesProject =
       line.salesProjectId != null
         ? (salesProjectById.get(line.salesProjectId) ?? null)
@@ -1641,6 +1673,10 @@ export class SalesService {
       salesProjectId: salesProject?.id ?? null,
       salesProjectCodeSnapshot: salesProject?.salesProjectCode ?? null,
       salesProjectNameSnapshot: salesProject?.salesProjectName ?? null,
+      materialCategoryIdSnapshot: materialCategorySnapshot.id,
+      materialCategoryCodeSnapshot: materialCategorySnapshot.code,
+      materialCategoryNameSnapshot: materialCategorySnapshot.name,
+      materialCategoryPathSnapshot: materialCategorySnapshot.path,
       materialCodeSnapshot: material.materialCode,
       materialNameSnapshot: material.materialName,
       materialSpecSnapshot: material.specModel ?? "",
@@ -1654,5 +1690,110 @@ export class SalesService {
       endNumber: line.endNumber ?? null,
       remark: line.remark,
     };
+  }
+
+  private async buildMaterialCategorySnapshot(material: {
+    category: {
+      id: number;
+      categoryCode: string;
+      categoryName: string;
+      parentId: number | null;
+    } | null;
+  }) {
+    const effectiveCategory = await this.resolveEffectiveMaterialCategory(
+      material.category,
+    );
+    const path = await this.buildMaterialCategoryPath(effectiveCategory);
+
+    return {
+      id: effectiveCategory.id,
+      code: effectiveCategory.categoryCode,
+      name: effectiveCategory.categoryName,
+      path: path.map(
+        (node) =>
+          ({
+            id: node.id,
+            categoryCode: node.categoryCode,
+            categoryName: node.categoryName,
+          }) satisfies Prisma.JsonObject,
+      ) as Prisma.JsonArray,
+    };
+  }
+
+  private async resolveEffectiveMaterialCategory(
+    category:
+      | {
+          id: number;
+          categoryCode: string;
+          categoryName: string;
+          parentId: number | null;
+        }
+      | null,
+  ) {
+    if (category) {
+      return category;
+    }
+
+    const defaultCategory = await this.prisma.materialCategory.findUnique({
+      where: { categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE },
+      select: {
+        id: true,
+        categoryCode: true,
+        categoryName: true,
+        parentId: true,
+      },
+    });
+    if (!defaultCategory) {
+      throw new BadRequestException(
+        "物料缺少有效分类，且默认未分类不存在，无法写入分类快照",
+      );
+    }
+    return defaultCategory;
+  }
+
+  private async buildMaterialCategoryPath(category: {
+    id: number;
+    categoryCode: string;
+    categoryName: string;
+    parentId: number | null;
+  }) {
+    const visited = new Set<number>();
+    const path: MaterialCategorySnapshotNode[] = [];
+    let current:
+      | {
+          id: number;
+          categoryCode: string;
+          categoryName: string;
+          parentId: number | null;
+        }
+      | null = category;
+
+    while (current) {
+      if (visited.has(current.id)) {
+        throw new BadRequestException("物料分类存在循环，无法写入分类快照");
+      }
+      visited.add(current.id);
+      path.unshift({
+        id: current.id,
+        categoryCode: current.categoryCode,
+        categoryName: current.categoryName,
+      });
+
+      if (!current.parentId) {
+        break;
+      }
+
+      const parent = await this.masterDataService.getMaterialCategoryById(
+        current.parentId,
+      );
+      current = {
+        id: parent.id,
+        categoryCode: parent.categoryCode,
+        categoryName: parent.categoryName,
+        parentId: parent.parentId ?? null,
+      };
+    }
+
+    return path;
   }
 }

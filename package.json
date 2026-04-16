@@ -2,6 +2,7 @@
   "name": "saifute-wms-server-nestjs",
   "version": "0.1.0",
   "private": true,
+  "workspaces": ["web"],
   "scripts": {
     "biome": "biome check .",
     "build": "nest build --path tsconfig.build.json",
@@ -20,6 +21,8 @@
     "migration:master-data:dry-run": "bun --env-file .env.dev scripts/migration/master-data/migrate.ts",
     "migration:master-data:execute": "bun --env-file .env.dev scripts/migration/master-data/migrate.ts --execute",
     "migration:master-data:validate": "bun --env-file .env.dev scripts/migration/master-data/validate.ts",
+    "migration:monthly-reporting-material-category-snapshot:dry-run": "bun --env-file .env.dev scripts/migration/monthly-reporting-material-category-snapshot/migrate.ts",
+    "migration:monthly-reporting-material-category-snapshot:execute": "bun --env-file .env.dev scripts/migration/monthly-reporting-material-category-snapshot/migrate.ts --execute",
     "migration:approval-document-phase2:cutover": "bun --env-file .env.dev scripts/migration/approval-document-phase2/cutover.ts",
     "migration:approval-document-phase2:rehearsal": "bun --env-file .env.dev scripts/migration/approval-document-phase2/rehearsal.ts",
     "migration:approval-document-phase2:validate": "bun --env-file .env.dev scripts/migration/approval-document-phase2/validate.ts",

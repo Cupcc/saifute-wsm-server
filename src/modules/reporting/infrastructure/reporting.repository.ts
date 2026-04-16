@@ -14,6 +14,8 @@ import { BusinessDocumentType } from "../../../shared/domain/business-document-t
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
 import {
+  type MaterialCategorySnapshotNode,
+  type MonthlyMaterialCategoryEntry,
   type MonthlyReportEntry,
   MonthlyReportingAbnormalFlag,
   MonthlyReportingDirection,
@@ -64,6 +66,7 @@ export interface MonthlySalesProjectEntry {
   salesProjectCode: string | null;
   salesProjectName: string | null;
   topicKey: MonthlyReportingTopicKey.SALES_OUTBOUND | MonthlyReportingTopicKey.SALES_RETURN;
+  documentTypeLabel: string;
   documentId: number;
   documentNo: string;
   bizDate: Date;
@@ -483,6 +486,10 @@ export class ReportingRepository {
           line.order.orderType === SalesStockOrderType.OUTBOUND
             ? MonthlyReportingTopicKey.SALES_OUTBOUND
             : MonthlyReportingTopicKey.SALES_RETURN,
+        documentTypeLabel:
+          line.order.orderType === SalesStockOrderType.OUTBOUND
+            ? "销售出库单"
+            : "销售退货单",
         documentId: line.order.id,
         documentNo: line.order.documentNo,
         bizDate: line.order.bizDate,
@@ -497,6 +504,304 @@ export class ReportingRepository {
         }),
       };
     });
+  }
+
+  async findMonthlyMaterialCategoryEntries(params: {
+    start: Date;
+    end: Date;
+    stockScope?: StockScopeCode;
+    workshopId?: number;
+  }): Promise<MonthlyMaterialCategoryEntry[]> {
+    const [inboundLines, salesLines] = await Promise.all([
+      this.prisma.stockInOrderLine.findMany({
+        where: {
+          order: {
+            lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+            bizDate: { gte: params.start, lte: params.end },
+            ...(params.stockScope
+              ? {
+                  stockScope: {
+                    is: {
+                      scopeCode: params.stockScope,
+                    },
+                  },
+                }
+              : {}),
+            ...(params.workshopId ? { workshopId: params.workshopId } : {}),
+          },
+        },
+        select: {
+          id: true,
+          lineNo: true,
+          materialId: true,
+          materialCodeSnapshot: true,
+          materialNameSnapshot: true,
+          materialSpecSnapshot: true,
+          unitCodeSnapshot: true,
+          quantity: true,
+          amount: true,
+          materialCategoryIdSnapshot: true,
+          materialCategoryCodeSnapshot: true,
+          materialCategoryNameSnapshot: true,
+          materialCategoryPathSnapshot: true,
+          order: {
+            select: {
+              id: true,
+              documentNo: true,
+              bizDate: true,
+              createdAt: true,
+              orderType: true,
+              stockScope: {
+                select: {
+                  scopeCode: true,
+                  scopeName: true,
+                },
+              },
+              workshopId: true,
+              workshopNameSnapshot: true,
+              workshop: {
+                select: {
+                  workshopName: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ orderId: "asc" }, { lineNo: "asc" }],
+      }),
+      this.prisma.salesStockOrderLine.findMany({
+        where: {
+          order: {
+            lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+            bizDate: { gte: params.start, lte: params.end },
+            ...(params.stockScope
+              ? {
+                  stockScope: {
+                    is: {
+                      scopeCode: params.stockScope,
+                    },
+                  },
+                }
+              : {}),
+            ...(params.workshopId ? { workshopId: params.workshopId } : {}),
+          },
+        },
+        select: {
+          id: true,
+          lineNo: true,
+          materialId: true,
+          materialCodeSnapshot: true,
+          materialNameSnapshot: true,
+          materialSpecSnapshot: true,
+          unitCodeSnapshot: true,
+          quantity: true,
+          amount: true,
+          costAmount: true,
+          salesProjectId: true,
+          salesProjectCodeSnapshot: true,
+          salesProjectNameSnapshot: true,
+          sourceDocumentId: true,
+          materialCategoryIdSnapshot: true,
+          materialCategoryCodeSnapshot: true,
+          materialCategoryNameSnapshot: true,
+          materialCategoryPathSnapshot: true,
+          order: {
+            select: {
+              id: true,
+              documentNo: true,
+              bizDate: true,
+              createdAt: true,
+              orderType: true,
+              stockScope: {
+                select: {
+                  scopeCode: true,
+                  scopeName: true,
+                },
+              },
+              workshopId: true,
+              workshop: {
+                select: {
+                  workshopName: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ orderId: "asc" }, { lineNo: "asc" }],
+      }),
+    ]);
+
+    const sourceOrderIds = [
+      ...new Set(
+        salesLines
+          .filter(
+            (line) =>
+              line.order.orderType === SalesStockOrderType.SALES_RETURN &&
+              typeof line.sourceDocumentId === "number",
+          )
+          .map((line) => line.sourceDocumentId as number),
+      ),
+    ];
+    const sourceOrderMap = await this.loadSalesOrderSourceMap(sourceOrderIds);
+    const sourceRefsByOrder = new Map<
+      number,
+      Array<{ bizDate: Date; documentNo: string }>
+    >();
+
+    for (const line of salesLines) {
+      if (
+        line.order.orderType !== SalesStockOrderType.SALES_RETURN ||
+        typeof line.sourceDocumentId !== "number"
+      ) {
+        continue;
+      }
+
+      const source = sourceOrderMap.get(line.sourceDocumentId);
+      if (!source) {
+        continue;
+      }
+
+      const current = sourceRefsByOrder.get(line.order.id) ?? [];
+      current.push(source);
+      sourceRefsByOrder.set(line.order.id, current);
+    }
+
+    const inboundEntries = inboundLines.map((line) => {
+      const categoryPath = this.parseMaterialCategoryPathSnapshot(
+        line.materialCategoryPathSnapshot,
+        {
+          id: line.materialCategoryIdSnapshot ?? null,
+          categoryCode: line.materialCategoryCodeSnapshot ?? null,
+          categoryName:
+            line.materialCategoryNameSnapshot?.trim() || "未分类",
+        },
+      );
+      const leafCategory = categoryPath.at(-1) ?? {
+        id: line.materialCategoryIdSnapshot ?? null,
+        categoryCode: line.materialCategoryCodeSnapshot ?? null,
+        categoryName:
+          line.materialCategoryNameSnapshot?.trim() || "未分类",
+      };
+
+      return {
+        topicKey:
+          line.order.orderType === StockInOrderType.ACCEPTANCE
+            ? MonthlyReportingTopicKey.ACCEPTANCE_INBOUND
+            : MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
+        direction: MonthlyReportingDirection.IN,
+        documentType: BusinessDocumentType.StockInOrder,
+        documentTypeLabel:
+          line.order.orderType === StockInOrderType.ACCEPTANCE
+            ? "验收单"
+            : "生产入库单",
+        documentId: line.order.id,
+        documentNo: line.order.documentNo,
+        documentLineId: line.id,
+        lineNo: line.lineNo,
+        bizDate: line.order.bizDate,
+        createdAt: line.order.createdAt,
+        stockScope: this.toStockScopeCode(line.order.stockScope?.scopeCode),
+        stockScopeName: line.order.stockScope?.scopeName ?? null,
+        workshopId: line.order.workshopId ?? null,
+        workshopName:
+          line.order.workshop?.workshopName ??
+          line.order.workshopNameSnapshot ??
+          null,
+        materialId: line.materialId,
+        materialCode: line.materialCodeSnapshot,
+        materialName: line.materialNameSnapshot,
+        materialSpec: line.materialSpecSnapshot,
+        unitCode: line.unitCodeSnapshot,
+        categoryId: leafCategory.id,
+        categoryCode: leafCategory.categoryCode,
+        categoryName: leafCategory.categoryName,
+        categoryPath,
+        quantity: line.quantity,
+        amount: line.amount,
+        cost: line.amount,
+        salesProjectId: null,
+        salesProjectCode: null,
+        salesProjectName: null,
+        abnormalFlags: this.buildAbnormalFlags({
+          bizDate: line.order.bizDate,
+          createdAt: line.order.createdAt,
+        }),
+        sourceBizDate: null,
+        sourceDocumentNo: null,
+      } satisfies MonthlyMaterialCategoryEntry;
+    });
+
+    const salesEntries = salesLines.map((line) => {
+      const sourceReference = this.resolveSourceReference(
+        line.order.bizDate,
+        sourceRefsByOrder.get(line.order.id) ?? [],
+      );
+      const categoryPath = this.parseMaterialCategoryPathSnapshot(
+        line.materialCategoryPathSnapshot,
+        {
+          id: line.materialCategoryIdSnapshot ?? null,
+          categoryCode: line.materialCategoryCodeSnapshot ?? null,
+          categoryName:
+            line.materialCategoryNameSnapshot?.trim() || "未分类",
+        },
+      );
+      const leafCategory = categoryPath.at(-1) ?? {
+        id: line.materialCategoryIdSnapshot ?? null,
+        categoryCode: line.materialCategoryCodeSnapshot ?? null,
+        categoryName:
+          line.materialCategoryNameSnapshot?.trim() || "未分类",
+      };
+
+      return {
+        topicKey:
+          line.order.orderType === SalesStockOrderType.OUTBOUND
+            ? MonthlyReportingTopicKey.SALES_OUTBOUND
+            : MonthlyReportingTopicKey.SALES_RETURN,
+        direction:
+          line.order.orderType === SalesStockOrderType.OUTBOUND
+            ? MonthlyReportingDirection.OUT
+            : MonthlyReportingDirection.IN,
+        documentType: BusinessDocumentType.SalesStockOrder,
+        documentTypeLabel:
+          line.order.orderType === SalesStockOrderType.OUTBOUND
+            ? "销售出库单"
+            : "销售退货单",
+        documentId: line.order.id,
+        documentNo: line.order.documentNo,
+        documentLineId: line.id,
+        lineNo: line.lineNo,
+        bizDate: line.order.bizDate,
+        createdAt: line.order.createdAt,
+        stockScope: this.toStockScopeCode(line.order.stockScope?.scopeCode),
+        stockScopeName: line.order.stockScope?.scopeName ?? null,
+        workshopId: line.order.workshopId,
+        workshopName: line.order.workshop.workshopName,
+        materialId: line.materialId,
+        materialCode: line.materialCodeSnapshot,
+        materialName: line.materialNameSnapshot,
+        materialSpec: line.materialSpecSnapshot,
+        unitCode: line.unitCodeSnapshot,
+        categoryId: leafCategory.id,
+        categoryCode: leafCategory.categoryCode,
+        categoryName: leafCategory.categoryName,
+        categoryPath,
+        quantity: line.quantity,
+        amount: line.amount,
+        cost: this.toDecimal(line.costAmount),
+        salesProjectId: line.salesProjectId ?? null,
+        salesProjectCode: line.salesProjectCodeSnapshot ?? null,
+        salesProjectName: line.salesProjectNameSnapshot ?? null,
+        abnormalFlags: this.buildAbnormalFlags({
+          bizDate: line.order.bizDate,
+          createdAt: line.order.createdAt,
+          sourceBizDate: sourceReference.sourceBizDate,
+        }),
+        sourceBizDate: sourceReference.sourceBizDate,
+        sourceDocumentNo: sourceReference.sourceDocumentNo,
+      } satisfies MonthlyMaterialCategoryEntry;
+    });
+
+    return [...inboundEntries, ...salesEntries];
   }
 
   private async findInboundMonthlyEntries(params: {
@@ -942,6 +1247,17 @@ export class ReportingRepository {
         OR: [
           { sourceWorkshopId: params.workshopId },
           { targetWorkshopId: params.workshopId },
+          {
+            lines: {
+              some: {
+                rdProject: {
+                  is: {
+                    workshopId: params.workshopId,
+                  },
+                },
+              },
+            },
+          },
         ],
       });
     }
@@ -958,62 +1274,140 @@ export class ReportingRepository {
         targetWorkshop: true,
         lines: {
           select: {
+            quantity: true,
+            amount: true,
             costAmount: true,
+            rdProjectId: true,
+            rdProjectCodeSnapshot: true,
+            rdProjectNameSnapshot: true,
+            rdProject: {
+              select: {
+                workshopId: true,
+                workshopNameSnapshot: true,
+              },
+            },
           },
         },
       },
       orderBy: [{ bizDate: "asc" }, { id: "asc" }],
     });
 
-    return orders.map((order) => ({
-      topicKey: MonthlyReportingTopicKey.RD_HANDOFF,
-      direction: MonthlyReportingDirection.TRANSFER,
-      documentType: BusinessDocumentType.RdHandoffOrder,
-      documentTypeLabel: "RD 交接单",
-      documentId: order.id,
-      documentNo: order.documentNo,
-      bizDate: order.bizDate,
-      createdAt: order.createdAt,
-      stockScope: null,
-      stockScopeName: this.joinArrowLabels(
-        order.sourceStockScope?.scopeName ?? null,
-        order.targetStockScope?.scopeName ?? null,
-      ),
-      workshopId: null,
-      workshopName: this.joinArrowLabels(
-        order.sourceWorkshop?.workshopName ??
-          order.sourceWorkshopNameSnapshot ??
-          null,
-        order.targetWorkshop?.workshopName ??
-          order.targetWorkshopNameSnapshot ??
-          null,
-      ),
-      salesProjectIds: [],
-      salesProjectCodes: [],
-      salesProjectNames: [],
-      rdProjectId: null,
-      rdProjectCode: null,
-      rdProjectName: null,
-      sourceStockScopeName: order.sourceStockScope?.scopeName ?? null,
-      targetStockScopeName: order.targetStockScope?.scopeName ?? null,
-      sourceWorkshopName:
+    const direction =
+      params.stockScope === "MAIN"
+        ? MonthlyReportingDirection.OUT
+        : MonthlyReportingDirection.IN;
+
+    return orders.flatMap((order) => {
+      const sourceStockScopeName = order.sourceStockScope?.scopeName ?? null;
+      const targetStockScopeName = order.targetStockScope?.scopeName ?? null;
+      const sourceWorkshopName =
         order.sourceWorkshop?.workshopName ??
         order.sourceWorkshopNameSnapshot ??
-        null,
-      targetWorkshopName:
+        null;
+      const targetWorkshopName =
         order.targetWorkshop?.workshopName ??
         order.targetWorkshopNameSnapshot ??
-        null,
-      quantity: order.totalQty,
-      amount: order.totalAmount,
-      cost: this.sumNullableDecimals(order.lines.map((line) => line.costAmount)),
-      abnormalFlags: this.buildAbnormalFlags({
+        null;
+      const grouped = new Map<
+        string,
+        {
+          rdProjectId: number | null;
+          rdProjectCode: string | null;
+          rdProjectName: string | null;
+          workshopId: number | null;
+          workshopName: string | null;
+          quantity: Prisma.Decimal;
+          amount: Prisma.Decimal;
+          cost: Prisma.Decimal;
+        }
+      >();
+
+      const filteredLines = order.lines.filter((line) => {
+        if (!params.workshopId) {
+          return true;
+        }
+        return (
+          line.rdProject?.workshopId ??
+          order.targetWorkshopId ??
+          null
+        ) === params.workshopId;
+      });
+
+      for (const line of filteredLines) {
+        const lineWorkshopId = line.rdProject?.workshopId ?? order.targetWorkshopId;
+        const lineWorkshopName =
+          line.rdProject?.workshopNameSnapshot ??
+          targetWorkshopName;
+        const key = [
+          line.rdProjectId ?? "null",
+          line.rdProjectCodeSnapshot ?? "",
+          line.rdProjectNameSnapshot ?? "",
+          lineWorkshopId ?? "null",
+          lineWorkshopName ?? "",
+        ].join(":");
+        const current = grouped.get(key) ?? {
+          rdProjectId: line.rdProjectId ?? null,
+          rdProjectCode: line.rdProjectCodeSnapshot ?? null,
+          rdProjectName: line.rdProjectNameSnapshot ?? null,
+          workshopId: lineWorkshopId ?? null,
+          workshopName: lineWorkshopName ?? null,
+          quantity: new Prisma.Decimal(0),
+          amount: new Prisma.Decimal(0),
+          cost: new Prisma.Decimal(0),
+        };
+        current.quantity = current.quantity.add(line.quantity);
+        current.amount = current.amount.add(line.amount);
+        current.cost = current.cost.add(line.costAmount ?? 0);
+        grouped.set(key, current);
+      }
+
+      return [...grouped.values()].map((item) => ({
+        topicKey: MonthlyReportingTopicKey.RD_HANDOFF,
+        direction,
+        documentType: BusinessDocumentType.RdHandoffOrder,
+        documentTypeLabel: "RD 交接单",
+        documentId: order.id,
+        documentNo: order.documentNo,
         bizDate: order.bizDate,
         createdAt: order.createdAt,
-      }),
-      sourceBizDate: null,
-      sourceDocumentNo: null,
-    }));
+        stockScope:
+          params.stockScope === "MAIN"
+            ? "MAIN"
+            : params.stockScope === "RD_SUB"
+              ? "RD_SUB"
+              : null,
+          stockScopeName:
+            params.stockScope === "MAIN"
+              ? sourceStockScopeName
+              : params.stockScope === "RD_SUB"
+                ? targetStockScopeName
+                : this.joinArrowLabels(sourceStockScopeName, targetStockScopeName),
+        workshopId: item.workshopId,
+        workshopName:
+          params.stockScope === "MAIN" || params.stockScope === "RD_SUB"
+            ? item.workshopName
+            : this.joinArrowLabels(sourceWorkshopName, item.workshopName),
+        salesProjectIds: [],
+        salesProjectCodes: [],
+        salesProjectNames: [],
+        rdProjectId: item.rdProjectId,
+        rdProjectCode: item.rdProjectCode,
+        rdProjectName: item.rdProjectName,
+        sourceStockScopeName,
+        targetStockScopeName,
+        sourceWorkshopName,
+        targetWorkshopName: item.workshopName ?? targetWorkshopName,
+        quantity: item.quantity,
+        amount: item.amount,
+        cost: item.cost,
+        abnormalFlags: this.buildAbnormalFlags({
+          bizDate: order.bizDate,
+          createdAt: order.createdAt,
+        }),
+        sourceBizDate: null,
+        sourceDocumentNo: null,
+      }));
+    });
   }
 
   private async findRdStocktakeMonthlyEntries(params: {
@@ -1043,6 +1437,7 @@ export class ReportingRepository {
         lines: {
           include: {
             inventoryLog: true,
+            rdProject: true,
           },
         },
       },
@@ -1050,101 +1445,92 @@ export class ReportingRepository {
     });
 
     return orders.flatMap((order) => {
-      const positiveLines = order.lines.filter((line) =>
-        new Prisma.Decimal(line.adjustmentQty).gt(0),
-      );
-      const negativeLines = order.lines.filter((line) =>
-        new Prisma.Decimal(line.adjustmentQty).lt(0),
-      );
       const abnormalFlags = this.buildAbnormalFlags({
         bizDate: order.bizDate,
         createdAt: order.createdAt,
         extraFlags: [MonthlyReportingAbnormalFlag.STOCKTAKE_ADJUSTMENT],
       });
+      const grouped = new Map<
+        string,
+        {
+          topicKey: MonthlyReportingTopicKey;
+          direction: MonthlyReportingDirection;
+          rdProjectId: number | null;
+          rdProjectCode: string | null;
+          rdProjectName: string | null;
+          quantity: Prisma.Decimal;
+          amount: Prisma.Decimal;
+          cost: Prisma.Decimal;
+        }
+      >();
 
-      const entries: MonthlyReportEntry[] = [];
-
-      if (positiveLines.length > 0) {
-        entries.push({
-          topicKey: MonthlyReportingTopicKey.RD_STOCKTAKE_GAIN,
-          direction: MonthlyReportingDirection.IN,
-          documentType: BusinessDocumentType.RdStocktakeOrder,
-          documentTypeLabel: "RD 盘点调整单",
-          documentId: order.id,
-          documentNo: order.documentNo,
-          bizDate: order.bizDate,
-          createdAt: order.createdAt,
-          stockScope: this.toStockScopeCode(order.stockScope?.scopeCode),
-          stockScopeName: order.stockScope?.scopeName ?? null,
-          workshopId: order.workshopId,
-          workshopName: order.workshop.workshopName,
-          salesProjectIds: [],
-          salesProjectCodes: [],
-          salesProjectNames: [],
-          rdProjectId: null,
-          rdProjectCode: null,
-          rdProjectName: null,
-          sourceStockScopeName: null,
-          targetStockScopeName: null,
-          sourceWorkshopName: null,
-          targetWorkshopName: null,
-          quantity: this.sumNullableDecimals(
-            positiveLines.map((line) => line.adjustmentQty),
-          ),
-          amount: this.sumNullableDecimals(
-            positiveLines.map((line) => line.inventoryLog?.costAmount),
-          ),
-          cost: this.sumNullableDecimals(
-            positiveLines.map((line) => line.inventoryLog?.costAmount),
-          ),
-          abnormalFlags,
-          sourceBizDate: null,
-          sourceDocumentNo: null,
-        });
+      for (const line of order.lines) {
+        const adjustmentQty = new Prisma.Decimal(line.adjustmentQty);
+        if (adjustmentQty.eq(0)) {
+          continue;
+        }
+        const isGain = adjustmentQty.gt(0);
+        const key = [
+          isGain ? "gain" : "loss",
+          line.rdProjectId ?? "null",
+          line.rdProjectCodeSnapshot ?? "",
+          line.rdProjectNameSnapshot ?? "",
+        ].join(":");
+        const current = grouped.get(key) ?? {
+          topicKey: isGain
+            ? MonthlyReportingTopicKey.RD_STOCKTAKE_GAIN
+            : MonthlyReportingTopicKey.RD_STOCKTAKE_LOSS,
+          direction: isGain
+            ? MonthlyReportingDirection.IN
+            : MonthlyReportingDirection.OUT,
+          rdProjectId: line.rdProjectId ?? null,
+          rdProjectCode: line.rdProjectCodeSnapshot ?? null,
+          rdProjectName: line.rdProjectNameSnapshot ?? null,
+          quantity: new Prisma.Decimal(0),
+          amount: new Prisma.Decimal(0),
+          cost: new Prisma.Decimal(0),
+        };
+        current.quantity = current.quantity.add(
+          isGain ? adjustmentQty : adjustmentQty.abs(),
+        );
+        current.amount = current.amount.add(line.inventoryLog?.costAmount ?? 0);
+        current.cost = current.cost.add(line.inventoryLog?.costAmount ?? 0);
+        grouped.set(key, current);
       }
 
-      if (negativeLines.length > 0) {
-        entries.push({
-          topicKey: MonthlyReportingTopicKey.RD_STOCKTAKE_LOSS,
-          direction: MonthlyReportingDirection.OUT,
-          documentType: BusinessDocumentType.RdStocktakeOrder,
-          documentTypeLabel: "RD 盘点调整单",
-          documentId: order.id,
-          documentNo: order.documentNo,
-          bizDate: order.bizDate,
-          createdAt: order.createdAt,
-          stockScope: this.toStockScopeCode(order.stockScope?.scopeCode),
-          stockScopeName: order.stockScope?.scopeName ?? null,
-          workshopId: order.workshopId,
-          workshopName: order.workshop.workshopName,
-          salesProjectIds: [],
-          salesProjectCodes: [],
-          salesProjectNames: [],
-          rdProjectId: null,
-          rdProjectCode: null,
-          rdProjectName: null,
-          sourceStockScopeName: null,
-          targetStockScopeName: null,
-          sourceWorkshopName: null,
-          targetWorkshopName: null,
-          quantity: this.sumNullableDecimals(
-            negativeLines.map((line) =>
-              new Prisma.Decimal(line.adjustmentQty).abs(),
-            ),
-          ),
-          amount: this.sumNullableDecimals(
-            negativeLines.map((line) => line.inventoryLog?.costAmount),
-          ),
-          cost: this.sumNullableDecimals(
-            negativeLines.map((line) => line.inventoryLog?.costAmount),
-          ),
-          abnormalFlags,
-          sourceBizDate: null,
-          sourceDocumentNo: null,
-        });
-      }
-
-      return entries;
+      return [...grouped.values()].map((item) => ({
+        topicKey: item.topicKey,
+        direction: item.direction,
+        documentType: BusinessDocumentType.RdStocktakeOrder,
+        documentTypeLabel:
+          item.topicKey === MonthlyReportingTopicKey.RD_STOCKTAKE_GAIN
+            ? "RD盘盈调整单"
+            : "RD盘亏调整单",
+        documentId: order.id,
+        documentNo: order.documentNo,
+        bizDate: order.bizDate,
+        createdAt: order.createdAt,
+        stockScope: this.toStockScopeCode(order.stockScope?.scopeCode),
+        stockScopeName: order.stockScope?.scopeName ?? null,
+        workshopId: order.workshopId,
+        workshopName: order.workshop.workshopName,
+        salesProjectIds: [],
+        salesProjectCodes: [],
+        salesProjectNames: [],
+        rdProjectId: item.rdProjectId,
+        rdProjectCode: item.rdProjectCode,
+        rdProjectName: item.rdProjectName,
+        sourceStockScopeName: null,
+        targetStockScopeName: null,
+        sourceWorkshopName: null,
+        targetWorkshopName: null,
+        quantity: item.quantity,
+        amount: item.amount,
+        cost: item.cost,
+        abnormalFlags,
+        sourceBizDate: null,
+        sourceDocumentNo: null,
+      }));
     });
   }
 
@@ -1234,7 +1620,7 @@ export class ReportingRepository {
           topicKey: MonthlyReportingTopicKey.PRICE_CORRECTION_OUT,
           direction: MonthlyReportingDirection.OUT,
           documentType: BusinessDocumentType.StockInPriceCorrectionOrder,
-          documentTypeLabel: "入库调价单",
+          documentTypeLabel: "入库调价转出单",
           documentId: order.id,
           documentNo: order.documentNo,
           bizDate: order.bizDate,
@@ -1267,7 +1653,7 @@ export class ReportingRepository {
           topicKey: MonthlyReportingTopicKey.PRICE_CORRECTION_IN,
           direction: MonthlyReportingDirection.IN,
           documentType: BusinessDocumentType.StockInPriceCorrectionOrder,
-          documentTypeLabel: "入库调价单",
+          documentTypeLabel: "入库调价转入单",
           documentId: order.id,
           documentNo: order.documentNo,
           bizDate: order.bizDate,
@@ -1384,6 +1770,111 @@ export class ReportingRepository {
         },
       ]),
     );
+  }
+
+  private parseMaterialCategoryPathSnapshot(
+    snapshot: Prisma.JsonValue | string | null | undefined,
+    fallbackLeaf: MaterialCategorySnapshotNode,
+  ): MaterialCategorySnapshotNode[] {
+    const fallbackPath = [fallbackLeaf].filter(
+      (node) => node.categoryName.trim().length > 0,
+    );
+
+    if (!snapshot) {
+      return fallbackPath.length > 0
+        ? fallbackPath
+        : [
+            {
+              id: null,
+              categoryCode: null,
+              categoryName: "未分类",
+            },
+          ];
+    }
+
+    const parsedSnapshot =
+      typeof snapshot === "string"
+        ? this.tryParseJsonSnapshot(snapshot)
+        : snapshot;
+    if (!Array.isArray(parsedSnapshot)) {
+      return fallbackPath.length > 0
+        ? fallbackPath
+        : [
+            {
+              id: null,
+              categoryCode: null,
+              categoryName: "未分类",
+            },
+          ];
+    }
+
+    const nodes = parsedSnapshot
+      .map((value) => this.normalizeMaterialCategoryPathNode(value))
+      .filter(
+        (node): node is MaterialCategorySnapshotNode =>
+          node != null && node.categoryName.trim().length > 0,
+      );
+
+    if (nodes.length > 0) {
+      return nodes;
+    }
+
+    return fallbackPath.length > 0
+      ? fallbackPath
+      : [
+          {
+            id: null,
+            categoryCode: null,
+            categoryName: "未分类",
+          },
+        ];
+  }
+
+  private tryParseJsonSnapshot(value: string) {
+    try {
+      return JSON.parse(value) as unknown;
+    } catch {
+      return null;
+    }
+  }
+
+  private normalizeMaterialCategoryPathNode(value: unknown) {
+    if (!value || typeof value !== "object") {
+      return null;
+    }
+
+    const candidate = value as {
+      id?: unknown;
+      categoryCode?: unknown;
+      categoryName?: unknown;
+      code?: unknown;
+      name?: unknown;
+    };
+    const rawCategoryName =
+      typeof candidate.categoryName === "string"
+        ? candidate.categoryName
+        : typeof candidate.name === "string"
+          ? candidate.name
+          : "";
+    const categoryName =
+      typeof rawCategoryName === "string" ? rawCategoryName.trim() : "";
+
+    if (categoryName.length === 0) {
+      return null;
+    }
+
+    return {
+      id: typeof candidate.id === "number" ? candidate.id : null,
+      categoryCode:
+        typeof candidate.categoryCode === "string" &&
+        candidate.categoryCode.trim().length > 0
+          ? candidate.categoryCode.trim()
+          : typeof candidate.code === "string" &&
+              candidate.code.trim().length > 0
+            ? candidate.code.trim()
+          : null,
+      categoryName,
+    } satisfies MaterialCategorySnapshotNode;
   }
 
   private resolveSourceReference(

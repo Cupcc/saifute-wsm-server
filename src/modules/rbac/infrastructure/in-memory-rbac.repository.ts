@@ -121,26 +121,14 @@ export class InMemoryRbacRepository {
           permissions: ["reporting:home:view"],
         },
         {
-          name: "InventorySummary",
-          path: "/system/reporting/inventory-summary",
-          component: "reporting/inventory-summary/index",
-          permissions: ["reporting:inventory-summary:view"],
-        },
-        {
-          name: "MaterialCategorySummary",
-          path: "/system/reporting/material-category-summary",
-          component: "reporting/material-category-summary/index",
-          permissions: ["reporting:material-category-summary:view"],
-        },
-        {
-          name: "ReportingTrends",
-          path: "/system/reporting/trends",
-          component: "reporting/trends/index",
-          permissions: ["reporting:trends:view"],
-        },
-        {
           name: "MonthlyReporting",
           path: "/system/reporting/monthly-reporting",
+          component: "reporting/monthly-reporting/index",
+          permissions: ["reporting:monthly-reporting:view"],
+        },
+        {
+          name: "MonthlyReportingMaterialCategory",
+          path: "/system/reporting/monthly-reporting-material-category",
           component: "reporting/monthly-reporting/index",
           permissions: ["reporting:monthly-reporting:view"],
         },
@@ -423,6 +411,12 @@ export class InMemoryRbacRepository {
         {
           name: "RdMonthlyReporting",
           path: "/rd/monthly-reporting",
+          component: "reporting/monthly-reporting/index",
+          permissions: ["reporting:monthly-reporting:view"],
+        },
+        {
+          name: "RdMonthlyReportingMaterialCategory",
+          path: "/rd/monthly-reporting-material-category",
           component: "reporting/monthly-reporting/index",
           permissions: ["reporting:monthly-reporting:view"],
         },

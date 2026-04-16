@@ -6,13 +6,14 @@
 |------|------|
 | 模块 | legacy-rd-project |
 | 需求源 | docs/requirements/domain/rd-project-management.md（本 spec 冻结的是 `2026-04-09` 历史交付证据） |
-| 最近更新 | 2026-04-09 |
+| 最近更新 | 2026-04-14 |
 
 ## 历史说明
 
 - 本 spec 冻结的是 `2026-04-09` 当时的 `src/modules/rd-project/**` 验收结果；该实现本质上是 `RD_SUB` 下的历史研发项目能力。
 - 当前运行时菜单与页面文案已经从“项目管理”收口为“研发项目”，以避免与销售项目语义冲突。
 - 当前研发项目需求真源见 `docs/requirements/domain/rd-project-management.md`；销售项目真源见 `docs/requirements/domain/sales-project-management.md`。
+- `2026-04-14` 新确认 follow-on 规则要求：进入 `RD_SUB` 的物料必须归属研发项目，研发项目承担 `RD_SUB` 二级归属真源。该 follow-on 不在本历史 spec 的 `F1-F4` 验收范围内，后续将由 `task-20260414-1418-rd-sub-project-attribution-and-reporting-alignment.md` 配合新的 `rd-subwarehouse` 验收规格承接。
 
 ## 能力覆盖
 

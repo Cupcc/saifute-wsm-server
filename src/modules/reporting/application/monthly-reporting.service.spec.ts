@@ -6,10 +6,13 @@ import {
   type MonthlySalesProjectEntry,
 } from "../infrastructure/reporting.repository";
 import {
+  type MaterialCategorySnapshotNode,
+  type MonthlyMaterialCategoryEntry,
   MonthlyReportingAbnormalFlag,
   MonthlyReportingDirection,
   MonthlyReportingTopicKey,
   type MonthlyReportEntry,
+  MonthlyReportingViewMode,
 } from "./monthly-reporting.shared";
 import { MonthlyReportingService } from "./monthly-reporting.service";
 
@@ -26,6 +29,7 @@ describe("MonthlyReportingService", () => {
           useValue: {
             findMonthlyReportEntries: jest.fn(),
             findMonthlySalesProjectEntries: jest.fn(),
+            findMonthlyMaterialCategoryEntries: jest.fn(),
           },
         },
         {
@@ -85,6 +89,7 @@ describe("MonthlyReportingService", () => {
       salesProjectCode: "SP-101",
       salesProjectName: "项目A",
       topicKey: MonthlyReportingTopicKey.SALES_OUTBOUND,
+      documentTypeLabel: "销售出库单",
       documentId: 1,
       documentNo: "SO-001",
       bizDate: new Date("2026-03-05T02:00:00.000Z"),
@@ -93,6 +98,69 @@ describe("MonthlyReportingService", () => {
       amount: new Prisma.Decimal("100"),
       cost: new Prisma.Decimal("70"),
       abnormalFlags: [],
+      ...overrides,
+    };
+  }
+
+  function createMaterialCategoryPath(
+    nodes: Array<Partial<MaterialCategorySnapshotNode>>,
+  ): MaterialCategorySnapshotNode[] {
+    return nodes.map((node, index) => ({
+      id: node.id ?? index + 1,
+      categoryCode: node.categoryCode ?? `CAT-${index + 1}`,
+      categoryName: node.categoryName ?? `分类${index + 1}`,
+    }));
+  }
+
+  function createMaterialCategoryEntry(
+    overrides: Partial<MonthlyMaterialCategoryEntry> = {},
+  ): MonthlyMaterialCategoryEntry {
+    const categoryPath = createMaterialCategoryPath([
+      {
+        id: 10,
+        categoryCode: "RAW",
+        categoryName: "原料",
+      },
+      {
+        id: 11,
+        categoryCode: "CHEM",
+        categoryName: "化工",
+      },
+    ]);
+
+    return {
+      topicKey: MonthlyReportingTopicKey.ACCEPTANCE_INBOUND,
+      direction: MonthlyReportingDirection.IN,
+      documentType: "StockInOrder",
+      documentTypeLabel: "验收单",
+      documentId: 101,
+      documentNo: "YS-001",
+      documentLineId: 1001,
+      lineNo: 1,
+      bizDate: new Date("2026-03-05T02:00:00.000Z"),
+      createdAt: new Date("2026-03-05T03:00:00.000Z"),
+      stockScope: "MAIN",
+      stockScopeName: "主仓",
+      workshopId: 10,
+      workshopName: "一车间",
+      materialId: 501,
+      materialCode: "M-RAW-001",
+      materialName: "原料 A",
+      materialSpec: "25kg",
+      unitCode: "KG",
+      categoryId: 11,
+      categoryCode: "CHEM",
+      categoryName: "化工",
+      categoryPath,
+      quantity: new Prisma.Decimal("3"),
+      amount: new Prisma.Decimal("30"),
+      cost: new Prisma.Decimal("30"),
+      salesProjectId: null,
+      salesProjectCode: null,
+      salesProjectName: null,
+      abnormalFlags: [],
+      sourceBizDate: null,
+      sourceDocumentNo: null,
       ...overrides,
     };
   }
@@ -115,18 +183,21 @@ describe("MonthlyReportingService", () => {
       }),
       createEntry({
         topicKey: MonthlyReportingTopicKey.RD_HANDOFF,
-        direction: MonthlyReportingDirection.TRANSFER,
+        direction: MonthlyReportingDirection.OUT,
         documentType: "RdHandoffOrder",
         documentTypeLabel: "RD 交接单",
         documentId: 3,
         documentNo: "RDH-002",
-        stockScope: null,
-        stockScopeName: "主仓 -> RD小仓",
-        workshopId: null,
-        workshopName: null,
+        stockScope: "MAIN",
+        stockScopeName: "主仓",
+        workshopId: 10,
+        workshopName: "一车间",
         salesProjectIds: [],
         salesProjectCodes: [],
         salesProjectNames: [],
+        rdProjectId: 701,
+        rdProjectCode: "TEST-RDP-001",
+        rdProjectName: "测试研发项目",
         sourceStockScopeName: "主仓",
         targetStockScopeName: "RD小仓",
         sourceWorkshopName: "一车间",
@@ -169,19 +240,25 @@ describe("MonthlyReportingService", () => {
       workshopId: 10,
     });
     expect(result.summary.documentCount).toBe(3);
-    expect(result.summary.totalOutAmount).toBe("100.00");
+    expect(result.summary.totalOutAmount).toBe("120.00");
     expect(result.summary.totalInAmount).toBe("20.00");
-    expect(result.summary.totalTransferAmount).toBe("20.00");
     expect(result.summary.totalCost).toBe("102.00");
     expect(result.domains.map((item) => item.domainLabel)).toEqual([
       "销售",
-      "RD小仓",
+      "研发项目",
     ]);
-    expect(result.topics[0]).toMatchObject({
-      topicKey: MonthlyReportingTopicKey.SALES_OUTBOUND,
-      topicLabel: "销售出库",
-      totalOutAmount: "100.00",
-    });
+    expect(result.documentTypes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          documentTypeLabel: "RD 交接单",
+          totalOutAmount: "20.00",
+        }),
+        expect.objectContaining({
+          documentTypeLabel: "销售出库单",
+          totalOutAmount: "100.00",
+        }),
+      ]),
+    );
     expect(result.salesProjectItems[0]).toMatchObject({
       salesProjectCode: "SP-101",
       salesProjectName: "项目A",
@@ -189,24 +266,68 @@ describe("MonthlyReportingService", () => {
       salesReturnAmount: "20.00",
       netAmount: "80.00",
     });
-    expect(result.rdHandoffItems[0]).toMatchObject({
-      sourceStockScopeName: "主仓",
-      targetStockScopeName: "RD小仓",
-      transferAmount: "20.00",
-    });
-    expect(result.topicCatalog).toEqual(
+    expect(result.documentTypeCatalog).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          topicKey: MonthlyReportingTopicKey.ACCEPTANCE_INBOUND,
-          topicLabel: "验收入库",
+          documentTypeLabel: "销售出库单",
         }),
         expect.objectContaining({
-          topicKey: MonthlyReportingTopicKey.RD_HANDOFF,
-          domainLabel: "RD小仓",
-          topicLabel: "主仓到RD交接",
+          domainLabel: "研发项目",
+          documentTypeLabel: "RD 交接单",
         }),
       ]),
     );
+  });
+
+  it("should count project handoff as rd-project inbound in all-stock view", async () => {
+    repository.findMonthlyReportEntries.mockResolvedValue([
+      createEntry({
+        topicKey: MonthlyReportingTopicKey.RD_HANDOFF,
+        direction: MonthlyReportingDirection.IN,
+        documentType: "RdHandoffOrder",
+        documentTypeLabel: "RD 交接单",
+        documentId: 3,
+        documentNo: "RDH-003",
+        stockScope: "RD_SUB",
+        stockScopeName: "RD小仓",
+        workshopId: 9,
+        workshopName: "研发车间",
+        salesProjectIds: [],
+        salesProjectCodes: [],
+        salesProjectNames: [],
+        rdProjectId: 701,
+        rdProjectCode: "TEST-RDP-001",
+        rdProjectName: "测试研发项目",
+        sourceStockScopeName: "主仓",
+        targetStockScopeName: "RD小仓",
+        sourceWorkshopName: "一车间",
+        targetWorkshopName: "研发车间",
+        quantity: new Prisma.Decimal("9"),
+        amount: new Prisma.Decimal("900"),
+        cost: new Prisma.Decimal("900"),
+      }),
+    ]);
+    repository.findMonthlySalesProjectEntries.mockResolvedValue([]);
+
+    const result = await service.getMonthlyReportSummary({
+      yearMonth: "2026-03",
+    });
+
+    expect(result.summary.totalInAmount).toBe("900.00");
+    expect(result.domains).toEqual([
+      expect.objectContaining({
+        domainLabel: "研发项目",
+        totalInAmount: "900.00",
+        totalOutAmount: "0.00",
+      }),
+    ]);
+    expect(result.rdProjectItems).toEqual([
+      expect.objectContaining({
+        rdProjectCode: "TEST-RDP-001",
+        handoffInAmount: "900.00",
+        netAmount: "900.00",
+      }),
+    ]);
   });
 
   it("should apply abnormal and keyword filters to document drill-down", async () => {
@@ -237,11 +358,225 @@ describe("MonthlyReportingService", () => {
     expect(result.total).toBe(1);
     expect(result.items[0]).toMatchObject({
       documentNo: "SR-001",
-      topicKey: MonthlyReportingTopicKey.SALES_RETURN,
+      documentTypeLabel: "销售退货单",
       abnormalLabels: ["跨月修正"],
       sourceBizMonth: "2026-02",
       sourceDocumentNo: "SO-099",
     });
+  });
+
+  it("should summarize material-category view from line facts and roll up parent categories", async () => {
+    repository.findMonthlyMaterialCategoryEntries.mockResolvedValue([
+      createMaterialCategoryEntry(),
+      createMaterialCategoryEntry({
+        topicKey: MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
+        documentId: 102,
+        documentNo: "RK-001",
+        documentLineId: 1002,
+        lineNo: 1,
+        amount: new Prisma.Decimal("50"),
+        cost: new Prisma.Decimal("50"),
+      }),
+      createMaterialCategoryEntry({
+        topicKey: MonthlyReportingTopicKey.SALES_OUTBOUND,
+        direction: MonthlyReportingDirection.OUT,
+        documentType: "SalesStockOrder",
+        documentTypeLabel: "销售出库单",
+        documentId: 201,
+        documentNo: "CK-001",
+        documentLineId: 2001,
+        lineNo: 1,
+        materialId: 601,
+        materialCode: "M-RAW-002",
+        materialName: "原料 B",
+        amount: new Prisma.Decimal("40"),
+        cost: new Prisma.Decimal("28"),
+        salesProjectId: 701,
+        salesProjectCode: "SP-701",
+        salesProjectName: "销售项目 A",
+      }),
+      createMaterialCategoryEntry({
+        topicKey: MonthlyReportingTopicKey.SALES_RETURN,
+        documentType: "SalesStockOrder",
+        documentTypeLabel: "销售退货单",
+        documentId: 202,
+        documentNo: "XSTH-001",
+        documentLineId: 2002,
+        lineNo: 1,
+        materialId: 601,
+        materialCode: "M-RAW-002",
+        materialName: "原料 B",
+        amount: new Prisma.Decimal("8"),
+        cost: new Prisma.Decimal("6"),
+        salesProjectId: 701,
+        salesProjectCode: "SP-701",
+        salesProjectName: "销售项目 A",
+        abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
+        sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
+        sourceDocumentNo: "CK-0009",
+      }),
+    ]);
+
+    const result = await service.getMonthlyReportSummary({
+      yearMonth: "2026-03",
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+      categoryNodeKey: "10:RAW:原料",
+    });
+
+    expect(repository.findMonthlyMaterialCategoryEntries).toHaveBeenCalledWith({
+      start: new Date("2026-02-28T16:00:00.000Z"),
+      end: new Date("2026-03-31T15:59:59.999Z"),
+      stockScope: undefined,
+      workshopId: undefined,
+    });
+    expect(result.viewMode).toBe("MATERIAL_CATEGORY");
+    expect(result.summary).toMatchObject({
+      categoryCount: 2,
+      lineCount: 4,
+      acceptanceInboundAmount: "30.00",
+      productionReceiptAmount: "50.00",
+      salesOutboundAmount: "40.00",
+      salesReturnAmount: "8.00",
+      netAmount: "48.00",
+      abnormalDocumentCount: 1,
+    });
+    expect(result.categories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          categoryId: 10,
+          categoryName: "原料",
+          categoryPathLabel: "原料",
+          acceptanceInboundAmount: "30.00",
+          productionReceiptAmount: "50.00",
+          salesOutboundAmount: "40.00",
+          salesReturnAmount: "8.00",
+          netAmount: "48.00",
+        }),
+        expect.objectContaining({
+          categoryId: 11,
+          categoryName: "化工",
+          categoryPathLabel: "原料 / 化工",
+          parentCategoryId: 10,
+          salesOutboundAmount: "40.00",
+        }),
+      ]),
+    );
+  });
+
+  it("should expose material-category line details and export the category workbook", async () => {
+    repository.findMonthlyMaterialCategoryEntries.mockResolvedValue([
+      createMaterialCategoryEntry({
+        topicKey: MonthlyReportingTopicKey.SALES_RETURN,
+        documentType: "SalesStockOrder",
+        documentTypeLabel: "销售退货单",
+        documentId: 202,
+        documentNo: "XSTH-001",
+        documentLineId: 2002,
+        lineNo: 2,
+        amount: new Prisma.Decimal("8"),
+        cost: new Prisma.Decimal("6"),
+        salesProjectId: 701,
+        salesProjectCode: "SP-701",
+        salesProjectName: "销售项目 A",
+        abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
+        sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
+        sourceDocumentNo: "CK-0009",
+      }),
+    ]);
+
+    const details = await service.getMonthlyReportDocuments({
+      yearMonth: "2026-03",
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+      keyword: "销售项目 A",
+    });
+    const exportResult = await service.exportMonthlyReport({
+      yearMonth: "2026-03",
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+    });
+
+    expect(details.total).toBe(1);
+    expect(details.items[0]).toMatchObject({
+      documentNo: "XSTH-001",
+      lineNo: 2,
+      documentTypeLabel: "销售退货单",
+      categoryPathLabel: "原料 / 化工",
+      salesProjectCode: "SP-701",
+      abnormalLabels: ["跨月修正"],
+      sourceBizMonth: "2026-02",
+      sourceDocumentNo: "CK-0009",
+    });
+    expect(exportResult.fileName).toBe(
+      "monthly-reporting-material-category-2026-03.xls",
+    );
+    expect(exportResult.content).toContain('<Worksheet ss:Name="分类汇总">');
+    expect(exportResult.content).toContain('<Worksheet ss:Name="单据行明细">');
+    expect(exportResult.content).toContain("原料 / 化工");
+    expect(exportResult.content).toContain("XSTH-001");
+  });
+
+  it("should filter material-category rows by stable node key before falling back to category id", async () => {
+    repository.findMonthlyMaterialCategoryEntries.mockResolvedValue([
+      createMaterialCategoryEntry({
+        documentId: 301,
+        documentNo: "YS-301",
+        amount: new Prisma.Decimal("30"),
+        cost: new Prisma.Decimal("30"),
+        categoryId: 11,
+        categoryCode: "CHEM",
+        categoryName: "化工",
+        categoryPath: createMaterialCategoryPath([
+          { id: 10, categoryCode: "RAW", categoryName: "原料" },
+          { id: 11, categoryCode: "CHEM", categoryName: "化工" },
+        ]),
+      }),
+      createMaterialCategoryEntry({
+        documentId: 302,
+        documentNo: "YS-302",
+        amount: new Prisma.Decimal("45"),
+        cost: new Prisma.Decimal("45"),
+        categoryId: 11,
+        categoryCode: "CHEM",
+        categoryName: "化工",
+        categoryPath: createMaterialCategoryPath([
+          { id: 12, categoryCode: "AUX", categoryName: "辅料" },
+          { id: 11, categoryCode: "CHEM", categoryName: "化工" },
+        ]),
+      }),
+    ]);
+
+    const result = await service.getMonthlyReportSummary({
+      yearMonth: "2026-03",
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+      categoryNodeKey: "10:RAW:原料>11:CHEM:化工",
+    });
+
+    expect(result.summary).toMatchObject({
+      categoryCount: 2,
+      lineCount: 1,
+      acceptanceInboundAmount: "30.00",
+    });
+    expect(result.categories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          nodeKey: "10:RAW:原料",
+          categoryPathLabel: "原料",
+        }),
+        expect.objectContaining({
+          nodeKey: "10:RAW:原料>11:CHEM:化工",
+          categoryPathLabel: "原料 / 化工",
+        }),
+      ]),
+    );
+    expect(result.categories).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({
+          categoryPathLabel: "辅料",
+        }),
+        expect.objectContaining({
+          categoryPathLabel: "辅料 / 化工",
+        }),
+      ]),
+    );
   });
 
   it("should not expose stock-scope names as workshop labels in workshop summaries or details", async () => {
@@ -311,18 +646,21 @@ describe("MonthlyReportingService", () => {
       createEntry(),
       createEntry({
         topicKey: MonthlyReportingTopicKey.RD_HANDOFF,
-        direction: MonthlyReportingDirection.TRANSFER,
+        direction: MonthlyReportingDirection.IN,
         documentType: "RdHandoffOrder",
         documentTypeLabel: "RD 交接单",
         documentId: 3,
         documentNo: "RDH-002",
-        stockScope: null,
-        stockScopeName: "主仓 -> RD小仓",
-        workshopId: null,
-        workshopName: null,
+        stockScope: "RD_SUB",
+        stockScopeName: "RD小仓",
+        workshopId: 9,
+        workshopName: "研发车间",
         salesProjectIds: [],
         salesProjectCodes: [],
         salesProjectNames: [],
+        rdProjectId: 701,
+        rdProjectCode: "TEST-RDP-001",
+        rdProjectName: "测试研发项目",
         sourceStockScopeName: "主仓",
         targetStockScopeName: "RD小仓",
         sourceWorkshopName: "一车间",
@@ -342,10 +680,11 @@ describe("MonthlyReportingService", () => {
 
     expect(result.fileName).toBe("monthly-reporting-2026-03.xls");
     expect(result.contentType).toContain("application/vnd.ms-excel");
-    expect(result.content).toContain('<Worksheet ss:Name="业务操作汇总">');
-    expect(result.content).toContain('<Worksheet ss:Name="主仓到RD交接汇总">');
-    expect(result.content).toContain("主仓到RD交接");
+    expect(result.content).toContain('<Worksheet ss:Name="单据类型汇总">');
+    expect(result.content).toContain("RD 交接单");
     expect(result.content).toContain("RDH-002");
+    expect(result.content).not.toContain("交接金额");
+    expect(result.content).not.toContain("主仓到RD交接汇总");
     expect(result.content).not.toContain("SO-001");
   });
 });

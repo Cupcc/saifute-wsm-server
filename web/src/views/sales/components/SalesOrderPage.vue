@@ -281,7 +281,7 @@
       @pagination="getList"
     />
 
-    <customer-order-detail-dialog
+    <sales-order-detail-dialog
       v-model="detailOpen"
       :loading="detailLoading"
       :detail-data="detailData"
@@ -290,7 +290,7 @@
       :show-source-outbound="showSourceOutbound"
     />
 
-    <customer-order-editor-dialog
+    <sales-order-editor-dialog
       v-model="editorOpen"
       :mode="mode"
       :order-id="editingOrderId"

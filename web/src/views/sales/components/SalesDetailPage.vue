@@ -254,7 +254,7 @@
       @pagination="getList"
     />
 
-    <customer-order-detail-dialog
+    <sales-order-detail-dialog
       v-model="detailOpen"
       :loading="detailLoading"
       :detail-data="detailData"

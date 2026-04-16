@@ -36,6 +36,15 @@ describe("RdStocktakeOrderController", () => {
           provide: RdStocktakeOrderService,
           useValue: {
             listOrders: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+            listProjectOptions: jest.fn().mockResolvedValue({
+              items: [{ id: 701, projectCode: "TEST-RDP-001" }],
+              total: 1,
+            }),
+            getProjectMaterialBookQty: jest.fn().mockResolvedValue({
+              rdProjectId: 701,
+              materialId: 100,
+              bookQty: "5.000000",
+            }),
             getOrderById: jest.fn().mockResolvedValue({
               id: 1,
               workshopId: 6,
@@ -53,7 +62,14 @@ describe("RdStocktakeOrderController", () => {
               documentNo: "RDSTK-001",
               bizDate: "2026-03-30",
               workshopId: 6,
-              lines: [{ materialId: 100, countedQty: "7", reason: "盘点" }],
+              lines: [
+                {
+                  rdProjectId: 701,
+                  materialId: 100,
+                  countedQty: "7",
+                  reason: "盘点",
+                },
+              ],
             }),
           },
         },
@@ -84,13 +100,53 @@ describe("RdStocktakeOrderController", () => {
     );
   });
 
+  it("resolves workshop scope when listing project options", async () => {
+    await controller.listProjectOptions({ workshopId: 999 }, rdUser);
+
+    expect(workshopScopeService.resolveQueryWorkshopId).toHaveBeenCalledWith(
+      rdUser,
+      999,
+    );
+    expect(rdStocktakeOrderService.listProjectOptions).toHaveBeenCalledWith(6);
+  });
+
+  it("resolves workshop scope when querying project material book qty", async () => {
+    await controller.getProjectMaterialBookQty(
+      {
+        workshopId: 999,
+        rdProjectId: 701,
+        materialId: 100,
+      },
+      rdUser,
+    );
+
+    expect(workshopScopeService.resolveQueryWorkshopId).toHaveBeenCalledWith(
+      rdUser,
+      999,
+    );
+    expect(
+      rdStocktakeOrderService.getProjectMaterialBookQty,
+    ).toHaveBeenCalledWith({
+      workshopId: 6,
+      rdProjectId: 701,
+      materialId: 100,
+    });
+  });
+
   it("applies fixed workshop scope when creating orders", async () => {
     await controller.createOrder(
       {
         documentNo: "RDSTK-001",
         bizDate: "2026-03-30",
         workshopId: 999,
-        lines: [{ materialId: 100, countedQty: "7", reason: "盘点" }],
+        lines: [
+          {
+            rdProjectId: 701,
+            materialId: 100,
+            countedQty: "7",
+            reason: "盘点",
+          },
+        ],
       },
       rdUser,
     );

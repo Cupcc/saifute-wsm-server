@@ -558,6 +558,7 @@ export class RdProjectService {
                 sourceOperationTypes: [
                   "RD_HANDOFF_IN",
                 ] as typeof FIFO_SOURCE_OPERATION_TYPES,
+                sourceProjectTargetId: projectTargetId,
               },
               tx,
             );
@@ -591,6 +592,7 @@ export class RdProjectService {
                 sourceOperationTypes: [
                   "RD_HANDOFF_IN",
                 ] as typeof FIFO_SOURCE_OPERATION_TYPES,
+                sourceProjectTargetId: projectTargetId,
               },
               tx,
             );
@@ -918,16 +920,21 @@ export class RdProjectService {
       }
     }
 
-    const materialLedger = await Promise.all(
-      Array.from(ledgerSeed.values()).map(async (row) => {
-        const availableBalance = await this.inventoryService.getBalanceSnapshot(
+    const attributedBalanceMap = project.projectTargetId
+      ? await this.inventoryService.summarizeAttributedQuantities(
           {
-            materialId: row.materialId,
+            materialIds: Array.from(ledgerSeed.keys()),
             stockScope: RD_PROJECT_STOCK_SCOPE,
+            projectTargetId: project.projectTargetId,
           },
           tx,
+        )
+      : new Map<number, PrismaNamespace.Decimal>();
+
+    const materialLedger = Array.from(ledgerSeed.values()).map((row) => {
+        const availableQty = toDecimal(
+          attributedBalanceMap.get(row.materialId) ?? 0,
         );
-        const availableQty = toDecimal(availableBalance?.quantityOnHand);
         const procurement = procurementSummary.get(row.materialId) ?? {
           pendingQty: new PrismaNamespace.Decimal(0),
           inProcurementQty: new PrismaNamespace.Decimal(0),
@@ -975,8 +982,7 @@ export class RdProjectService {
             procurementOpenQty,
           }),
         };
-      }),
-    );
+      });
 
     const summary = materialLedger.reduce(
       (acc, row) => ({

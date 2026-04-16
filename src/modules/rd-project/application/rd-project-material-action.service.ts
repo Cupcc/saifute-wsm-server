@@ -211,6 +211,7 @@ export class RdProjectMaterialActionService {
                   idempotencyKey: `${RD_PROJECT_ACTION_DOCUMENT_TYPE}:${action.id}:line:${line.id}`,
                   consumerLineId: line.id,
                   sourceOperationTypes: [...sourceTypes],
+                  sourceProjectTargetId: projectTargetId,
                 },
                 tx,
               );

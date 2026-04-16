@@ -35,7 +35,12 @@ export class CreateInboundOrderDto {
   @IsInt()
   @IsOptional()
   @Min(1)
-  handlerPersonnelId?: number;
+  handlerPersonnelId?: number | null;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  handlerName?: string;
 
   @IsInt()
   @IsOptional()

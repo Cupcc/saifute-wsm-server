@@ -49,6 +49,9 @@ export function getMonthlyReportingDetails(params = {}) {
 }
 
 export function exportMonthlyReporting(data = {}) {
-  const fileName = `monthly_reporting_${data.yearMonth || new Date().toISOString().slice(0, 7)}.xls`;
+  const fileName =
+    data.viewMode === "MATERIAL_CATEGORY"
+      ? `monthly_reporting_material_category_${data.yearMonth || new Date().toISOString().slice(0, 7)}.xls`
+      : `monthly_reporting_${data.yearMonth || new Date().toISOString().slice(0, 7)}.xls`;
   return download("/api/reporting/monthly-reporting/export", data, fileName);
 }

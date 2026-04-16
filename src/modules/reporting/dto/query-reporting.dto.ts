@@ -13,6 +13,7 @@ import {
 import {
   MonthlyReportingDomainKey,
   MonthlyReportingTopicKey,
+  MonthlyReportingViewMode,
 } from "../application/monthly-reporting.shared";
 
 export enum ReportingTrendType {
@@ -171,12 +172,21 @@ export class QueryMonthlyReportingDto {
   yearMonth!: string;
 
   @IsOptional()
+  @IsEnum(MonthlyReportingViewMode)
+  viewMode?: MonthlyReportingViewMode = MonthlyReportingViewMode.DOMAIN;
+
+  @IsOptional()
   @IsEnum(ReportingStockScope)
   stockScope?: ReportingStockScope;
 
   @IsOptional()
   @IsEnum(MonthlyReportingDomainKey)
   domainKey?: MonthlyReportingDomainKey;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  documentTypeLabel?: string;
 
   @IsOptional()
   @IsEnum(MonthlyReportingTopicKey)
@@ -192,6 +202,17 @@ export class QueryMonthlyReportingDto {
   @IsInt()
   @Min(1)
   workshopId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  categoryId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(512)
+  categoryNodeKey?: string;
 }
 
 export class QueryMonthlyReportingDetailDto extends QueryMonthlyReportingDto {

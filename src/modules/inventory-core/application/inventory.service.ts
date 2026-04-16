@@ -84,6 +84,8 @@ export interface SettleConsumerOutCommand extends DecreaseStockCommand {
    * only a subset of IN types should be eligible (e.g. RD_SUB only uses RD_HANDOFF_IN).
    */
   sourceOperationTypes?: InventoryOperationTypeEnum[];
+  /** Restricts allocation to source layers owned by a single project target. */
+  sourceProjectTargetId?: number;
 }
 
 export interface FifoAllocationPiece {
@@ -618,6 +620,7 @@ export class InventoryService {
             scope.stockScopeId,
             sourceTypes,
             selectedUnitCost,
+            cmd.sourceProjectTargetId,
             cmd.businessDocumentType,
             cmd.businessDocumentId,
             cmd.consumerLineId,
@@ -632,6 +635,7 @@ export class InventoryService {
             changeQty,
             sourceTypes,
             selectedUnitCost,
+            cmd.sourceProjectTargetId,
             cmd.businessDocumentType,
             cmd.businessDocumentId,
             cmd.consumerLineId,
@@ -872,6 +876,7 @@ export class InventoryService {
     stockScopeId: number,
     allowedOperationTypes: InventoryOperationTypeEnum[],
     selectedUnitCost: Prisma.Decimal | null,
+    sourceProjectTargetId: number | undefined,
     consumerDocumentType: string,
     consumerDocumentId: number,
     consumerLineId: number,
@@ -901,6 +906,12 @@ export class InventoryService {
       throw new BadRequestException(
         `手动来源流水库存范围不匹配: 流水范围=${sourceLog.stockScopeId ?? "null"}, 当前范围=${stockScopeId}`,
       );
+    }
+    if (
+      typeof sourceProjectTargetId === "number" &&
+      sourceLog.projectTargetId !== sourceProjectTargetId
+    ) {
+      throw new BadRequestException("手动来源流水不属于当前项目归属");
     }
     if (
       !allowedOperationTypes.includes(
@@ -955,6 +966,7 @@ export class InventoryService {
     qty: Prisma.Decimal,
     sourceTypes: InventoryOperationTypeEnum[],
     selectedUnitCost: Prisma.Decimal | null,
+    sourceProjectTargetId: number | undefined,
     consumerDocumentType: string,
     consumerDocumentId: number,
     consumerLineId: number,
@@ -967,6 +979,7 @@ export class InventoryService {
         stockScopeId,
         sourceOperationTypes: sourceTypes,
         unitCost: selectedUnitCost ?? undefined,
+        projectTargetId: sourceProjectTargetId,
       },
       db,
     );
@@ -1075,6 +1088,73 @@ export class InventoryService {
       scope.stockScopeId,
       tx,
     );
+  }
+
+  async summarizeAttributedQuantities(
+    params: {
+      materialIds: number[];
+      stockScope?: StockScopeCode;
+      workshopId?: number;
+      projectTargetId: number;
+    },
+    tx?: Prisma.TransactionClient,
+  ) {
+    const scope = await this.stockScopeCompatibilityService.resolveRequired({
+      stockScope: params.stockScope,
+      workshopId: params.workshopId,
+    });
+    const materialIds = [...new Set(params.materialIds)].filter(
+      (value) => value > 0,
+    );
+    if (materialIds.length === 0) {
+      return new Map<number, Prisma.Decimal>();
+    }
+
+    const logs = await this.repository.findEffectiveLogsByProjectTarget(
+      {
+        stockScopeId: scope.stockScopeId,
+        projectTargetId: params.projectTargetId,
+        materialIds,
+      },
+      tx,
+    );
+
+    const summary = new Map<number, Prisma.Decimal>();
+    for (const materialId of materialIds) {
+      summary.set(materialId, new Prisma.Decimal(0));
+    }
+
+    for (const log of logs) {
+      const current = summary.get(log.materialId) ?? new Prisma.Decimal(0);
+      const delta =
+        log.direction === StockDirection.IN
+          ? new Prisma.Decimal(log.changeQty)
+          : new Prisma.Decimal(log.changeQty).neg();
+      summary.set(log.materialId, current.add(delta));
+    }
+
+    return summary;
+  }
+
+  async getAttributedQuantitySnapshot(
+    params: {
+      materialId: number;
+      stockScope?: StockScopeCode;
+      workshopId?: number;
+      projectTargetId: number;
+    },
+    tx?: Prisma.TransactionClient,
+  ) {
+    const summary = await this.summarizeAttributedQuantities(
+      {
+        materialIds: [params.materialId],
+        stockScope: params.stockScope,
+        workshopId: params.workshopId,
+        projectTargetId: params.projectTargetId,
+      },
+      tx,
+    );
+    return summary.get(params.materialId) ?? new Prisma.Decimal(0);
   }
 
   async listLogs(params: {
@@ -1255,6 +1335,7 @@ export class InventoryService {
     stockScope?: StockScopeCode;
     workshopId?: number;
     sourceOperationTypes?: InventoryOperationTypeEnum[];
+    projectTargetId?: number;
   }): Promise<PriceLayerAvailabilityItem[]> {
     const scope = await this.stockScopeCompatibilityService.resolveRequired({
       stockScope: params.stockScope,
@@ -1267,6 +1348,7 @@ export class InventoryService {
       stockScopeId: scope.stockScopeId,
       sourceOperationTypes:
         params.sourceOperationTypes ?? FIFO_SOURCE_OPERATION_TYPES,
+      projectTargetId: params.projectTargetId,
     });
 
     const grouped = new Map<

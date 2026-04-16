@@ -12,7 +12,11 @@ export enum MonthlyReportingDomainKey {
 export enum MonthlyReportingDirection {
   IN = "IN",
   OUT = "OUT",
-  TRANSFER = "TRANSFER",
+}
+
+export enum MonthlyReportingViewMode {
+  DOMAIN = "DOMAIN",
+  MATERIAL_CATEGORY = "MATERIAL_CATEGORY",
 }
 
 export enum MonthlyReportingTopicKey {
@@ -142,17 +146,17 @@ export const MONTHLY_REPORTING_TOPIC_META: Record<
     label: "项目报废",
   },
   [MonthlyReportingTopicKey.RD_HANDOFF]: {
-    order: 130,
-    domainKey: MonthlyReportingDomainKey.RD_SUB,
-    label: "主仓到RD交接",
+    order: 95,
+    domainKey: MonthlyReportingDomainKey.RD_PROJECT,
+    label: "项目交接",
   },
   [MonthlyReportingTopicKey.RD_STOCKTAKE_GAIN]: {
-    order: 140,
+    order: 130,
     domainKey: MonthlyReportingDomainKey.RD_SUB,
     label: "RD盘盈",
   },
   [MonthlyReportingTopicKey.RD_STOCKTAKE_LOSS]: {
-    order: 150,
+    order: 140,
     domainKey: MonthlyReportingDomainKey.RD_SUB,
     label: "RD盘亏",
   },
@@ -165,6 +169,14 @@ export const MONTHLY_REPORTING_DOMAIN_OPTIONS = Object.values(
 export const MONTHLY_REPORTING_TOPIC_OPTIONS = Object.values(
   MonthlyReportingTopicKey,
 );
+
+export const MONTHLY_REPORTING_MATERIAL_CATEGORY_TOPIC_OPTIONS: ReadonlyArray<MonthlyReportingTopicKey> =
+  [
+    MonthlyReportingTopicKey.ACCEPTANCE_INBOUND,
+    MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
+    MonthlyReportingTopicKey.SALES_OUTBOUND,
+    MonthlyReportingTopicKey.SALES_RETURN,
+  ];
 
 export const MONTHLY_REPORTING_ABNORMAL_LABELS: Record<
   MonthlyReportingAbnormalFlag,
@@ -202,6 +214,47 @@ export interface MonthlyReportEntry {
   quantity: Prisma.Decimal;
   amount: Prisma.Decimal;
   cost: Prisma.Decimal;
+  abnormalFlags: MonthlyReportingAbnormalFlag[];
+  sourceBizDate: Date | null;
+  sourceDocumentNo: string | null;
+}
+
+export interface MaterialCategorySnapshotNode {
+  id: number | null;
+  categoryCode: string | null;
+  categoryName: string;
+}
+
+export interface MonthlyMaterialCategoryEntry {
+  topicKey: MonthlyReportingTopicKey;
+  direction: MonthlyReportingDirection;
+  documentType: string;
+  documentTypeLabel: string;
+  documentId: number;
+  documentNo: string;
+  documentLineId: number;
+  lineNo: number;
+  bizDate: Date;
+  createdAt: Date;
+  stockScope: StockScopeCode | null;
+  stockScopeName: string | null;
+  workshopId: number | null;
+  workshopName: string | null;
+  materialId: number;
+  materialCode: string;
+  materialName: string;
+  materialSpec: string | null;
+  unitCode: string;
+  categoryId: number | null;
+  categoryCode: string | null;
+  categoryName: string;
+  categoryPath: MaterialCategorySnapshotNode[];
+  quantity: Prisma.Decimal;
+  amount: Prisma.Decimal;
+  cost: Prisma.Decimal;
+  salesProjectId: number | null;
+  salesProjectCode: string | null;
+  salesProjectName: string | null;
   abnormalFlags: MonthlyReportingAbnormalFlag[];
   sourceBizDate: Date | null;
   sourceDocumentNo: string | null;

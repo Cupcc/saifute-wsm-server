@@ -153,6 +153,25 @@
         </div>
 
         <el-table :data="form.lines" border stripe>
+          <el-table-column label="研发项目" min-width="240">
+            <template #default="{ row }">
+              <el-select
+                v-model="row.rdProjectId"
+                filterable
+                clearable
+                placeholder="请选择研发项目"
+                style="width: 100%"
+                @change="() => syncBookQty(row)"
+              >
+                <el-option
+                  v-for="item in rdProjectOptions"
+                  :key="item.id"
+                  :label="formatProjectLabel(item)"
+                  :value="item.id"
+                />
+              </el-select>
+            </template>
+          </el-table-column>
           <el-table-column label="物料" min-width="260">
             <template #default="{ row }">
               <el-select
@@ -266,6 +285,8 @@
 
         <el-table :data="detailRow.lines || []" stripe class="detail-table">
           <el-table-column prop="lineNo" label="行号" width="80" />
+          <el-table-column prop="rdProjectCodeSnapshot" label="研发项目编码" min-width="160" />
+          <el-table-column prop="rdProjectNameSnapshot" label="研发项目名称" min-width="180" />
           <el-table-column prop="materialCodeSnapshot" label="物料编码" min-width="140" />
           <el-table-column prop="materialNameSnapshot" label="物料名称" min-width="180" />
           <el-table-column prop="bookQty" label="账面数" min-width="110" />
@@ -292,10 +313,11 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { computed, onMounted, ref } from "vue";
 import {
   createRdStocktakeOrder,
+  getRdStocktakeBookQty,
   getRdStocktakeOrder,
-  listRdInventoryBalances,
   listRdMaterials,
   listRdStocktakeOrders,
+  listRdStocktakeProjectOptions,
   voidRdStocktakeOrder,
 } from "@/api/rd-subwarehouse";
 import useUserStore from "@/store/modules/user";
@@ -310,6 +332,7 @@ const total = ref(0);
 const pageNum = ref(1);
 const pageSize = ref(10);
 const materialOptions = ref([]);
+const rdProjectOptions = ref([]);
 const createOpen = ref(false);
 const createFormRef = ref();
 const detailOpen = ref(false);
@@ -329,6 +352,7 @@ const formRules = {
 
 function createEmptyLine() {
   return {
+    rdProjectId: null,
     materialId: null,
     bookQty: 0,
     countedQty: 0,
@@ -358,6 +382,15 @@ function formatDate(value) {
 
 function formatQty(value) {
   return Number(value || 0).toFixed(6);
+}
+
+function formatProjectLabel(project) {
+  if (!project) {
+    return "-";
+  }
+  return project.projectCode
+    ? `${project.projectCode} ${project.projectName}`
+    : project.projectName || "-";
 }
 
 function formatSignedQty(value) {
@@ -393,21 +426,31 @@ async function searchMaterials(keyword) {
   }
 }
 
-async function fetchBookQty(materialId) {
-  if (!materialId) {
+async function loadRdProjectOptions() {
+  if (!userStore.workshopScope?.workshopId) {
+    rdProjectOptions.value = [];
+    return;
+  }
+  const response = await listRdStocktakeProjectOptions({
+    workshopId: userStore.workshopScope.workshopId,
+  });
+  rdProjectOptions.value = response.data?.items || [];
+}
+
+async function fetchBookQty(materialId, rdProjectId) {
+  if (!materialId || !rdProjectId || !form.value.workshopId) {
     return 0;
   }
-  const response = await listRdInventoryBalances({
+  const response = await getRdStocktakeBookQty({
+    workshopId: form.value.workshopId,
     materialId,
-    limit: 1,
-    offset: 0,
+    rdProjectId,
   });
-  const row = response.data?.items?.[0];
-  return Number(row?.quantityOnHand || 0);
+  return Number(response.data?.bookQty ?? 0);
 }
 
 async function syncBookQty(row) {
-  row.bookQty = await fetchBookQty(row.materialId);
+  row.bookQty = await fetchBookQty(row.materialId, row.rdProjectId);
 }
 
 async function loadRows() {
@@ -491,15 +534,20 @@ async function validateForm() {
 
   for (let index = 0; index < form.value.lines.length; index += 1) {
     const line = form.value.lines[index];
+    if (!line.rdProjectId) {
+      ElMessage.error(`第 ${index + 1} 行研发项目不能为空`);
+      return false;
+    }
     if (!line.materialId) {
       ElMessage.error(`第 ${index + 1} 行物料不能为空`);
       return false;
     }
-    if (seenMaterialIds.has(line.materialId)) {
-      ElMessage.error(`第 ${index + 1} 行物料重复，请同一物料只保留一行`);
+    const dedupeKey = `${line.rdProjectId}:${line.materialId}`;
+    if (seenMaterialIds.has(dedupeKey)) {
+      ElMessage.error(`第 ${index + 1} 行项目物料重复，请同一项目物料只保留一行`);
       return false;
     }
-    seenMaterialIds.add(line.materialId);
+    seenMaterialIds.add(dedupeKey);
     if (Number(line.countedQty) < 0) {
       ElMessage.error(`第 ${index + 1} 行实盘数不能小于 0`);
       return false;
@@ -527,6 +575,7 @@ async function submitCreate() {
       approvedBy: form.value.approvedBy || undefined,
       remark: form.value.remark || undefined,
       lines: form.value.lines.map((line) => ({
+        rdProjectId: line.rdProjectId,
         materialId: line.materialId,
         countedQty: String(line.countedQty || 0),
         reason: line.reason,
@@ -563,7 +612,7 @@ async function handleVoid(orderId) {
 }
 
 onMounted(() => {
-  loadRows();
+  Promise.all([loadRows(), loadRdProjectOptions()]);
 });
 </script>
 

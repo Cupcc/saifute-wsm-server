@@ -45,9 +45,13 @@ export class CreateRdStocktakeOrderDto {
 
   @IsArray()
   @ArrayMinSize(1, { message: "lines must have at least one item" })
-  @ArrayUnique((line: CreateRdStocktakeOrderLineDto) => line.materialId, {
-    message: "lines must not contain duplicate materialId",
-  })
+  @ArrayUnique(
+    (line: CreateRdStocktakeOrderLineDto) =>
+      `${line.rdProjectId}:${line.materialId}`,
+    {
+      message: "lines must not contain duplicate rdProjectId:materialId",
+    },
+  )
   @ValidateNested({ each: true })
   @Type(() => CreateRdStocktakeOrderLineDto)
   lines!: CreateRdStocktakeOrderLineDto[];

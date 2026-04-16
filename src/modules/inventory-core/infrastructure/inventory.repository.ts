@@ -312,6 +312,7 @@ export class InventoryRepository {
       stockScopeId: number;
       sourceOperationTypes: InventoryOperationType[];
       unitCost?: Prisma.Decimal;
+      projectTargetId?: number;
     },
     db: InventoryDbClient = this.prisma,
   ) {
@@ -321,6 +322,9 @@ export class InventoryRepository {
         stockScopeId: params.stockScopeId,
         direction: StockDirection.IN,
         operationType: { in: params.sourceOperationTypes },
+        ...(typeof params.projectTargetId === "number"
+          ? { projectTargetId: params.projectTargetId }
+          : {}),
         ...(params.unitCost ? { unitCost: params.unitCost } : {}),
         reversalOfLogId: null,
         reversedByLogs: { none: {} },
@@ -354,6 +358,33 @@ export class InventoryRepository {
         };
       })
       .filter((log) => log.availableQty.gt(0));
+  }
+
+  async findEffectiveLogsByProjectTarget(
+    params: {
+      stockScopeId: number;
+      projectTargetId: number;
+      materialIds?: number[];
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventoryLog.findMany({
+      where: {
+        stockScopeId: params.stockScopeId,
+        projectTargetId: params.projectTargetId,
+        ...(params.materialIds?.length
+          ? { materialId: { in: params.materialIds } }
+          : {}),
+        reversalOfLogId: null,
+        reversedByLogs: { none: {} },
+      },
+      select: {
+        materialId: true,
+        direction: true,
+        changeQty: true,
+      },
+      orderBy: [{ bizDate: "asc" }, { occurredAt: "asc" }, { id: "asc" }],
+    });
   }
 
   /**

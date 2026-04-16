@@ -101,7 +101,6 @@ function mapInboundOrder(order, config, audit = null) {
     supplierName: order.supplierNameSnapshot ?? "",
     workshopId: order.workshopId,
     workshopName: order.workshopNameSnapshot ?? "",
-    chargeBy: order.handlerNameSnapshot ?? "",
     attn: order.handlerNameSnapshot ?? "",
     totalAmount: Number(order.totalAmount ?? 0).toFixed(2),
     totalQty: Number(order.totalQty ?? 0),
@@ -169,7 +168,9 @@ function buildInboundPayload(
     orderType: config.orderType,
     bizDate: data[config.dateKey],
     supplierId,
-    handlerPersonnelId,
+    handlerPersonnelId: handlerPersonnelId ?? null,
+    handlerName:
+      typeof data.attn === "string" && data.attn.trim() ? data.attn.trim() : undefined,
     workshopId: data.workshopId,
     remark: data.remark,
     lines: lines.map((line) => ({

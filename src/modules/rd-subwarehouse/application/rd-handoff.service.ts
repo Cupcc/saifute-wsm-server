@@ -22,6 +22,8 @@ import {
   InventoryService,
 } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import { ensureProjectTarget } from "../../rd-project/application/rd-project.shared";
+import { RdProjectRepository } from "../../rd-project/infrastructure/rd-project.repository";
 import type { CreateRdHandoffOrderDto } from "../dto/create-rd-handoff-order.dto";
 import type { QueryRdHandoffOrderDto } from "../dto/query-rd-handoff-order.dto";
 import { RdHandoffRepository } from "../infrastructure/rd-handoff.repository";
@@ -43,6 +45,7 @@ export class RdHandoffService {
     private readonly rdProcurementRequestRepository: RdProcurementRequestRepository,
     private readonly masterDataService: MasterDataService,
     private readonly inventoryService: InventoryService,
+    private readonly rdProjectRepository: RdProjectRepository,
   ) {}
 
   async listOrders(query: QueryRdHandoffOrderDto) {
@@ -85,6 +88,10 @@ export class RdHandoffService {
       number,
       Awaited<ReturnType<RdProcurementRequestRepository["findRequestById"]>>
     >();
+    const projectCache = new Map<
+      string,
+      Awaited<ReturnType<RdProjectRepository["findProjectByCode"]>>
+    >();
     const linesWithSnapshots = await Promise.all(
       dto.lines.map(async (line, idx) => {
         const material = await this.masterDataService.getMaterialById(
@@ -113,16 +120,25 @@ export class RdHandoffService {
         if (requestLine.materialId !== material.id) {
           throw new BadRequestException("交接物料必须与采购需求行一致");
         }
+        const rdProject = await this.resolveRdProjectForRequest(
+          sourceRequest,
+          projectCache,
+        );
         const quantity = new Prisma.Decimal(line.quantity);
         const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
         const amount = quantity.mul(unitPrice);
         return {
           lineNo: idx + 1,
           materialId: material.id,
+          rdProjectId: rdProject.id,
+          rdProjectWorkshopId: rdProject.workshopId,
+          rdProjectWorkshopNameSnapshot: rdProject.workshopNameSnapshot ?? null,
           materialCodeSnapshot: material.materialCode,
           materialNameSnapshot: material.materialName,
           materialSpecSnapshot: material.specModel ?? "",
           unitCodeSnapshot: material.unitCode,
+          rdProjectCodeSnapshot: rdProject.projectCode,
+          rdProjectNameSnapshot: rdProject.projectName,
           quantity,
           unitPrice,
           amount,
@@ -142,6 +158,23 @@ export class RdHandoffService {
       (sum, line) => sum.add(line.amount),
       new Prisma.Decimal(0),
     );
+    const distinctTargetWorkshops = [
+      ...new Map(
+        linesWithSnapshots.map((line) => [
+          line.rdProjectWorkshopId,
+          line.rdProjectWorkshopNameSnapshot,
+        ]),
+      ).entries(),
+    ];
+    const resolvedTargetWorkshopId =
+      distinctTargetWorkshops.length === 1
+        ? distinctTargetWorkshops[0]?.[0] ?? null
+        : null;
+    const resolvedTargetWorkshopNameSnapshot =
+      distinctTargetWorkshops.length === 1
+        ? distinctTargetWorkshops[0]?.[1] ??
+          targetStockScopeRecord.scopeName
+        : targetStockScopeRecord.scopeName;
 
     return createWithGeneratedDocumentNo((attempt) => {
       const documentNo = buildDashedTimestampDocumentNo(
@@ -150,6 +183,7 @@ export class RdHandoffService {
         attempt,
       );
       return this.prisma.runInTransaction(async (tx) => {
+        const projectTargetIdByProjectId = new Map<number, number>();
         const order = await this.repository.createOrder(
           {
             documentNo,
@@ -158,22 +192,29 @@ export class RdHandoffService {
             sourceStockScopeId: sourceStockScopeRecord.id,
             targetStockScopeId: targetStockScopeRecord.id,
             sourceWorkshopId: null,
-            targetWorkshopId: null,
+            targetWorkshopId: resolvedTargetWorkshopId,
             auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,
             handlerNameSnapshot: handlerSnapshot.handlerNameSnapshot,
             sourceWorkshopNameSnapshot: sourceStockScopeRecord.scopeName,
-            targetWorkshopNameSnapshot: targetStockScopeRecord.scopeName,
+            targetWorkshopNameSnapshot: resolvedTargetWorkshopNameSnapshot,
             totalQty,
             totalAmount,
             remark: dto.remark,
             createdBy,
             updatedBy: createdBy,
           },
-          linesWithSnapshots.map((line) => ({
-            ...line,
-            createdBy,
-            updatedBy: createdBy,
-          })),
+          linesWithSnapshots.map((line) => {
+            const {
+              rdProjectWorkshopId: _rdProjectWorkshopId,
+              rdProjectWorkshopNameSnapshot: _rdProjectWorkshopNameSnapshot,
+              ...persistedLine
+            } = line;
+            return {
+              ...persistedLine,
+              createdBy,
+              updatedBy: createdBy,
+            };
+          }),
           tx,
         );
 
@@ -182,6 +223,32 @@ export class RdHandoffService {
           (t) => t !== "RD_HANDOFF_IN",
         );
         for (const line of order.lines) {
+          if (!line.rdProjectId) {
+            throw new BadRequestException("RD 交接明细缺少研发项目归属");
+          }
+          let projectTargetId = projectTargetIdByProjectId.get(line.rdProjectId);
+          if (projectTargetId == null) {
+            const currentProject = await this.rdProjectRepository.findProjectById(
+              line.rdProjectId,
+              tx,
+            );
+            if (
+              !currentProject ||
+              currentProject.lifecycleStatus !== DocumentLifecycleStatus.EFFECTIVE
+            ) {
+              throw new BadRequestException(
+                `交接关联的研发项目不存在或已失效: ${line.rdProjectCodeSnapshot ?? line.rdProjectId}`,
+              );
+            }
+            projectTargetId = await ensureProjectTarget({
+              project: currentProject,
+              updatedBy: createdBy,
+              repository: this.rdProjectRepository,
+              tx,
+            });
+            projectTargetIdByProjectId.set(line.rdProjectId, projectTargetId);
+          }
+
           // MAIN OUT: settle against MAIN source layers via FIFO.
           const outSettlement = await this.inventoryService.settleConsumerOut(
             {
@@ -195,9 +262,10 @@ export class RdHandoffService {
               businessDocumentId: order.id,
               businessDocumentNumber: order.documentNo,
               businessDocumentLineId: line.id,
+              projectTargetId,
               operatorId: createdBy,
               idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:out:${line.id}`,
-              note: `主仓交接到 RD 小仓: ${order.sourceWorkshopNameSnapshot} -> ${order.targetWorkshopNameSnapshot}`,
+              note: `主仓交接到 RD 小仓 (${line.rdProjectCodeSnapshot ?? "未命名项目"}): ${order.sourceWorkshopNameSnapshot} -> ${order.targetWorkshopNameSnapshot}`,
               consumerLineId: line.id,
               sourceOperationTypes: mainSourceTypes,
             },
@@ -242,9 +310,10 @@ export class RdHandoffService {
                 businessDocumentId: order.id,
                 businessDocumentNumber: order.documentNo,
                 businessDocumentLineId: line.id,
+                projectTargetId,
                 operatorId: createdBy,
                 idempotencyKey: bridgeIdempotencyKey,
-                note: `主仓交接到 RD 小仓 (MAIN 来源层 ${allocation.sourceLogId}): ${order.sourceWorkshopNameSnapshot} -> ${order.targetWorkshopNameSnapshot}`,
+                note: `主仓交接到 RD 小仓 / ${line.rdProjectCodeSnapshot ?? "未命名项目"} (MAIN 来源层 ${allocation.sourceLogId}): ${order.sourceWorkshopNameSnapshot} -> ${order.targetWorkshopNameSnapshot}`,
                 unitCost: allocation.unitCost,
                 costAmount: allocation.costAmount,
               },
@@ -394,12 +463,19 @@ export class RdHandoffService {
       number,
       Awaited<ReturnType<RdProcurementRequestRepository["findRequestById"]>>
     >,
-  ) {
+  ): Promise<
+    NonNullable<
+      Awaited<ReturnType<RdProcurementRequestRepository["findRequestById"]>>
+    >
+  > {
     if (!requestId) {
       throw new BadRequestException("RD 交接明细必须绑定采购需求单");
     }
     if (cache.has(requestId)) {
-      return cache.get(requestId) ?? null;
+      const cached = cache.get(requestId);
+      if (cached) {
+        return cached;
+      }
     }
 
     const request =
@@ -412,5 +488,54 @@ export class RdHandoffService {
     }
     cache.set(requestId, request);
     return request;
+  }
+
+  private async resolveRdProjectForRequest(
+    request: NonNullable<
+      Awaited<ReturnType<RdProcurementRequestRepository["findRequestById"]>>
+    >,
+    cache: Map<
+      string,
+      Awaited<ReturnType<RdProjectRepository["findProjectByCode"]>>
+    >,
+  ) {
+    const projectCode = request.projectCode?.trim();
+    if (!projectCode) {
+      throw new BadRequestException("RD 采购需求缺少研发项目编码，无法创建交接");
+    }
+
+    if (cache.has(projectCode)) {
+      const cached = cache.get(projectCode);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    const project = await this.rdProjectRepository.findProjectByCode(projectCode);
+    if (!project) {
+      throw new BadRequestException(
+        `RD 采购需求项目编码未映射到研发项目: ${projectCode}`,
+      );
+    }
+    if (project.lifecycleStatus !== DocumentLifecycleStatus.EFFECTIVE) {
+      throw new BadRequestException(`研发项目已失效: ${projectCode}`);
+    }
+    if (project.workshopId !== request.workshopId) {
+      throw new BadRequestException(
+        `采购需求与研发项目业务车间不一致: ${projectCode}`,
+      );
+    }
+    if (
+      request.projectName &&
+      project.projectName &&
+      request.projectName.trim() !== project.projectName.trim()
+    ) {
+      throw new BadRequestException(
+        `采购需求项目名称与研发项目不一致: ${projectCode}`,
+      );
+    }
+
+    cache.set(projectCode, project);
+    return project;
   }
 }

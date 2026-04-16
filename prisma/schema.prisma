@@ -603,6 +603,10 @@ model StockInOrderLine {
   lineNo                     Int
   materialId                 Int
   rdProcurementRequestLineId Int?
+  materialCategoryIdSnapshot Int?
+  materialCategoryCodeSnapshot String?                        @db.VarChar(64)
+  materialCategoryNameSnapshot String?                        @db.VarChar(128)
+  materialCategoryPathSnapshot Json?
   materialCodeSnapshot       String                            @db.VarChar(64)
   materialNameSnapshot       String                            @db.VarChar(128)
   materialSpecSnapshot       String?                           @db.VarChar(128)
@@ -674,6 +678,10 @@ model SalesStockOrderLine {
   salesProjectId           Int?
   salesProjectCodeSnapshot String?         @db.VarChar(64)
   salesProjectNameSnapshot String?         @db.VarChar(128)
+  materialCategoryIdSnapshot Int?
+  materialCategoryCodeSnapshot String?     @db.VarChar(64)
+  materialCategoryNameSnapshot String?     @db.VarChar(128)
+  materialCategoryPathSnapshot Json?
   materialCodeSnapshot     String          @db.VarChar(64)
   materialNameSnapshot     String          @db.VarChar(128)
   materialSpecSnapshot     String?         @db.VarChar(128)
@@ -943,6 +951,8 @@ model RdProject {
   materialLines         RdProjectMaterialLine[]
   bomLines              RdProjectBomLine[]
   materialActions       RdProjectMaterialAction[]
+  handoffLines          RdHandoffOrderLine[]
+  stocktakeLines        RdStocktakeOrderLine[]
 
   @@index([bizDate])
   @@index([customerId])
@@ -1112,10 +1122,13 @@ model RdHandoffOrderLine {
   orderId              Int
   lineNo               Int
   materialId           Int
+  rdProjectId          Int?
   materialCodeSnapshot String         @db.VarChar(64)
   materialNameSnapshot String         @db.VarChar(128)
   materialSpecSnapshot String?        @db.VarChar(128)
   unitCodeSnapshot     String         @db.VarChar(32)
+  rdProjectCodeSnapshot String?       @db.VarChar(64)
+  rdProjectNameSnapshot String?       @db.VarChar(128)
   quantity             Decimal        @db.Decimal(18, 6)
   unitPrice            Decimal        @default(0) @db.Decimal(18, 2)
   amount               Decimal        @default(0) @db.Decimal(18, 2)
@@ -1131,9 +1144,11 @@ model RdHandoffOrderLine {
   updatedAt            DateTime       @updatedAt
   order                RdHandoffOrder @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   material             Material       @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rdProject            RdProject?     @relation(fields: [rdProjectId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([orderId, lineNo])
   @@index([materialId])
+  @@index([rdProjectId])
   @@index([sourceDocumentType, sourceDocumentId, sourceDocumentLineId])
   @@map("rd_handoff_order_line")
 }
@@ -1297,10 +1312,13 @@ model RdStocktakeOrderLine {
   orderId              Int
   lineNo               Int
   materialId           Int
+  rdProjectId          Int?
   materialCodeSnapshot String           @db.VarChar(64)
   materialNameSnapshot String           @db.VarChar(128)
   materialSpecSnapshot String?          @db.VarChar(128)
   unitCodeSnapshot     String           @db.VarChar(32)
+  rdProjectCodeSnapshot String?         @db.VarChar(64)
+  rdProjectNameSnapshot String?         @db.VarChar(128)
   bookQty              Decimal          @db.Decimal(18, 6)
   countedQty           Decimal          @db.Decimal(18, 6)
   adjustmentQty        Decimal          @db.Decimal(18, 6)
@@ -1313,11 +1331,13 @@ model RdStocktakeOrderLine {
   updatedAt            DateTime         @updatedAt
   order                RdStocktakeOrder @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   material             Material         @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rdProject            RdProject?       @relation(fields: [rdProjectId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   inventoryLog         InventoryLog?    @relation("RdStocktakeLineInventoryLog", fields: [inventoryLogId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([orderId, lineNo])
-  @@unique([orderId, materialId])
+  @@unique([orderId, materialId, rdProjectId])
   @@index([materialId])
+  @@index([rdProjectId])
   @@map("rd_stocktake_order_line")
 }
 

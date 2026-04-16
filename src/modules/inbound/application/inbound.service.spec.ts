@@ -83,6 +83,24 @@ describe("InboundService", () => {
     workshopId: null,
     workshopNameSnapshot: null,
   };
+  const mockMaterialCategoryRoot = {
+    id: 90,
+    categoryCode: "ELEC",
+    categoryName: "电子类",
+    parentId: null,
+  };
+  const mockMaterialCategoryLeaf = {
+    id: 99,
+    categoryCode: "RESISTOR",
+    categoryName: "电阻",
+    parentId: 90,
+  };
+  const mockUncategorizedCategory = {
+    id: 1,
+    categoryCode: "UNCATEGORIZED",
+    categoryName: "未分类",
+    parentId: null,
+  };
 
   const mockMaterial = {
     id: 100,
@@ -90,6 +108,7 @@ describe("InboundService", () => {
     materialName: "Material A",
     specModel: "Spec",
     unitCode: "PCS",
+    category: mockMaterialCategoryLeaf,
   };
 
   const mockWorkshop = {
@@ -125,13 +144,19 @@ describe("InboundService", () => {
   let inventoryService: jest.Mocked<InventoryService>;
   let approvalService: jest.Mocked<ApprovalService>;
   let rdProcurementRequestService: jest.Mocked<RdProcurementRequestService>;
-  let prisma: { runInTransaction: jest.Mock };
+  let prisma: {
+    runInTransaction: jest.Mock;
+    materialCategory: { findUnique: jest.Mock };
+  };
 
   beforeEach(async () => {
     prisma = {
       runInTransaction: jest.fn((handler: (tx: unknown) => Promise<unknown>) =>
         handler({}),
       ),
+      materialCategory: {
+        findUnique: jest.fn().mockResolvedValue(mockMaterialCategoryLeaf),
+      },
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -164,6 +189,7 @@ describe("InboundService", () => {
           provide: MasterDataService,
           useValue: {
             getMaterialById: jest.fn(),
+            getMaterialCategoryById: jest.fn(),
             getWorkshopById: jest.fn(),
             getStockScopeByCode: jest.fn().mockResolvedValue({
               id: 1,
@@ -210,6 +236,9 @@ describe("InboundService", () => {
 
     (masterDataService.getMaterialById as jest.Mock).mockResolvedValue(
       mockMaterial,
+    );
+    (masterDataService.getMaterialCategoryById as jest.Mock).mockResolvedValue(
+      mockMaterialCategoryRoot,
     );
     (masterDataService.getWorkshopById as jest.Mock).mockResolvedValue(
       mockWorkshop,
@@ -262,6 +291,21 @@ describe("InboundService", () => {
         }),
         expect.anything(),
       );
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.arrayContaining([
+          expect.objectContaining({
+            materialCategoryIdSnapshot: 99,
+            materialCategoryCodeSnapshot: "RESISTOR",
+            materialCategoryNameSnapshot: "电阻",
+            materialCategoryPathSnapshot: [
+              { id: 90, categoryCode: "ELEC", categoryName: "电子类" },
+              { id: 99, categoryCode: "RESISTOR", categoryName: "电阻" },
+            ],
+          }),
+        ]),
+        expect.anything(),
+      );
     });
 
     it("should allow acceptance order without workshop", async () => {
@@ -293,6 +337,37 @@ describe("InboundService", () => {
       );
     });
 
+    it("should persist handler name snapshot when no personnel id is provided", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue({
+        ...mockOrder,
+        handlerPersonnelId: null,
+        handlerNameSnapshot: "当前账号昵称",
+      });
+
+      await service.createOrder(
+        {
+          documentNo: "SI-HANDLER-NAME",
+          orderType: StockInOrderType.ACCEPTANCE,
+          bizDate: "2025-03-14",
+          supplierId: 10,
+          handlerName: "当前账号昵称",
+          lines: [{ materialId: 100, quantity: "100", unitPrice: "10" }],
+        },
+        "1",
+      );
+
+      expect(masterDataService.getPersonnelById).not.toHaveBeenCalled();
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          handlerPersonnelId: null,
+          handlerNameSnapshot: "当前账号昵称",
+        }),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
     it("should pass unit cost snapshot from inbound line price to increaseStock", async () => {
       (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
       (repository.createOrder as jest.Mock).mockResolvedValue(mockOrder);
@@ -314,6 +389,58 @@ describe("InboundService", () => {
           unitCost: expect.any(Prisma.Decimal),
           costAmount: expect.any(Prisma.Decimal),
         }),
+        expect.anything(),
+      );
+    });
+
+    it("should fall back to uncategorized snapshot when material category is missing", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(mockOrder);
+      (masterDataService.getMaterialById as jest.Mock).mockResolvedValue({
+        ...mockMaterial,
+        category: null,
+      });
+      (prisma.materialCategory.findUnique as jest.Mock).mockResolvedValue(
+        mockUncategorizedCategory,
+      );
+
+      await service.createOrder(
+        {
+          documentNo: "SI-UNCAT",
+          orderType: StockInOrderType.ACCEPTANCE,
+          bizDate: "2025-03-14",
+          supplierId: 10,
+          workshopId: 1,
+          lines: [{ materialId: 100, quantity: "10", unitPrice: "10" }],
+        },
+        "1",
+      );
+
+      expect(prisma.materialCategory.findUnique).toHaveBeenCalledWith({
+        where: { categoryCode: "UNCATEGORIZED" },
+        select: {
+          id: true,
+          categoryCode: true,
+          categoryName: true,
+          parentId: true,
+        },
+      });
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.arrayContaining([
+          expect.objectContaining({
+            materialCategoryIdSnapshot: 1,
+            materialCategoryCodeSnapshot: "UNCATEGORIZED",
+            materialCategoryNameSnapshot: "未分类",
+            materialCategoryPathSnapshot: [
+              {
+                id: 1,
+                categoryCode: "UNCATEGORIZED",
+                categoryName: "未分类",
+              },
+            ],
+          }),
+        ]),
         expect.anything(),
       );
     });
@@ -503,6 +630,18 @@ describe("InboundService", () => {
 
       expect(inventoryService.reverseStock).toHaveBeenCalled();
       expect(inventoryService.increaseStock).toHaveBeenCalled();
+      expect(repository.createOrderLine).toHaveBeenCalledWith(
+        expect.objectContaining({
+          materialCategoryIdSnapshot: 99,
+          materialCategoryCodeSnapshot: "RESISTOR",
+          materialCategoryNameSnapshot: "电阻",
+          materialCategoryPathSnapshot: [
+            { id: 90, categoryCode: "ELEC", categoryName: "电子类" },
+            { id: 99, categoryCode: "RESISTOR", categoryName: "电阻" },
+          ],
+        }),
+        expect.anything(),
+      );
       expect(reverseAcceptanceStatusesForOrder).toHaveBeenCalled();
       expect(applyAcceptanceStatusesForOrder).toHaveBeenCalled();
       expect(
@@ -545,6 +684,46 @@ describe("InboundService", () => {
         expect.objectContaining({
           workshopId: null,
           workshopNameSnapshot: null,
+        }),
+        expect.anything(),
+      );
+    });
+
+    it("should allow updating handler by free-text snapshot", async () => {
+      (repository.findOrderById as jest.Mock)
+        .mockResolvedValueOnce(mockOrder)
+        .mockResolvedValueOnce(mockOrder)
+        .mockResolvedValueOnce({ ...mockOrder, lines: [] });
+      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+        { id: 1, businessDocumentLineId: 1 },
+      ]);
+      (repository.updateOrder as jest.Mock).mockResolvedValue({
+        ...mockOrder,
+        handlerPersonnelId: null,
+        handlerNameSnapshot: "当前账号昵称",
+      });
+      (repository.deleteOrderLine as jest.Mock).mockResolvedValue(undefined);
+      (repository.createOrderLine as jest.Mock).mockResolvedValue({
+        ...mockOrder.lines[0],
+        id: 2,
+        lineNo: 1,
+      });
+
+      await service.updateOrder(
+        1,
+        {
+          handlerPersonnelId: null,
+          handlerName: "当前账号昵称",
+          lines: [{ materialId: 100, quantity: "100", unitPrice: "10" }],
+        },
+        "1",
+      );
+
+      expect(repository.updateOrder).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          handlerPersonnelId: null,
+          handlerNameSnapshot: "当前账号昵称",
         }),
         expect.anything(),
       );
@@ -601,6 +780,13 @@ describe("InboundService", () => {
         1,
         expect.objectContaining({
           rdProcurementRequestLineId: 500,
+          materialCategoryIdSnapshot: 99,
+          materialCategoryCodeSnapshot: "RESISTOR",
+          materialCategoryNameSnapshot: "电阻",
+          materialCategoryPathSnapshot: [
+            { id: 90, categoryCode: "ELEC", categoryName: "电子类" },
+            { id: 99, categoryCode: "RESISTOR", categoryName: "电阻" },
+          ],
         }),
         expect.anything(),
       );

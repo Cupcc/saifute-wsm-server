@@ -14,12 +14,13 @@ import {
   getMonthlyReportingTopicMeta,
   MONTHLY_REPORTING_ABNORMAL_LABELS,
   MONTHLY_REPORTING_DOMAIN_META,
-  MONTHLY_REPORTING_TOPIC_META,
+  MONTHLY_REPORTING_MATERIAL_CATEGORY_TOPIC_OPTIONS,
+  type MonthlyMaterialCategoryEntry,
   type MonthlyReportEntry,
   MonthlyReportingDirection,
   type MonthlyReportingDomainKey,
   type MonthlyReportingTopicKey,
-  sortMonthlyReportingEntries,
+  MonthlyReportingViewMode,
   sumDecimals,
 } from "./monthly-reporting.shared";
 
@@ -29,11 +30,10 @@ export interface MonthlyReportDomainCatalogItem {
   sortOrder: number;
 }
 
-export interface MonthlyReportTopicCatalogItem {
+export interface MonthlyReportDocumentTypeCatalogItem {
   domainKey: MonthlyReportingDomainKey;
   domainLabel: string;
-  topicKey: MonthlyReportingTopicKey;
-  topicLabel: string;
+  documentTypeLabel: string;
   sortOrder: number;
 }
 
@@ -45,8 +45,6 @@ export interface MonthlyReportSummaryTotals {
   totalInAmount: string;
   totalOutQuantity: string;
   totalOutAmount: string;
-  totalTransferQuantity: string;
-  totalTransferAmount: string;
   netQuantity: string;
   netAmount: string;
   totalCost: string;
@@ -58,12 +56,11 @@ export interface MonthlyReportDomainSummaryItem
   domainLabel: string;
 }
 
-export interface MonthlyReportTopicSummaryItem
+export interface MonthlyReportDocumentTypeSummaryItem
   extends Omit<MonthlyReportSummaryTotals, "domainCount"> {
   domainKey: MonthlyReportingDomainKey;
   domainLabel: string;
-  topicKey: MonthlyReportingTopicKey;
-  topicLabel: string;
+  documentTypeLabel: string;
 }
 
 export interface MonthlyReportWorkshopSummaryItem {
@@ -103,6 +100,8 @@ export interface MonthlyReportRdProjectSummaryItem {
   rdProjectName: string;
   documentCount: number;
   abnormalDocumentCount: number;
+  handoffInQuantity: string;
+  handoffInAmount: string;
   pickQuantity: string;
   pickAmount: string;
   returnQuantity: string;
@@ -114,23 +113,9 @@ export interface MonthlyReportRdProjectSummaryItem {
   totalCost: string;
 }
 
-export interface MonthlyReportRdHandoffSummaryItem {
-  sourceStockScopeName: string;
-  targetStockScopeName: string;
-  sourceWorkshopName: string;
-  targetWorkshopName: string;
-  documentCount: number;
-  abnormalDocumentCount: number;
-  transferQuantity: string;
-  transferAmount: string;
-  totalCost: string;
-}
-
 export interface MonthlyReportDocumentItem {
   domainKey: MonthlyReportingDomainKey;
   domainLabel: string;
-  topicKey: MonthlyReportingTopicKey;
-  topicLabel: string;
   direction: MonthlyReportingDirection;
   documentType: string;
   documentTypeLabel: string;
@@ -164,16 +149,147 @@ export interface MonthlyReportExportResult {
   contentType: string;
 }
 
+export interface MonthlyReportMaterialCategorySummaryTotals {
+  categoryCount: number;
+  lineCount: number;
+  documentCount: number;
+  abnormalDocumentCount: number;
+  acceptanceInboundAmount: string;
+  productionReceiptAmount: string;
+  salesOutboundAmount: string;
+  salesReturnAmount: string;
+  netAmount: string;
+  totalCost: string;
+}
+
+export interface MonthlyReportMaterialCategorySummaryItem {
+  nodeKey: string;
+  parentNodeKey: string | null;
+  categoryId: number | null;
+  parentCategoryId: number | null;
+  categoryCode: string | null;
+  categoryName: string;
+  categoryPathLabel: string;
+  depth: number;
+  lineCount: number;
+  documentCount: number;
+  abnormalDocumentCount: number;
+  acceptanceInboundAmount: string;
+  productionReceiptAmount: string;
+  salesOutboundAmount: string;
+  salesReturnAmount: string;
+  netAmount: string;
+  totalCost: string;
+}
+
+export interface MonthlyReportMaterialCategoryDetailItem {
+  direction: MonthlyReportingDirection;
+  documentType: string;
+  documentTypeLabel: string;
+  documentId: number;
+  documentNo: string;
+  documentLineId: number;
+  lineNo: number;
+  bizDate: string;
+  stockScope: StockScopeCode | null;
+  stockScopeName: string | null;
+  workshopId: number | null;
+  workshopName: string | null;
+  materialId: number;
+  materialCode: string;
+  materialName: string;
+  materialSpec: string | null;
+  unitCode: string;
+  categoryId: number | null;
+  categoryCode: string | null;
+  categoryName: string;
+  categoryPathLabel: string;
+  salesProjectCode: string | null;
+  salesProjectName: string | null;
+  quantity: string;
+  amount: string;
+  cost: string;
+  abnormalFlags: string[];
+  abnormalLabels: string[];
+  sourceBizMonth: string | null;
+  sourceDocumentNo: string | null;
+  createdAt: string;
+}
+
 interface MonthlyReportQuery {
   yearMonth: string;
+  viewMode?: MonthlyReportingViewMode;
   stockScope?: StockScopeCode;
   workshopId?: number;
   domainKey?: MonthlyReportingDomainKey;
+  documentTypeLabel?: string;
   topicKey?: MonthlyReportingTopicKey;
   abnormalOnly?: boolean;
   keyword?: string;
+  categoryId?: number;
+  categoryNodeKey?: string;
   limit?: number;
   offset?: number;
+}
+
+interface MonthlyReportDomainFilters {
+  viewMode: MonthlyReportingViewMode.DOMAIN;
+  stockScope: StockScopeCode | null;
+  workshopId: number | null;
+  domainKey: MonthlyReportingDomainKey | null;
+  documentTypeLabel: string | null;
+  abnormalOnly: boolean;
+  keyword: string | null;
+}
+
+interface MonthlyReportMaterialCategoryFilters {
+  viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY;
+  stockScope: StockScopeCode | null;
+  workshopId: number | null;
+  documentTypeLabel: string | null;
+  categoryId: number | null;
+  categoryNodeKey: string | null;
+  abnormalOnly: boolean;
+  keyword: string | null;
+}
+
+export interface MonthlyReportDomainSummaryResult {
+  yearMonth: string;
+  filters: MonthlyReportDomainFilters;
+  viewMode: MonthlyReportingViewMode.DOMAIN;
+  domainCatalog: MonthlyReportDomainCatalogItem[];
+  documentTypeCatalog: MonthlyReportDocumentTypeCatalogItem[];
+  domains: MonthlyReportDomainSummaryItem[];
+  documentTypes: MonthlyReportDocumentTypeSummaryItem[];
+  workshopItems: MonthlyReportWorkshopSummaryItem[];
+  salesProjectItems: MonthlyReportSalesProjectSummaryItem[];
+  rdProjectItems: MonthlyReportRdProjectSummaryItem[];
+  summary: MonthlyReportSummaryTotals;
+}
+
+export interface MonthlyReportMaterialCategorySummaryResult {
+  yearMonth: string;
+  filters: MonthlyReportMaterialCategoryFilters;
+  viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY;
+  documentTypeCatalog: MonthlyReportDocumentTypeCatalogItem[];
+  categories: MonthlyReportMaterialCategorySummaryItem[];
+  summary: MonthlyReportMaterialCategorySummaryTotals;
+}
+
+export interface MonthlyReportDomainDocumentsResult {
+  yearMonth: string;
+  viewMode: MonthlyReportingViewMode.DOMAIN;
+  total: number;
+  items: MonthlyReportDocumentItem[];
+  summary: Omit<MonthlyReportSummaryTotals, "domainCount">;
+}
+
+export interface MonthlyReportMaterialCategoryDocumentsResult {
+  yearMonth: string;
+  viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY;
+  total: number;
+  items: MonthlyReportMaterialCategoryDetailItem[];
+  summary: Omit<MonthlyReportMaterialCategorySummaryTotals, "categoryCount">;
 }
 
 interface MonthlyReportSourceData {
@@ -182,6 +298,7 @@ interface MonthlyReportSourceData {
 }
 
 const RESERVED_STOCK_SCOPE_WORKSHOP_NAMES = new Set(["主仓", "研发小仓"]);
+const MATERIAL_CATEGORY_DEFAULT_LABEL = "未分类";
 
 @Injectable()
 export class MonthlyReportingService {
@@ -190,9 +307,37 @@ export class MonthlyReportingService {
     private readonly appConfigService: AppConfigService,
   ) {}
 
-  async getMonthlyReportSummary(query: MonthlyReportQuery) {
+  async getMonthlyReportSummary(
+    query: MonthlyReportQuery & {
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY;
+    },
+  ): Promise<MonthlyReportMaterialCategorySummaryResult>;
+  async getMonthlyReportSummary(
+    query: MonthlyReportQuery & {
+      viewMode?: MonthlyReportingViewMode.DOMAIN;
+    },
+  ): Promise<MonthlyReportDomainSummaryResult>;
+  async getMonthlyReportSummary(
+    query: MonthlyReportQuery,
+  ): Promise<
+    | MonthlyReportDomainSummaryResult
+    | MonthlyReportMaterialCategorySummaryResult
+  >;
+  async getMonthlyReportSummary(
+    query: MonthlyReportQuery,
+  ): Promise<
+    | MonthlyReportDomainSummaryResult
+    | MonthlyReportMaterialCategorySummaryResult
+  > {
+    if (query.viewMode === MonthlyReportingViewMode.MATERIAL_CATEGORY) {
+      return this.getMaterialCategoryMonthlyReportSummary(query);
+    }
+
     const { rows, salesProjectEntries } = await this.loadSourceData(query);
-    const filteredRows = this.filterRows(rows, query);
+    const rowsBeforeDocumentTypeFilter = this.filterRows(rows, query, {
+      ignoreDocumentTypeLabel: true,
+    });
+    const filteredRows = this.filterRows(rowsBeforeDocumentTypeFilter, query);
     const filteredSalesProjectEntries = this.filterSalesProjectEntries(
       salesProjectEntries,
       query,
@@ -202,21 +347,24 @@ export class MonthlyReportingService {
     return {
       yearMonth: query.yearMonth,
       filters: {
+        viewMode: MonthlyReportingViewMode.DOMAIN,
         stockScope: query.stockScope ?? null,
         workshopId: query.workshopId ?? null,
         domainKey: query.domainKey ?? null,
-        topicKey: query.topicKey ?? null,
+        documentTypeLabel: query.documentTypeLabel?.trim() || null,
         abnormalOnly: query.abnormalOnly ?? false,
         keyword: query.keyword?.trim() || null,
       },
+      viewMode: MonthlyReportingViewMode.DOMAIN,
       domainCatalog: this.buildDomainCatalog(),
-      topicCatalog: this.buildTopicCatalog(),
+      documentTypeCatalog: this.buildDocumentTypeCatalog(
+        rowsBeforeDocumentTypeFilter,
+      ),
       domains: domainItems,
-      topics: this.buildTopicItems(filteredRows),
+      documentTypes: this.buildDocumentTypeItems(filteredRows),
       workshopItems: this.buildWorkshopItems(filteredRows),
       salesProjectItems: this.buildSalesProjectItems(filteredSalesProjectEntries),
       rdProjectItems: this.buildRdProjectItems(filteredRows),
-      rdHandoffItems: this.buildRdHandoffItems(filteredRows),
       summary: {
         domainCount: domainItems.length,
         ...this.buildTotals(filteredRows),
@@ -224,7 +372,32 @@ export class MonthlyReportingService {
     };
   }
 
-  async getMonthlyReportDocuments(query: MonthlyReportQuery) {
+  async getMonthlyReportDocuments(
+    query: MonthlyReportQuery & {
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY;
+    },
+  ): Promise<MonthlyReportMaterialCategoryDocumentsResult>;
+  async getMonthlyReportDocuments(
+    query: MonthlyReportQuery & {
+      viewMode?: MonthlyReportingViewMode.DOMAIN;
+    },
+  ): Promise<MonthlyReportDomainDocumentsResult>;
+  async getMonthlyReportDocuments(
+    query: MonthlyReportQuery,
+  ): Promise<
+    | MonthlyReportDomainDocumentsResult
+    | MonthlyReportMaterialCategoryDocumentsResult
+  >;
+  async getMonthlyReportDocuments(
+    query: MonthlyReportQuery,
+  ): Promise<
+    | MonthlyReportDomainDocumentsResult
+    | MonthlyReportMaterialCategoryDocumentsResult
+  > {
+    if (query.viewMode === MonthlyReportingViewMode.MATERIAL_CATEGORY) {
+      return this.getMaterialCategoryMonthlyReportDocuments(query);
+    }
+
     const { rows } = await this.loadSourceData(query);
     const filteredRows = this.filterRows(rows, query);
     const offset = query.offset ?? 0;
@@ -232,6 +405,7 @@ export class MonthlyReportingService {
 
     return {
       yearMonth: query.yearMonth,
+      viewMode: MonthlyReportingViewMode.DOMAIN,
       total: filteredRows.length,
       items: filteredRows
         .slice(offset, offset + limit)
@@ -243,6 +417,10 @@ export class MonthlyReportingService {
   async exportMonthlyReport(
     query: MonthlyReportQuery,
   ): Promise<MonthlyReportExportResult> {
+    if (query.viewMode === MonthlyReportingViewMode.MATERIAL_CATEGORY) {
+      return this.exportMaterialCategoryMonthlyReport(query);
+    }
+
     const { rows, salesProjectEntries } = await this.loadSourceData(query);
     const filteredRows = this.filterRows(rows, query);
     const filteredSalesProjectEntries = this.filterSalesProjectEntries(
@@ -251,13 +429,12 @@ export class MonthlyReportingService {
     );
     const totals = this.buildTotals(filteredRows);
     const domainItems = this.buildDomainItems(filteredRows);
-    const topicItems = this.buildTopicItems(filteredRows);
+    const documentTypeItems = this.buildDocumentTypeItems(filteredRows);
     const workshopItems = this.buildWorkshopItems(filteredRows);
     const salesProjectItems = this.buildSalesProjectItems(
       filteredSalesProjectEntries,
     );
     const rdProjectItems = this.buildRdProjectItems(filteredRows);
-    const rdHandoffItems = this.buildRdHandoffItems(filteredRows);
 
     return {
       fileName: `monthly-reporting-${query.yearMonth}.xls`,
@@ -270,8 +447,6 @@ export class MonthlyReportingService {
             ["总入金额", totals.totalInAmount],
             ["总出数量", totals.totalOutQuantity],
             ["总出金额", totals.totalOutAmount],
-            ["交接数量", totals.totalTransferQuantity],
-            ["交接金额", totals.totalTransferAmount],
             ["净发生数量", totals.netQuantity],
             ["净发生金额", totals.netAmount],
             ["单据数", totals.documentCount],
@@ -287,7 +462,6 @@ export class MonthlyReportingService {
             "异常单据数",
             "总入金额",
             "总出金额",
-            "交接金额",
             "净发生金额",
             "总成本",
           ],
@@ -297,32 +471,29 @@ export class MonthlyReportingService {
             item.abnormalDocumentCount,
             item.totalInAmount,
             item.totalOutAmount,
-            item.totalTransferAmount,
             item.netAmount,
             item.totalCost,
           ]),
         },
         {
-          name: "业务操作汇总",
+          name: "单据类型汇总",
           columns: [
             "领域",
-            "操作",
+            "单据类型",
             "单据数",
             "异常单据数",
             "总入金额",
             "总出金额",
-            "交接金额",
             "净发生金额",
             "总成本",
           ],
-          rows: topicItems.map((item) => [
+          rows: documentTypeItems.map((item) => [
             item.domainLabel,
-            item.topicLabel,
+            item.documentTypeLabel,
             item.documentCount,
             item.abnormalDocumentCount,
             item.totalInAmount,
             item.totalOutAmount,
-            item.totalTransferAmount,
             item.netAmount,
             item.totalCost,
           ]),
@@ -380,6 +551,7 @@ export class MonthlyReportingService {
             "研发项目名称",
             "单据数",
             "异常单据数",
+            "项目交接入金额",
             "项目领用金额",
             "项目退回金额",
             "项目报废金额",
@@ -391,6 +563,7 @@ export class MonthlyReportingService {
             item.rdProjectName,
             item.documentCount,
             item.abnormalDocumentCount,
+            item.handoffInAmount,
             item.pickAmount,
             item.returnAmount,
             item.scrapAmount,
@@ -399,33 +572,9 @@ export class MonthlyReportingService {
           ]),
         },
         {
-          name: "主仓到RD交接汇总",
-          columns: [
-            "来源仓别",
-            "目标仓别",
-            "来源车间",
-            "目标车间",
-            "单据数",
-            "异常单据数",
-            "交接金额",
-            "总成本",
-          ],
-          rows: rdHandoffItems.map((item) => [
-            item.sourceStockScopeName,
-            item.targetStockScopeName,
-            item.sourceWorkshopName,
-            item.targetWorkshopName,
-            item.documentCount,
-            item.abnormalDocumentCount,
-            item.transferAmount,
-            item.totalCost,
-          ]),
-        },
-        {
           name: "单据头明细",
           columns: [
             "领域",
-            "操作",
             "单据类型",
             "单据编号",
             "业务日期",
@@ -449,7 +598,6 @@ export class MonthlyReportingService {
             const item = this.toDocumentItem(row);
             return [
               item.domainLabel,
-              item.topicLabel,
               item.documentTypeLabel,
               item.documentNo,
               item.bizDate,
@@ -474,6 +622,189 @@ export class MonthlyReportingService {
       ]),
       contentType: "application/vnd.ms-excel; charset=utf-8",
     };
+  }
+
+  private async getMaterialCategoryMonthlyReportSummary(
+    query: MonthlyReportQuery,
+  ): Promise<MonthlyReportMaterialCategorySummaryResult> {
+    const entries = await this.loadMaterialCategorySourceData(query);
+    const entriesBeforeDocumentTypeFilter = this.filterMaterialCategoryEntries(
+      entries,
+      query,
+      {
+        ignoreDocumentTypeLabel: true,
+      },
+    );
+    const filteredEntries = this.filterMaterialCategoryEntries(entriesBeforeDocumentTypeFilter, query);
+    const categoryItems = this.buildMaterialCategoryItems(filteredEntries);
+
+    return {
+      yearMonth: query.yearMonth,
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+      filters: {
+        viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+        stockScope: query.stockScope ?? null,
+        workshopId: query.workshopId ?? null,
+        documentTypeLabel: query.documentTypeLabel?.trim() || null,
+        categoryId: query.categoryId ?? null,
+        categoryNodeKey: query.categoryNodeKey?.trim() || null,
+        abnormalOnly: query.abnormalOnly ?? false,
+        keyword: query.keyword?.trim() || null,
+      },
+      documentTypeCatalog: this.buildMaterialCategoryDocumentTypeCatalog(
+        entriesBeforeDocumentTypeFilter,
+      ),
+      categories: categoryItems,
+      summary: {
+        categoryCount: categoryItems.length,
+        ...this.buildMaterialCategoryTotals(filteredEntries),
+      },
+    };
+  }
+
+  private async getMaterialCategoryMonthlyReportDocuments(
+    query: MonthlyReportQuery,
+  ): Promise<MonthlyReportMaterialCategoryDocumentsResult> {
+    const entries = await this.loadMaterialCategorySourceData(query);
+    const filteredEntries = this.filterMaterialCategoryEntries(entries, query);
+    const offset = query.offset ?? 0;
+    const limit = Math.min(query.limit ?? 50, 200);
+
+    return {
+      yearMonth: query.yearMonth,
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+      total: filteredEntries.length,
+      items: filteredEntries
+        .slice(offset, offset + limit)
+        .map((entry) => this.toMaterialCategoryDetailItem(entry)),
+      summary: this.buildMaterialCategoryTotals(filteredEntries),
+    };
+  }
+
+  private async exportMaterialCategoryMonthlyReport(
+    query: MonthlyReportQuery,
+  ): Promise<MonthlyReportExportResult> {
+    const entries = await this.loadMaterialCategorySourceData(query);
+    const filteredEntries = this.filterMaterialCategoryEntries(entries, query);
+    const categoryItems = this.buildMaterialCategoryItems(filteredEntries);
+    const totals = this.buildMaterialCategoryTotals(filteredEntries);
+
+    return {
+      fileName: `monthly-reporting-material-category-${query.yearMonth}.xls`,
+      content: this.buildExcelXmlWorkbook([
+        {
+          name: "总览",
+          columns: ["指标", "值"],
+          rows: [
+            ["验收入库金额", totals.acceptanceInboundAmount],
+            ["生产入库金额", totals.productionReceiptAmount],
+            ["销售出库金额", totals.salesOutboundAmount],
+            ["销售退货金额", totals.salesReturnAmount],
+            ["净发生金额", totals.netAmount],
+            ["单据行数", totals.lineCount],
+            ["单据数", totals.documentCount],
+            ["异常单据数", totals.abnormalDocumentCount],
+            ["总成本", totals.totalCost],
+          ],
+        },
+        {
+          name: "分类汇总",
+          columns: [
+            "分类编码",
+            "分类名称",
+            "分类路径",
+            "层级",
+            "单据行数",
+            "单据数",
+            "异常单据数",
+            "验收入库金额",
+            "生产入库金额",
+            "销售出库金额",
+            "销售退货金额",
+            "净发生金额",
+            "总成本",
+          ],
+          rows: categoryItems.map((item) => [
+            item.categoryCode ?? "",
+            item.categoryName,
+            item.categoryPathLabel,
+            item.depth,
+            item.lineCount,
+            item.documentCount,
+            item.abnormalDocumentCount,
+            item.acceptanceInboundAmount,
+            item.productionReceiptAmount,
+            item.salesOutboundAmount,
+            item.salesReturnAmount,
+            item.netAmount,
+            item.totalCost,
+          ]),
+        },
+        {
+          name: "单据行明细",
+          columns: [
+            "分类路径",
+            "叶子分类编码",
+            "叶子分类名称",
+            "单据类型",
+            "单据编号",
+            "行号",
+            "业务日期",
+            "仓别",
+            "车间",
+            "物料编码",
+            "物料名称",
+            "规格型号",
+            "单位",
+            "销售项目编码",
+            "销售项目名称",
+            "数量",
+            "金额",
+            "成本",
+            "异常标识",
+            "来源月份",
+            "来源单据",
+          ],
+          rows: filteredEntries.map((entry) => {
+            const item = this.toMaterialCategoryDetailItem(entry);
+            return [
+              item.categoryPathLabel,
+              item.categoryCode ?? "",
+              item.categoryName,
+              item.documentTypeLabel,
+              item.documentNo,
+              item.lineNo,
+              item.bizDate,
+              item.stockScopeName ?? "",
+              item.workshopName ?? "",
+              item.materialCode,
+              item.materialName,
+              item.materialSpec ?? "",
+              item.unitCode,
+              item.salesProjectCode ?? "",
+              item.salesProjectName ?? "",
+              item.quantity,
+              item.amount,
+              item.cost,
+              item.abnormalLabels.join("、"),
+              item.sourceBizMonth ?? "",
+              item.sourceDocumentNo ?? "",
+            ];
+          }),
+        },
+      ]),
+      contentType: "application/vnd.ms-excel; charset=utf-8",
+    };
+  }
+
+  private async loadMaterialCategorySourceData(query: MonthlyReportQuery) {
+    const { start, end } = this.resolveMonthRange(query.yearMonth);
+    return this.repository.findMonthlyMaterialCategoryEntries({
+      start,
+      end,
+      stockScope: query.stockScope,
+      workshopId: query.workshopId,
+    });
   }
 
   private async loadSourceData(
@@ -501,7 +832,15 @@ export class MonthlyReportingService {
     };
   }
 
-  private filterRows(rows: MonthlyReportEntry[], query: MonthlyReportQuery) {
+  private filterRows(
+    rows: MonthlyReportEntry[],
+    query: MonthlyReportQuery,
+    options: {
+      ignoreDocumentTypeLabel?: boolean;
+    } = {},
+  ) {
+    const documentTypeLabel = query.documentTypeLabel?.trim() || null;
+
     return [...rows]
       .filter((row) =>
         query.domainKey
@@ -510,6 +849,11 @@ export class MonthlyReportingService {
           : true,
       )
       .filter((row) => (query.topicKey ? row.topicKey === query.topicKey : true))
+      .filter((row) =>
+        options.ignoreDocumentTypeLabel || !documentTypeLabel
+          ? true
+          : row.documentTypeLabel === documentTypeLabel,
+      )
       .filter((row) =>
         query.abnormalOnly ? row.abnormalFlags.length > 0 : true,
       )
@@ -550,6 +894,8 @@ export class MonthlyReportingService {
     entries: MonthlySalesProjectEntry[],
     query: MonthlyReportQuery,
   ) {
+    const documentTypeLabel = query.documentTypeLabel?.trim() || null;
+
     if (query.domainKey && query.domainKey !== "SALES") {
       return [];
     }
@@ -565,6 +911,11 @@ export class MonthlyReportingService {
     return entries
       .filter((entry) => (query.topicKey ? entry.topicKey === query.topicKey : true))
       .filter((entry) =>
+        documentTypeLabel
+          ? entry.documentTypeLabel === documentTypeLabel
+          : true,
+      )
+      .filter((entry) =>
         query.abnormalOnly ? entry.abnormalFlags.length > 0 : true,
       )
       .filter((entry) => this.matchesSalesProjectKeyword(entry, query.keyword));
@@ -578,8 +929,6 @@ export class MonthlyReportingService {
     return {
       domainKey: topicMeta.domainKey,
       domainLabel: domainMeta.label,
-      topicKey: row.topicKey,
-      topicLabel: topicMeta.label,
       direction: row.direction,
       documentType: row.documentType,
       documentTypeLabel: row.documentTypeLabel,
@@ -641,27 +990,60 @@ export class MonthlyReportingService {
       );
   }
 
-  private buildTopicItems(rows: MonthlyReportEntry[]): MonthlyReportTopicSummaryItem[] {
-    const grouped = new Map<MonthlyReportingTopicKey, MonthlyReportEntry[]>();
+  private buildDocumentTypeItems(
+    rows: MonthlyReportEntry[],
+  ): MonthlyReportDocumentTypeSummaryItem[] {
+    const grouped = new Map<
+      string,
+      {
+        domainKey: MonthlyReportingDomainKey;
+        documentTypeLabel: string;
+        sortOrder: number;
+        rows: MonthlyReportEntry[];
+      }
+    >();
 
     for (const row of rows) {
-      const current = grouped.get(row.topicKey) ?? [];
-      current.push(row);
-      grouped.set(row.topicKey, current);
+      const topicMeta = getMonthlyReportingTopicMeta(row.topicKey);
+      const mapKey = `${topicMeta.domainKey}:${row.documentTypeLabel}`;
+      const current = grouped.get(mapKey) ?? {
+        domainKey: topicMeta.domainKey,
+        documentTypeLabel: row.documentTypeLabel,
+        sortOrder: topicMeta.order,
+        rows: [],
+      };
+      current.sortOrder = Math.min(current.sortOrder, topicMeta.order);
+      current.rows.push(row);
+      grouped.set(mapKey, current);
     }
 
-    return sortMonthlyReportingEntries(
-      [...grouped.entries()].map(([topicKey, topicRows]) => {
-        const topicMeta = getMonthlyReportingTopicMeta(topicKey);
-        return {
-          domainKey: topicMeta.domainKey,
-          domainLabel: getMonthlyReportingDomainMeta(topicMeta.domainKey).label,
-          topicKey,
-          topicLabel: topicMeta.label,
-          ...this.buildTotals(topicRows),
-        };
-      }),
-    );
+    return [...grouped.values()]
+      .map((item) => ({
+        domainKey: item.domainKey,
+        domainLabel: getMonthlyReportingDomainMeta(item.domainKey).label,
+        documentTypeLabel: item.documentTypeLabel,
+        sortOrder: item.sortOrder,
+        ...this.buildTotals(item.rows),
+      }))
+      .sort((left, right) => {
+        const leftDomainOrder = getMonthlyReportingDomainMeta(left.domainKey).order;
+        const rightDomainOrder = getMonthlyReportingDomainMeta(
+          right.domainKey,
+        ).order;
+        if (leftDomainOrder !== rightDomainOrder) {
+          return leftDomainOrder - rightDomainOrder;
+        }
+
+        if (left.sortOrder !== right.sortOrder) {
+          return left.sortOrder - right.sortOrder;
+        }
+
+        return left.documentTypeLabel.localeCompare(
+          right.documentTypeLabel,
+          "zh-Hans-CN",
+        );
+      })
+      .map(({ sortOrder: _sortOrder, ...item }) => item);
   }
 
   private buildWorkshopItems(rows: MonthlyReportEntry[]): MonthlyReportWorkshopSummaryItem[] {
@@ -818,9 +1200,23 @@ export class MonthlyReportingService {
   }
 
   private buildRdProjectItems(rows: MonthlyReportEntry[]): MonthlyReportRdProjectSummaryItem[] {
-    const rdProjectRows = rows.filter(
-      (row) => getMonthlyReportingTopicMeta(row.topicKey).domainKey === "RD_PROJECT",
-    );
+    const rdProjectRows = rows.filter((row) => {
+      if (
+        row.topicKey === "RD_PROJECT_PICK" ||
+        row.topicKey === "RD_PROJECT_RETURN" ||
+        row.topicKey === "RD_PROJECT_SCRAP"
+      ) {
+        return true;
+      }
+
+      return (
+        row.topicKey === "RD_HANDOFF" &&
+        row.direction !== MonthlyReportingDirection.OUT &&
+        (row.rdProjectId != null ||
+          Boolean(row.rdProjectCode) ||
+          Boolean(row.rdProjectName))
+      );
+    });
     const grouped = new Map<
       string,
       {
@@ -850,6 +1246,7 @@ export class MonthlyReportingService {
 
     return [...grouped.values()]
       .map((item) => {
+        const handoffRows = item.rows.filter((row) => row.topicKey === "RD_HANDOFF");
         const pickRows = item.rows.filter((row) => row.topicKey === "RD_PROJECT_PICK");
         const returnRows = item.rows.filter(
           (row) => row.topicKey === "RD_PROJECT_RETURN",
@@ -865,9 +1262,13 @@ export class MonthlyReportingService {
             .filter((row) => row.abnormalFlags.length > 0)
             .map((row) => `${row.documentType}:${row.documentId}`),
         );
+        const handoffInQuantity = sumDecimals(
+          handoffRows.map((row) => row.quantity),
+        );
         const pickQuantity = sumDecimals(pickRows.map((row) => row.quantity));
         const returnQuantity = sumDecimals(returnRows.map((row) => row.quantity));
         const scrapQuantity = sumDecimals(scrapRows.map((row) => row.quantity));
+        const handoffInAmount = sumDecimals(handoffRows.map((row) => row.amount));
         const pickAmount = sumDecimals(pickRows.map((row) => row.amount));
         const returnAmount = sumDecimals(returnRows.map((row) => row.amount));
         const scrapAmount = sumDecimals(scrapRows.map((row) => row.amount));
@@ -878,6 +1279,8 @@ export class MonthlyReportingService {
           rdProjectName: item.rdProjectName,
           documentCount: documentKeys.size,
           abnormalDocumentCount: abnormalDocumentKeys.size,
+          handoffInQuantity: formatDecimal(handoffInQuantity),
+          handoffInAmount: formatMoney(handoffInAmount),
           pickQuantity: formatDecimal(pickQuantity),
           pickAmount: formatMoney(pickAmount),
           returnQuantity: formatDecimal(returnQuantity),
@@ -885,9 +1288,14 @@ export class MonthlyReportingService {
           scrapQuantity: formatDecimal(scrapQuantity),
           scrapAmount: formatMoney(scrapAmount),
           netQuantity: formatDecimal(
-            returnQuantity.sub(pickQuantity).sub(scrapQuantity),
+            handoffInQuantity
+              .add(returnQuantity)
+              .sub(pickQuantity)
+              .sub(scrapQuantity),
           ),
-          netAmount: formatMoney(returnAmount.sub(pickAmount).sub(scrapAmount)),
+          netAmount: formatMoney(
+            handoffInAmount.add(returnAmount).sub(pickAmount).sub(scrapAmount),
+          ),
           totalCost: formatMoney(sumDecimals(item.rows.map((row) => row.cost))),
         };
       })
@@ -896,72 +1304,123 @@ export class MonthlyReportingService {
       );
   }
 
-  private buildRdHandoffItems(rows: MonthlyReportEntry[]): MonthlyReportRdHandoffSummaryItem[] {
-    const rdHandoffRows = rows.filter((row) => row.topicKey === "RD_HANDOFF");
+  private buildMaterialCategoryItems(
+    entries: MonthlyMaterialCategoryEntry[],
+  ): MonthlyReportMaterialCategorySummaryItem[] {
     const grouped = new Map<
       string,
       {
-        sourceStockScopeName: string;
-        targetStockScopeName: string;
-        sourceWorkshopName: string;
-        targetWorkshopName: string;
-        rows: MonthlyReportEntry[];
+        nodeKey: string;
+        parentNodeKey: string | null;
+        categoryId: number | null;
+        parentCategoryId: number | null;
+        categoryCode: string | null;
+        categoryName: string;
+        categoryPathLabel: string;
+        depth: number;
+        entries: MonthlyMaterialCategoryEntry[];
       }
     >();
 
-    for (const row of rdHandoffRows) {
-      const sourceStockScopeName = row.sourceStockScopeName ?? "未区分来源仓别";
-      const targetStockScopeName = row.targetStockScopeName ?? "未区分目标仓别";
-      const sourceWorkshopName =
-        this.normalizeWorkshopName(row.sourceWorkshopName) ?? "未区分来源车间";
-      const targetWorkshopName =
-        this.normalizeWorkshopName(row.targetWorkshopName) ?? "未区分目标车间";
-      const mapKey = [
-        sourceStockScopeName,
-        targetStockScopeName,
-        sourceWorkshopName,
-        targetWorkshopName,
-      ].join(":");
-      const current = grouped.get(mapKey) ?? {
-        sourceStockScopeName,
-        targetStockScopeName,
-        sourceWorkshopName,
-        targetWorkshopName,
-        rows: [],
-      };
-      current.rows.push(row);
-      grouped.set(mapKey, current);
+    for (const entry of entries) {
+      const categoryPath = this.resolveMaterialCategoryPath(entry);
+
+      for (let index = 0; index < categoryPath.length; index += 1) {
+        const node = categoryPath[index];
+        const parentNode = index > 0 ? categoryPath[index - 1] : null;
+        const nodeKey = this.buildMaterialCategoryNodeKey(
+          categoryPath.slice(0, index + 1),
+        );
+        const parentNodeKey =
+          index > 0
+            ? this.buildMaterialCategoryNodeKey(categoryPath.slice(0, index))
+            : null;
+        const current = grouped.get(nodeKey) ?? {
+          nodeKey,
+          parentNodeKey,
+          categoryId: node.id,
+          parentCategoryId: parentNode?.id ?? null,
+          categoryCode: node.categoryCode,
+          categoryName: node.categoryName,
+          categoryPathLabel: categoryPath
+            .slice(0, index + 1)
+            .map((item) => item.categoryName)
+            .join(" / "),
+          depth: index,
+          entries: [],
+        };
+        current.entries.push(entry);
+        grouped.set(nodeKey, current);
+      }
     }
 
     return [...grouped.values()]
       .map((item) => {
+        const acceptanceRows = item.entries.filter(
+          (entry) => entry.topicKey === "ACCEPTANCE_INBOUND",
+        );
+        const productionRows = item.entries.filter(
+          (entry) => entry.topicKey === "PRODUCTION_RECEIPT",
+        );
+        const outboundRows = item.entries.filter(
+          (entry) => entry.topicKey === "SALES_OUTBOUND",
+        );
+        const returnRows = item.entries.filter(
+          (entry) => entry.topicKey === "SALES_RETURN",
+        );
         const documentKeys = new Set(
-          item.rows.map((row) => `${row.documentType}:${row.documentId}`),
+          item.entries.map((entry) => `${entry.documentType}:${entry.documentId}`),
         );
         const abnormalDocumentKeys = new Set(
-          item.rows
-            .filter((row) => row.abnormalFlags.length > 0)
-            .map((row) => `${row.documentType}:${row.documentId}`),
+          item.entries
+            .filter((entry) => entry.abnormalFlags.length > 0)
+            .map((entry) => `${entry.documentType}:${entry.documentId}`),
+        );
+        const acceptanceInboundAmount = sumDecimals(
+          acceptanceRows.map((entry) => entry.amount),
+        );
+        const productionReceiptAmount = sumDecimals(
+          productionRows.map((entry) => entry.amount),
+        );
+        const salesOutboundAmount = sumDecimals(
+          outboundRows.map((entry) => entry.amount),
+        );
+        const salesReturnAmount = sumDecimals(
+          returnRows.map((entry) => entry.amount),
         );
 
         return {
-          sourceStockScopeName: item.sourceStockScopeName,
-          targetStockScopeName: item.targetStockScopeName,
-          sourceWorkshopName: item.sourceWorkshopName,
-          targetWorkshopName: item.targetWorkshopName,
+          nodeKey: item.nodeKey,
+          parentNodeKey: item.parentNodeKey,
+          categoryId: item.categoryId,
+          parentCategoryId: item.parentCategoryId,
+          categoryCode: item.categoryCode,
+          categoryName: item.categoryName,
+          categoryPathLabel: item.categoryPathLabel,
+          depth: item.depth,
+          lineCount: item.entries.length,
           documentCount: documentKeys.size,
           abnormalDocumentCount: abnormalDocumentKeys.size,
-          transferQuantity: formatDecimal(
-            sumDecimals(item.rows.map((row) => row.quantity)),
+          acceptanceInboundAmount: formatMoney(acceptanceInboundAmount),
+          productionReceiptAmount: formatMoney(productionReceiptAmount),
+          salesOutboundAmount: formatMoney(salesOutboundAmount),
+          salesReturnAmount: formatMoney(salesReturnAmount),
+          netAmount: formatMoney(
+            acceptanceInboundAmount
+              .add(productionReceiptAmount)
+              .add(salesReturnAmount)
+              .sub(salesOutboundAmount),
           ),
-          transferAmount: formatMoney(
-            sumDecimals(item.rows.map((row) => row.amount)),
+          totalCost: formatMoney(
+            sumDecimals(item.entries.map((entry) => entry.cost)),
           ),
-          totalCost: formatMoney(sumDecimals(item.rows.map((row) => row.cost))),
         };
       })
       .sort((left, right) =>
-        right.transferAmount.localeCompare(left.transferAmount, "en"),
+        left.categoryPathLabel.localeCompare(
+          right.categoryPathLabel,
+          "zh-Hans-CN",
+        ),
       );
   }
 
@@ -975,16 +1434,97 @@ export class MonthlyReportingService {
       .sort((left, right) => left.sortOrder - right.sortOrder);
   }
 
-  private buildTopicCatalog(): MonthlyReportTopicCatalogItem[] {
-    return Object.entries(MONTHLY_REPORTING_TOPIC_META)
-      .map(([topicKey, meta]) => ({
-        domainKey: meta.domainKey,
-        domainLabel: getMonthlyReportingDomainMeta(meta.domainKey).label,
-        topicKey: topicKey as MonthlyReportingTopicKey,
-        topicLabel: meta.label,
-        sortOrder: meta.order,
-      }))
-      .sort((left, right) => left.sortOrder - right.sortOrder);
+  private buildDocumentTypeCatalog(
+    rows: MonthlyReportEntry[],
+  ): MonthlyReportDocumentTypeCatalogItem[] {
+    const grouped = new Map<
+      string,
+      {
+        domainKey: MonthlyReportingDomainKey;
+        domainLabel: string;
+        documentTypeLabel: string;
+        sortOrder: number;
+      }
+    >();
+
+    for (const row of rows) {
+      const topicMeta = getMonthlyReportingTopicMeta(row.topicKey);
+      const domainMeta = getMonthlyReportingDomainMeta(topicMeta.domainKey);
+      const mapKey = `${topicMeta.domainKey}:${row.documentTypeLabel}`;
+      const current = grouped.get(mapKey);
+
+      if (!current) {
+        grouped.set(mapKey, {
+          domainKey: topicMeta.domainKey,
+          domainLabel: domainMeta.label,
+          documentTypeLabel: row.documentTypeLabel,
+          sortOrder: topicMeta.order,
+        });
+        continue;
+      }
+
+      current.sortOrder = Math.min(current.sortOrder, topicMeta.order);
+    }
+
+    return [...grouped.values()].sort((left, right) => {
+      const leftDomainOrder = getMonthlyReportingDomainMeta(left.domainKey).order;
+      const rightDomainOrder = getMonthlyReportingDomainMeta(right.domainKey).order;
+      if (leftDomainOrder !== rightDomainOrder) {
+        return leftDomainOrder - rightDomainOrder;
+      }
+
+      if (left.sortOrder !== right.sortOrder) {
+        return left.sortOrder - right.sortOrder;
+      }
+
+      return left.documentTypeLabel.localeCompare(
+        right.documentTypeLabel,
+        "zh-Hans-CN",
+      );
+    });
+  }
+
+  private buildMaterialCategoryDocumentTypeCatalog(
+    entries: MonthlyMaterialCategoryEntry[],
+  ): MonthlyReportDocumentTypeCatalogItem[] {
+    const grouped = new Map<
+      string,
+      {
+        domainKey: MonthlyReportingDomainKey;
+        domainLabel: string;
+        documentTypeLabel: string;
+        sortOrder: number;
+      }
+    >();
+
+    for (const entry of entries) {
+      const topicMeta = getMonthlyReportingTopicMeta(entry.topicKey);
+      const domainMeta = getMonthlyReportingDomainMeta(topicMeta.domainKey);
+      const current = grouped.get(entry.documentTypeLabel);
+
+      if (!current) {
+        grouped.set(entry.documentTypeLabel, {
+          domainKey: topicMeta.domainKey,
+          domainLabel: domainMeta.label,
+          documentTypeLabel: entry.documentTypeLabel,
+          sortOrder: topicMeta.order,
+        });
+        continue;
+      }
+
+      current.sortOrder = Math.min(current.sortOrder, topicMeta.order);
+    }
+
+    return [...grouped.values()].sort((left, right) => {
+      if (left.sortOrder !== right.sortOrder) {
+        return left.sortOrder - right.sortOrder;
+      }
+
+      return left.documentTypeLabel.localeCompare(
+        right.documentTypeLabel,
+        "zh-Hans-CN",
+      );
+    });
   }
 
   private buildTotals(rows: MonthlyReportEntry[]): Omit<
@@ -1005,19 +1545,10 @@ export class MonthlyReportingService {
     const outRows = rows.filter(
       (row) => row.direction === MonthlyReportingDirection.OUT,
     );
-    const transferRows = rows.filter(
-      (row) => row.direction === MonthlyReportingDirection.TRANSFER,
-    );
     const totalInQuantity = sumDecimals(inRows.map((row) => row.quantity));
     const totalOutQuantity = sumDecimals(outRows.map((row) => row.quantity));
-    const totalTransferQuantity = sumDecimals(
-      transferRows.map((row) => row.quantity),
-    );
     const totalInAmount = sumDecimals(inRows.map((row) => row.amount));
     const totalOutAmount = sumDecimals(outRows.map((row) => row.amount));
-    const totalTransferAmount = sumDecimals(
-      transferRows.map((row) => row.amount),
-    );
 
     return {
       documentCount: documentKeys.size,
@@ -1026,11 +1557,177 @@ export class MonthlyReportingService {
       totalInAmount: formatMoney(totalInAmount),
       totalOutQuantity: formatDecimal(totalOutQuantity),
       totalOutAmount: formatMoney(totalOutAmount),
-      totalTransferQuantity: formatDecimal(totalTransferQuantity),
-      totalTransferAmount: formatMoney(totalTransferAmount),
       netQuantity: formatDecimal(totalInQuantity.sub(totalOutQuantity)),
       netAmount: formatMoney(totalInAmount.sub(totalOutAmount)),
       totalCost: formatMoney(sumDecimals(rows.map((row) => row.cost))),
+    };
+  }
+
+  private buildMaterialCategoryTotals(
+    entries: MonthlyMaterialCategoryEntry[],
+  ): Omit<MonthlyReportMaterialCategorySummaryTotals, "categoryCount"> {
+    const documentKeys = new Set(
+      entries.map((entry) => `${entry.documentType}:${entry.documentId}`),
+    );
+    const abnormalDocumentKeys = new Set(
+      entries
+        .filter((entry) => entry.abnormalFlags.length > 0)
+        .map((entry) => `${entry.documentType}:${entry.documentId}`),
+    );
+    const acceptanceInboundAmount = sumDecimals(
+      entries
+        .filter((entry) => entry.topicKey === "ACCEPTANCE_INBOUND")
+        .map((entry) => entry.amount),
+    );
+    const productionReceiptAmount = sumDecimals(
+      entries
+        .filter((entry) => entry.topicKey === "PRODUCTION_RECEIPT")
+        .map((entry) => entry.amount),
+    );
+    const salesOutboundAmount = sumDecimals(
+      entries
+        .filter((entry) => entry.topicKey === "SALES_OUTBOUND")
+        .map((entry) => entry.amount),
+    );
+    const salesReturnAmount = sumDecimals(
+      entries
+        .filter((entry) => entry.topicKey === "SALES_RETURN")
+        .map((entry) => entry.amount),
+    );
+
+    return {
+      lineCount: entries.length,
+      documentCount: documentKeys.size,
+      abnormalDocumentCount: abnormalDocumentKeys.size,
+      acceptanceInboundAmount: formatMoney(acceptanceInboundAmount),
+      productionReceiptAmount: formatMoney(productionReceiptAmount),
+      salesOutboundAmount: formatMoney(salesOutboundAmount),
+      salesReturnAmount: formatMoney(salesReturnAmount),
+      netAmount: formatMoney(
+        acceptanceInboundAmount
+          .add(productionReceiptAmount)
+          .add(salesReturnAmount)
+          .sub(salesOutboundAmount),
+      ),
+      totalCost: formatMoney(sumDecimals(entries.map((entry) => entry.cost))),
+    };
+  }
+
+  private filterMaterialCategoryEntries(
+    entries: MonthlyMaterialCategoryEntry[],
+    query: MonthlyReportQuery,
+    options: {
+      ignoreDocumentTypeLabel?: boolean;
+    } = {},
+  ) {
+    const documentTypeLabel = query.documentTypeLabel?.trim() || null;
+
+    if (
+      query.topicKey &&
+      !MONTHLY_REPORTING_MATERIAL_CATEGORY_TOPIC_OPTIONS.includes(query.topicKey)
+    ) {
+      return [];
+    }
+    const categoryNodeKey = query.categoryNodeKey?.trim() || null;
+
+    return [...entries]
+      .filter((entry) =>
+        query.topicKey ? entry.topicKey === query.topicKey : true,
+      )
+      .filter((entry) =>
+        options.ignoreDocumentTypeLabel || !documentTypeLabel
+          ? true
+          : entry.documentTypeLabel === documentTypeLabel,
+      )
+      .filter((entry) =>
+        categoryNodeKey
+          ? this.resolveMaterialCategoryNodeKeys(entry).includes(
+              categoryNodeKey,
+            )
+          : query.categoryId
+          ? this.resolveMaterialCategoryPath(entry).some(
+              (node) => node.id === query.categoryId,
+            )
+          : true,
+      )
+      .filter((entry) =>
+        query.abnormalOnly ? entry.abnormalFlags.length > 0 : true,
+      )
+      .filter((entry) =>
+        this.matchesMaterialCategoryKeyword(entry, query.keyword),
+      )
+      .sort((left, right) => {
+        const leftPathLabel = this.resolveMaterialCategoryPathLabel(left);
+        const rightPathLabel = this.resolveMaterialCategoryPathLabel(right);
+        if (leftPathLabel !== rightPathLabel) {
+          return leftPathLabel.localeCompare(rightPathLabel, "zh-Hans-CN");
+        }
+
+        const leftTopicOrder = getMonthlyReportingTopicMeta(left.topicKey).order;
+        const rightTopicOrder = getMonthlyReportingTopicMeta(right.topicKey).order;
+        if (leftTopicOrder !== rightTopicOrder) {
+          return leftTopicOrder - rightTopicOrder;
+        }
+
+        if (left.bizDate.getTime() !== right.bizDate.getTime()) {
+          return left.bizDate.getTime() - right.bizDate.getTime();
+        }
+
+        if (left.documentNo !== right.documentNo) {
+          return left.documentNo.localeCompare(right.documentNo);
+        }
+
+        return left.lineNo - right.lineNo;
+      });
+  }
+
+  private toMaterialCategoryDetailItem(
+    entry: MonthlyMaterialCategoryEntry,
+  ): MonthlyReportMaterialCategoryDetailItem {
+    const workshopRef = this.normalizeWorkshopRef(
+      entry.workshopId,
+      entry.workshopName,
+    );
+
+    return {
+      direction: entry.direction,
+      documentType: entry.documentType,
+      documentTypeLabel: entry.documentTypeLabel,
+      documentId: entry.documentId,
+      documentNo: entry.documentNo,
+      documentLineId: entry.documentLineId,
+      lineNo: entry.lineNo,
+      bizDate: this.toDateOnly(entry.bizDate),
+      stockScope: entry.stockScope,
+      stockScopeName: entry.stockScopeName,
+      workshopId: workshopRef.workshopId,
+      workshopName: workshopRef.workshopName,
+      materialId: entry.materialId,
+      materialCode: entry.materialCode,
+      materialName: entry.materialName,
+      materialSpec: entry.materialSpec,
+      unitCode: entry.unitCode,
+      categoryId: entry.categoryId,
+      categoryCode: entry.categoryCode,
+      categoryName: entry.categoryName,
+      categoryPathLabel: this.resolveMaterialCategoryPathLabel(entry),
+      salesProjectCode: entry.salesProjectCode,
+      salesProjectName: entry.salesProjectName,
+      quantity: formatDecimal(entry.quantity),
+      amount: formatMoney(entry.amount),
+      cost: formatMoney(entry.cost),
+      abnormalFlags: entry.abnormalFlags,
+      abnormalLabels: entry.abnormalFlags.map(
+        (flag) => MONTHLY_REPORTING_ABNORMAL_LABELS[flag],
+      ),
+      sourceBizMonth: entry.sourceBizDate
+        ? formatYearMonth(
+            entry.sourceBizDate,
+            this.appConfigService.businessTimezone,
+          )
+        : null,
+      sourceDocumentNo: entry.sourceDocumentNo,
+      createdAt: entry.createdAt.toISOString(),
     };
   }
 
@@ -1050,7 +1747,6 @@ export class MonthlyReportingService {
       row.documentNo,
       row.documentTypeLabel,
       domainLabel,
-      topicMeta.label,
       row.stockScopeName,
       this.normalizeWorkshopName(row.workshopName),
       row.sourceStockScopeName,
@@ -1064,6 +1760,47 @@ export class MonthlyReportingService {
       row.sourceBizDate
         ? formatYearMonth(
             row.sourceBizDate,
+            this.appConfigService.businessTimezone,
+          )
+        : null,
+      ...abnormalLabels,
+    ]
+      .filter(Boolean)
+      .some((candidate) =>
+        String(candidate).toLowerCase().includes(normalizedKeyword),
+      );
+  }
+
+  private matchesMaterialCategoryKeyword(
+    entry: MonthlyMaterialCategoryEntry,
+    keyword?: string,
+  ) {
+    const normalizedKeyword = keyword?.trim().toLowerCase();
+    if (!normalizedKeyword) {
+      return true;
+    }
+
+    const abnormalLabels = entry.abnormalFlags.map(
+      (flag) => MONTHLY_REPORTING_ABNORMAL_LABELS[flag],
+    );
+
+    return [
+      entry.documentNo,
+      entry.documentTypeLabel,
+      entry.stockScopeName,
+      this.normalizeWorkshopName(entry.workshopName),
+      entry.materialCode,
+      entry.materialName,
+      entry.materialSpec,
+      entry.categoryCode,
+      entry.categoryName,
+      this.resolveMaterialCategoryPathLabel(entry),
+      entry.salesProjectCode,
+      entry.salesProjectName,
+      entry.sourceDocumentNo,
+      entry.sourceBizDate
+        ? formatYearMonth(
+            entry.sourceBizDate,
             this.appConfigService.businessTimezone,
           )
         : null,
@@ -1090,9 +1827,9 @@ export class MonthlyReportingService {
 
     return [
       entry.documentNo,
+      entry.documentTypeLabel,
       entry.salesProjectCode,
       entry.salesProjectName,
-      getMonthlyReportingTopicMeta(entry.topicKey).label,
       ...abnormalLabels,
     ]
       .filter(Boolean)
@@ -1120,6 +1857,48 @@ export class MonthlyReportingService {
     }
 
     return this.normalizeWorkshopName(row.workshopName) ?? "";
+  }
+
+  private resolveMaterialCategoryPath(entry: MonthlyMaterialCategoryEntry) {
+    if (entry.categoryPath.length > 0) {
+      return entry.categoryPath;
+    }
+
+    return [
+      {
+        id: entry.categoryId,
+        categoryCode: entry.categoryCode,
+        categoryName: entry.categoryName || MATERIAL_CATEGORY_DEFAULT_LABEL,
+      },
+    ];
+  }
+
+  private resolveMaterialCategoryPathLabel(entry: MonthlyMaterialCategoryEntry) {
+    return this.resolveMaterialCategoryPath(entry)
+      .map((node) => node.categoryName)
+      .join(" / ");
+  }
+
+  private resolveMaterialCategoryNodeKeys(entry: MonthlyMaterialCategoryEntry) {
+    const categoryPath = this.resolveMaterialCategoryPath(entry);
+    return categoryPath.map((_, index) =>
+      this.buildMaterialCategoryNodeKey(categoryPath.slice(0, index + 1)),
+    );
+  }
+
+  private buildMaterialCategoryNodeKey(
+    path: Array<{
+      id: number | null;
+      categoryCode: string | null;
+      categoryName: string;
+    }>,
+  ) {
+    return path
+      .map(
+        (node) =>
+          `${node.id ?? "null"}:${node.categoryCode ?? ""}:${node.categoryName}`,
+      )
+      .join(">");
   }
 
   private normalizeWorkshopRef(

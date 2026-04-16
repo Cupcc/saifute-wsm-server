@@ -442,11 +442,31 @@ async function seedBusinessFixture(
     RESET_ACTOR,
   );
 
+  const rdProject = await services.rdProjectService.createProject(
+    {
+      projectCode: "TEST-RDP-001",
+      projectName: "测试研发项目",
+      bizDate: "2026-04-06",
+      supplierId: refs.supplierId,
+      managerPersonnelId: refs.personnel.manager,
+      workshopId: refs.workshops.rd,
+      remark: "开发重置脚本: RD 项目样例",
+      bomLines: [
+        {
+          materialId: refs.materials.controller,
+          quantity: "2",
+          unitPrice: "300",
+        },
+      ],
+    },
+    RESET_ACTOR,
+  );
+
   const rdRequest = await services.rdProcurementRequestService.createRequest(
     {
       bizDate: "2026-04-06",
-      projectCode: "TEST-RDPUR-001",
-      projectName: "测试研发采购需求",
+      projectCode: rdProject.projectCode,
+      projectName: rdProject.projectName,
       supplierId: refs.supplierId,
       handlerPersonnelId: refs.personnel.manager,
       workshopId: refs.workshops.rd,
@@ -486,26 +506,6 @@ async function seedBusinessFixture(
           sourceDocumentType: BusinessDocumentType.RdProcurementRequest,
           sourceDocumentId: rdRequest.id,
           sourceDocumentLineId: rdRequest.lines[0].id,
-        },
-      ],
-    },
-    RESET_ACTOR,
-  );
-
-  const rdProject = await services.rdProjectService.createProject(
-    {
-      projectCode: "TEST-RDP-001",
-      projectName: "测试研发项目",
-      bizDate: "2026-04-14",
-      supplierId: refs.supplierId,
-      managerPersonnelId: refs.personnel.manager,
-      workshopId: refs.workshops.rd,
-      remark: "开发重置脚本: RD 项目样例",
-      bomLines: [
-        {
-          materialId: refs.materials.controller,
-          quantity: "2",
-          unitPrice: "300",
         },
       ],
     },

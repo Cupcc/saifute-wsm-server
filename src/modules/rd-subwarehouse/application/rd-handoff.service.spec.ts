@@ -11,6 +11,7 @@ import {
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import { RdProjectRepository } from "../../rd-project/infrastructure/rd-project.repository";
 import { RdHandoffRepository } from "../infrastructure/rd-handoff.repository";
 import { RdProcurementRequestRepository } from "../infrastructure/rd-procurement-request.repository";
 import { RdHandoffService } from "./rd-handoff.service";
@@ -26,9 +27,20 @@ jest.mock("./rd-material-status.helper", () => ({
 }));
 
 describe("RdHandoffService", () => {
+  const mockRdProject = {
+    id: 701,
+    projectCode: "TEST-RDP-001",
+    projectName: "测试研发项目",
+    projectTargetId: 7001,
+    workshopId: 9,
+    lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+  };
   const mockRequest = {
     id: 5,
     lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+    projectCode: "TEST-RDP-001",
+    projectName: "测试研发项目",
+    workshopId: 9,
     lines: [
       {
         id: 501,
@@ -73,6 +85,9 @@ describe("RdHandoffService", () => {
         materialNameSnapshot: "Material A",
         materialSpecSnapshot: "Spec",
         unitCodeSnapshot: "PCS",
+        rdProjectId: 701,
+        rdProjectCodeSnapshot: "TEST-RDP-001",
+        rdProjectNameSnapshot: "测试研发项目",
         quantity: new Prisma.Decimal(8),
         unitPrice: new Prisma.Decimal(10),
         amount: new Prisma.Decimal(80),
@@ -126,6 +141,17 @@ describe("RdHandoffService", () => {
           provide: RdProcurementRequestRepository,
           useValue: {
             findRequestById: jest.fn().mockResolvedValue(mockRequest),
+          },
+        },
+        {
+          provide: RdProjectRepository,
+          useValue: {
+            findProjectByCode: jest.fn().mockResolvedValue(mockRdProject),
+            findProjectById: jest.fn().mockResolvedValue(mockRdProject),
+            findProjectTargetBySource: jest.fn(),
+            updateProjectTarget: jest.fn(),
+            attachProjectTargetToProject: jest.fn(),
+            createProjectTarget: jest.fn(),
           },
         },
         {
@@ -226,6 +252,7 @@ describe("RdHandoffService", () => {
         stockScope: "MAIN",
         operationType: InventoryOperationType.RD_HANDOFF_OUT,
         businessDocumentType: "RdHandoffOrder",
+        projectTargetId: 7001,
       }),
       expect.anything(),
     );
@@ -234,6 +261,7 @@ describe("RdHandoffService", () => {
         stockScope: "RD_SUB",
         operationType: InventoryOperationType.RD_HANDOFF_IN,
         businessDocumentType: "RdHandoffOrder",
+        projectTargetId: 7001,
       }),
       expect.anything(),
     );
@@ -268,7 +296,7 @@ describe("RdHandoffService", () => {
     expect(repository.createOrder).toHaveBeenCalledWith(
       expect.objectContaining({
         sourceWorkshopId: null,
-        targetWorkshopId: null,
+        targetWorkshopId: 9,
         sourceWorkshopNameSnapshot: "主仓",
         targetWorkshopNameSnapshot: "研发小仓",
       }),
@@ -278,12 +306,14 @@ describe("RdHandoffService", () => {
     expect(inventoryService.settleConsumerOut).toHaveBeenCalledWith(
       expect.objectContaining({
         stockScope: "MAIN",
+        projectTargetId: 7001,
       }),
       expect.anything(),
     );
     expect(inventoryService.increaseStock).toHaveBeenCalledWith(
       expect.objectContaining({
         stockScope: "RD_SUB",
+        projectTargetId: 7001,
       }),
       expect.anything(),
     );
@@ -406,6 +436,7 @@ describe("RdHandoffService", () => {
         stockScope: "RD_SUB",
         operationType: InventoryOperationType.RD_HANDOFF_IN,
         idempotencyKey: expect.stringContaining(":src:101"),
+        projectTargetId: 7001,
         unitCost: expect.objectContaining({}), // Prisma.Decimal
         costAmount: expect.objectContaining({}),
       }),
@@ -417,6 +448,7 @@ describe("RdHandoffService", () => {
         stockScope: "RD_SUB",
         operationType: InventoryOperationType.RD_HANDOFF_IN,
         idempotencyKey: expect.stringContaining(":src:102"),
+        projectTargetId: 7001,
       }),
     );
   });

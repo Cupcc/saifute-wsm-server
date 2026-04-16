@@ -18,6 +18,8 @@ import { BusinessDocumentType } from "../../../shared/domain/business-document-t
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import { ensureProjectTarget } from "../../rd-project/application/rd-project.shared";
+import { RdProjectRepository } from "../../rd-project/infrastructure/rd-project.repository";
 import type { CreateRdStocktakeOrderDto } from "../dto/create-rd-stocktake-order.dto";
 import type { QueryRdStocktakeOrderDto } from "../dto/query-rd-stocktake-order.dto";
 import { RdStocktakeOrderRepository } from "../infrastructure/rd-stocktake-order.repository";
@@ -32,6 +34,7 @@ export class RdStocktakeOrderService {
     private readonly repository: RdStocktakeOrderRepository,
     private readonly masterDataService: MasterDataService,
     private readonly inventoryService: InventoryService,
+    private readonly rdProjectRepository: RdProjectRepository,
   ) {}
 
   async listOrders(query: QueryRdStocktakeOrderDto) {
@@ -46,6 +49,56 @@ export class RdStocktakeOrderService {
       limit,
       offset,
     });
+  }
+
+  async listProjectOptions(workshopId?: number) {
+    const resolvedWorkshopId = this.requireWorkshopId(workshopId);
+    const result = await this.rdProjectRepository.findProjects({
+      workshopId: resolvedWorkshopId,
+      stockScope: "RD_SUB",
+      limit: 200,
+      offset: 0,
+    });
+
+    return {
+      items: result.items.map((project) => ({
+        id: project.id,
+        projectCode: project.projectCode,
+        projectName: project.projectName,
+        workshopId: project.workshopId,
+        workshopNameSnapshot: project.workshopNameSnapshot,
+      })),
+      total: result.total,
+    };
+  }
+
+  async getProjectMaterialBookQty(params: {
+    workshopId?: number;
+    rdProjectId: number;
+    materialId: number;
+  }) {
+    const workshopId = this.requireWorkshopId(params.workshopId);
+    const [project] = await Promise.all([
+      this.requireEffectiveRdProject(params.rdProjectId, workshopId),
+      this.masterDataService.getMaterialById(params.materialId),
+    ]);
+
+    const bookQty = project.projectTargetId
+      ? await this.inventoryService.getAttributedQuantitySnapshot({
+          materialId: params.materialId,
+          stockScope: "RD_SUB",
+          projectTargetId: project.projectTargetId,
+        })
+      : new Prisma.Decimal(0);
+
+    return {
+      workshopId,
+      rdProjectId: project.id,
+      rdProjectCode: project.projectCode,
+      rdProjectName: project.projectName,
+      materialId: params.materialId,
+      bookQty: bookQty.toString(),
+    };
   }
 
   async getOrderById(id: number) {
@@ -72,25 +125,45 @@ export class RdStocktakeOrderService {
         attempt,
       );
       return this.prisma.runInTransaction(async (tx) => {
+        const projectTargetIdByProjectId = new Map<number, number>();
         const linesWithSnapshots = await Promise.all(
           dto.lines.map(async (line, idx) => {
             const material = await this.masterDataService.getMaterialById(
               line.materialId,
             );
-            const countedQty = new Prisma.Decimal(line.countedQty);
-            const balance = await this.inventoryService.getBalanceSnapshot(
-              {
-                materialId: material.id,
-                stockScope: "RD_SUB",
-              },
+            const rdProject = await this.requireEffectiveRdProject(
+              line.rdProjectId,
+              workshopId,
               tx,
             );
-            const bookQty = new Prisma.Decimal(balance?.quantityOnHand ?? 0);
+            const countedQty = new Prisma.Decimal(line.countedQty);
+            let projectTargetId = projectTargetIdByProjectId.get(rdProject.id);
+            if (projectTargetId == null) {
+              projectTargetId = await ensureProjectTarget({
+                project: rdProject,
+                updatedBy: createdBy,
+                repository: this.rdProjectRepository,
+                tx,
+              });
+              projectTargetIdByProjectId.set(rdProject.id, projectTargetId);
+            }
+            const bookQty =
+              await this.inventoryService.getAttributedQuantitySnapshot(
+                {
+                  materialId: material.id,
+                  stockScope: "RD_SUB",
+                  projectTargetId,
+                },
+                tx,
+              );
             const adjustmentQty = countedQty.sub(bookQty);
 
             return {
               lineNo: idx + 1,
               materialId: material.id,
+              rdProjectId: rdProject.id,
+              rdProjectCodeSnapshot: rdProject.projectCode,
+              rdProjectNameSnapshot: rdProject.projectName,
               materialCodeSnapshot: material.materialCode,
               materialNameSnapshot: material.materialName,
               materialSpecSnapshot: material.specModel ?? "",
@@ -143,6 +216,13 @@ export class RdStocktakeOrderService {
         );
 
         for (const line of order.lines) {
+          if (!line.rdProjectId) {
+            throw new BadRequestException("RD 盘点明细缺少研发项目归属");
+          }
+          const projectTargetId = projectTargetIdByProjectId.get(line.rdProjectId);
+          if (projectTargetId == null) {
+            throw new BadRequestException("RD 盘点明细缺少项目目标映射");
+          }
           const adjustmentQty = new Prisma.Decimal(line.adjustmentQty);
           if (adjustmentQty.eq(0)) {
             continue;
@@ -161,9 +241,10 @@ export class RdStocktakeOrderService {
                   businessDocumentId: order.id,
                   businessDocumentNumber: order.documentNo,
                   businessDocumentLineId: line.id,
+                  projectTargetId,
                   operatorId: createdBy,
                   idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:in:${line.id}`,
-                  note: `RD 盘点调增: ${line.bookQty.toString()} -> ${line.countedQty.toString()}`,
+                  note: `RD 盘点调增 / ${line.rdProjectCodeSnapshot ?? "未命名项目"}: ${line.bookQty.toString()} -> ${line.countedQty.toString()}`,
                 },
                 tx,
               )
@@ -179,9 +260,10 @@ export class RdStocktakeOrderService {
                   businessDocumentId: order.id,
                   businessDocumentNumber: order.documentNo,
                   businessDocumentLineId: line.id,
+                  projectTargetId,
                   operatorId: createdBy,
                   idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:out:${line.id}`,
-                  note: `RD 盘点调减: ${line.bookQty.toString()} -> ${line.countedQty.toString()}`,
+                  note: `RD 盘点调减 / ${line.rdProjectCodeSnapshot ?? "未命名项目"}: ${line.bookQty.toString()} -> ${line.countedQty.toString()}`,
                 },
                 tx,
               );
@@ -254,14 +336,15 @@ export class RdStocktakeOrderService {
   }
 
   private assertUniqueMaterials(dto: CreateRdStocktakeOrderDto) {
-    const seenMaterialIds = new Set<number>();
+    const seenMaterialKeys = new Set<string>();
     for (const line of dto.lines) {
-      if (seenMaterialIds.has(line.materialId)) {
+      const key = `${line.materialId}:${line.rdProjectId}`;
+      if (seenMaterialKeys.has(key)) {
         throw new BadRequestException(
-          `同一张 RD 盘点调整单不能重复出现物料: ${line.materialId}`,
+          `同一张 RD 盘点调整单不能重复出现相同项目物料: ${line.materialId}`,
         );
       }
-      seenMaterialIds.add(line.materialId);
+      seenMaterialKeys.add(key);
     }
   }
 
@@ -270,5 +353,25 @@ export class RdStocktakeOrderService {
       throw new BadRequestException("workshopId 必填");
     }
     return workshopId;
+  }
+
+  private async requireEffectiveRdProject(
+    rdProjectId: number,
+    workshopId: number,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const project = await this.rdProjectRepository.findProjectById(rdProjectId, tx);
+    if (!project) {
+      throw new BadRequestException(`研发项目不存在: ${rdProjectId}`);
+    }
+    if (project.lifecycleStatus !== DocumentLifecycleStatus.EFFECTIVE) {
+      throw new BadRequestException(`研发项目已失效: ${project.projectCode}`);
+    }
+    if (project.workshopId !== workshopId) {
+      throw new BadRequestException(
+        `研发项目与盘点业务车间不一致: ${project.projectCode}`,
+      );
+    }
+    return project;
   }
 }

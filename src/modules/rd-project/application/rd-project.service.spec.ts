@@ -211,6 +211,7 @@ describe("RdProjectService", () => {
             releaseInventorySource: jest.fn(),
             reverseStock: jest.fn(),
             getLogsForDocument: jest.fn().mockResolvedValue([]),
+            summarizeAttributedQuantities: jest.fn().mockResolvedValue(new Map()),
             getBalanceSnapshot: jest.fn().mockResolvedValue({
               quantityOnHand: new Prisma.Decimal(0),
             }),
@@ -421,9 +422,9 @@ describe("RdProjectService", () => {
         },
       ],
     } as never);
-    inventoryService.getBalanceSnapshot.mockResolvedValue({
-      quantityOnHand: new Prisma.Decimal(20),
-    } as never);
+    inventoryService.summarizeAttributedQuantities.mockResolvedValue(
+      new Map([[100, new Prisma.Decimal(20)]]) as never,
+    );
     rdProcurementRequestService.listRequests.mockResolvedValue({
       total: 1,
       items: [

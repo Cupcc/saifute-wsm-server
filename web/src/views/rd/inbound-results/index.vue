@@ -57,6 +57,11 @@
           label="目标车间"
           min-width="140"
         />
+        <el-table-column label="研发项目" min-width="220" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ formatOrderProjectLabels(row.lines) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="totalQty" label="总数量" min-width="120" />
         <el-table-column prop="totalAmount" label="总金额" min-width="120" />
         <el-table-column label="明细数" min-width="100">
@@ -109,6 +114,8 @@
 
         <el-table :data="detailRow.lines || []" stripe class="detail-table">
           <el-table-column prop="lineNo" label="行号" width="80" />
+          <el-table-column prop="rdProjectCodeSnapshot" label="研发项目编码" min-width="160" />
+          <el-table-column prop="rdProjectNameSnapshot" label="研发项目名称" min-width="180" />
           <el-table-column prop="materialCodeSnapshot" label="物料编码" min-width="140" />
           <el-table-column prop="materialNameSnapshot" label="物料名称" min-width="180" />
           <el-table-column prop="materialSpecSnapshot" label="规格型号" min-width="140" />
@@ -148,6 +155,20 @@ function formatDate(value) {
     return "-";
   }
   return new Date(value).toLocaleDateString("zh-CN");
+}
+
+function formatOrderProjectLabels(lines) {
+  const labels = [...new Set(
+    (lines || [])
+      .map((line) => {
+        if (line.rdProjectCodeSnapshot && line.rdProjectNameSnapshot) {
+          return `${line.rdProjectCodeSnapshot} ${line.rdProjectNameSnapshot}`;
+        }
+        return line.rdProjectNameSnapshot || line.rdProjectCodeSnapshot || null;
+      })
+      .filter(Boolean),
+  )];
+  return labels.length > 0 ? labels.join("、") : "-";
 }
 
 async function loadRows() {

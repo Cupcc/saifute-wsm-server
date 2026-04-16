@@ -4,20 +4,24 @@
       <template #header>
         <div class="page-header">
           <div>
-            <div class="page-title">月度对账报表</div>
+            <div class="page-title">{{ pageTitle }}</div>
             <div class="page-subtitle">
-              先看仓库总入、总出和净发生，再按领域查看业务操作。研发项目表示 RD 内部项目领用，
-              RD小仓表示主仓到研发小仓交接等仓务；销售项目在下方业务汇总中查看。
+              {{ reportingSubtitle }}
             </div>
           </div>
-          <el-button
-            v-hasPermi="['reporting:export']"
-            type="success"
-            :loading="exporting"
-            @click="handleExport"
-          >
-            导出 Excel
-          </el-button>
+          <div class="page-actions">
+            <el-button plain @click="handleNavigateToSiblingView">
+              {{ siblingViewActionText }}
+            </el-button>
+            <el-button
+              v-hasPermi="['reporting:export']"
+              type="success"
+              :loading="exporting"
+              @click="handleExport"
+            >
+              导出 Excel
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -64,7 +68,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="领域">
+        <el-form-item v-if="!isMaterialCategoryView" label="领域">
           <el-select
             v-model="filters.domainKey"
             clearable
@@ -80,19 +84,35 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="操作">
+        <el-form-item v-else label="分类">
           <el-select
-            v-model="filters.topicKey"
+            v-model="filters.categoryNodeKey"
             clearable
             filterable
-            placeholder="全部操作"
-            style="width: 220px"
+            placeholder="全部分类"
+            style="width: 280px"
           >
             <el-option
-              v-for="item in filteredTopicOptions"
-              :key="item.topicKey"
-              :label="`${item.domainLabel} / ${item.topicLabel}`"
-              :value="item.topicKey"
+              v-for="item in categoryOptions"
+              :key="item.nodeKey"
+              :label="item.categoryPathLabel"
+              :value="item.nodeKey"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="单据类型">
+          <el-select
+            v-model="filters.documentTypeLabel"
+            clearable
+            filterable
+            placeholder="全部单据类型"
+            style="width: 240px"
+          >
+            <el-option
+              v-for="item in filteredDocumentTypeOptions"
+              :key="`${item.domainKey}-${item.documentTypeLabel}`"
+              :label="formatDocumentTypeOptionLabel(item)"
+              :value="item.documentTypeLabel"
             />
           </el-select>
         </el-form-item>
@@ -103,8 +123,8 @@
           <el-input
             v-model="filters.keyword"
             clearable
-            placeholder="单据号 / 操作 / 销售项目 / 来源单据"
-            style="width: 280px"
+            :placeholder="keywordPlaceholder"
+            style="width: 320px"
             @keyup.enter="handleSearch"
           />
         </el-form-item>
@@ -114,7 +134,7 @@
         </el-form-item>
       </el-form>
 
-      <el-row :gutter="16" class="summary-row">
+      <el-row v-if="!isMaterialCategoryView" :gutter="16" class="summary-row">
         <el-col :xs="24" :sm="12" :lg="4">
           <div class="stat-box">
             <div class="stat-label">总入金额</div>
@@ -125,12 +145,6 @@
           <div class="stat-box">
             <div class="stat-label">总出金额</div>
             <div class="stat-value">{{ summary.totalOutAmount }}</div>
-          </div>
-        </el-col>
-        <el-col :xs="24" :sm="12" :lg="4">
-          <div class="stat-box">
-            <div class="stat-label">交接金额</div>
-            <div class="stat-value">{{ summary.totalTransferAmount }}</div>
           </div>
         </el-col>
         <el-col :xs="24" :sm="12" :lg="4">
@@ -153,21 +167,60 @@
         </el-col>
       </el-row>
 
-      <el-card shadow="never" class="section-card">
+      <el-row v-else :gutter="16" class="summary-row">
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
+            <div class="stat-label">验收入库金额</div>
+            <div class="stat-value">{{ summary.acceptanceInboundAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
+            <div class="stat-label">生产入库金额</div>
+            <div class="stat-value">{{ summary.productionReceiptAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
+            <div class="stat-label">销售出库金额</div>
+            <div class="stat-value">{{ summary.salesOutboundAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
+            <div class="stat-label">销售退货金额</div>
+            <div class="stat-value">{{ summary.salesReturnAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
+            <div class="stat-label">净发生金额</div>
+            <div class="stat-value">{{ summary.netAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box danger-box">
+            <div class="stat-label">单据行数</div>
+            <div class="stat-value">{{ summary.lineCount }}</div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <el-card v-if="!isMaterialCategoryView" shadow="never" class="section-card">
         <template #header>
           <div class="section-header">
             <span>领域汇总</span>
             <span class="section-tip">
-              先看当前筛选范围内各领域的总入、总出、交接和净发生。
+              {{ domainSummaryTip }}
             </span>
           </div>
         </template>
         <div class="domain-legend">
           <span class="legend-item">
-            <strong>研发项目</strong>：查看 RD 内部项目领用、退回和报废。
+            <strong>研发项目</strong>：{{ rdProjectLegendText }}
           </span>
           <span class="legend-item">
-            <strong>RD小仓</strong>：查看主仓到研发小仓交接，以及后续盘盈盘亏等小仓仓务。
+            <strong>RD小仓</strong>：{{ rdSubLegendText }}
           </span>
           <span class="legend-item">
             <strong>销售项目</strong>：属于销售域下的业务汇总，不单列为一级领域。
@@ -179,45 +232,52 @@
           <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
           <el-table-column prop="totalInAmount" label="总入金额" min-width="140" />
           <el-table-column prop="totalOutAmount" label="总出金额" min-width="140" />
-          <el-table-column prop="totalTransferAmount" label="交接金额" min-width="140" />
           <el-table-column prop="netAmount" label="净发生金额" min-width="140" />
           <el-table-column prop="totalCost" label="总成本" min-width="140" />
         </el-table>
       </el-card>
 
-      <el-card shadow="never" class="section-card">
+      <el-card v-if="!isMaterialCategoryView" shadow="never" class="section-card">
         <template #header>
           <div class="section-header">
-            <span>业务操作汇总</span>
+            <span>单据类型汇总</span>
             <div class="detail-actions">
-              <span class="section-tip">{{ activeTopicLabel }}</span>
-              <el-button v-if="filters.topicKey" text type="primary" @click="clearTopicFilter">
-                查看全部操作
+              <span class="section-tip">{{ activeDocumentTypeLabel }}</span>
+              <el-button
+                v-if="filters.documentTypeLabel"
+                text
+                type="primary"
+                @click="clearDocumentTypeFilter"
+              >
+                查看全部单据类型
               </el-button>
             </div>
           </div>
         </template>
         <el-table
-          :data="topicRows"
+          :data="documentTypeRows"
           stripe
-          row-key="topicKey"
+          :row-key="resolveDocumentTypeRowKey"
           v-loading="summaryLoading"
-          :row-class-name="resolveTopicRowClassName"
-          @row-click="handleTopicRowClick"
+          :row-class-name="resolveDocumentTypeRowClassName"
+          @row-click="handleDocumentTypeRowClick"
         >
           <el-table-column prop="domainLabel" label="领域" min-width="120" />
-          <el-table-column prop="topicLabel" label="操作" min-width="160" />
+          <el-table-column prop="documentTypeLabel" label="单据类型" min-width="180" />
           <el-table-column prop="documentCount" label="单据数" min-width="100" />
           <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
           <el-table-column prop="totalInAmount" label="总入金额" min-width="140" />
           <el-table-column prop="totalOutAmount" label="总出金额" min-width="140" />
-          <el-table-column prop="totalTransferAmount" label="交接金额" min-width="140" />
           <el-table-column prop="netAmount" label="净发生金额" min-width="140" />
           <el-table-column prop="totalCost" label="总成本" min-width="140" />
         </el-table>
       </el-card>
 
-      <el-card v-if="businessSummaryTabs.length > 0" shadow="never" class="section-card">
+      <el-card
+        v-if="!isMaterialCategoryView && businessSummaryTabs.length > 0"
+        shadow="never"
+        class="section-card"
+      >
         <template #header>
           <div class="section-header">
             <span>业务汇总</span>
@@ -267,6 +327,7 @@
               <el-table-column prop="rdProjectName" label="研发项目名称" min-width="180" />
               <el-table-column prop="documentCount" label="单据数" min-width="100" />
               <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
+              <el-table-column prop="handoffInAmount" label="项目交接入金额" min-width="140" />
               <el-table-column prop="pickAmount" label="项目领用金额" min-width="140" />
               <el-table-column prop="returnAmount" label="项目退回金额" min-width="140" />
               <el-table-column prop="scrapAmount" label="项目报废金额" min-width="140" />
@@ -274,35 +335,61 @@
               <el-table-column prop="totalCost" label="总成本" min-width="140" />
             </el-table>
           </el-tab-pane>
-          <el-tab-pane
-            v-if="rdHandoffRows.length > 0"
-            label="主仓到RD交接汇总"
-            name="rdHandoff"
-          >
-            <el-table :data="rdHandoffRows" stripe v-loading="summaryLoading">
-              <el-table-column prop="sourceStockScopeName" label="来源仓别" min-width="140" />
-              <el-table-column prop="targetStockScopeName" label="目标仓别" min-width="140" />
-              <el-table-column prop="sourceWorkshopName" label="来源车间" min-width="160" />
-              <el-table-column prop="targetWorkshopName" label="目标车间" min-width="160" />
-              <el-table-column prop="documentCount" label="单据数" min-width="100" />
-              <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
-              <el-table-column prop="transferAmount" label="交接金额" min-width="140" />
-              <el-table-column prop="totalCost" label="总成本" min-width="140" />
-            </el-table>
-          </el-tab-pane>
         </el-tabs>
+      </el-card>
+
+      <el-card v-if="isMaterialCategoryView" shadow="never" class="section-card">
+        <template #header>
+          <div class="section-header">
+            <span>分类汇总</span>
+            <div class="detail-actions">
+              <span class="section-tip">{{ activeCategoryLabel }}</span>
+              <el-button
+                v-if="showCategoryAction"
+                text
+                type="primary"
+                @click="handleCategoryAction"
+              >
+                {{ categoryActionText }}
+              </el-button>
+            </div>
+          </div>
+        </template>
+        <el-table
+          :data="categoryTreeRows"
+          stripe
+          row-key="nodeKey"
+          default-expand-all
+          v-loading="summaryLoading"
+          :tree-props="{ children: 'children' }"
+          :row-class-name="resolveCategoryRowClassName"
+          @row-click="handleCategoryRowClick"
+        >
+          <el-table-column prop="categoryCode" label="分类编码" min-width="140" />
+          <el-table-column prop="categoryName" label="分类名称" min-width="160" />
+          <el-table-column prop="categoryPathLabel" label="分类路径" min-width="220" show-overflow-tooltip />
+          <el-table-column prop="lineCount" label="单据行数" min-width="100" />
+          <el-table-column prop="documentCount" label="单据数" min-width="100" />
+          <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
+          <el-table-column prop="acceptanceInboundAmount" label="验收入库金额" min-width="140" />
+          <el-table-column prop="productionReceiptAmount" label="生产入库金额" min-width="140" />
+          <el-table-column prop="salesOutboundAmount" label="销售出库金额" min-width="140" />
+          <el-table-column prop="salesReturnAmount" label="销售退货金额" min-width="140" />
+          <el-table-column prop="netAmount" label="净发生金额" min-width="140" />
+          <el-table-column prop="totalCost" label="总成本" min-width="140" />
+        </el-table>
       </el-card>
 
       <el-card shadow="never" class="section-card">
         <template #header>
           <div class="section-header">
-            <span>单据头明细</span>
-            <span class="section-tip">点击上面的业务操作可快速切到对应单据头明细。</span>
+            <span>{{ detailSectionTitle }}</span>
+            <span class="section-tip">{{ detailSectionTip }}</span>
           </div>
         </template>
-        <el-table :data="detailRows" stripe v-loading="detailLoading">
+
+        <el-table v-if="!isMaterialCategoryView" :data="detailRows" stripe v-loading="detailLoading">
           <el-table-column prop="domainLabel" label="领域" min-width="120" />
-          <el-table-column prop="topicLabel" label="操作" min-width="160" />
           <el-table-column prop="documentTypeLabel" label="单据类型" min-width="140" />
           <el-table-column prop="documentNo" label="单据编号" min-width="180" />
           <el-table-column prop="bizDate" label="业务日期" min-width="120" />
@@ -338,6 +425,43 @@
           <el-table-column prop="sourceDocumentNo" label="来源单据" min-width="200" show-overflow-tooltip />
         </el-table>
 
+        <el-table v-else :data="detailRows" stripe v-loading="detailLoading">
+          <el-table-column prop="categoryPathLabel" label="分类路径" min-width="220" show-overflow-tooltip />
+          <el-table-column prop="documentTypeLabel" label="单据类型" min-width="140" />
+          <el-table-column prop="documentNo" label="单据编号" min-width="180" />
+          <el-table-column prop="lineNo" label="行号" min-width="90" />
+          <el-table-column prop="bizDate" label="业务日期" min-width="120" />
+          <el-table-column prop="stockScopeName" label="仓别" min-width="140" />
+          <el-table-column prop="workshopName" label="车间" min-width="140" />
+          <el-table-column prop="materialCode" label="物料编码" min-width="160" />
+          <el-table-column prop="materialName" label="物料名称" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="materialSpec" label="规格型号" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="unitCode" label="单位" min-width="100" />
+          <el-table-column prop="salesProjectCode" label="销售项目编码" min-width="160" />
+          <el-table-column prop="salesProjectName" label="销售项目名称" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="quantity" label="数量" min-width="120" />
+          <el-table-column prop="amount" label="金额" min-width="120" />
+          <el-table-column prop="cost" label="成本" min-width="120" />
+          <el-table-column label="异常标识" min-width="220">
+            <template #default="{ row }">
+              <div v-if="row.abnormalLabels.length > 0" class="tag-wrap">
+                <el-tag
+                  v-for="tag in row.abnormalLabels"
+                  :key="`${row.documentNo}-${row.lineNo}-${tag}`"
+                  size="small"
+                  effect="plain"
+                  type="danger"
+                >
+                  {{ tag }}
+                </el-tag>
+              </div>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="sourceBizMonth" label="来源月份" min-width="120" />
+          <el-table-column prop="sourceDocumentNo" label="来源单据" min-width="200" show-overflow-tooltip />
+        </el-table>
+
         <div class="pagination-wrap">
           <el-pagination
             background
@@ -356,7 +480,8 @@
 </template>
 
 <script setup name="MonthlyReportingPage">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { listWorkshop } from "@/api/base/workshop";
 import {
   exportMonthlyReporting,
@@ -365,25 +490,35 @@ import {
 } from "@/api/reporting";
 import useUserStore from "@/store/modules/user";
 
+const DOMAIN_VIEW = "DOMAIN";
+const MATERIAL_CATEGORY_VIEW = "MATERIAL_CATEGORY";
+const MATERIAL_CATEGORY_ROUTE_NAMES = new Set([
+  "MonthlyReportingMaterialCategory",
+  "RdMonthlyReportingMaterialCategory",
+]);
+
 const userStore = useUserStore();
+const route = useRoute();
+const router = useRouter();
 
 const summaryLoading = ref(false);
 const detailLoading = ref(false);
 const exporting = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
+const selectedCategoryNodeKey = ref(undefined);
 const workshopOptions = ref([]);
 const domainCatalog = ref([]);
-const topicCatalog = ref([]);
+const documentTypeCatalog = ref([]);
 const domainRows = ref([]);
-const topicRows = ref([]);
+const documentTypeRows = ref([]);
 const workshopRows = ref([]);
 const salesProjectRows = ref([]);
 const rdProjectRows = ref([]);
-const rdHandoffRows = ref([]);
+const categoryRows = ref([]);
 const detailRows = ref([]);
 const detailTotal = ref(0);
-const summary = ref(createEmptySummary());
+const summary = ref(createEmptySummary(DOMAIN_VIEW));
 const activeBusinessSummaryTab = ref("workshop");
 
 const fixedStockScope = computed(() =>
@@ -395,6 +530,33 @@ const fixedWorkshopId = computed(() =>
   userStore.workshopScope?.mode === "FIXED"
     ? userStore.workshopScope.workshopId
     : undefined,
+);
+const filters = ref(createDefaultFilters(resolveRouteViewMode()));
+const isMaterialCategoryView = computed(
+  () => filters.value.viewMode === MATERIAL_CATEGORY_VIEW,
+);
+const pageTitle = computed(() =>
+  isMaterialCategoryView.value ? "物料分类月报" : "月度对账报表",
+);
+const siblingViewRouteName = computed(() => {
+  if (isMaterialCategoryView.value) {
+    return route.name?.toString().startsWith("Rd")
+      ? "RdMonthlyReporting"
+      : "MonthlyReporting";
+  }
+
+  return route.name?.toString().startsWith("Rd")
+    ? "RdMonthlyReportingMaterialCategory"
+    : "MonthlyReportingMaterialCategory";
+});
+const siblingViewActionText = computed(() =>
+  isMaterialCategoryView.value ? "查看领域月报" : "查看物料分类月报",
+);
+const activeCategoryNodeKey = computed(
+  () => selectedCategoryNodeKey.value || filters.value.categoryNodeKey,
+);
+const hasCategorySelection = computed(() =>
+  Boolean(selectedCategoryNodeKey.value),
 );
 const isStockScopeLocked = computed(() => Boolean(fixedStockScope.value));
 const isWorkshopLocked = computed(
@@ -413,31 +575,116 @@ const stockScopeOptions = computed(() => {
   return allOptions.filter((item) => item.value === fixedStockScope.value);
 });
 const domainOptions = computed(() => domainCatalog.value);
-const filteredTopicOptions = computed(() => {
-  if (!filters.value.domainKey) {
-    return topicCatalog.value;
+const filteredDocumentTypeOptions = computed(() => {
+  if (isMaterialCategoryView.value) {
+    return documentTypeCatalog.value;
   }
 
-  return topicCatalog.value.filter(
+  if (!filters.value.domainKey) {
+    return documentTypeCatalog.value;
+  }
+
+  return documentTypeCatalog.value.filter(
     (item) => item.domainKey === filters.value.domainKey,
   );
 });
-const filters = ref(createDefaultFilters());
-
-const activeTopicLabel = computed(() => {
-  if (!filters.value.topicKey) {
-    return "当前显示全部操作明细";
+const categoryOptions = computed(() => {
+  return [...categoryRows.value]
+    .map((row) => ({
+      nodeKey: row.nodeKey,
+      categoryId: row.categoryId,
+      categoryCode: row.categoryCode,
+      categoryName: row.categoryName,
+      categoryPathLabel: row.categoryPathLabel,
+      depth: row.depth,
+    }))
+    .sort((left, right) =>
+    left.categoryPathLabel.localeCompare(right.categoryPathLabel, "zh-Hans-CN"),
+  );
+});
+const categoryTreeRows = computed(() =>
+  buildMaterialCategoryTreeRows(categoryRows.value),
+);
+const reportingSubtitle = computed(() => {
+  if (isMaterialCategoryView.value) {
+    return "物料分类视角按单据行事实统计验收入库、生产入库、销售出库和销售退货金额，分类归属使用业务发生时快照并向父级分类汇总。";
   }
 
-  const current = topicCatalog.value.find(
-    (item) => item.topicKey === filters.value.topicKey,
+  if (filters.value.stockScope === "MAIN") {
+    return "当前是主仓视角，发往研发项目的项目交接已计入总出金额；销售项目在下方业务汇总中查看。";
+  }
+  if (filters.value.stockScope === "RD_SUB") {
+    return "当前是 RD 小仓视角，项目交接已直接计入研发项目总入，RD小仓只保留盘盈盘亏等仓务；销售项目在下方业务汇总中查看。";
+  }
+  return "先看当前月份各领域的总入、总出和净发生，再按领域查看单据类型。研发项目包含项目交接、领用、退回和报废；RD小仓只保留盘盈盘亏等仓务；销售项目在下方业务汇总中查看。";
+});
+const domainSummaryTip = computed(
+  () => "先看当前筛选范围内各领域的总入、总出和净发生。",
+);
+const rdProjectLegendText = computed(
+  () => "查看项目交接、项目领用、项目退回和项目报废。",
+);
+const rdSubLegendText = computed(() =>
+  filters.value.stockScope === "RD_SUB"
+    ? "查看当前 RD 小仓视角下的盘盈盘亏等仓务调整。"
+    : "查看 RD 小仓盘盈盘亏等仓务调整，不再承接项目交接金额。",
+);
+const keywordPlaceholder = computed(() =>
+  isMaterialCategoryView.value
+    ? "单据号 / 物料 / 分类 / 销售项目 / 来源单据"
+    : "单据号 / 单据类型 / 销售项目 / 来源单据",
+);
+const activeDocumentTypeLabel = computed(() => {
+  if (!filters.value.documentTypeLabel) {
+    return "当前显示全部单据类型明细";
+  }
+
+  const current = documentTypeCatalog.value.find(
+    (item) => item.documentTypeLabel === filters.value.documentTypeLabel,
   );
 
   return current
-    ? `当前显示 ${current.domainLabel} / ${current.topicLabel} 明细`
-    : "当前显示操作明细";
+    ? isMaterialCategoryView.value
+      ? `当前显示 ${current.documentTypeLabel} 明细`
+      : `当前显示 ${current.domainLabel} / ${current.documentTypeLabel} 明细`
+    : "当前显示单据类型明细";
 });
+const activeCategoryLabel = computed(() => {
+  if (!activeCategoryNodeKey.value) {
+    return "当前显示全部分类汇总";
+  }
+
+  const current = categoryOptions.value.find(
+    (item) => item.nodeKey === activeCategoryNodeKey.value,
+  );
+
+  if (hasCategorySelection.value) {
+    return current
+      ? `当前选中 ${current.categoryPathLabel}`
+      : "当前选中分类";
+  }
+
+  return current ? `当前筛选 ${current.categoryPathLabel}` : "当前显示分类汇总";
+});
+const showCategoryAction = computed(
+  () => hasCategorySelection.value || Boolean(filters.value.categoryNodeKey),
+);
+const categoryActionText = computed(() =>
+  hasCategorySelection.value ? "取消选中" : "查看全部分类",
+);
+const detailSectionTitle = computed(() =>
+  isMaterialCategoryView.value ? "单据行明细" : "单据头明细",
+);
+const detailSectionTip = computed(() =>
+  isMaterialCategoryView.value
+    ? "当前为物料分类视角，明细按单据行展示分类、物料、销售项目与来源追溯信息。"
+    : "点击上面的单据类型可快速切到对应单据头明细。",
+);
 const businessSummaryTabs = computed(() => {
+  if (isMaterialCategoryView.value) {
+    return [];
+  }
+
   const tabs = [];
 
   if (workshopRows.value.length > 0) {
@@ -457,14 +704,7 @@ const businessSummaryTabs = computed(() => {
   if (rdProjectRows.value.length > 0) {
     tabs.push({
       key: "rdProject",
-      tip: "按研发项目查看项目领用、项目退回和项目报废。",
-    });
-  }
-
-  if (rdHandoffRows.value.length > 0) {
-    tabs.push({
-      key: "rdHandoff",
-      tip: "按来源仓别、目标仓别和来源目标车间查看交接。",
+      tip: "按研发项目查看项目交接、项目领用、项目退回和项目报废。",
     });
   }
 
@@ -477,7 +717,7 @@ const activeBusinessSummaryTip = computed(
     )?.tip || "切换查看不同业务锚点的汇总。",
 );
 
-function createEmptySummary() {
+function createEmptyDomainSummary() {
   return {
     domainCount: 0,
     documentCount: 0,
@@ -486,40 +726,126 @@ function createEmptySummary() {
     totalInAmount: "0.00",
     totalOutQuantity: "0.000000",
     totalOutAmount: "0.00",
-    totalTransferQuantity: "0.000000",
-    totalTransferAmount: "0.00",
     netQuantity: "0.000000",
     netAmount: "0.00",
     totalCost: "0.00",
   };
 }
 
+function createEmptyMaterialCategorySummary() {
+  return {
+    categoryCount: 0,
+    lineCount: 0,
+    documentCount: 0,
+    abnormalDocumentCount: 0,
+    acceptanceInboundAmount: "0.00",
+    productionReceiptAmount: "0.00",
+    salesOutboundAmount: "0.00",
+    salesReturnAmount: "0.00",
+    netAmount: "0.00",
+    totalCost: "0.00",
+  };
+}
+
+function createEmptySummary(viewMode = DOMAIN_VIEW) {
+  return viewMode === MATERIAL_CATEGORY_VIEW
+    ? createEmptyMaterialCategorySummary()
+    : createEmptyDomainSummary();
+}
+
 function getDefaultMonth() {
   return new Date().toISOString().slice(0, 7);
 }
 
-function createDefaultFilters() {
+function resolveRouteViewMode(routeName = route.name) {
+  return MATERIAL_CATEGORY_ROUTE_NAMES.has(routeName?.toString() || "")
+    ? MATERIAL_CATEGORY_VIEW
+    : DOMAIN_VIEW;
+}
+
+function createDefaultFilters(viewMode = DOMAIN_VIEW) {
   return {
     yearMonth: getDefaultMonth(),
+    viewMode,
     stockScope: fixedStockScope.value,
     workshopId: fixedWorkshopId.value,
     domainKey: undefined,
-    topicKey: undefined,
+    documentTypeLabel: undefined,
+    categoryNodeKey: undefined,
     abnormalOnly: false,
     keyword: "",
   };
 }
 
-function buildBaseQuery() {
+function resolveDetailCategoryNodeKey() {
+  return selectedCategoryNodeKey.value || filters.value.categoryNodeKey;
+}
+
+function buildBaseQuery({ useSelectedCategory = false } = {}) {
   return {
     yearMonth: filters.value.yearMonth,
+    viewMode: filters.value.viewMode,
     stockScope: filters.value.stockScope || undefined,
     workshopId: filters.value.workshopId,
-    domainKey: filters.value.domainKey,
-    topicKey: filters.value.topicKey,
+    domainKey: isMaterialCategoryView.value
+      ? undefined
+      : filters.value.domainKey,
+    documentTypeLabel: filters.value.documentTypeLabel?.trim() || undefined,
+    categoryNodeKey: isMaterialCategoryView.value
+      ? useSelectedCategory
+        ? resolveDetailCategoryNodeKey()
+        : filters.value.categoryNodeKey
+      : undefined,
     abnormalOnly: filters.value.abnormalOnly || undefined,
     keyword: filters.value.keyword?.trim() || undefined,
   };
+}
+
+function buildMaterialCategoryTreeRows(rows) {
+  const rowMap = new Map(
+    rows.map((row) => [
+      row.nodeKey,
+      {
+        ...row,
+        children: [],
+      },
+    ]),
+  );
+  const roots = [];
+
+  for (const row of rowMap.values()) {
+    const parent = row.parentNodeKey
+      ? rowMap.get(row.parentNodeKey) || null
+      : null;
+
+    if (parent) {
+      parent.children.push(row);
+      continue;
+    }
+
+    roots.push(row);
+  }
+
+  const sortRows = (items) => {
+    items.sort((left, right) =>
+      left.categoryPathLabel.localeCompare(
+        right.categoryPathLabel,
+        "zh-Hans-CN",
+      ),
+    );
+    items.forEach((item) => sortRows(item.children));
+    return items;
+  };
+
+  return sortRows(roots);
+}
+
+function formatDocumentTypeOptionLabel(item) {
+  if (isMaterialCategoryView.value) {
+    return item.documentTypeLabel;
+  }
+
+  return `${item.domainLabel} / ${item.documentTypeLabel}`;
 }
 
 async function loadWorkshopOptions() {
@@ -555,15 +881,29 @@ async function loadSummary() {
   try {
     const response = await getMonthlyReportingSummary(buildBaseQuery());
     const data = response.data || {};
+
+    documentTypeCatalog.value = data.documentTypeCatalog || [];
+    summary.value = data.summary || createEmptySummary(filters.value.viewMode);
+
+    if (isMaterialCategoryView.value) {
+      domainCatalog.value = [];
+      domainRows.value = [];
+      documentTypeRows.value = [];
+      workshopRows.value = [];
+      salesProjectRows.value = [];
+      rdProjectRows.value = [];
+      categoryRows.value = data.categories || [];
+      activeBusinessSummaryTab.value = "";
+      return;
+    }
+
     domainCatalog.value = data.domainCatalog || [];
-    topicCatalog.value = data.topicCatalog || [];
-    summary.value = data.summary || createEmptySummary();
+    categoryRows.value = [];
     domainRows.value = data.domains || [];
-    topicRows.value = data.topics || [];
+    documentTypeRows.value = data.documentTypes || [];
     workshopRows.value = data.workshopItems || [];
     salesProjectRows.value = data.salesProjectItems || [];
     rdProjectRows.value = data.rdProjectItems || [];
-    rdHandoffRows.value = data.rdHandoffItems || [];
     syncBusinessSummaryTab();
   } finally {
     summaryLoading.value = false;
@@ -574,7 +914,7 @@ async function loadDetails() {
   detailLoading.value = true;
   try {
     const response = await getMonthlyReportingDetails({
-      ...buildBaseQuery(),
+      ...buildBaseQuery({ useSelectedCategory: true }),
       limit: pageSize.value,
       offset: (pageNum.value - 1) * pageSize.value,
     });
@@ -590,12 +930,14 @@ async function loadPage() {
 }
 
 function handleSearch() {
+  selectedCategoryNodeKey.value = undefined;
   pageNum.value = 1;
   loadPage();
 }
 
 function handleReset() {
-  filters.value = createDefaultFilters();
+  filters.value = createDefaultFilters(resolveRouteViewMode());
+  selectedCategoryNodeKey.value = undefined;
   pageNum.value = 1;
   loadPage();
 }
@@ -611,29 +953,69 @@ function handleSizeChange(value) {
   loadDetails();
 }
 
-function handleTopicRowClick(row) {
-  filters.value.topicKey = row.topicKey;
+function handleDocumentTypeRowClick(row) {
+  if (isMaterialCategoryView.value) {
+    return;
+  }
+
+  filters.value.documentTypeLabel = row.documentTypeLabel;
+  pageNum.value = 1;
+  loadDetails();
+}
+
+function handleCategoryRowClick(row) {
+  if (!isMaterialCategoryView.value || !row.nodeKey) {
+    return;
+  }
+
+  selectedCategoryNodeKey.value =
+    selectedCategoryNodeKey.value === row.nodeKey ? undefined : row.nodeKey;
   pageNum.value = 1;
   loadDetails();
 }
 
 function handleDomainChange() {
+  if (isMaterialCategoryView.value) {
+    return;
+  }
+
   if (
-    filters.value.topicKey &&
-    !filteredTopicOptions.value.some(
-      (item) => item.topicKey === filters.value.topicKey,
+    filters.value.documentTypeLabel &&
+    !filteredDocumentTypeOptions.value.some(
+      (item) => item.documentTypeLabel === filters.value.documentTypeLabel,
     )
   ) {
-    filters.value.topicKey = undefined;
+    filters.value.documentTypeLabel = undefined;
   }
 
   syncBusinessSummaryTab();
 }
 
-function clearTopicFilter() {
-  filters.value.topicKey = undefined;
+function clearDocumentTypeFilter() {
+  filters.value.documentTypeLabel = undefined;
   pageNum.value = 1;
   loadDetails();
+}
+
+function clearCategorySelection() {
+  selectedCategoryNodeKey.value = undefined;
+  pageNum.value = 1;
+  loadDetails();
+}
+
+function clearCategoryFilter() {
+  filters.value.categoryNodeKey = undefined;
+  pageNum.value = 1;
+  loadPage();
+}
+
+function handleCategoryAction() {
+  if (hasCategorySelection.value) {
+    clearCategorySelection();
+    return;
+  }
+
+  clearCategoryFilter();
 }
 
 function resolvePreferredBusinessSummaryTab() {
@@ -644,14 +1026,17 @@ function resolvePreferredBusinessSummaryTab() {
       return salesProjectRows.value.length > 0 ? "salesProject" : null;
     case "RD_PROJECT":
       return rdProjectRows.value.length > 0 ? "rdProject" : null;
-    case "RD_SUB":
-      return rdHandoffRows.value.length > 0 ? "rdHandoff" : null;
     default:
       return null;
   }
 }
 
 function syncBusinessSummaryTab() {
+  if (isMaterialCategoryView.value) {
+    activeBusinessSummaryTab.value = "";
+    return;
+  }
+
   const preferredTab = resolvePreferredBusinessSummaryTab();
   if (preferredTab) {
     activeBusinessSummaryTab.value = preferredTab;
@@ -669,8 +1054,21 @@ function syncBusinessSummaryTab() {
   }
 }
 
-function resolveTopicRowClassName({ row }) {
-  return row.topicKey === filters.value.topicKey ? "is-active-topic" : "";
+function resolveDocumentTypeRowClassName({ row }) {
+  return row.documentTypeLabel === filters.value.documentTypeLabel
+    ? "is-active-row"
+    : "";
+}
+
+function resolveDocumentTypeRowKey(row) {
+  return `${row.domainKey || "ALL"}:${row.documentTypeLabel}`;
+}
+
+function resolveCategoryRowClassName({ row }) {
+  return Boolean(selectedCategoryNodeKey.value) &&
+    row.nodeKey === selectedCategoryNodeKey.value
+    ? "is-active-row"
+    : "";
 }
 
 async function handleExport() {
@@ -682,10 +1080,33 @@ async function handleExport() {
   }
 }
 
+function resetFiltersForCurrentRoute() {
+  filters.value = createDefaultFilters(resolveRouteViewMode());
+  selectedCategoryNodeKey.value = undefined;
+  pageNum.value = 1;
+}
+
+function handleNavigateToSiblingView() {
+  router.push({ name: siblingViewRouteName.value });
+}
+
 onMounted(async () => {
   await loadWorkshopOptions();
+  resetFiltersForCurrentRoute();
   await loadPage();
 });
+
+watch(
+  () => route.name,
+  async (nextRouteName, previousRouteName) => {
+    if (!previousRouteName || nextRouteName === previousRouteName) {
+      return;
+    }
+
+    resetFiltersForCurrentRoute();
+    await loadPage();
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -695,6 +1116,14 @@ onMounted(async () => {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+  }
+
+  .page-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .page-title {
@@ -707,6 +1136,7 @@ onMounted(async () => {
     margin-top: 6px;
     color: #909399;
     font-size: 13px;
+    line-height: 1.5;
   }
 
   .query-form {
@@ -804,7 +1234,7 @@ onMounted(async () => {
   }
 }
 
-:deep(.el-table .is-active-topic) {
-  --el-table-tr-bg-color: #f0f9eb;
+:deep(.el-table .is-active-row > td.el-table__cell) {
+  background-color: #f0f9eb !important;
 }
 </style>

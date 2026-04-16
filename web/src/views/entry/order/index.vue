@@ -136,35 +136,28 @@
 			    </el-button>
 		    </template>
 	    </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[4].visible">
-        <template #default="scope">
-          <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
-            {{ scope.row.chargeBy }}
-          </el-button>
-        </template>
-      </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[5].visible">
+      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[4].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             {{ scope.row.attn }}
           </el-button>
         </template>
       </el-table-column>
-	    <el-table-column sortable show-overflow-tooltip label="关联部门" align="center" prop="workshopName" v-if="columns[6].visible">
+	    <el-table-column sortable show-overflow-tooltip label="关联部门" align="center" prop="workshopName" v-if="columns[5].visible">
 		    <template #default="scope">
 			    <el-button link type="primary" :underline="false" @click="handleDetail(scope.row)">
 				    {{ scope.row.workshopName }}
 			    </el-button>
 		    </template>
 	    </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[7].visible">
+      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[6].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             {{ scope.row.createBy }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[8].visible">
+      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[7].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             <span v-if="scope.row.auditStatus === '0' || scope.row.auditStatus === 0" style="color: #E6A23C;">未审核</span>
@@ -247,11 +240,6 @@
         </el-row>
 	      <el-row>
           <el-col :span="12">
-	          <el-form-item label="负责人" prop="chargeBy">
-		          <combo-input v-model="form.chargeBy" scope="personnel" field="personnelName" placeholder="请选择或输入负责人" :disabled="form.inboundId != null" />
-	          </el-form-item>
-          </el-col>
-          <el-col :span="12">
 	          <el-form-item label="供应商" prop="supplierId">
 		          <el-select
 			          v-model="form.supplierId"
@@ -272,16 +260,16 @@
 				          <span style="float: left">{{ item.supplierCode }}</span>
 				          <span style="float: left; margin-left: 10px;">{{ item.supplierName }}</span>
 			          </el-option>
-		          </el-select>
+			          </el-select>
 	          </el-form-item>
           </el-col>
-        </el-row>
-	      <el-row>
 		      <el-col :span="12">
 			      <el-form-item label="总金额" prop="totalAmount">
 				      <el-input v-model="form.totalAmount" placeholder="自动计算" disabled />
 			      </el-form-item>
 		      </el-col>
+        </el-row>
+	      <el-row>
 		      <el-col :span="12">
 			      <el-form-item label="备注" prop="remark">
 				      <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" :disabled="form.inboundId != null"/>
@@ -376,7 +364,6 @@
               <el-descriptions-item label="验收日期">{{ parseTime(detailData.inboundDate, '{y}-{m}-{d}') }}</el-descriptions-item>
               <el-descriptions-item label="总金额">{{ detailData.totalAmount }}</el-descriptions-item>
               <el-descriptions-item label="供应商">{{ detailData.supplierName }}</el-descriptions-item>
-              <el-descriptions-item label="负责人">{{ detailData.chargeBy }}</el-descriptions-item>
               <el-descriptions-item label="经办人">{{ detailData.attn }}</el-descriptions-item>
               <el-descriptions-item label="关联部门">{{ detailData.workshopName }}</el-descriptions-item>
               <el-descriptions-item label="创建人">{{ detailData.createBy }}</el-descriptions-item>
@@ -495,7 +482,11 @@ import useAiActionStore from "@/store/modules/aiAction";
 import useUserStore from "@/store/modules/user";
 import { formatDateToYYYYMMDD } from "@/utils/orderNumber";
 
-const username = computed(() => useUserStore().name);
+const userStore = useUserStore();
+const username = computed(() => userStore.name);
+const operatorNickname = computed(
+  () => userStore.nickName || userStore.name || "",
+);
 
 const { proxy } = getCurrentInstance();
 
@@ -571,11 +562,10 @@ const columns = ref([
   { key: 1, label: `验收日期`, visible: true },
   { key: 2, label: `总金额`, visible: true },
   { key: 3, label: `供应商`, visible: true },
-  { key: 4, label: `负责人`, visible: false },
-  { key: 5, label: `经办人`, visible: true },
-  { key: 6, label: `关联部门`, visible: true },
-  { key: 7, label: `创建人`, visible: false },
-  { key: 8, label: `审核结果`, visible: true },
+  { key: 4, label: `经办人`, visible: true },
+  { key: 5, label: `关联部门`, visible: true },
+  { key: 6, label: `创建人`, visible: false },
+  { key: 7, label: `审核结果`, visible: true },
 ]);
 
 function formatDocumentDate(value) {
@@ -762,7 +752,6 @@ function reset() {
     inboundDate: null,
     supplierId: null,
     workshopId: null,
-    chargeBy: null,
     attn: null,
     totalAmount: null,
     remark: null,
@@ -891,6 +880,7 @@ function handleAdd() {
   reset();
   const today = new Date();
   form.value.inboundDate = formatDateToYYYYMMDD(today);
+  form.value.attn = operatorNickname.value || null;
   isView.value = false;
   title.value = "添加验收单";
   open.value = true;
@@ -919,7 +909,6 @@ function handleUpdate(row) {
         inboundDate: orderData.inboundDate,
         supplierId: orderData.supplierId,
         workshopId: orderData.workshopId,
-        chargeBy: orderData.chargeBy,
         attn: orderData.attn,
         totalAmount: orderData.totalAmount,
         remark: orderData.remark,
@@ -1073,7 +1062,7 @@ const route = useRoute();
 
 /**
  * 处理 AI 助手的表单预填充
- * 支持预填: supplierName, workshopName, attn, chargeBy, remark, details[{materialName, quantity, unitPrice, taxPrice, remark}]
+ * 支持预填: supplierName, workshopName, attn, remark, details[{materialName, quantity, unitPrice, taxPrice, remark}]
  */
 async function handleAiPrefill(formData) {
   // 1. 打开新增表单
@@ -1081,7 +1070,6 @@ async function handleAiPrefill(formData) {
   await nextTick();
 
   // 2. 填入简单文本字段
-  if (formData.chargeBy) form.value.chargeBy = formData.chargeBy;
   if (formData.remark) form.value.remark = formData.remark;
 
   // 3. 经办人 — 远程搜索并选中

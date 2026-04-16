@@ -186,6 +186,22 @@ export function getRdStocktakeOrder(orderId) {
   });
 }
 
+export function listRdStocktakeProjectOptions(params = {}) {
+  return request({
+    url: "/api/rd-subwarehouse/stocktake-orders/project-options",
+    method: "get",
+    params,
+  });
+}
+
+export function getRdStocktakeBookQty(params = {}) {
+  return request({
+    url: "/api/rd-subwarehouse/stocktake-orders/book-qty",
+    method: "get",
+    params,
+  });
+}
+
 export function createRdStocktakeOrder(data) {
   return request({
     url: "/api/rd-subwarehouse/stocktake-orders",

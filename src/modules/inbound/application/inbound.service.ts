@@ -33,6 +33,13 @@ import { InboundRepository } from "../infrastructure/inbound.repository";
 
 const DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
 const BUSINESS_MODULE = "inbound";
+const DEFAULT_MATERIAL_CATEGORY_CODE = "UNCATEGORIZED";
+
+type MaterialCategorySnapshotNode = {
+  id: number;
+  categoryCode: string;
+  categoryName: string;
+};
 
 function toOperationType(orderType: StockInOrderType): InventoryOperationType {
   switch (orderType) {
@@ -112,7 +119,8 @@ export class InboundService {
     const { supplierCodeSnapshot, supplierNameSnapshot } =
       await this.resolveSupplierSnapshot(dto.supplierId);
     const { handlerNameSnapshot } = await this.resolveHandlerSnapshot(
-      dto.handlerPersonnelId,
+      dto.handlerPersonnelId ?? undefined,
+      dto.handlerName,
     );
     const stockScopeRecord =
       await this.masterDataService.getStockScopeByCode("MAIN");
@@ -120,6 +128,10 @@ export class InboundService {
       lineNo: number;
       materialId: number;
       rdProcurementRequestLineId: number | null;
+      materialCategoryIdSnapshot: number;
+      materialCategoryCodeSnapshot: string;
+      materialCategoryNameSnapshot: string;
+      materialCategoryPathSnapshot: Prisma.JsonArray;
       materialCodeSnapshot: string;
       materialNameSnapshot: string;
       materialSpecSnapshot: string;
@@ -155,7 +167,7 @@ export class InboundService {
             orderType: dto.orderType,
             bizDate,
             supplierId: dto.supplierId,
-            handlerPersonnelId: dto.handlerPersonnelId,
+            handlerPersonnelId: dto.handlerPersonnelId ?? null,
             stockScopeId: stockScopeRecord.id,
             workshopId: workshop?.id ?? null,
             rdProcurementRequestId: null,
@@ -290,8 +302,13 @@ export class InboundService {
           supplierCodeSnapshot: existing.supplierCodeSnapshot,
           supplierNameSnapshot: existing.supplierNameSnapshot,
         };
-    const handlerSnapshot = dto.handlerPersonnelId
-      ? await this.resolveHandlerSnapshot(dto.handlerPersonnelId)
+    const hasHandlerOverride =
+      Object.hasOwn(dto, "handlerPersonnelId") || Object.hasOwn(dto, "handlerName");
+    const handlerSnapshot = hasHandlerOverride
+      ? await this.resolveHandlerSnapshot(
+          dto.handlerPersonnelId ?? undefined,
+          dto.handlerName,
+        )
       : { handlerNameSnapshot: existing.handlerNameSnapshot };
     const stockScopeRecord =
       await this.masterDataService.getStockScopeByCode("MAIN");
@@ -445,6 +462,13 @@ export class InboundService {
             {
               lineNo: lineData.lineNo,
               materialId: lineData.materialId,
+              materialCategoryIdSnapshot: lineData.materialCategoryIdSnapshot,
+              materialCategoryCodeSnapshot:
+                lineData.materialCategoryCodeSnapshot,
+              materialCategoryNameSnapshot:
+                lineData.materialCategoryNameSnapshot,
+              materialCategoryPathSnapshot:
+                lineData.materialCategoryPathSnapshot,
               materialCodeSnapshot: lineData.materialCodeSnapshot,
               materialNameSnapshot: lineData.materialNameSnapshot,
               materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -506,6 +530,12 @@ export class InboundService {
             lineNo: lineData.lineNo,
             materialId: lineData.materialId,
             rdProcurementRequestLineId: lineData.rdProcurementRequestLineId,
+            materialCategoryIdSnapshot: lineData.materialCategoryIdSnapshot,
+            materialCategoryCodeSnapshot:
+              lineData.materialCategoryCodeSnapshot,
+            materialCategoryNameSnapshot:
+              lineData.materialCategoryNameSnapshot,
+            materialCategoryPathSnapshot: lineData.materialCategoryPathSnapshot,
             materialCodeSnapshot: lineData.materialCodeSnapshot,
             materialNameSnapshot: lineData.materialNameSnapshot,
             materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -568,8 +598,9 @@ export class InboundService {
         {
           bizDate,
           supplierId: finalSupplierId,
-          handlerPersonnelId:
-            dto.handlerPersonnelId ?? existing.handlerPersonnelId,
+          handlerPersonnelId: hasHandlerOverride
+            ? (dto.handlerPersonnelId ?? null)
+            : existing.handlerPersonnelId,
           stockScopeId: stockScopeRecord.id,
           workshopId,
           rdProcurementRequestId:
@@ -760,9 +791,12 @@ export class InboundService {
     };
   }
 
-  private async resolveHandlerSnapshot(handlerPersonnelId?: number) {
+  private async resolveHandlerSnapshot(
+    handlerPersonnelId?: number,
+    handlerName?: string,
+  ) {
     if (!handlerPersonnelId) {
-      return { handlerNameSnapshot: null };
+      return { handlerNameSnapshot: handlerName?.trim() || null };
     }
     const p = await this.masterDataService.getPersonnelById(handlerPersonnelId);
     return { handlerNameSnapshot: p.personnelName };
@@ -813,6 +847,8 @@ export class InboundService {
     const material = await this.masterDataService.getMaterialById(
       line.materialId,
     );
+    const materialCategorySnapshot =
+      await this.buildMaterialCategorySnapshot(material);
     const quantity = new Prisma.Decimal(line.quantity);
     const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
     const amount = quantity.mul(unitPrice);
@@ -828,6 +864,10 @@ export class InboundService {
       lineNo,
       materialId: material.id,
       rdProcurementRequestLineId: requestLine?.id ?? null,
+      materialCategoryIdSnapshot: materialCategorySnapshot.id,
+      materialCategoryCodeSnapshot: materialCategorySnapshot.code,
+      materialCategoryNameSnapshot: materialCategorySnapshot.name,
+      materialCategoryPathSnapshot: materialCategorySnapshot.path,
       materialCodeSnapshot: material.materialCode,
       materialNameSnapshot: material.materialName,
       materialSpecSnapshot: material.specModel ?? "",
@@ -1017,5 +1057,110 @@ export class InboundService {
       rdProcurementProjectCodeSnapshot: request.projectCode,
       rdProcurementProjectNameSnapshot: request.projectName,
     };
+  }
+
+  private async buildMaterialCategorySnapshot(material: {
+    category: {
+      id: number;
+      categoryCode: string;
+      categoryName: string;
+      parentId: number | null;
+    } | null;
+  }) {
+    const effectiveCategory = await this.resolveEffectiveMaterialCategory(
+      material.category,
+    );
+    const path = await this.buildMaterialCategoryPath(effectiveCategory);
+
+    return {
+      id: effectiveCategory.id,
+      code: effectiveCategory.categoryCode,
+      name: effectiveCategory.categoryName,
+      path: path.map(
+        (node) =>
+          ({
+            id: node.id,
+            categoryCode: node.categoryCode,
+            categoryName: node.categoryName,
+          }) satisfies Prisma.JsonObject,
+      ) as Prisma.JsonArray,
+    };
+  }
+
+  private async resolveEffectiveMaterialCategory(
+    category:
+      | {
+          id: number;
+          categoryCode: string;
+          categoryName: string;
+          parentId: number | null;
+        }
+      | null,
+  ) {
+    if (category) {
+      return category;
+    }
+
+    const defaultCategory = await this.prisma.materialCategory.findUnique({
+      where: { categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE },
+      select: {
+        id: true,
+        categoryCode: true,
+        categoryName: true,
+        parentId: true,
+      },
+    });
+    if (!defaultCategory) {
+      throw new BadRequestException(
+        "物料缺少有效分类，且默认未分类不存在，无法写入分类快照",
+      );
+    }
+    return defaultCategory;
+  }
+
+  private async buildMaterialCategoryPath(category: {
+    id: number;
+    categoryCode: string;
+    categoryName: string;
+    parentId: number | null;
+  }) {
+    const visited = new Set<number>();
+    const path: MaterialCategorySnapshotNode[] = [];
+    let current:
+      | {
+          id: number;
+          categoryCode: string;
+          categoryName: string;
+          parentId: number | null;
+        }
+      | null = category;
+
+    while (current) {
+      if (visited.has(current.id)) {
+        throw new BadRequestException("物料分类存在循环，无法写入分类快照");
+      }
+      visited.add(current.id);
+      path.unshift({
+        id: current.id,
+        categoryCode: current.categoryCode,
+        categoryName: current.categoryName,
+      });
+
+      if (!current.parentId) {
+        break;
+      }
+
+      const parent = await this.masterDataService.getMaterialCategoryById(
+        current.parentId,
+      );
+      current = {
+        id: parent.id,
+        categoryCode: parent.categoryCode,
+        categoryName: parent.categoryName,
+        parentId: parent.parentId ?? null,
+      };
+    }
+
+    return path;
   }
 }

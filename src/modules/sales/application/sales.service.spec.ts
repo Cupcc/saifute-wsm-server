@@ -114,6 +114,24 @@ describe("SalesService", () => {
       },
     ],
   };
+  const mockMaterialCategoryRoot = {
+    id: 90,
+    categoryCode: "ELEC",
+    categoryName: "电子类",
+    parentId: null,
+  };
+  const mockMaterialCategoryLeaf = {
+    id: 99,
+    categoryCode: "RESISTOR",
+    categoryName: "电阻",
+    parentId: 90,
+  };
+  const mockUncategorizedCategory = {
+    id: 1,
+    categoryCode: "UNCATEGORIZED",
+    categoryName: "未分类",
+    parentId: null,
+  };
 
   const mockMaterial = {
     id: 100,
@@ -121,6 +139,7 @@ describe("SalesService", () => {
     materialName: "Material A",
     specModel: "Spec",
     unitCode: "PCS",
+    category: mockMaterialCategoryLeaf,
   };
   const mockWorkshop = { id: 1, workshopName: "Workshop A" };
   const mockCustomer = {
@@ -147,6 +166,7 @@ describe("SalesService", () => {
   let salesProjectService: jest.Mocked<SalesProjectService>;
   let prisma: {
     runInTransaction: jest.Mock;
+    materialCategory: { findUnique: jest.Mock };
     stockInPriceCorrectionOrderLine: { findMany: jest.Mock };
     stockInOrderLine: { findMany: jest.Mock };
   };
@@ -156,6 +176,9 @@ describe("SalesService", () => {
       runInTransaction: jest.fn((handler: (tx: unknown) => Promise<unknown>) =>
         handler({}),
       ),
+      materialCategory: {
+        findUnique: jest.fn().mockResolvedValue(mockMaterialCategoryLeaf),
+      },
       stockInPriceCorrectionOrderLine: {
         findMany: jest.fn().mockResolvedValue([]),
       },
@@ -196,6 +219,7 @@ describe("SalesService", () => {
           provide: MasterDataService,
           useValue: {
             getMaterialById: jest.fn(),
+            getMaterialCategoryById: jest.fn(),
             getWorkshopById: jest.fn(),
             getStockScopeByCode: jest.fn().mockResolvedValue({
               id: 1,
@@ -271,6 +295,9 @@ describe("SalesService", () => {
 
     (masterDataService.getMaterialById as jest.Mock).mockResolvedValue(
       mockMaterial,
+    );
+    (masterDataService.getMaterialCategoryById as jest.Mock).mockResolvedValue(
+      mockMaterialCategoryRoot,
     );
     (masterDataService.getWorkshopById as jest.Mock).mockResolvedValue(
       mockWorkshop,
@@ -348,6 +375,21 @@ describe("SalesService", () => {
       expect(
         salesProjectService.listProjectReferencesByIds,
       ).toHaveBeenCalledWith([300], undefined);
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.arrayContaining([
+          expect.objectContaining({
+            materialCategoryIdSnapshot: 99,
+            materialCategoryCodeSnapshot: "RESISTOR",
+            materialCategoryNameSnapshot: "电阻",
+            materialCategoryPathSnapshot: [
+              { id: 90, categoryCode: "ELEC", categoryName: "电子类" },
+              { id: 99, categoryCode: "RESISTOR", categoryName: "电阻" },
+            ],
+          }),
+        ]),
+        expect.anything(),
+      );
     });
 
     it("should reject duplicate material and selected-unit-cost combinations", async () => {
@@ -376,6 +418,66 @@ describe("SalesService", () => {
         ),
       ).rejects.toThrow("同一单据内不允许重复的物料+价格层");
       expect(repository.createOrder).not.toHaveBeenCalled();
+    });
+
+    it("should fall back to uncategorized snapshot when material category is missing", async () => {
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        mockOutboundOrder,
+      );
+      (masterDataService.getMaterialById as jest.Mock).mockResolvedValue({
+        ...mockMaterial,
+        category: null,
+      });
+      (prisma.materialCategory.findUnique as jest.Mock).mockResolvedValue(
+        mockUncategorizedCategory,
+      );
+
+      await service.createOrder(
+        {
+          documentNo: "OB-UNCAT",
+          bizDate: "2025-03-14",
+          customerId: 10,
+          workshopId: 1,
+          lines: [
+            {
+              materialId: 100,
+              quantity: "10",
+              selectedUnitCost: "10",
+              unitPrice: "10",
+            },
+          ],
+        },
+        "1",
+      );
+
+      expect(prisma.materialCategory.findUnique).toHaveBeenCalledWith({
+        where: { categoryCode: "UNCATEGORIZED" },
+        select: {
+          id: true,
+          categoryCode: true,
+          categoryName: true,
+          parentId: true,
+        },
+      });
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.arrayContaining([
+          expect.objectContaining({
+            materialCategoryIdSnapshot: 1,
+            materialCategoryCodeSnapshot: "UNCATEGORIZED",
+            materialCategoryNameSnapshot: "未分类",
+            materialCategoryPathSnapshot: [
+              {
+                id: 1,
+                categoryCode: "UNCATEGORIZED",
+                categoryName: "未分类",
+              },
+            ],
+          }),
+        ]),
+        expect.anything(),
+      );
     });
   });
 
@@ -529,6 +631,19 @@ describe("SalesService", () => {
           businessDocumentLineId: 1,
           startNumber: "101",
           endNumber: "200",
+        }),
+        expect.anything(),
+      );
+      expect(repository.updateOrderLine).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          materialCategoryIdSnapshot: 99,
+          materialCategoryCodeSnapshot: "RESISTOR",
+          materialCategoryNameSnapshot: "电阻",
+          materialCategoryPathSnapshot: [
+            { id: 90, categoryCode: "ELEC", categoryName: "电子类" },
+            { id: 99, categoryCode: "RESISTOR", categoryName: "电阻" },
+          ],
         }),
         expect.anything(),
       );
@@ -718,6 +833,21 @@ describe("SalesService", () => {
           downstreamDocumentId: 2,
           downstreamLineId: 2,
         }),
+        expect.anything(),
+      );
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.arrayContaining([
+          expect.objectContaining({
+            materialCategoryIdSnapshot: 99,
+            materialCategoryCodeSnapshot: "RESISTOR",
+            materialCategoryNameSnapshot: "电阻",
+            materialCategoryPathSnapshot: [
+              { id: 90, categoryCode: "ELEC", categoryName: "电子类" },
+              { id: 99, categoryCode: "RESISTOR", categoryName: "电阻" },
+            ],
+          }),
+        ]),
         expect.anything(),
       );
     });
