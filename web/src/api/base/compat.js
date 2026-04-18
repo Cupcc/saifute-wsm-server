@@ -2,6 +2,7 @@ import request from "@/utils/request";
 
 const DEFAULT_PAGE_NUM = 1;
 const DEFAULT_PAGE_SIZE = 30;
+const DEFAULT_UNCATEGORIZED_LABEL = "未分类";
 
 function toPositiveNumber(value, fallback) {
   const parsed = Number(value);
@@ -49,6 +50,23 @@ export function buildDataResponse(data, mapper) {
   };
 }
 
+export function normalizeOptionalId(value, { allowNull = false } = {}) {
+  if (value === "" || typeof value === "undefined") {
+    return allowNull ? null : undefined;
+  }
+
+  if (value === null) {
+    return allowNull ? null : undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return allowNull ? null : undefined;
+  }
+
+  return parsed;
+}
+
 function toNumberOrNull(value) {
   if (value === null || typeof value === "undefined" || value === "") {
     return null;
@@ -65,7 +83,7 @@ export function mapMaterial(item, extras = {}) {
     materialName: item.materialName,
     specification: item.specModel ?? "",
     category: item.category?.id ?? item.categoryId ?? null,
-    categoryName: item.category?.categoryName ?? "",
+    categoryName: item.category?.categoryName ?? DEFAULT_UNCATEGORIZED_LABEL,
     unit: item.unitCode ?? "",
     stockMin: toNumberOrNull(item.warningMinQty),
     stockMax: toNumberOrNull(item.warningMaxQty),
@@ -86,6 +104,7 @@ export function mapCustomer(item) {
     contactPhone: "",
     address: "",
     remark: "",
+    status: item.status ?? "ACTIVE",
     children: [],
   };
 }
@@ -95,35 +114,50 @@ export function mapSupplier(item) {
     supplierId: item.id,
     supplierCode: item.supplierCode,
     supplierName: item.supplierName,
-    supplierShortName: item.supplierName,
     status: item.status ?? "ACTIVE",
-    contactPerson: "",
-    contactPhone: "",
-    address: "",
+    contactPerson: item.contactPerson ?? "",
+    contactPhone: item.contactPhone ?? "",
+    address: item.address ?? "",
     remark: "",
   };
 }
 
-export function mapPersonnel(item, query = {}) {
+export function mapPersonnel(item) {
   return {
     personnelId: item.id,
-    type:
-      typeof query.type === "undefined" || query.type === null
-        ? 1
-        : Number(query.type),
-    code: item.personnelCode,
     name: item.personnelName,
-    contactPhone: "",
+    contactPhone: item.contactPhone ?? "",
+    status: item.status ?? "ACTIVE",
   };
 }
 
 export function mapWorkshop(item) {
+  const defaultHandler =
+    item.defaultHandlerPersonnel && typeof item.defaultHandlerPersonnel === "object"
+      ? item.defaultHandlerPersonnel
+      : null;
+  const defaultHandlerPersonnelName =
+    defaultHandler?.personnelName ?? item.defaultHandlerPersonnelName ?? "";
+
   return {
     workshopId: item.id,
-    workshopCode: item.workshopCode,
     workshopName: item.workshopName,
-    contactPerson: "",
-    chargeBy: "",
+    defaultHandlerPersonnelId:
+      defaultHandler?.id ?? item.defaultHandlerPersonnelId ?? null,
+    defaultHandlerPersonnelName,
+    status: item.status ?? "ACTIVE",
+    // Keep legacy aliases populated while pages finish migrating.
+    contactPerson: defaultHandlerPersonnelName,
+    chargeBy: defaultHandlerPersonnelName,
+  };
+}
+
+export function mapStockScope(item) {
+  return {
+    stockScopeId: item.id,
+    scopeCode: item.scopeCode,
+    scopeName: item.scopeName,
+    status: item.status ?? "ACTIVE",
   };
 }
 

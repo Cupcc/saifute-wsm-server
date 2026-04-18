@@ -6,6 +6,7 @@ import { WorkshopScopeService } from "./workshop-scope.service";
 
 describe("WorkshopScopeService", () => {
   let service: WorkshopScopeService;
+  let masterDataService: jest.Mocked<MasterDataService>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -14,19 +15,15 @@ describe("WorkshopScopeService", () => {
         {
           provide: MasterDataService,
           useValue: {
-            getStockScopeByCode: jest.fn().mockResolvedValue({
-              id: 2,
-              scopeCode: "RD_SUB",
-              scopeName: "研发小仓",
-            }),
-            getWorkshopByCode: jest.fn().mockResolvedValue({
-              id: 88,
-              workshopCode: "RD",
-              workshopName: "研发小仓",
-            }),
+            getStockScopeByCode: jest
+              .fn()
+              .mockImplementation(async (scopeCode) => ({
+                id: scopeCode === "MAIN" ? 1 : 2,
+                scopeCode,
+                scopeName: scopeCode === "MAIN" ? "主仓" : "研发小仓",
+              })),
             getWorkshopByName: jest.fn().mockResolvedValue({
               id: 88,
-              workshopCode: "RD",
               workshopName: "研发小仓",
             }),
           },
@@ -35,6 +32,7 @@ describe("WorkshopScopeService", () => {
     }).compile();
 
     service = moduleRef.get(WorkshopScopeService);
+    masterDataService = moduleRef.get(MasterDataService);
   });
 
   const rdUser: SessionUserSnapshot = {
@@ -46,11 +44,32 @@ describe("WorkshopScopeService", () => {
     permissions: [],
     department: null,
     consoleMode: "rd-subwarehouse",
+    stockScope: {
+      mode: "FIXED",
+      stockScope: "RD_SUB",
+      stockScopeName: "研发小仓",
+    },
     workshopScope: {
       mode: "FIXED",
       workshopId: null,
-      workshopCode: "RD",
       workshopName: "研发小仓",
+    },
+  };
+
+  const allScopeUser: SessionUserSnapshot = {
+    ...rdUser,
+    userId: 1,
+    username: "admin",
+    displayName: "系统管理员",
+    stockScope: {
+      mode: "ALL",
+      stockScope: null,
+      stockScopeName: null,
+    },
+    workshopScope: {
+      mode: "ALL",
+      workshopId: null,
+      workshopName: null,
     },
   };
 
@@ -69,6 +88,23 @@ describe("WorkshopScopeService", () => {
   it("rejects access to another inventory stock scope", async () => {
     await expect(
       service.assertInventoryStockScopeAccess(rdUser, 1),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it("allows all-scope users to resolve an explicit inventory stock scope", async () => {
+    await expect(
+      service.resolveInventoryQueryScope(allScopeUser, undefined, "MAIN"),
+    ).resolves.toEqual({
+      stockScopeId: 1,
+      stockScope: "MAIN",
+      stockScopeName: "主仓",
+    });
+    expect(masterDataService.getStockScopeByCode).toHaveBeenCalledWith("MAIN");
+  });
+
+  it("rejects explicit inventory scope drift for fixed-scope users", async () => {
+    await expect(
+      service.resolveInventoryQueryScope(rdUser, undefined, "MAIN"),
     ).rejects.toThrow(ForbiddenException);
   });
 });

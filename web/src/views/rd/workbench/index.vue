@@ -14,14 +14,14 @@
       <el-row :gutter="16" class="metric-row">
         <el-col :xs="24" :sm="12" :lg="6">
           <div class="metric-box">
-            <div class="metric-label">活跃物料数</div>
+            <div class="metric-label">在库物料数</div>
             <div class="metric-value">{{ dashboard.inventory.activeMaterialCount }}</div>
           </div>
         </el-col>
         <el-col :xs="24" :sm="12" :lg="6">
           <div class="metric-box">
-            <div class="metric-label">库存总量</div>
-            <div class="metric-value">{{ dashboard.inventory.totalQuantityOnHand }}</div>
+            <div class="metric-label">库存货值</div>
+            <div class="metric-value">{{ dashboard.inventory.totalInventoryValue }}</div>
           </div>
         </el-col>
         <el-col :xs="24" :sm="12" :lg="6">
@@ -42,8 +42,8 @@
         <el-button type="primary" @click="goTo('/rd/procurement-requests')">
           采购需求
         </el-button>
-        <el-button type="primary" @click="goTo('/rd/project-consumption')">
-          项目领用
+        <el-button type="primary" @click="goTo('/rd/projects')">
+          研发项目
         </el-button>
         <el-button @click="goTo('/rd/scrap-orders')">本仓报废</el-button>
         <el-button @click="goTo('/rd/inventory-summary')">查看库存</el-button>
@@ -95,7 +95,7 @@ const recentInboundRows = ref([]);
 const dashboard = ref({
   inventory: {
     activeMaterialCount: 0,
-    totalQuantityOnHand: "0.000000",
+    totalInventoryValue: "0.00",
     lowStockCount: 0,
   },
   todayDocuments: {
@@ -104,7 +104,7 @@ const dashboard = ref({
 });
 
 const workshopLabel = computed(
-  () => userStore.workshopScope?.workshopName || "未绑定研发小仓",
+  () => userStore.stockScope?.stockScopeName || "未绑定研发小仓",
 );
 
 const consoleLabel = computed(() =>

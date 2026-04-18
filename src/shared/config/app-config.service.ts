@@ -4,212 +4,169 @@ import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class AppConfigService {
-  constructor(private readonly configService: ConfigService) {}
+  readonly appName: string;
+  readonly environment: string;
+  readonly httpTrustProxy: string | number | boolean;
+  readonly apiGlobalPrefix: string;
+  readonly swaggerEnabled: boolean;
+  readonly swaggerTitle: string;
+  readonly swaggerDescription: string;
+  readonly swaggerVersion: string;
+  readonly swaggerPath: string;
+  readonly swaggerJsonPath: string;
+  readonly jwtSecret: string;
+  readonly jwtExpiresInSeconds: number;
+  readonly jwtRefreshSecret: string;
+  readonly jwtRefreshExpiresInSeconds: number;
+  readonly sessionTtlSeconds: number;
+  readonly sessionMaxTtlSeconds: number;
+  readonly sessionRefreshThresholdSeconds: number;
+  readonly captchaTtlSeconds: number;
+  readonly captchaEnabled: boolean;
+  readonly passwordMaxRetries: number;
+  readonly passwordLockMinutes: number;
+  readonly redisHost: string;
+  readonly redisPort: number;
+  readonly redisPassword: string | null;
+  readonly redisDb: number;
+  readonly redisConnectTimeoutMs: number;
+  readonly authIpBlacklist: ReadonlyArray<string>;
+  readonly fileStorageRootPath: string;
+  readonly uploadRootPath: string;
+  readonly profilePublicPrefix: string;
+  readonly fileUploadMaxSizeBytes: number;
+  readonly fileAllowedExtensions: ReadonlyArray<string>;
+  readonly businessTimezone: string;
+  readonly schedulerEnabled: boolean;
+  readonly schedulerTimezone: string;
+  readonly logLevel: string;
+  readonly logDirPath: string;
+  readonly aiAssistantEnabled: boolean;
+  readonly aiAssistantBaseUrl: string;
+  readonly aiAssistantModel: string;
+  readonly aiAssistantApiKey: string | null;
+  readonly aiAssistantTimeoutMs: number;
 
-  get appName(): string {
-    return this.readString("APP_NAME", "saifute-wms-server");
-  }
-
-  get environment(): string {
-    return this.readString("NODE_ENV", "development");
-  }
-
-  get apiGlobalPrefix(): string {
-    return this.normalizeRoutePrefix(
+  constructor(private readonly configService: ConfigService) {
+    this.appName = this.readString("APP_NAME", "saifute-wms-server");
+    this.environment = this.readString("NODE_ENV", "development");
+    this.httpTrustProxy = this.resolveTrustProxySetting(
+      this.configService.get<string>("HTTP_TRUST_PROXY"),
+    );
+    this.apiGlobalPrefix = this.normalizeRoutePrefix(
       this.readString("API_GLOBAL_PREFIX", "api"),
     );
-  }
 
-  get swaggerEnabled(): boolean {
-    const configured = this.parseBooleanValue(
+    const configuredSwaggerEnabled = this.parseBooleanValue(
       this.configService.get<string>("SWAGGER_ENABLED"),
     );
-    if (configured !== null) {
-      return configured;
-    }
-
-    return ["development", "dev", "local"].includes(
-      this.environment.trim().toLowerCase(),
-    );
-  }
-
-  get swaggerTitle(): string {
-    return this.readString("SWAGGER_TITLE", `${this.appName} API`);
-  }
-
-  get swaggerDescription(): string {
-    return this.readString(
+    this.swaggerEnabled =
+      configuredSwaggerEnabled ?? this.isDevelopmentLikeEnvironment();
+    this.swaggerTitle = this.readString("SWAGGER_TITLE", `${this.appName} API`);
+    this.swaggerDescription = this.readString(
       "SWAGGER_DESCRIPTION",
       `${this.appName} API documentation`,
     );
-  }
-
-  get swaggerVersion(): string {
-    return this.readString("SWAGGER_VERSION", "0.1.0");
-  }
-
-  get swaggerPath(): string {
-    return this.normalizeRoutePrefix(this.readString("SWAGGER_PATH", "docs"));
-  }
-
-  get swaggerJsonPath(): string {
-    return this.normalizeRoutePrefix(
+    this.swaggerVersion = this.readString("SWAGGER_VERSION", "0.1.0");
+    this.swaggerPath = this.normalizeRoutePrefix(
+      this.readString("SWAGGER_PATH", "docs"),
+    );
+    this.swaggerJsonPath = this.normalizeRoutePrefix(
       this.readString("SWAGGER_JSON_PATH", "docs-json"),
     );
-  }
 
-  get jwtSecret(): string {
-    return this.readString("JWT_SECRET", "dev-secret");
-  }
+    this.jwtSecret = this.readString("JWT_SECRET", "dev-secret");
+    this.jwtExpiresInSeconds = this.readNumber("JWT_EXPIRES_IN_SECONDS", 3600);
+    this.sessionTtlSeconds = this.readNumber("SESSION_TTL_SECONDS", 3600);
+    this.sessionMaxTtlSeconds = this.readNumber(
+      "SESSION_MAX_TTL_SECONDS",
+      28800,
+    );
+    this.sessionRefreshThresholdSeconds = this.readNumber(
+      "SESSION_REFRESH_THRESHOLD_SECONDS",
+      1200,
+    );
+    this.jwtRefreshSecret = this.readString(
+      "JWT_REFRESH_SECRET",
+      `${this.jwtSecret}:refresh`,
+    );
+    this.jwtRefreshExpiresInSeconds = this.readNumber(
+      "JWT_REFRESH_EXPIRES_IN_SECONDS",
+      this.sessionMaxTtlSeconds,
+    );
+    this.captchaTtlSeconds = this.readNumber("CAPTCHA_TTL_SECONDS", 300);
+    this.captchaEnabled = this.readBoolean("CAPTCHA_ENABLED", true);
+    this.passwordMaxRetries = this.readNumber("PASSWORD_MAX_RETRIES", 5);
+    this.passwordLockMinutes = this.readNumber("PASSWORD_LOCK_MINUTES", 15);
 
-  get jwtExpiresInSeconds(): number {
-    return this.readNumber("JWT_EXPIRES_IN_SECONDS", 3600);
-  }
+    this.redisHost = this.readString("REDIS_HOST", "127.0.0.1");
+    this.redisPort = this.readNumber("REDIS_PORT", 6379);
+    this.redisPassword = this.readNullableString("REDIS_PASSWORD");
+    this.redisDb = this.readNumber("REDIS_DB", 0);
+    this.redisConnectTimeoutMs = this.readNumber(
+      "REDIS_CONNECT_TIMEOUT_MS",
+      5000,
+    );
+    this.authIpBlacklist = this.readStringList("AUTH_IP_BLACKLIST", "");
 
-  get sessionTtlSeconds(): number {
-    return this.readNumber("SESSION_TTL_SECONDS", 3600);
-  }
-
-  get sessionMaxTtlSeconds(): number {
-    return this.readNumber("SESSION_MAX_TTL_SECONDS", 28800);
-  }
-
-  get sessionRefreshThresholdSeconds(): number {
-    return this.readNumber("SESSION_REFRESH_THRESHOLD_SECONDS", 1200);
-  }
-
-  get captchaTtlSeconds(): number {
-    return this.readNumber("CAPTCHA_TTL_SECONDS", 300);
-  }
-
-  get captchaEnabled(): boolean {
-    return this.readBoolean("CAPTCHA_ENABLED", true);
-  }
-
-  get passwordMaxRetries(): number {
-    return this.readNumber("PASSWORD_MAX_RETRIES", 5);
-  }
-
-  get passwordLockMinutes(): number {
-    return this.readNumber("PASSWORD_LOCK_MINUTES", 15);
-  }
-
-  get redisHost(): string {
-    return this.readString("REDIS_HOST", "127.0.0.1");
-  }
-
-  get redisPort(): number {
-    return this.readNumber("REDIS_PORT", 6379);
-  }
-
-  get redisPassword(): string | null {
-    const value = this.readString("REDIS_PASSWORD", "").trim();
-    return value ? value : null;
-  }
-
-  get redisDb(): number {
-    return this.readNumber("REDIS_DB", 0);
-  }
-
-  get redisConnectTimeoutMs(): number {
-    return this.readNumber("REDIS_CONNECT_TIMEOUT_MS", 5000);
-  }
-
-  get authIpBlacklist(): string[] {
-    const value = this.readString("AUTH_IP_BLACKLIST", "");
-    return value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  get fileStorageRootPath(): string {
-    const configuredRoot =
-      this.configService.get<string>("FILE_STORAGE_ROOT_PATH") ??
-      this.configService.get<string>("UPLOAD_ROOT_PATH") ??
-      "storage";
-    return path.isAbsolute(configuredRoot)
-      ? configuredRoot
-      : path.resolve(process.cwd(), configuredRoot);
-  }
-
-  get uploadRootPath(): string {
-    return this.fileStorageRootPath;
-  }
-
-  get profilePublicPrefix(): string {
-    const value = this.readString("FILE_STORAGE_PUBLIC_PREFIX", "/profile");
-    return this.normalizePublicPrefix(value);
-  }
-
-  get fileUploadMaxSizeBytes(): number {
-    return this.readNumber("FILE_STORAGE_MAX_SIZE_BYTES", 5 * 1024 * 1024);
-  }
-
-  get fileAllowedExtensions(): string[] {
-    const configured = this.readString(
+    this.fileStorageRootPath = this.resolvePath(
+      this.readFirstString(
+        ["FILE_STORAGE_ROOT_PATH", "UPLOAD_ROOT_PATH"],
+        "storage",
+      ),
+    );
+    this.uploadRootPath = this.fileStorageRootPath;
+    this.profilePublicPrefix = this.normalizePublicPrefix(
+      this.readString("FILE_STORAGE_PUBLIC_PREFIX", "/profile"),
+    );
+    this.fileUploadMaxSizeBytes = this.readNumber(
+      "FILE_STORAGE_MAX_SIZE_BYTES",
+      5 * 1024 * 1024,
+    );
+    this.fileAllowedExtensions = this.readStringList(
       "FILE_STORAGE_ALLOWED_EXTENSIONS",
       ".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar",
+      (item) => {
+        const normalized = item.toLowerCase();
+        return normalized.startsWith(".") ? normalized : `.${normalized}`;
+      },
     );
 
-    return configured
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean)
-      .map((item) => (item.startsWith(".") ? item : `.${item}`));
-  }
+    this.businessTimezone = this.readString(
+      "BUSINESS_TIMEZONE",
+      "Asia/Shanghai",
+    );
+    this.schedulerEnabled = this.readBoolean("SCHEDULER_ENABLED", true);
+    this.schedulerTimezone = this.readString(
+      "SCHEDULER_TIMEZONE",
+      this.businessTimezone,
+    );
 
-  get businessTimezone(): string {
-    return this.readString("BUSINESS_TIMEZONE", "Asia/Shanghai");
-  }
-
-  get schedulerEnabled(): boolean {
-    return this.readBoolean("SCHEDULER_ENABLED", true);
-  }
-
-  get schedulerTimezone(): string {
-    return this.readString("SCHEDULER_TIMEZONE", this.businessTimezone);
-  }
-
-  get logLevel(): string {
-    return this.readString(
+    this.logLevel = this.readString(
       "LOG_LEVEL",
-      this.environment === "development" ? "debug" : "info",
+      this.isDevelopmentLikeEnvironment() ? "debug" : "info",
     );
-  }
-
-  get logDirPath(): string {
-    const configuredRoot = this.readString(
-      "LOG_DIR",
-      this.environment === "development" ? "logs-dev" : "logs",
+    this.logDirPath = this.resolvePath(
+      this.readString(
+        "LOG_DIR",
+        this.isDevelopmentLikeEnvironment() ? "logs-dev" : "logs",
+      ),
     );
-    return path.isAbsolute(configuredRoot)
-      ? configuredRoot
-      : path.resolve(process.cwd(), configuredRoot);
-  }
 
-  get aiAssistantEnabled(): boolean {
-    return this.readBoolean("AI_ASSISTANT_ENABLED", true);
-  }
-
-  get aiAssistantBaseUrl(): string {
-    return this.readString(
+    this.aiAssistantEnabled = this.readBoolean("AI_ASSISTANT_ENABLED", true);
+    this.aiAssistantBaseUrl = this.readString(
       "AI_ASSISTANT_BASE_URL",
       "https://api.openai.com/v1",
     );
-  }
-
-  get aiAssistantModel(): string {
-    return this.readString("AI_ASSISTANT_MODEL", "gpt-4.1-mini");
-  }
-
-  get aiAssistantApiKey(): string | null {
-    const value = this.readString("AI_ASSISTANT_API_KEY", "").trim();
-    return value ? value : null;
-  }
-
-  get aiAssistantTimeoutMs(): number {
-    return this.readNumber("AI_ASSISTANT_TIMEOUT_MS", 15000);
+    this.aiAssistantModel = this.readString(
+      "AI_ASSISTANT_MODEL",
+      "gpt-4.1-mini",
+    );
+    this.aiAssistantApiKey = this.readNullableString("AI_ASSISTANT_API_KEY");
+    this.aiAssistantTimeoutMs = this.readNumber(
+      "AI_ASSISTANT_TIMEOUT_MS",
+      15000,
+    );
   }
 
   private readNumber(key: string, fallback: number): number {
@@ -235,6 +192,39 @@ export class AppConfigService {
     return raw.trim();
   }
 
+  private readFirstString(
+    keys: ReadonlyArray<string>,
+    fallback: string,
+  ): string {
+    for (const key of keys) {
+      const raw = this.configService.get<string>(key);
+      if (raw !== undefined && raw !== null) {
+        return raw.trim();
+      }
+    }
+
+    return fallback.trim();
+  }
+
+  private readNullableString(key: string): string | null {
+    const value = this.readString(key, "");
+    return value ? value : null;
+  }
+
+  private readStringList(
+    key: string,
+    fallback: string,
+    normalizeItem?: (item: string) => string,
+  ): ReadonlyArray<string> {
+    const items = this.readString(key, fallback)
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((item) => normalizeItem?.(item) ?? item);
+
+    return Object.freeze(items);
+  }
+
   private parseBooleanValue(value: string | undefined): boolean | null {
     if (typeof value !== "string") {
       return null;
@@ -249,6 +239,43 @@ export class AppConfigService {
     }
 
     return null;
+  }
+
+  private resolveTrustProxySetting(
+    value: string | undefined,
+  ): string | number | boolean {
+    const parsedBoolean = this.parseBooleanValue(value);
+    if (parsedBoolean !== null) {
+      return parsedBoolean;
+    }
+
+    const normalized = value?.trim();
+    if (!normalized) {
+      return this.shouldTrustLoopbackProxyByDefault() ? "loopback" : false;
+    }
+
+    if (/^\d+$/.test(normalized)) {
+      return Number(normalized);
+    }
+
+    return normalized;
+  }
+
+  private resolvePath(value: string): string {
+    return path.isAbsolute(value) ? value : path.resolve(process.cwd(), value);
+  }
+
+  private isDevelopmentLikeEnvironment(): boolean {
+    return ["development", "dev", "local"].includes(
+      this.environment.trim().toLowerCase(),
+    );
+  }
+
+  private shouldTrustLoopbackProxyByDefault(): boolean {
+    const normalizedEnvironment = this.environment.trim().toLowerCase();
+    return (
+      this.isDevelopmentLikeEnvironment() || normalizedEnvironment === "test"
+    );
   }
 
   private normalizeRoutePrefix(value: string): string {

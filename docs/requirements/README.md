@@ -1,59 +1,112 @@
 # 需求文档说明
 
-`docs/requirements/**` 保存面向用户的需求真源。
+`docs/requirements/` 是本项目面向用户的需求真源，负责定义"系统要做什么、不做什么"。执行计划与验收记录不在此目录，统一写在 `docs/tasks/*.md`。
 
-## 目录职责
-
-| 路径 | 作用 |
-| --- | --- |
-| `PROJECT_REQUIREMENTS.md` | 项目级、长期稳定、跨主题持续生效的需求与背景 |
-| `topics/*.md` | 某个长期业务主题的约束、功能项清单、阶段路线图与功能项说明 |
-| `REQUIREMENT_CENTER.md` | 需求索引看板 |
-
-不再使用切片 `req-*.md` 文件。需求真源统一维护在 `topics/*.md`；执行计划、验证过程与验收记录写在 `docs/tasks/*.md`。
-
-## 目录布局
+## 目录布局与职责
 
 ```text
 docs/requirements/
-├── PROJECT_REQUIREMENTS.md
-├── REQUIREMENT_CENTER.md
-├── README.md
-└── topics/
-    ├── _template.md
-    └── *.md
+├── README.md                 ← 本文件；使用指南
+├── PROJECT_REQUIREMENTS.md   ← 项目级业务总纲
+├── REQUIREMENT_CENTER.md     ← 条目级需求全景看板
+└── domain/
+    ├── _template.md          ← domain 文档模板
+    └── *.md                  ← 各领域需求真源
 ```
 
-## 怎么写 topic
+## 文档说明
 
-每个 topic 包含：
+### `PROJECT_REQUIREMENTS.md`
 
-- **长期约束**：`C*` 编号，长期生效，不随切片变化。
-- **功能项清单**：`F*` 编号，每项是一项可单独实现、单独验收的功能或结果，包含一句话验收标准、阶段、状态、关联 task。
-- **功能项说明**（可选）：为后续拆 task 预先写清"这项要解决什么、不包括什么、完成算什么、需要什么证据"。
-- **阶段路线图**：当前各阶段状态。
+项目级业务总纲，记录长期稳定、跨主题持续生效的内容。
 
-说明：
+- **写什么**：项目背景与业务现状、建设目标、全局业务规则（单据与审核、仓储与库存模型、来源与成本、组织与权限）、领域地图、管理输出范围。
+- **不写什么**：单个主题的完整流程、状态机、字段设计、任务执行细节。
 
-- 旧文档里如果还写"能力清单 / 能力合同"，可以视为与"功能项清单 / 功能项说明"同义，后续新文档优先用后者。
-- 长期约束默认就是有效的，所以一般不必再写"状态：生效中"；如果后来不适用，直接删掉或改写为新的正式约束。
+### `REQUIREMENT_CENTER.md`
 
-功能项状态由 `未开始 → 进行中 → conditionally-accepted / 已完成` 流转，直接在 topic 里更新，不需要另开切片文档。
+条目级需求全景看板，提供所有需求条目的统一追踪视图。
 
-## 怎么开始一个新功能项
+- **写什么**：每条需求的 REQ 编号、摘要、来源、归属领域、功能项编号、当前状态、关联任务；顶部统计汇总。
+- **不写什么**：需求正文、详细验收标准、执行进展。
+- **设计目的**：打开一个文件就能回答"什么完成了、什么没完成、什么在进行中"。
 
-1. 确认对应 `topics/*.md` 已有该功能项的说明信息（要解决什么 / 不包括什么 / 完成标准）。
-2. 直接创建 `docs/tasks/task-YYYYMMDD-HHMM-*.md`，在 Metadata 中填 `Related requirement: docs/requirements/topics/*.md (Fx)`。
-3. 交付完成后，更新 topic 里该功能项的状态与关联 task 路径。
+### `domain/*.md`
 
-## 编写约定
+某个长期业务领域的 PRD。
 
-- 全文用中文；路径、文件名、metadata 可保留英文。
-- topic 只写长期约束与功能项说明，不写当前回合进展。
-- 功能项说明里的验收标准用 `[TC-*]` 或 `[AC-*]` 编号，供 task doc 直接引用。
+- **写什么**：该领域的业务边界、角色、场景、流程、单据与数据、状态与规则、查询与报表、权限与数据隔离、功能项清单与验收标准。
+- **不写什么**：单次交付进展、执行日志、实现细节、技术方案。
+- **怎么写**：参照 `domain/_template.md`，按业务事实组织，不按技术模块反推需求。
 
-## 与任务文档的关系
+## 需求收集与分发流程
 
-- `docs/tasks/*.md` 承接详细执行计划、验证过程、review 结论与 acceptance 记录。
-- `docs/acceptance-tests/**` 承接 full-mode acceptance specs 与 runs。
-- task doc 在 Metadata 中用 `Related requirement: docs/requirements/topics/*.md (Fx)` 指向 topic。
+需求从对话进入体系，经 AI 分析后归档到文档中：
+
+```
+对话 / Draft（讨论、头脑风暴、澄清需求）
+      ↓ 需求明确后 AI 归档
+REQUIREMENT_CENTER.md（新增条目行）+ domain/*.md（写入详细规格）
+      ↓ 拆任务执行
+docs/tasks/task-*.md
+      ↓ 完成回写
+REQUIREMENT_CENTER.md（更新状态）+ domain/*.md（更新功能项状态）
+```
+
+### AI 分发决策树
+
+```
+收到一条需求
+  │
+  ├─ 是长期业务规则 / 约束？
+  │   ├─ 跨多个 domain → 写入 PROJECT_REQUIREMENTS.md
+  │   └─ 属于某个 domain → 写入对应 domain/*.md 的对应章节
+  │
+  ├─ 是某个 domain 的新功能需求？
+  │   ├─ 该 domain 文档已存在 → 追加到功能项清单 + REQUIREMENT_CENTER 新增行
+  │   └─ 该 domain 文档不存在 → 先创建骨架，再写入
+  │
+  ├─ 是一次性任务（bug fix / 紧急调整）？
+  │   └─ 不进入 domain，直接建议开 task-*.md
+  │
+  ├─ 已被现有需求覆盖？
+  │   └─ 告知用户已有覆盖，标注位置
+  │
+  └─ 信息不足，无法判断？
+      └─ 在对话中向用户追问，明确后再归档
+```
+
+### 归档操作清单
+
+AI 将需求归档时，需同步完成：
+
+1. `REQUIREMENT_CENTER.md` — 在对应领域分组追加条目行，分配下一个 REQ 编号
+2. `domain/*.md` — 在功能项清单追加 F 编号行，补充验收标准
+3. `REQUIREMENT_CENTER.md` — 更新顶部统计数字
+
+### 状态回写
+
+task 验收通过后，需同步完成：
+
+1. `domain/*.md` — 更新功能项状态与关联任务链接
+2. `REQUIREMENT_CENTER.md` — 更新对应条目状态列与关联任务列，刷新统计数字
+
+## 功能项状态流转
+
+```
+🔍 待确认 → 📋 未开始 → 🔧 进行中 → ✅ 已完成
+                                    → ⚠️ conditionally-accepted
+```
+
+- `🔍 待确认`：信息不足或需要用户确认归属
+- `📋 未开始`：已明确，等待排期
+- `🔧 进行中`：已开 task，正在执行
+- `✅ 已完成`：task 验收通过
+- `⚠️ conditionally-accepted`：有条件通过，标注阻塞项
+
+## 跨文档协作流程
+
+1. 确认对应 `domain/*.md` 已有明确的业务边界、功能项和验收标准。
+2. 新开任务时，从功能项清单中挑选本次要交付的 `1～3` 项，创建 `docs/tasks/task-YYYYMMDD-HHMM-*.md`。
+3. 在 task Metadata 中填写 `Related requirement: docs/requirements/domain/*.md (Fx)`，确保 task 能回链到对应功能项。
+4. 交付完成后，回写 domain 功能项状态、任务链接，以及 `REQUIREMENT_CENTER.md` 对应条目状态。

@@ -8,7 +8,7 @@ import {
   MaxLength,
   Min,
 } from "class-validator";
-import { StockInOrderType } from "../../../generated/prisma/client";
+import { StockInOrderType } from "../../../../generated/prisma/client";
 
 export class QueryInboundOrderDto {
   /** 入库单号关键字 */

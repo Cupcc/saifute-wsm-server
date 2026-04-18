@@ -8,6 +8,7 @@ import {
   QueryFactoryNumberReservationsDto,
   QueryInventoryBalancesDto,
   QueryInventoryLogsDto,
+  QueryInventoryPriceLayersDto,
   QueryInventorySourceUsagesDto,
 } from "../dto/query-inventory.dto";
 
@@ -47,26 +48,57 @@ export class InventoryController {
       await this.workshopScopeService.resolveInventoryQueryScope(
         user,
         query.workshopId,
+        query.stockScope,
+      );
+    const workshopId =
+      await this.workshopScopeService.resolveInventoryQueryWorkshopId(
+        user,
+        query.workshopId,
       );
     return this.inventoryService.listLogs({
       materialId: query.materialId,
       stockScope: inventoryScope?.stockScope,
+      workshopId,
       businessDocumentId: query.businessDocumentId,
       businessDocumentType: query.businessDocumentType,
       businessDocumentNumber: query.businessDocumentNumber,
       operationType: query.operationType,
-      occurredAtFrom: query.occurredAtFrom,
-      occurredAtTo: query.occurredAtTo,
+      bizDateFrom: query.bizDateFrom,
+      bizDateTo: query.bizDateTo,
       limit: query.limit,
       offset: query.offset,
     });
   }
 
+  @Permissions("inventory:balance:list")
+  @Get("price-layers")
+  async listPriceLayers(
+    @Query() query: QueryInventoryPriceLayersDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+        query.stockScope,
+      );
+    return this.inventoryService.listPriceLayerAvailability({
+      materialId: query.materialId,
+      stockScope: inventoryScope?.stockScope,
+    });
+  }
+
   @Permissions("inventory:source-usage:list")
   @Get("source-usages")
-  async listSourceUsages(@Query() query: QueryInventorySourceUsagesDto) {
+  async listSourceUsages(
+    @Query() query: QueryInventorySourceUsagesDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(user);
     return this.inventoryService.listSourceUsages({
       materialId: query.materialId,
+      stockScope: inventoryScope?.stockScope,
       consumerDocumentType: query.consumerDocumentType,
       consumerDocumentId: query.consumerDocumentId,
       limit: query.limit,
@@ -104,6 +136,10 @@ export class InventoryController {
   ) {
     const reservation =
       await this.inventoryService.getFactoryNumberReservationById(id);
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
+      user,
+      reservation.stockScopeId,
+    );
     await this.workshopScopeService.assertInventoryWorkshopAccess(
       user,
       reservation.workshopId,

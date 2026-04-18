@@ -4,7 +4,7 @@ import {
   type OnModuleInit,
 } from "@nestjs/common";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { Prisma, PrismaClient } from "../../generated/prisma/client";
+import { Prisma, PrismaClient } from "../../../generated/prisma/client";
 
 @Injectable()
 export class PrismaService

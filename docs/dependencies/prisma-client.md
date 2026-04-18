@@ -6,7 +6,7 @@
 - Related packages: `prisma`, `@prisma/adapter-mariadb`
 - `package.json` range: `@prisma/client: ^7.5.0`, `prisma: ^7.5.0`, `@prisma/adapter-mariadb: ^7.5.0`
 - Lockfile version: `@prisma/client: 7.5.0`, `prisma: 7.5.0`
-- Repo touchpoints: `prisma/schema.prisma`, `src/shared/prisma/prisma.service.ts`, `src/generated/prisma/`
+- Repo touchpoints: `prisma/schema.prisma`, `src/shared/prisma/prisma.service.ts`, `generated/prisma/`
 - Last refreshed: `2026-03-15 (local snapshot only)`
 - Refresh status: `seed-only, pending Context7 enrichment`
 
@@ -79,7 +79,7 @@ await prisma.$transaction(async (tx) => {
 
 ## Repo Usage Notes
 
-- Current local conventions: `The repo uses generated client output under src/generated/prisma and a MariaDB adapter in the shared Prisma service.`
+- Current local conventions: `The repo generates Prisma client output under the root-level generated/prisma directory (gitignored) and uses a MariaDB adapter in the shared Prisma service.`
 - Wrappers or abstractions in this repo: `PrismaService.runInTransaction()` wraps callback transactions for callers.`
 - Known gaps or TODOs: `Fill Context7 resolve metadata and verify any Prisma 7.5 guidance around adapters, transactions, and generated client imports before reusing this note as an authoritative API reference.`
 

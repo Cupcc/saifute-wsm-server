@@ -4,7 +4,7 @@ import {
   LoginLogResult,
   OperLogStatus,
   type Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 @Injectable()

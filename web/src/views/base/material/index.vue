@@ -2,31 +2,13 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="物料编码" prop="materialCode">
-        <el-input
-          v-model="queryParams.materialCode"
-          placeholder="请输入物料编码"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.materialCode" scope="material" field="materialCode" placeholder="请选择或输入物料编码" width="240px" />
       </el-form-item>
       <el-form-item label="物料名称" prop="materialName">
-        <el-input
-          v-model="queryParams.materialName"
-          placeholder="请输入物料名称"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.materialName" scope="material" field="materialName" placeholder="请选择或输入物料名称" width="240px" />
       </el-form-item>
       <el-form-item label="规格型号" prop="specification">
-        <el-input
-          v-model="queryParams.specification"
-          placeholder="请输入规格型号"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.specification" scope="material" field="specModel" placeholder="请选择或输入规格型号" width="240px" />
       </el-form-item>
       <el-form-item label="分类" prop="category">
         <el-select
@@ -43,13 +25,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="单位" prop="unit">
-        <el-input
-          v-model="queryParams.unit"
-          placeholder="请输入单位"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.unit" scope="material" field="unitCode" placeholder="请选择或输入单位" width="240px" />
       </el-form-item>
       <el-form-item label="安全库存" prop="stockMin">
         <el-input
@@ -86,11 +62,11 @@
       <el-table-column sortable show-overflow-tooltip label="规格型号" align="center" prop="specification" v-if="columns[2].visible" />
       <el-table-column sortable show-overflow-tooltip label="分类" align="center" prop="category" v-if="columns[3].visible">
         <template #default="scope">
-          <dict-tag :options="saifute_material_category" :value="scope.row.category"/>
+          <span>{{ scope.row.categoryName || "未分类" }}</span>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="单位" align="center" prop="unit" v-if="columns[5].visible" />
-      <el-table-column sortable show-overflow-tooltip label="安全库存" align="center" prop="stockMin" v-if="columns[6].visible" />
+      <el-table-column sortable show-overflow-tooltip label="单位" align="center" prop="unit" v-if="columns[4].visible" />
+      <el-table-column sortable show-overflow-tooltip label="安全库存" align="center" prop="stockMin" v-if="columns[5].visible" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['base:material:edit']">修改</el-button>
@@ -114,13 +90,13 @@
         <div style="flex: 1; margin-right: 20px;">
           <el-form ref="materialRef" :model="form" :rules="rules" label-width="80px">
             <el-form-item label="物料编码" prop="materialCode">
-              <el-input v-model="form.materialCode" placeholder="请输入物料编码" />
+              <combo-input v-model="form.materialCode" scope="material" field="materialCode" placeholder="请选择或输入物料编码" />
             </el-form-item>
             <el-form-item label="物料名称" prop="materialName">
-              <el-input v-model="form.materialName" placeholder="请输入物料名称" @input="searchMaterials" />
+              <combo-input v-model="form.materialName" scope="material" field="materialName" placeholder="请选择或输入物料名称" @update:modelValue="searchMaterials" />
             </el-form-item>
             <el-form-item label="规格型号" prop="specification">
-              <el-input v-model="form.specification" placeholder="请输入规格型号" @input="searchMaterials" />
+              <combo-input v-model="form.specification" scope="material" field="specModel" placeholder="请选择或输入规格型号" @update:modelValue="searchMaterials" />
             </el-form-item>
             <el-form-item label="分类" prop="category">
               <el-select v-model="form.category" placeholder="请选择分类" @change="searchMaterials">
@@ -133,7 +109,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="单位" prop="unit">
-              <el-input v-model="form.unit" placeholder="请输入单位" />
+              <combo-input v-model="form.unit" scope="material" field="unitCode" placeholder="请选择或输入单位" />
             </el-form-item>
             <el-form-item label="安全库存" prop="stockMin">
               <el-input v-model="form.stockMin" placeholder="请输入安全库存" />
@@ -162,7 +138,7 @@
             </el-table-column>
 	          <el-table-column show-overflow-tooltip label="分类" align="center" width="60" prop="category">
 		          <template #default="scope">
-			          <dict-tag :options="saifute_material_category" :value="scope.row.category"/>
+			          <span>{{ scope.row.categoryName || "未分类" }}</span>
 		          </template>
 	          </el-table-column>
             <el-table-column prop="unit" label="单位" width="80" show-overflow-tooltip />
@@ -221,15 +197,13 @@ import {
   delMaterial,
   getMaterial,
   listMaterial,
-  listMaterialByCodeOrName,
   updateMaterial,
 } from "@/api/base/material";
+import { listMaterialCategory } from "@/api/base/material-category";
+import { clearSuggestionsCache } from "@/api/base/suggestions";
 
 const { proxy } = getCurrentInstance();
-const { sys_yes_no, saifute_material_category } = proxy.useDict(
-  "sys_yes_no",
-  "saifute_material_category",
-);
+const saifute_material_category = ref([]);
 
 const materialList = ref([]);
 const open = ref(false);
@@ -266,7 +240,6 @@ const data = reactive({
     specification: [
       { required: true, message: "规格型号不能为空", trigger: "blur" },
     ],
-    category: [{ required: true, message: "分类不能为空", trigger: "change" }],
   },
 });
 
@@ -295,9 +268,8 @@ const columns = ref([
   { key: 1, label: `物料名称`, visible: true },
   { key: 2, label: `规格型号`, visible: true },
   { key: 3, label: `分类`, visible: true },
-  { key: 4, label: `附件`, visible: true },
-  { key: 5, label: `单位`, visible: true },
-  { key: 6, label: `安全库存`, visible: true },
+  { key: 4, label: `单位`, visible: true },
+  { key: 5, label: `安全库存`, visible: true },
 ]);
 
 /** 查询物料列表 */
@@ -323,7 +295,7 @@ function reset() {
     materialCode: null,
     materialName: null,
     specification: null,
-    category: 1,
+    category: null,
     unit: null,
     stockMin: null,
   };
@@ -353,6 +325,7 @@ function handleSelectionChange(selection) {
 /** 新增按钮操作 */
 function handleAdd() {
   reset();
+  loadMaterialCategories();
   open.value = true;
   title.value = "添加物料";
 }
@@ -379,12 +352,14 @@ function submitForm() {
     if (valid) {
       if (form.value.materialId != null) {
         updateMaterial(form.value).then((response) => {
+          clearSuggestionsCache();
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
         });
       } else {
         addMaterial(form.value).then((response) => {
+          clearSuggestionsCache();
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
@@ -454,6 +429,19 @@ async function searchMaterials() {
   });
 }
 
+function loadMaterialCategories() {
+  return listMaterialCategory({ pageNum: 1, pageSize: 200 })
+    .then((response) => {
+      saifute_material_category.value = response.rows.map((item) => ({
+        label: item.categoryName,
+        value: String(item.categoryId),
+      }));
+    })
+    .catch(() => {
+      saifute_material_category.value = [];
+    });
+}
+
 // 高亮显示文本
 function highlightText(text, keyword) {
   if (!text || !keyword) return text;
@@ -468,4 +456,5 @@ function highlightText(text, keyword) {
 }
 
 getList();
+loadMaterialCategories();
 </script>

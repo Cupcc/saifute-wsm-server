@@ -73,7 +73,7 @@ export function applyRdProcurementStatusAction(requestId, data) {
 
 export function listRdProjects(params = {}) {
   return request({
-    url: "/api/projects",
+    url: "/api/rd-projects",
     method: "get",
     params,
   });
@@ -81,22 +81,60 @@ export function listRdProjects(params = {}) {
 
 export function getRdProject(projectId) {
   return request({
-    url: `/api/projects/${projectId}`,
+    url: `/api/rd-projects/${projectId}`,
     method: "get",
   });
 }
 
 export function createRdProject(data) {
   return request({
-    url: "/api/projects",
+    url: "/api/rd-projects",
     method: "post",
+    data,
+  });
+}
+
+export function updateRdProject(projectId, data) {
+  return request({
+    url: `/api/rd-projects/${projectId}`,
+    method: "patch",
     data,
   });
 }
 
 export function voidRdProject(projectId, data) {
   return request({
-    url: `/api/projects/${projectId}/void`,
+    url: `/api/rd-projects/${projectId}/void`,
+    method: "post",
+    data,
+  });
+}
+
+export function listRdProjectMaterialActions(projectId) {
+  return request({
+    url: `/api/rd-projects/${projectId}/material-actions`,
+    method: "get",
+  });
+}
+
+export function getRdProjectMaterialAction(actionId) {
+  return request({
+    url: `/api/rd-projects/material-actions/${actionId}`,
+    method: "get",
+  });
+}
+
+export function createRdProjectMaterialAction(projectId, data) {
+  return request({
+    url: `/api/rd-projects/${projectId}/material-actions`,
+    method: "post",
+    data,
+  });
+}
+
+export function voidRdProjectMaterialAction(actionId, data) {
+  return request({
+    url: `/api/rd-projects/material-actions/${actionId}/void`,
     method: "post",
     data,
   });
@@ -145,6 +183,22 @@ export function getRdStocktakeOrder(orderId) {
   return request({
     url: `/api/rd-subwarehouse/stocktake-orders/${orderId}`,
     method: "get",
+  });
+}
+
+export function listRdStocktakeProjectOptions(params = {}) {
+  return request({
+    url: "/api/rd-subwarehouse/stocktake-orders/project-options",
+    method: "get",
+    params,
+  });
+}
+
+export function getRdStocktakeBookQty(params = {}) {
+  return request({
+    url: "/api/rd-subwarehouse/stocktake-orders/book-qty",
+    method: "get",
+    params,
   });
 }
 

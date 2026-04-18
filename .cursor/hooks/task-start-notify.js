@@ -23,6 +23,13 @@ function normalizeText(value) {
     .trim();
 }
 
+/** 飞书消息里展示的 task_id，仅取前 6 位（避免长 UUID 占满文案） */
+function shortTaskIdForFeishuDisplay(id) {
+  const s = String(id || "").trim();
+  if (!s) return "";
+  return s.slice(0, 6);
+}
+
 function summarizePrompt(prompt) {
   const normalized = normalizeText(prompt);
   if (!normalized) {
@@ -154,7 +161,7 @@ async function main() {
   const promptSummary = summarizePrompt(payload.prompt);
 
   writeTaskState(projectDir, payload, startedAtMs, promptSummary);
-  const taskId = String(payload.generation_id || "").trim();
+  const taskId = shortTaskIdForFeishuDisplay(payload.generation_id);
   await sendStartNotification(promptSummary, taskId);
 
   process.stdout.write(

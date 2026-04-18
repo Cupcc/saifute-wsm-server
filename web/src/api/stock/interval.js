@@ -2,7 +2,7 @@ import request from "@/utils/request";
 import { unsupportedStockAction } from "./compat";
 
 const BUSINESS_DOCUMENT_TYPE_MAP = {
-  4: "CustomerStockOrder",
+  4: "SalesStockOrder",
 };
 
 function isSupportedIntervalOrderType(orderType) {
@@ -17,7 +17,7 @@ function isSupportedIntervalOrderType(orderType) {
 function mapReservation(item) {
   return {
     intervalId: item.id,
-    orderType: item.businessDocumentType === "CustomerStockOrder" ? "4" : "",
+    orderType: item.businessDocumentType === "SalesStockOrder" ? "4" : "",
     detailId: item.businessDocumentLineId,
     startNum: item.startNumber,
     endNum: item.endNumber,

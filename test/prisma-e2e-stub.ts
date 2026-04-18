@@ -10,6 +10,7 @@ function createModelStub() {
     findMany: () => Promise.resolve([]),
     findUnique: () => Promise.resolve(null),
     findFirst: () => Promise.resolve(null),
+    groupBy: () => Promise.resolve([]),
     create: () => Promise.resolve({}),
     update: () => Promise.resolve({}),
     upsert: () => Promise.resolve({}),
@@ -227,7 +228,6 @@ function createMemoryModel<T extends MemoryRecord>() {
 function createSeededWorkshopModel() {
   const model = createMemoryModel<{
     id: number;
-    workshopCode: string;
     workshopName: string;
     status: string;
     createdAt: Date;
@@ -238,15 +238,25 @@ function createSeededWorkshopModel() {
   void model.createMany({
     data: [
       {
-        workshopCode: "MAIN",
-        workshopName: "主仓",
+        workshopName: "装备车间",
         status: "ACTIVE",
         createdAt: now,
         updatedAt: now,
       },
       {
-        workshopCode: "RD",
-        workshopName: "研发小仓",
+        workshopName: "硐室车间",
+        status: "ACTIVE",
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        workshopName: "配件车间",
+        status: "ACTIVE",
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        workshopName: "电子车间",
         status: "ACTIVE",
         createdAt: now,
         updatedAt: now,
@@ -295,6 +305,10 @@ function createSupplierModel() {
     id: number;
     supplierCode: string;
     supplierName: string;
+    supplierShortName?: string | null;
+    contactPerson?: string | null;
+    contactPhone?: string | null;
+    address?: string | null;
     status: string;
     creationMode?: string;
     sourceDocumentType?: string | null;
@@ -319,15 +333,24 @@ export class PrismaE2eStub {
   inventoryLog = createModelStub();
   inventorySourceUsage = createModelStub();
   factoryNumberReservation = createModelStub();
-  workflowAuditDocument = createModelStub();
+  approvalDocument = createModelStub();
   stockInOrder = createModelStub();
   stockInOrderLine = createModelStub();
-  customerStockOrder = createModelStub();
-  customerStockOrderLine = createModelStub();
+  salesStockOrder = createModelStub();
+  salesStockOrderLine = createModelStub();
   workshopMaterialOrder = createModelStub();
   workshopMaterialOrderLine = createModelStub();
-  project = createModelStub();
-  projectMaterialLine = createModelStub();
+  rdProject = createModelStub();
+  rdProjectBomLine = createModelStub();
+  rdProjectMaterialLine = createModelStub();
+  rdProjectMaterialAction = createModelStub();
+  rdProjectMaterialActionLine = createModelStub();
+  rdHandoffOrder = createModelStub();
+  rdHandoffOrderLine = createModelStub();
+  rdStocktakeOrder = createModelStub();
+  rdStocktakeOrderLine = createModelStub();
+  stockInPriceCorrectionOrder = createModelStub();
+  stockInPriceCorrectionOrderLine = createModelStub();
   documentRelation = createModelStub();
   documentLineRelation = createModelStub();
   loginLog = createMemoryModel<{
@@ -403,7 +426,6 @@ export class PrismaE2eStub {
   sysUserPost = createModelStub();
   sysRoleMenu = createModelStub();
   sysRoleDept = createModelStub();
-  systemManagementSnapshot = createModelStub();
 
   async $connect(): Promise<void> {}
   async $disconnect(): Promise<void> {}

@@ -46,6 +46,7 @@ const SKIP_RESPONSE_ENVELOPE_SWAGGER_OPERATIONS: ReadonlyArray<SwaggerOperationD
   [
     { method: "get", path: "files/download" },
     { method: "get", path: "reporting/export" },
+    { method: "post", path: "reporting/monthly-reporting/export" },
     { method: "post", path: "ai/chat" },
   ];
 
@@ -54,6 +55,7 @@ export async function setupApp(
 ): Promise<AppConfigService> {
   const appConfigService = app.get(AppConfigService);
 
+  app.set("trust proxy", appConfigService.httpTrustProxy);
   app.setGlobalPrefix(appConfigService.apiGlobalPrefix);
   app.useGlobalPipes(
     new ValidationPipe({

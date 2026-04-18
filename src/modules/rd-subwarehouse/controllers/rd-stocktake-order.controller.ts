@@ -14,7 +14,9 @@ import { WorkshopScopeService } from "../../rbac/application/workshop-scope.serv
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { RdStocktakeOrderService } from "../application/rd-stocktake-order.service";
 import { CreateRdStocktakeOrderDto } from "../dto/create-rd-stocktake-order.dto";
+import { QueryRdStocktakeBookQtyDto } from "../dto/query-rd-stocktake-book-qty.dto";
 import { QueryRdStocktakeOrderDto } from "../dto/query-rd-stocktake-order.dto";
+import { QueryRdStocktakeProjectOptionsDto } from "../dto/query-rd-stocktake-project-options.dto";
 import { VoidRdStocktakeOrderDto } from "../dto/void-rd-stocktake-order.dto";
 
 @Controller("rd-subwarehouse/stocktake-orders")
@@ -37,6 +39,36 @@ export class RdStocktakeOrderController {
     return this.rdStocktakeOrderService.listOrders({
       ...query,
       workshopId,
+    });
+  }
+
+  @Permissions("rd:stocktake-order:list")
+  @Get("project-options")
+  async listProjectOptions(
+    @Query() query: QueryRdStocktakeProjectOptionsDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    return this.rdStocktakeOrderService.listProjectOptions(workshopId);
+  }
+
+  @Permissions("rd:stocktake-order:list")
+  @Get("book-qty")
+  async getProjectMaterialBookQty(
+    @Query() query: QueryRdStocktakeBookQtyDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    return this.rdStocktakeOrderService.getProjectMaterialBookQty({
+      workshopId,
+      rdProjectId: query.rdProjectId,
+      materialId: query.materialId,
     });
   }
 

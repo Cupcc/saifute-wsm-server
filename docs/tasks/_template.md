@@ -3,7 +3,7 @@
 ## Metadata
 
 - Scope:
-- Related requirement: （填写对应 topic 能力路径，格式：`docs/requirements/topics/*.md (Fx)`；无直接关联 topic 时填 `-`）
+- Related requirement: （填写对应 domain 能力路径，格式：`docs/requirements/domain/*.md (Fx)`；无直接关联 domain 时填 `-`）
 - Status: `planned`
 - Review status: `not-reviewed`
 - Delivery mode: `standard` | `autonomous`
@@ -23,7 +23,7 @@
 
 ## Requirement Alignment
 
-- Topic capability:
+- Domain capability:
 - User intent summary:
 - Acceptance criteria carried into this task:
 - Requirement evidence expectations:
@@ -84,7 +84,13 @@
 ### Acceptance Test Expectations
 
 - Acceptance mode: `none` | `light` | `full`
+- User-visible flow affected: `yes` | `no`
+- Cross-module write path: `yes` | `no`
+- Irreversible or high-cost business effect: `yes` | `no`
+- Existing automated user-flow coverage: `yes` | `no`
 - Browser test required: `yes` | `no`
+- Browser waiver reason:
+- Related acceptance cases:
 - Related acceptance spec:
 - Separate acceptance run required: `yes` | `optional` | `no`
 - Complete test report required: `yes` | `no`
@@ -113,7 +119,7 @@
 
 ### Acceptance Checklist
 
-> Acceptance QA 在验收时逐条填写。每条应对应 topic capability 的用户需求或 task doc 的 `[AC-*]` 条目。
+> Acceptance QA 在验收时逐条填写。每条应对应 domain capability 的用户需求或 task doc 的 `[AC-*]` 条目。
 
 - [ ] `[AC-1]` criterion text — Evidence: ... — Verdict: `✓ met` | `✗ not met` | `△ partially met`
 

@@ -35,23 +35,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="经办人" prop="attn">
-        <el-select
-          v-model="queryParams.attn"
-          filterable
-          remote
-          reserve-keyword
-          placeholder="请输入经办人姓名搜索"
-          :remote-method="searchPersonnel"
-          :loading="personnelLoading"
-          clearable
-          style="width: 240px">
-          <el-option
-            v-for="item in personnelOptions"
-            :key="item.personnelId"
-            :label="item.name"
-            :value="item.name">
-          </el-option>
-        </el-select>
+        <combo-input v-model="queryParams.attn" scope="personnel" field="personnelName" placeholder="请选择或输入经办人" width="240px" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -92,16 +76,33 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
-    <adaptive-table border stripe v-loading="loading" :data="scrapOrderList" @selection-change="handleSelectionChange">
+    <adaptive-table border stripe v-loading="loading" :data="scrapOrderList" @selection-change="handleSelectionChange" @row-click="handleRowClick">
+      <el-table-column type="selection" width="50" align="center" />
       <el-table-column type="index" width="50" align="center" />
       <el-table-column sortable show-overflow-tooltip label="报废单号" align="center" prop="scrapNo" v-if="columns[0].visible">
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.scrapNo }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="报废日期" align="center" prop="scrapDate" width="180" v-if="columns[1].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="报废日期"
+        align="center"
+        prop="scrapDate"
+        width="200"
+        :sort-method="compareScrapDateRows"
+        v-if="columns[1].visible"
+      >
         <template #default="scope">
-          <el-button link type="primary" @click="handleDetail(scope.row)">{{ parseTime(scope.row.scrapDate, '{y}-{m}-{d}') }}</el-button>
+          <el-button link type="primary" @click="handleDetail(scope.row)">
+            <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+              <span>{{ formatDocumentDate(scope.row.scrapDate) }}</span>
+              <span style="font-size: 12px; color: #909399;">
+                创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+              </span>
+            </span>
+          </el-button>
         </template>
       </el-table-column>
       <el-table-column sortable show-overflow-tooltip label="处理方式" align="center" prop="disposalMethod" v-if="columns[2].visible">
@@ -111,17 +112,12 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[3].visible">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.chargeBy }}</el-button>
-        </template>
-      </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[4].visible">
+      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[3].visible">
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.attn }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[5].visible">
+      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[4].visible">
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">{{ scope.row.createBy }}</el-button>
         </template>
@@ -148,7 +144,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="报废单号" prop="scrapNo">
-              <el-input v-model="form.scrapNo" placeholder="系统自动生成或手动输入" @input="handleScrapNoInput" />
+              <el-input v-model="form.scrapNo" placeholder="保存后自动生成" disabled />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -157,8 +153,7 @@
                 v-model="form.scrapDate"
                 type="date"
                 value-format="YYYY-MM-DD"
-                placeholder="请选择报废日期"
-                @change="handleScrapDateChange">
+                placeholder="请选择报废日期">
               </el-date-picker>
             </el-form-item>
           </el-col>
@@ -176,31 +171,30 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="负责人" prop="chargeBy">
-              <el-input v-model="form.chargeBy" placeholder="请输入负责人" />
-            </el-form-item>
-          </el-col>
         </el-row>
         <el-row>
           <el-col :span="12">
             <el-form-item label="经办人" prop="attn">
+              <combo-input v-model="form.attn" scope="personnel" field="personnelName" placeholder="请选择或输入经办人" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="车间" prop="workshopId">
               <el-select
-                v-model="form.attn"
+                v-model="form.workshopId"
                 filterable
                 remote
                 reserve-keyword
-                placeholder="请输入经办人姓名搜索"
-                :remote-method="searchPersonnel"
-                :loading="personnelLoading"
-                allow-create
-                default-first-option
+                placeholder="请输入车间名称搜索"
+                :remote-method="searchWorkshop"
+                :loading="workshopLoading"
                 style="width: 100%">
                 <el-option
-                  v-for="item in personnelOptions"
-                  :key="item.personnelId"
-                  :label="item.name"
-                  :value="item.name">
+                  v-for="item in workshopOptions"
+                  :key="item.workshopId"
+                  :label="item.workshopName"
+                  :value="item.workshopId">
+                  <span style="float: left">{{ item.workshopName }}</span>
                 </el-option>
               </el-select>
             </el-form-item>
@@ -250,7 +244,7 @@
             </el-table-column>
             <el-table-column label="单位" prop="unit">
               <template #default="scope">
-                <el-input v-model="scope.row.unit" placeholder="请输入单位" :disabled="isView" />
+                <combo-input v-model="scope.row.unit" scope="material" field="unitCode" placeholder="请选择或输入单位" :disabled="isView" />
               </template>
             </el-table-column>
             <el-table-column label="报废原因" prop="scrapReason">
@@ -301,10 +295,9 @@
             <el-descriptions-item label="处理方式">
               <dict-tag :options="saifute_disposal_method" :value="detailData.disposalMethod"/>
             </el-descriptions-item>
-            <el-descriptions-item label="负责人">{{ detailData.chargeBy }}</el-descriptions-item>
             <el-descriptions-item label="经办人">{{ detailData.attn }}</el-descriptions-item>
             <el-descriptions-item label="创建者">{{ detailData.createBy }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ parseTime(detailData.createTime) }}</el-descriptions-item>
+            <el-descriptions-item label="创建时间">{{ parseTime(detailData.createdAt) }}</el-descriptions-item>
             <el-descriptions-item label="备注" :span="2">{{ detailData.remark }}</el-descriptions-item>
           </el-descriptions>
         </el-tab-pane>
@@ -353,15 +346,16 @@
 <script setup name="ScrapOrder">
 import { listMaterialByCodeOrName } from "@/api/base/material";
 import { listPersonnel } from "@/api/base/personnel";
+import { clearSuggestionsCache } from "@/api/base/suggestions";
+import { listByNameOrContact } from "@/api/base/workshop";
 import {
   addScrapOrder,
-  delScrapOrder,
   getScrapOrder,
   listScrapOrder,
   updateScrapOrder,
   voidScrapOrder,
 } from "@/api/stock/scrapOrder";
-import { formatDateToYYYYMMDD, generateOrderNo } from "@/utils/orderNumber";
+import { formatDateToYYYYMMDD } from "@/utils/orderNumber";
 
 const { proxy } = getCurrentInstance();
 const { saifute_disposal_method, scrap_reason } = proxy.useDict(
@@ -392,6 +386,8 @@ const materialLoading = ref(false);
 // 人员信息相关
 const personnelOptions = ref([]);
 const personnelLoading = ref(false);
+const workshopOptions = ref([]);
+const workshopLoading = ref(false);
 
 // 详情数据
 const detailData = ref({});
@@ -408,10 +404,10 @@ const data = reactive({
     attn: null,
   },
   rules: {
-    scrapNo: [{ required: true, message: "报废单号不能为空", trigger: "blur" }],
     scrapDate: [
       { required: true, message: "报废日期不能为空", trigger: "blur" },
     ],
+    workshopId: [{ required: true, message: "车间不能为空", trigger: "change" }],
     disposalMethod: [
       { required: true, message: "处理方式不能为空", trigger: "change" },
     ],
@@ -432,10 +428,66 @@ const columns = ref([
   { key: 0, label: `报废单号`, visible: true },
   { key: 1, label: `报废日期`, visible: true },
   { key: 2, label: `处理方式`, visible: true },
-  { key: 3, label: `负责人`, visible: false },
-  { key: 4, label: `经办人`, visible: true },
-  { key: 5, label: `创建者`, visible: false },
+  { key: 3, label: `经办人`, visible: true },
+  { key: 4, label: `创建者`, visible: false },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function compareScrapDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.scrapDate).localeCompare(
+    formatDocumentDate(right?.scrapDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.scrapId ?? 0) - Number(right?.scrapId ?? 0);
+}
 
 /** 查询报废单列表 */
 function getList() {
@@ -465,18 +517,17 @@ function cancel() {
 function reset() {
   form.value = {
     scrapId: null,
-    scrapNo: null,
+    scrapNo: "",
     scrapDate: null,
-    disposalMethod: null,
-    chargeBy: null,
+    workshopId: null,
+    disposalMethod: 1,
     attn: null,
     remark: null,
     delFlag: null,
     voidDescription: null,
     createBy: null,
-    createTime: null,
-    updateTime: null,
-    scrapNoManuallyChanged: false,
+    createdAt: null,
+    updatedAt: null,
   };
   detailList.value = [
     {
@@ -490,6 +541,8 @@ function reset() {
   ];
   materialOptions.value = [];
   materialLoading.value = false;
+  workshopOptions.value = [];
+  workshopLoading.value = false;
   proxy.resetForm("scrapOrderRef");
 }
 
@@ -544,6 +597,21 @@ function searchPersonnel(query) {
     });
 }
 
+/** 搜索车间 */
+function searchWorkshop(query) {
+  workshopLoading.value = true;
+  listByNameOrContact({
+    workshopName: query,
+  })
+    .then((response) => {
+      workshopOptions.value = response.rows || [];
+      workshopLoading.value = false;
+    })
+    .catch(() => {
+      workshopLoading.value = false;
+    });
+}
+
 /** 添加明细项 */
 function addDetailItem() {
   detailList.value.push({
@@ -585,48 +653,19 @@ function getFilteredMaterialOptions(rowIndex) {
   );
 }
 
-/**
- * 生成报废单号
- */
-async function generateScrapNo(date) {
-  // 查询当天已有的报废单号，找出最大流水号
-  const params = {
-    beginScrapDate: formatDateToYYYYMMDD(date),
-    endScrapDate: formatDateToYYYYMMDD(date),
-  };
-
-  return generateOrderNo(date, "BF", listScrapOrder, params, "scrapNo");
-}
-
-/** 报废日期变更事件 */
-async function handleScrapDateChange(val) {
-  // 只有在新增模式下，并且报废单号尚未手动修改过时，才重新生成报废单号
-  if (val && !form.value.scrapId && !form.value.scrapNoManuallyChanged) {
-    const newDate = new Date(val);
-    const newScrapNo = await generateScrapNo(newDate);
-    form.value.scrapNo = newScrapNo;
-  }
-}
-
-/** 报废单号输入事件 */
-function handleScrapNoInput() {
-  // 标记报废单号已被手动修改
-  form.value.scrapNoManuallyChanged = true;
-}
-
 /** 新增按钮操作 */
 function handleAdd() {
   reset();
   const today = new Date();
   form.value.scrapDate = formatDateToYYYYMMDD(today);
-  form.value.scrapNoManuallyChanged = false;
+  form.value.disposalMethod = 1;
   title.value = "添加报废单";
   isView.value = false;
   open.value = true;
   dialogLoading.value = true;
-  generateScrapNo(today)
-    .then((scrapNo) => {
-      form.value.scrapNo = scrapNo;
+  Promise.resolve()
+    .then(() => {
+      searchWorkshop("");
       loadMaterialOptions();
     })
     .finally(() => {
@@ -636,15 +675,19 @@ function handleAdd() {
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
+  const scrapId = resolveSelectedScrapId(row);
+  if (!scrapId) {
+    return;
+  }
   reset();
   title.value = "修改报废单";
   isView.value = false;
   open.value = true;
   dialogLoading.value = true;
-  const _scrapId = row.scrapId || ids.value;
-  getScrapOrder(_scrapId)
+  getScrapOrder(scrapId)
     .then((response) => {
       form.value = response.data;
+      searchWorkshop(response.data.workshopName ?? "");
       if (response.data.details && response.data.details.length > 0) {
         detailList.value = response.data.details;
       }
@@ -677,10 +720,14 @@ function handleDetail(row) {
   });
 }
 
-/** 当报废单号输入框发生变化时 */
-function handleScrapNoChange() {
-  // 标记报废单号已被手动修改
-  form.value.scrapNoManuallyChanged = true;
+/** 点击行时同步工具栏状态 */
+function handleRowClick(row) {
+  if (!row?.scrapId) {
+    return;
+  }
+  ids.value = [row.scrapId];
+  single.value = false;
+  multiple.value = false;
 }
 
 /** 提交按钮 */
@@ -714,12 +761,14 @@ function submitForm() {
 
       if (form.value.scrapId != null) {
         updateScrapOrder(form.value).then((response) => {
+          clearSuggestionsCache();
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
         });
       } else {
         addScrapOrder(form.value).then((response) => {
+          clearSuggestionsCache();
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
@@ -731,12 +780,25 @@ function submitForm() {
 
 /** 作废按钮操作 */
 function handleDelete(row) {
+  const scrapId = resolveSelectedScrapId(row);
+  if (!scrapId) {
+    return;
+  }
   abandonForm.value = {
-    scrapId: row.scrapId || ids.value[0],
+    scrapId,
     voidDescription: "",
   };
   abandonOpen.value = true;
   proxy.resetForm("abandonRef");
+}
+
+function resolveSelectedScrapId(row) {
+  const scrapId = row?.scrapId ?? ids.value[0];
+  if (!scrapId) {
+    proxy.$modal.msgError("请选择一条报废单记录");
+    return null;
+  }
+  return scrapId;
 }
 
 /** 取消作废操作 */

@@ -7,7 +7,7 @@ import {
   MaxLength,
   Min,
 } from "class-validator";
-import { OperLogStatus } from "../../../generated/prisma/client";
+import { OperLogStatus } from "../../../../generated/prisma/client";
 
 export class QueryOperLogsDto {
   @IsOptional()

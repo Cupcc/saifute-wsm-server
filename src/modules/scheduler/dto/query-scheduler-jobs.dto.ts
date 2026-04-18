@@ -7,7 +7,7 @@ import {
   MaxLength,
   Min,
 } from "class-validator";
-import { SchedulerJobStatus } from "../../../generated/prisma/client";
+import { SchedulerJobStatus } from "../../../../generated/prisma/client";
 
 export class QuerySchedulerJobsDto {
   @IsOptional()

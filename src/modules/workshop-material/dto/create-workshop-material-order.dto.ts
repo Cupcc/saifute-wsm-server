@@ -12,14 +12,14 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
-import { WorkshopMaterialOrderType } from "../../../generated/prisma/client";
+import { WorkshopMaterialOrderType } from "../../../../generated/prisma/client";
 import { CreateWorkshopMaterialOrderLineDto } from "./create-workshop-material-order-line.dto";
 
 export class CreateWorkshopMaterialOrderDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(64)
-  documentNo!: string;
+  documentNo?: string;
 
   @IsEnum(WorkshopMaterialOrderType)
   orderType!: WorkshopMaterialOrderType;
@@ -32,9 +32,15 @@ export class CreateWorkshopMaterialOrderDto {
   @Min(1)
   handlerPersonnelId?: number;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  handlerName?: string;
+
   @IsInt()
+  @IsOptional()
   @Min(1)
-  workshopId!: number;
+  workshopId?: number;
 
   @IsString()
   @IsOptional()

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Saifute Orchestrator"
+  short_description: "Coordinate planner, coder, reviewer, and acceptance lanes for this repo"
+  default_prompt: "Use $saifute-subagent-orchestration to decide whether this request should stay local or be delegated across planner, coder, reviewer, and acceptance subagents in the Saifute WMS repository."

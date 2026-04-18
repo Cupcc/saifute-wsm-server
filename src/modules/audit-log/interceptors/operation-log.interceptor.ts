@@ -9,7 +9,8 @@ import type { Request } from "express";
 import type { Observable } from "rxjs";
 import { throwError } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
-import { OperLogStatus } from "../../../generated/prisma/client";
+import { OperLogStatus } from "../../../../generated/prisma/client";
+import { resolveRequestIp } from "../../../shared/common/request-ip.util";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { AuditLogService } from "../application/audit-log.service";
 import {
@@ -85,7 +86,7 @@ export class OperationLogInterceptor implements NestInterceptor {
       path: request.originalUrl || request.url,
       operatorId: request.user?.userId,
       operatorName: request.user?.username,
-      ip: this.resolveClientIp(request),
+      ip: resolveRequestIp(request),
       userAgent: this.resolveUserAgent(request),
       result,
       durationMs: Date.now() - startedAt,
@@ -105,23 +106,6 @@ export class OperationLogInterceptor implements NestInterceptor {
       occurredAt: new Date(startedAt),
     });
   }
-
-  private resolveClientIp(request: Request): string {
-    const forwardedFor = request.headers["x-forwarded-for"];
-    const forwardedIp = Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : forwardedFor;
-    const candidate =
-      forwardedIp?.split(",")[0]?.trim() ||
-      request.ip ||
-      request.socket.remoteAddress ||
-      "unknown";
-
-    return candidate === "::1"
-      ? "127.0.0.1"
-      : candidate.replace(/^::ffff:/, "");
-  }
-
   private resolveUserAgent(request: Request): string {
     const userAgent = request.headers["user-agent"];
     if (Array.isArray(userAgent)) {

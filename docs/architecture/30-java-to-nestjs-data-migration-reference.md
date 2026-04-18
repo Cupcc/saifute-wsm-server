@@ -132,9 +132,9 @@
 
 | 目标表                 | 现在的作用                  |
 | ------------------- | ---------------------- |
-| `material_category` | 物料分类树                         |
+| `material_category` | 物料分类                           |
 | `material`          | 物料主档；被库存、入库、出库、车间、项目复用        |
-| `customer`          | 客户主档；被客户收发和项目复用               |
+| `customer`       | 客户主档；被销售业务和项目复用               |
 | `supplier`          | 供应商主档；被入库和项目复用                |
 | `personnel`         | 人员主档；承接经办人、负责人等角色             |
 | `workshop`          | 车间主档；承接单据归属与成本核算，不再作为库存维度    |
@@ -153,16 +153,16 @@
 
 | 目标表                       | 现在的作用               |
 | ------------------------- | ------------------- |
-| `workflow_audit_document` | 保存当前有效审核投影，不替代业务主状态 |
+| `approval_document` | 保存当前有效审核投影，不替代业务主状态 |
 
 ### 4.4 四类事务单据表
 
 | 目标表组                                                       | 现在的作用                |
 | ---------------------------------------------------------- | -------------------- |
 | `stock_in_order` + `stock_in_order_line`                   | 统一承接验收单、生产入库单        |
-| `customer_stock_order` + `customer_stock_order_line`       | 统一承接出库单、销售退货单        |
+| `sales_stock_order` + `sales_stock_order_line`       | 统一承接出库单、销售退货单        |
 | `workshop_material_order` + `workshop_material_order_line` | 统一承接领料单、退料单、报废单      |
-| `project` + `project_material_line`                        | 承接项目及项目物料消耗，且保持库存副作用 |
+| `rd_project` + `rd_project_material_line`                  | 承接研发项目及项目物料消耗，且保持库存副作用 |
 
 ### 4.5 关系表
 
@@ -191,9 +191,9 @@
 
 | 旧表组                                                      | 旧作用     | 新表组                 | 新作用     | 迁移方式     | 当前状态                                  |
 | -------------------------------------------------------- | ------- | ------------------- | ------- | -------- | ------------------------------------- |
-| `sys_dict_data`（`dict_type='saifute_material_category'`） | 旧物料分类字典 | `material_category` | 独立物料分类树 | 转换生成     | 已迁入，`8 -> 8`                          |
+| `sys_dict_data`（`dict_type='saifute_material_category'`） | 旧物料分类字典 | `material_category` | 独立物料分类 | 转换生成     | 已迁入，`8 -> 8`                          |
 | `saifute_material`                                       | 物料主档    | `material`          | 标准物料主档  | 字段归一化迁移  | 已迁入 `437 / 458`，`21` 条因主数据问题被阻塞       |
-| `saifute_customer`                                       | 客户主档    | `customer`          | 客户主档    | 字段归一化迁移  | 已迁入，`184 / 184`                       |
+| `saifute_customer`                                       | 客户主档    | `customer`       | 客户主档    | 字段归一化迁移  | 已迁入，`184 / 184`                       |
 | `saifute_supplier`                                       | 供应商主档   | `supplier`          | 供应商主档   | 字段归一化迁移  | 已迁入，`93 / 93`                         |
 | `saifute_personnel`                                      | 人员主档    | `personnel`         | 人员主档    | 字段归一化迁移  | 已迁入，`51 / 51`                         |
 | `saifute_workshop`                                       | 车间主档    | `workshop`          | 车间主档（归属 / 核算维度）    | 字段归一化迁移 | 已迁入；后续不再把 `workshop` 当成库存范围兜底 |
@@ -212,12 +212,12 @@
 - 新库已迁入 `190` 单、`307` 行
 - `20` 张单据被排除，`286` 份遗留字段进入 `archived_field_payload`
 
-### 5.3 客户收发域：出库
+### 5.3 销售业务域：出库
 
 | 旧表组                                                  | 旧作用    | 新表组                                                                                   | 新作用                         | 迁移方式        | 当前状态     |
 | ---------------------------------------------------- | ------ | ------------------------------------------------------------------------------------- | --------------------------- | ----------- | -------- |
-| `saifute_outbound_order` + `saifute_outbound_detail` | 出库单    | `customer_stock_order` + `customer_stock_order_line`                                  | `orderType=OUTBOUND` 的客户出库单 | 直接收敛到客户收发家族 | 已迁入主单据   |
-| `saifute_interval`（`order_type=4`）                   | 出库编号区间 | `factory_number_reservation`，并按条件回填 `customer_stock_order_line.startNumber/endNumber` | 编号区间占用                      | 分流转换，不直拷    | 已迁入受支持部分 |
+| `saifute_outbound_order` + `saifute_outbound_detail` | 出库单    | `sales_stock_order` + `sales_stock_order_line`                                  | `orderType=OUTBOUND` 的销售出库单 | 直接收敛到销售业务家族 | 已迁入主单据   |
+| `saifute_interval`（`order_type=4`）                   | 出库编号区间 | `factory_number_reservation`，并按条件回填 `sales_stock_order_line.startNumber/endNumber` | 编号区间占用                      | 分流转换，不直拷    | 已迁入受支持部分 |
 
 当前状态：
 
@@ -226,11 +226,11 @@
 - 区间表 `161` 条旧记录中，`80` 条 `order_type=4` 进入 live reservation
 - 其余 `81` 条进入 `archived_intervals`，其中 `74` 条为 `order_type=2`，`5` 条为 `order_type=7`，`2` 条为归档的 `order_type=4`
 
-### 5.4 客户收发域：销售退货
+### 5.4 销售业务域：销售退货
 
 | 旧表组                                                          | 旧作用        | 新表组                                                            | 新作用                           | 迁移方式                        | 当前状态     |
 | ------------------------------------------------------------ | ---------- | -------------------------------------------------------------- | ----------------------------- | --------------------------- | -------- |
-| `saifute_sales_return_order` + `saifute_sales_return_detail` | 销售退货单      | `customer_stock_order` + `customer_stock_order_line`           | `orderType=SALES_RETURN` 的退货单 | formal admission 先入正式表，关系后补 | 已部分迁入    |
+| `saifute_sales_return_order` + `saifute_sales_return_detail` | 销售退货单      | `sales_stock_order` + `sales_stock_order_line`           | `orderType=SALES_RETURN` 的退货单 | formal admission 先入正式表，关系后补 | 已部分迁入    |
 | 旧头表 `source_id/source_type`、旧明细关系线索                          | 退货对出库的来源关系 | `document_relation`、`document_line_relation`、`sourceDocument*` | 退货上下游关系与行内来源                  | 恢复式迁移，不强造关系                 | 仍有后续增强空间 |
 
 当前状态：
@@ -280,7 +280,7 @@
 
 | 旧表组                                                      | 旧作用          | 新表组                                 | 新作用           | 迁移方式              | 当前状态    |
 | -------------------------------------------------------- | ------------ | ----------------------------------- | ------------- | ----------------- | ------- |
-| `saifute_composite_product` + `saifute_product_material` | 项目头与项目物料消耗明细 | `project` + `project_material_line` | 项目事务数据与项目物料消耗 | 事务型迁移，不是静态 BOM 复制 | 已迁入 |
+| `saifute_composite_product` + `saifute_product_material` | 项目头与项目物料消耗明细 | `rd_project` + `rd_project_material_line` | 研发项目事务数据与项目物料消耗 | 事务型迁移，不是静态 BOM 复制 | 已迁入 |
 
 当前状态：
 
@@ -297,7 +297,7 @@
 | `saifute_inventory_log`                                    | 旧库存流水         | `inventory_log`                                     | 新库存流水                       | 重放/重建，不直拷         | 当前已重放出 `733` 条流水                      |
 | `saifute_inventory_used`                                   | 旧来源占用         | `inventory_source_usage`                            | 来源占用与释放                     | 转换迁移，不直拷          | 当前仍为 `0`；本地迁移完成口径接受该受控留白，线上切换前需复核 |
 | `saifute_interval`                                         | 旧区间、编号、批次混合语义 | `factory_number_reservation` + `archived_intervals` | 编号区间 live reservation 与归档区间 | 按 `order_type` 分流 | 已部分完成                                 |
-| `saifute_audit_document`                                   | 旧审核投影         | `workflow_audit_document`                           | 当前有效审核投影                    | 投影重建              | 当前已生成 `360` 条审核投影                     |
+| `saifute_audit_document`                                   | 旧审核投影         | `approval_document`                           | 当前有效审核投影                    | 投影重建              | 当前已生成 `360` 条审核投影                     |
 | 旧头表 `source_id/source_type` + `saifute_inventory_used` 等线索 | 旧上下游关系证据      | `document_relation` + `document_line_relation`      | 新上下游关系模型                    | 恢复式构造，不强造关系       | 当前仍为 `0`；本地迁移完成口径接受该受控留白，线上切换前需复核 |
 | `saifute_inventory_warning`                                | 旧库存预警结果表      | `vw_inventory_warning`                              | 只读预警视图                      | 视图替代              | 不做表对表迁移                               |
 | `saifute_change_record`                                    | 旧变更记录         | 无稳定同名业务表                                            | 作为历史辅助信息保留                  | 归档或旧库留存           | 当前无正式目标表                              |
@@ -322,7 +322,7 @@
 | `inventory_balance`                            | 新库以 `materialId + stockScopeId` 为唯一维度；旧库存是单维，且与“车间归属”不是同一语义 | 基于 admitted 业务单据重放        |
 | `inventory_log`                                | 新库存流水需要统一 `businessDocumentType`、`operationType`、幂等键和逆操作语义 | 基于 admitted 业务单据重放        |
 | `inventory_source_usage`                       | 旧 `inventory_used` 不能机械一对一回填，新模型要求消费行与来源流水精确对齐             | 按可证明关系转换；当前仍待补强           |
-| `workflow_audit_document`                      | 新库只保留当前有效审核投影，不复制旧审核全过程                                    | 对需要审核的 admitted 单据重建投影    |
+| `approval_document`                      | 新库只保留当前有效审核投影，不复制旧审核全过程                                    | 对需要审核的 admitted 单据重建投影    |
 | `document_relation` / `document_line_relation` | 新关系模型比旧头表 `source_id/source_type` 更严格                      | 依据可证明证据恢复                 |
 | `factory_number_reservation`                   | 旧 `saifute_interval` 混合了多类区间，不都属于 live reservation         | 按 `order_type` 分流，非目标部分归档 |
 | `material_category`                            | 旧库没有独立分类表，分类挂在字典中                                          | 从字典拆分生成新表                 |
@@ -372,7 +372,7 @@
 - `map_personnel`
 - `map_workshop`
 - `map_stock_in_order` / `_line`
-- `map_customer_stock_order` / `_line`
+- `map_sales_stock_order` / `_line`
 - `map_workshop_material_order` / `_line`
 - `map_project` / `_line`
 - `map_factory_number_reservation`
@@ -428,7 +428,7 @@
 - `inventory_balance`
 - `inventory_log`
 - `inventory_source_usage`
-- `workflow_audit_document`
+- `approval_document`
 - `document_relation`
 - `document_line_relation`
 - `factory_number_reservation`
@@ -498,6 +498,8 @@
 | 排除项治理 | `excluded_documents` 可以让迁移先完成，再做受控签收 | 线上必须为每类 excluded 指定责任人和处置方式，不能把它们留成模糊尾项 |
 | 平台数据切换 | 账号、角色、菜单、日志、调度不在旧历史业务导入主线 | 线上要把“业务数据迁移”和“新系统初始化”拆成两套 checklist 执行 |
 | 上线信心 | 本地真实库验证能证明脚本逻辑，但不能替代生产演练 | 线上至少要对生产快照做一次全链路 rehearsal，再安排正式 cutover |
+
+注：本节中的“负库存 warning”仅描述历史迁移 / replay 阶段对旧数据缺少期初库存时的受控观察结果，不代表当前正式业务口径；正式业务下，若要求完全可信的 FIFO 成本追溯，则仍以“先入后出、禁止负库存”为准。
 
 ### 11.3 推荐的线上 cutover 顺序
 

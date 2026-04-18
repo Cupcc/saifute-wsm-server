@@ -4,8 +4,8 @@ import {
   buildPageQuery,
   buildRowsResponse,
   mapCustomer,
+  normalizeOptionalId,
   pickKeyword,
-  unsupportedBaseAction,
 } from "./compat";
 
 function applyCustomerTypeFilter(rows, customerType) {
@@ -33,6 +33,7 @@ export function listCustomer(query = {}) {
         "contactPhone",
         "address",
       ]),
+      includeDisabled: query.includeDisabled || undefined,
       limit,
       offset,
     },
@@ -43,6 +44,7 @@ export function listCustomer(query = {}) {
     return result;
   });
 }
+
 // 查询客户列表
 export function listTree(query = {}) {
   return listCustomer({ ...query, pageNum: 1, pageSize: 100 });
@@ -63,16 +65,36 @@ export async function getCustomer(customerId) {
 }
 
 // 新增客户
-export function addCustomer() {
-  return unsupportedBaseAction("当前 NestJS 后端未提供客户新增接口");
+export function addCustomer(data) {
+  return request({
+    url: "/api/master-data/customers",
+    method: "post",
+    data: {
+      customerCode: data.customerCode,
+      customerName: data.customerName,
+      parentId: normalizeOptionalId(data.parentId),
+    },
+  });
 }
 
 // 修改客户
-export function updateCustomer() {
-  return unsupportedBaseAction("当前 NestJS 后端未提供客户修改接口");
+export function updateCustomer(data) {
+  return request({
+    url: `/api/master-data/customers/${data.customerId}`,
+    method: "patch",
+    data: {
+      customerName: data.customerName,
+      parentId: normalizeOptionalId(data.parentId, { allowNull: true }),
+    },
+  });
 }
 
-// 删除客户
-export function delCustomer() {
-  return unsupportedBaseAction("当前 NestJS 后端未提供客户作废接口");
+// 删除客户（逻辑停用）
+export function delCustomer(data) {
+  const customerId =
+    typeof data === "number" ? data : (data?.customerId ?? data?.id);
+  return request({
+    url: `/api/master-data/customers/${customerId}/deactivate`,
+    method: "patch",
+  });
 }

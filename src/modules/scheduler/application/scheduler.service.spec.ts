@@ -5,7 +5,7 @@ import {
   SchedulerJobLogStatus,
   SchedulerJobStatus,
   SchedulerMisfirePolicy,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import { SchedulerRepository } from "../infrastructure/scheduler.repository";
 import { SchedulerExecutorRegistry } from "../infrastructure/scheduler-executor.registry";

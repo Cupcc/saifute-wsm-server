@@ -67,7 +67,6 @@ async function upsertMaterialCategory(
       INSERT INTO material_category (
         categoryCode,
         categoryName,
-        parentId,
         sortOrder,
         status,
         createdBy,
@@ -75,7 +74,7 @@ async function upsertMaterialCategory(
         updatedBy,
         updatedAt
       ) VALUES (
-        ?, ?, NULL, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
+        ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
         categoryName = VALUES(categoryName),
@@ -108,7 +107,6 @@ async function upsertWorkshop(
     connection,
     `
       INSERT INTO workshop (
-        workshopCode,
         workshopName,
         status,
         createdBy,
@@ -116,10 +114,9 @@ async function upsertWorkshop(
         updatedBy,
         updatedAt
       ) VALUES (
-        ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
+        ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        workshopName = VALUES(workshopName),
         status = VALUES(status),
         createdBy = VALUES(createdBy),
         createdAt = COALESCE(VALUES(createdAt), createdAt),
@@ -128,7 +125,6 @@ async function upsertWorkshop(
         id = LAST_INSERT_ID(id)
     `,
     [
-      record.target.workshopCode,
       record.target.workshopName,
       record.target.status,
       record.target.createdBy,
@@ -149,6 +145,10 @@ async function upsertSupplier(
       INSERT INTO supplier (
         supplierCode,
         supplierName,
+        supplierShortName,
+        contactPerson,
+        contactPhone,
+        address,
         status,
         creationMode,
         sourceDocumentType,
@@ -158,10 +158,14 @@ async function upsertSupplier(
         updatedBy,
         updatedAt
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
         supplierName = VALUES(supplierName),
+        supplierShortName = VALUES(supplierShortName),
+        contactPerson = VALUES(contactPerson),
+        contactPhone = VALUES(contactPhone),
+        address = VALUES(address),
         status = VALUES(status),
         creationMode = VALUES(creationMode),
         sourceDocumentType = VALUES(sourceDocumentType),
@@ -175,6 +179,10 @@ async function upsertSupplier(
     [
       record.target.supplierCode,
       record.target.supplierName,
+      record.target.supplierShortName,
+      record.target.contactPerson,
+      record.target.contactPhone,
+      record.target.address,
       record.target.status,
       record.target.creationMode,
       record.target.sourceDocumentType,
@@ -195,25 +203,20 @@ async function upsertPersonnel(
     connection,
     `
       INSERT INTO personnel (
-        personnelCode,
         personnelName,
+        contact_phone,
         status,
-        creationMode,
-        sourceDocumentType,
-        sourceDocumentId,
         createdBy,
         createdAt,
         updatedBy,
         updatedAt
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
+        ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
         personnelName = VALUES(personnelName),
+        contact_phone = VALUES(contact_phone),
         status = VALUES(status),
-        creationMode = VALUES(creationMode),
-        sourceDocumentType = VALUES(sourceDocumentType),
-        sourceDocumentId = VALUES(sourceDocumentId),
         createdBy = VALUES(createdBy),
         createdAt = COALESCE(VALUES(createdAt), createdAt),
         updatedBy = VALUES(updatedBy),
@@ -221,12 +224,9 @@ async function upsertPersonnel(
         id = LAST_INSERT_ID(id)
     `,
     [
-      record.target.personnelCode,
       record.target.personnelName,
+      record.target.contactPhone,
       record.target.status,
-      record.target.creationMode,
-      record.target.sourceDocumentType,
-      record.target.sourceDocumentId,
       record.target.createdBy,
       record.target.createdAt,
       record.target.updatedBy,

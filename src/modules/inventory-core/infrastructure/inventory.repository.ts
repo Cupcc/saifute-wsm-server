@@ -1,8 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import {
   FactoryNumberReservationStatus,
+  InventoryOperationType,
   Prisma,
-} from "../../../generated/prisma/client";
+  StockDirection,
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type InventoryDbClient = Prisma.TransactionClient | PrismaService;
@@ -30,7 +32,7 @@ export class InventoryRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        include: { material: true, stockScope: true, workshop: true },
+        include: { material: true, stockScope: true },
       }),
       this.prisma.inventoryBalance.count({ where }),
     ]);
@@ -56,12 +58,13 @@ export class InventoryRepository {
   async findLogs(params: {
     materialId?: number;
     stockScopeIds?: number[];
+    workshopId?: number;
     businessDocumentId?: number;
     businessDocumentType?: string;
     businessDocumentNumber?: string;
     operationType?: string;
-    occurredAtFrom?: Date;
-    occurredAtTo?: Date;
+    bizDateFrom?: Date;
+    bizDateTo?: Date;
     limit: number;
     offset: number;
   }) {
@@ -72,6 +75,7 @@ export class InventoryRepository {
     } else if (params.stockScopeIds?.length) {
       where.stockScopeId = { in: params.stockScopeIds };
     }
+    if (params.workshopId) where.workshopId = params.workshopId;
     if (params.businessDocumentId)
       where.businessDocumentId = params.businessDocumentId;
     if (params.businessDocumentType)
@@ -85,13 +89,13 @@ export class InventoryRepository {
       where.operationType =
         params.operationType as Prisma.EnumInventoryOperationTypeFilter;
     }
-    if (params.occurredAtFrom || params.occurredAtTo) {
-      where.occurredAt = {};
-      if (params.occurredAtFrom) {
-        where.occurredAt.gte = params.occurredAtFrom;
+    if (params.bizDateFrom || params.bizDateTo) {
+      where.bizDate = {};
+      if (params.bizDateFrom) {
+        where.bizDate.gte = params.bizDateFrom;
       }
-      if (params.occurredAtTo) {
-        where.occurredAt.lte = params.occurredAtTo;
+      if (params.bizDateTo) {
+        where.bizDate.lte = params.bizDateTo;
       }
     }
 
@@ -100,7 +104,7 @@ export class InventoryRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        orderBy: { occurredAt: "desc" },
+        orderBy: [{ bizDate: "desc" }, { occurredAt: "desc" }, { id: "desc" }],
         include: { material: true, stockScope: true, workshop: true },
       }),
       this.prisma.inventoryLog.count({ where }),
@@ -112,6 +116,7 @@ export class InventoryRepository {
   async findSourceUsages(
     params: {
       materialId?: number;
+      stockScopeIds?: number[];
       consumerDocumentType?: string;
       consumerDocumentId?: number;
       limit: number;
@@ -121,6 +126,13 @@ export class InventoryRepository {
   ) {
     const where: Prisma.InventorySourceUsageWhereInput = {};
     if (params.materialId) where.materialId = params.materialId;
+    if (params.stockScopeIds?.length === 1) {
+      where.sourceLog = { stockScopeId: params.stockScopeIds[0] };
+    } else if (params.stockScopeIds?.length) {
+      where.sourceLog = {
+        stockScopeId: { in: params.stockScopeIds },
+      };
+    }
     if (params.consumerDocumentType)
       where.consumerDocumentType = params.consumerDocumentType;
     if (params.consumerDocumentId)
@@ -137,6 +149,24 @@ export class InventoryRepository {
     ]);
 
     return { items, total };
+  }
+
+  async findSourceUsagesForConsumerLine(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+      consumerLineId: number;
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventorySourceUsage.findMany({
+      where: {
+        consumerDocumentType: params.consumerDocumentType,
+        consumerDocumentId: params.consumerDocumentId,
+        consumerLineId: params.consumerLineId,
+      },
+      include: { material: true, sourceLog: true },
+    });
   }
 
   async lockSourceLog(
@@ -190,7 +220,7 @@ export class InventoryRepository {
           businessDocumentId: params.businessDocumentId,
           reversalOfLogId: null,
         },
-        orderBy: { occurredAt: "asc" },
+        orderBy: [{ bizDate: "asc" }, { occurredAt: "asc" }, { id: "asc" }],
       }),
       db.inventoryLog.findMany({
         where: {
@@ -266,6 +296,136 @@ export class InventoryRepository {
     return db.inventorySourceUsage.update({
       where: { id },
       data,
+    });
+  }
+
+  /**
+   * Returns IN logs eligible as FIFO source layers for the given material and
+   * stock scope. Filters by operation type (only real inbound types), excludes
+   * logs that have been reversed, and includes only logs with remaining available
+   * quantity (changeQty minus net allocated). Results are ordered oldest-first so
+   * callers can greedily consume from the front.
+   */
+  async findFifoSourceLogs(
+    params: {
+      materialId: number;
+      stockScopeId: number;
+      sourceOperationTypes: InventoryOperationType[];
+      unitCost?: Prisma.Decimal;
+      projectTargetId?: number;
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    const logs = await db.inventoryLog.findMany({
+      where: {
+        materialId: params.materialId,
+        stockScopeId: params.stockScopeId,
+        direction: StockDirection.IN,
+        operationType: { in: params.sourceOperationTypes },
+        ...(typeof params.projectTargetId === "number"
+          ? { projectTargetId: params.projectTargetId }
+          : {}),
+        ...(params.unitCost ? { unitCost: params.unitCost } : {}),
+        reversalOfLogId: null,
+        reversedByLogs: { none: {} },
+      },
+      include: {
+        allocatedSourceUsages: {
+          select: { allocatedQty: true, releasedQty: true },
+        },
+      },
+      orderBy: [{ bizDate: "asc" }, { occurredAt: "asc" }, { id: "asc" }],
+    });
+
+    return logs
+      .map((log) => {
+        const netAllocated = log.allocatedSourceUsages.reduce(
+          (sum, u) =>
+            sum
+              .add(new Prisma.Decimal(u.allocatedQty))
+              .sub(new Prisma.Decimal(u.releasedQty)),
+          new Prisma.Decimal(0),
+        );
+        const availableQty = new Prisma.Decimal(log.changeQty).sub(
+          netAllocated,
+        );
+        return {
+          id: log.id,
+          changeQty: new Prisma.Decimal(log.changeQty),
+          occurredAt: log.occurredAt,
+          unitCost: log.unitCost ? new Prisma.Decimal(log.unitCost) : null,
+          availableQty,
+        };
+      })
+      .filter((log) => log.availableQty.gt(0));
+  }
+
+  async findEffectiveLogsByProjectTarget(
+    params: {
+      stockScopeId: number;
+      projectTargetId: number;
+      materialIds?: number[];
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventoryLog.findMany({
+      where: {
+        stockScopeId: params.stockScopeId,
+        projectTargetId: params.projectTargetId,
+        ...(params.materialIds?.length
+          ? { materialId: { in: params.materialIds } }
+          : {}),
+        reversalOfLogId: null,
+        reversedByLogs: { none: {} },
+      },
+      select: {
+        materialId: true,
+        direction: true,
+        changeQty: true,
+      },
+      orderBy: [{ bizDate: "asc" }, { occurredAt: "asc" }, { id: "asc" }],
+    });
+  }
+
+  /**
+   * Finds all non-released source usages for a given consumer document, used to
+   * bulk-release them when the consumer document is voided.
+   */
+  async findActiveSourceUsagesForConsumer(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventorySourceUsage.findMany({
+      where: {
+        consumerDocumentType: params.consumerDocumentType,
+        consumerDocumentId: params.consumerDocumentId,
+        status: { not: "RELEASED" },
+      },
+    });
+  }
+
+  /**
+   * Finds all non-released source usages for a single consumer document line.
+   * Used to release allocations before reversing a specific OUT log during update.
+   */
+  async findActiveSourceUsagesForConsumerLine(
+    params: {
+      consumerDocumentType: string;
+      consumerDocumentId: number;
+      consumerLineId: number;
+    },
+    db: InventoryDbClient = this.prisma,
+  ) {
+    return db.inventorySourceUsage.findMany({
+      where: {
+        consumerDocumentType: params.consumerDocumentType,
+        consumerDocumentId: params.consumerDocumentId,
+        consumerLineId: params.consumerLineId,
+        status: { not: "RELEASED" },
+      },
     });
   }
 

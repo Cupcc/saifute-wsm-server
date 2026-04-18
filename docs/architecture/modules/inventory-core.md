@@ -4,6 +4,8 @@
 
 作为所有事务型单据唯一可依赖的库存中心域，负责主仓 / RD 小仓库存现值、库存日志、来源追踪、预警和编号区间。任何业务模块不得直接改库存底表。
 
+当前已确认的 `F5` 第一版范围：预警只保留只读视图 / 报表提示；出厂编号区间能力只服务 `sales` 出库链路，不扩成多业务家族统一平台。
+
 ## 原 Java 来源与映射范围
 
 - `business/src/main/java/com/saifute/stock`
@@ -30,6 +32,8 @@
 - `releaseInventorySource()`
 - `checkInventoryWarning()`
 - `reserveFactoryNumberInterval()`
+- `queryPriceLayerAvailability()` — 按 `物料 + 单价` 聚合可用来源层，供销售出库价格层选择（计划中）
+- `allocateInventorySourceByPriceLayer()` — 在指定价格层内按 FIFO 分配来源（计划中）
 
 ## Controller 接口草案
 
@@ -63,7 +67,7 @@
 
 - `inventory-core` 是库存唯一写入口
 - 单据模块必须传入业务类型、单据号、来源标识和操作者
-- 是否允许负库存由策略配置决定，但默认先兼容现状
+- 面向完全可信的来源追溯与 FIFO 成本核算时，不允许负库存；所有出库必须先有可用入库来源，历史纠正应通过补录期初、逆操作重建或受控重放处理，而不是把负库存作为常态策略
 - 所有数量字段迁移时优先改用精度明确的十进制类型
 - 来源追踪与逆操作补偿是不可省略的关键语义
 - `reverseStock()` 必须保证同一条来源流水最多只生成一条逆向流水，且调用方应为同一来源流水使用稳定的 `idempotencyKey`
@@ -73,13 +77,14 @@
 - 简单库存主表读写可用 Prisma
 - 库存分配、报表查询、历史回溯优先 raw SQL
 - 通过 `InventoryTransactionService` 统一封装库存事务边界
-- 若并发扣减风险较高，可在实现层补悲观锁或版本号控制
+- `inventory_balance` 更新通过 `rowVersion` compare-and-swap 实现乐观锁；若后续热点竞争更高，再评估悲观锁
 
 ## 与其他模块的依赖关系
 
 - 依赖 `master-data` 获取物料等基础快照
-- 被 `inbound`、`customer`、`workshop-material`、`project` 依赖
-- 与 `workflow` 只通过业务模块协作，不直接耦合审核表
+- 被 `inbound`、`sales`、`workshop-material`、`rd-project` 依赖
+- 未来将被 `sales-project` 以只读项目维度视图 / 草稿生成方式协作依赖
+- 与 `approval` 只通过业务模块协作，不直接耦合审核表
 
 ## 事务边界与一致性要求
 
@@ -87,6 +92,7 @@
 - 业务单据与库存副作用原则上同事务完成
 - 不允许只写主表不写日志，或只回滚主表不释放来源占用
 - `increaseStock()`、`decreaseStock()`、`reverseStock()`、`allocateInventorySource()`、`releaseInventorySource()` 默认可独立开启事务执行；若调用方已持有事务，应复用同一个事务上下文完成组合编排
+- `factory_number_reservation` 第一版仅支持 `sales` 出库链路的占用、释放与查询；其他业务家族如需接入，后续单独扩 scope
 
 ## 权限点、数据权限、审计要求
 
@@ -101,6 +107,7 @@
 - `workshop` 只承担主仓领退料归属与成本核算，不参与库存余额唯一键
 - 同一物料不同入库批次可存在不同成本层；出库、领料、退料的成本必须通过来源分配传递
 - `inventory_warning` 收敛为只读视图 `vw_inventory_warning`，不单独落交易表
+- `inventory_warning` 第一版只承担读模型 / 报表提示职责，不派生独立预警处理流
 - 单据模块必须通过 `businessDocumentType`、`businessDocumentId`、`businessDocumentLineId` 向库存中心传递来源语义
 - `inventory_log.reversalOfLogId` 应保持唯一，确保同一条原始流水只能被逆操作一次
 - 详细业务流程与字段建议见 `docs/architecture/20-wms-database-tables-and-schema.md`
@@ -110,11 +117,22 @@
 - 库存增加、减少、逆操作测试
 - 库存日志必写测试
 - 来源分配与释放测试
-- 并发扣减一致性测试
+- 真实 DB 并发扣减一致性集成测试
 - 预警生成测试
+
+## 计划新增操作类型
+
+以下操作类型由入库调价单（`inbound` F8）引入，实现后需纳入 `InventoryOperationType`：
+
+- `PRICE_CORRECTION_OUT` — 把原来源流水中尚未消费的剩余数量转出
+- `PRICE_CORRECTION_IN` — 按正确单价重新转入，形成新的 FIFO 来源流水；需纳入 `FIFO_SOURCE_OPERATION_TYPES`
+
+详见需求：`docs/requirements/domain/inbound-business-module.md`（F8）。
 
 ## 暂不实现范围
 
 - 标准 WMS 仓库/库位/批次模型升级
 - 冻结库存
-- 移库和盘点
+- 移库
+- 主仓盘点 / 通用盘点单独切片；当前不并入 `inventory-core`
+- `RD` 小仓盘点 / 调整继续由 `rd-subwarehouse` 承接

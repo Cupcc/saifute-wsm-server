@@ -103,7 +103,25 @@
     <adaptive-table border stripe v-loading="loading" :data="intoDetailList">
       <el-table-column type="index" width="60" align="center" />
       <el-table-column sortable show-overflow-tooltip label="入库单号" align="center" prop="intoNo" key="intoNo" v-if="columns[0].visible"/>
-      <el-table-column sortable show-overflow-tooltip label="入库日期" align="center" prop="intoDate" v-if="columns[1].visible" />
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="入库日期"
+        align="center"
+        prop="intoDate"
+        width="200"
+        :sort-method="compareIntoDateRows"
+        v-if="columns[1].visible"
+      >
+        <template #default="scope">
+          <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+            <span>{{ formatDocumentDate(scope.row.intoDate) }}</span>
+            <span style="font-size: 12px; color: #909399;">
+              创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+            </span>
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column sortable show-overflow-tooltip label="部门" align="center" prop="workshopName" v-if="columns[2].visible" />
       <el-table-column sortable show-overflow-tooltip label="物料名称" align="center" prop="material.materialName" v-if="columns[3].visible" />
       <el-table-column sortable show-overflow-tooltip label="规格型号" align="center" prop="material.specification" v-if="columns[4].visible" />
@@ -216,6 +234,63 @@ const columns = ref([
   { key: 8, label: `小计`, visible: true },
   { key: 9, label: `备注`, visible: true },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function compareIntoDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.intoDate).localeCompare(
+    formatDocumentDate(right?.intoDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.detailId ?? 0) - Number(right?.detailId ?? 0);
+}
 
 /** 合计计算 */
 function getSummaries(param) {

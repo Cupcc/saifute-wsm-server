@@ -4,20 +4,21 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { AppController } from "./app.controller";
 import { AiAssistantModule } from "./modules/ai-assistant/ai-assistant.module";
+import { ApprovalModule } from "./modules/approval/approval.module";
 import { AuditLogModule } from "./modules/audit-log/audit-log.module";
 import { AuthModule } from "./modules/auth/auth.module";
-import { CustomerModule } from "./modules/customer/customer.module";
 import { FileStorageModule } from "./modules/file-storage/file-storage.module";
 import { InboundModule } from "./modules/inbound/inbound.module";
 import { InventoryCoreModule } from "./modules/inventory-core/inventory-core.module";
 import { MasterDataModule } from "./modules/master-data/master-data.module";
-import { ProjectModule } from "./modules/project/project.module";
 import { RbacModule } from "./modules/rbac/rbac.module";
+import { RdProjectModule } from "./modules/rd-project/rd-project.module";
 import { RdSubwarehouseModule } from "./modules/rd-subwarehouse/rd-subwarehouse.module";
 import { ReportingModule } from "./modules/reporting/reporting.module";
+import { SalesModule } from "./modules/sales/sales.module";
+import { SalesProjectModule } from "./modules/sales-project/sales-project.module";
 import { SchedulerModule } from "./modules/scheduler/scheduler.module";
 import { SessionModule } from "./modules/session/session.module";
-import { WorkflowModule } from "./modules/workflow/workflow.module";
 import { WorkshopMaterialModule } from "./modules/workshop-material/workshop-material.module";
 import { ResponseEnvelopeInterceptor } from "./shared/common/interceptors/response-envelope.interceptor";
 import { SharedConfigModule } from "./shared/config/shared-config.module";
@@ -42,11 +43,12 @@ import { RedisModule } from "./shared/redis/redis.module";
     FileStorageModule,
     MasterDataModule,
     InventoryCoreModule,
-    WorkflowModule,
+    ApprovalModule,
     InboundModule,
-    CustomerModule,
+    SalesModule,
+    SalesProjectModule,
     WorkshopMaterialModule,
-    ProjectModule,
+    RdProjectModule,
     RdSubwarehouseModule,
     ReportingModule,
     SchedulerModule,

@@ -1,7 +1,13 @@
+import {
+  BusinessDocumentType,
+  type BusinessDocumentTypeValue,
+} from "../shared/business-document-type";
 import type {
   AdmittedLineRow,
   AdmittedOrderRow,
   AdmittedStockInLineRow,
+  AuditDocumentInsert,
+  AuditProjectionPlan,
   DocumentFamilyValue,
   DocumentLineRelationInsert,
   DocumentRelationInsert,
@@ -19,10 +25,13 @@ import type {
   StaleClearRecord,
   UpstreamOutboundLineRow,
   UpstreamPickLineRow,
-  WorkflowAuditDocumentInsert,
-  WorkflowProjectionPlan,
 } from "./types";
 import { POST_ADMISSION_MIGRATION_BATCH } from "./types";
+
+const STOCK_IN_DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
+const SALES_STOCK_DOCUMENT_TYPE = BusinessDocumentType.SalesStockOrder;
+const WORKSHOP_MATERIAL_DOCUMENT_TYPE =
+  BusinessDocumentType.WorkshopMaterialOrder;
 
 function buildBalanceKey(materialId: number, workshopId: number): string {
   return `${materialId}::${workshopId}`;
@@ -30,7 +39,7 @@ function buildBalanceKey(materialId: number, workshopId: number): string {
 
 function buildIdempotencyKey(
   prefix: string,
-  documentType: string,
+  documentType: BusinessDocumentTypeValue,
   documentId: number,
   lineId: number,
 ): string {
@@ -364,30 +373,30 @@ function buildSourceBackfillPlan(
     if (srStalePrelinkDiffers) {
       staleClearRecords.push({
         lineId: classification.lineId,
-        documentTable: "customer_stock_order_line",
+        documentTable: "sales_stock_order_line",
       });
     }
 
     if (returnLine.sourceDocumentId === null || srStalePrelinkDiffers) {
       backfillRecords.push({
         lineId: classification.lineId,
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: SALES_STOCK_DOCUMENT_TYPE,
         sourceDocumentId: classification.provenUpstreamOrderId,
         sourceDocumentLineId: classification.provenUpstreamLineId,
       });
     }
 
-    const headerRelationKey = `CUSTOMER_STOCK::${upstreamLine.orderId}::${returnLine.orderId}`;
+    const headerRelationKey = `SALES_STOCK::${upstreamLine.orderId}::${returnLine.orderId}`;
 
     if (!seenHeaderRelations.has(headerRelationKey)) {
       seenHeaderRelations.add(headerRelationKey);
       documentRelations.push({
         relationType: "SALES_RETURN_FROM_OUTBOUND",
-        upstreamFamily: "CUSTOMER_STOCK",
-        upstreamDocumentType: "CustomerStockOrder",
+        upstreamFamily: "SALES_STOCK",
+        upstreamDocumentType: SALES_STOCK_DOCUMENT_TYPE,
         upstreamDocumentId: upstreamLine.orderId,
-        downstreamFamily: "CUSTOMER_STOCK",
-        downstreamDocumentType: "CustomerStockOrder",
+        downstreamFamily: "SALES_STOCK",
+        downstreamDocumentType: SALES_STOCK_DOCUMENT_TYPE,
         downstreamDocumentId: returnLine.orderId,
         isActive: returnLine.lifecycleStatus === "EFFECTIVE",
       });
@@ -395,12 +404,12 @@ function buildSourceBackfillPlan(
 
     documentLineRelations.push({
       relationType: "SALES_RETURN_FROM_OUTBOUND",
-      upstreamFamily: "CUSTOMER_STOCK",
-      upstreamDocumentType: "CustomerStockOrder",
+      upstreamFamily: "SALES_STOCK",
+      upstreamDocumentType: SALES_STOCK_DOCUMENT_TYPE,
       upstreamDocumentId: upstreamLine.orderId,
       upstreamLineId: upstreamLine.id,
-      downstreamFamily: "CUSTOMER_STOCK",
-      downstreamDocumentType: "CustomerStockOrder",
+      downstreamFamily: "SALES_STOCK",
+      downstreamDocumentType: SALES_STOCK_DOCUMENT_TYPE,
       downstreamDocumentId: returnLine.orderId,
       downstreamLineId: returnLine.id,
       linkedQty: returnLine.quantity,
@@ -437,7 +446,7 @@ function buildSourceBackfillPlan(
     if (returnLine.sourceDocumentId === null || wrStalePrelinkDiffers) {
       backfillRecords.push({
         lineId: classification.lineId,
-        sourceDocumentType: "WorkshopMaterialOrder",
+        sourceDocumentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
         sourceDocumentId: classification.provenUpstreamOrderId,
         sourceDocumentLineId: classification.provenUpstreamLineId,
       });
@@ -450,10 +459,10 @@ function buildSourceBackfillPlan(
       documentRelations.push({
         relationType: "WORKSHOP_RETURN_FROM_PICK",
         upstreamFamily: "WORKSHOP_MATERIAL",
-        upstreamDocumentType: "WorkshopMaterialOrder",
+        upstreamDocumentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
         upstreamDocumentId: upstreamLine.orderId,
         downstreamFamily: "WORKSHOP_MATERIAL",
-        downstreamDocumentType: "WorkshopMaterialOrder",
+        downstreamDocumentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
         downstreamDocumentId: returnLine.orderId,
         isActive: returnLine.lifecycleStatus === "EFFECTIVE",
       });
@@ -462,11 +471,11 @@ function buildSourceBackfillPlan(
     documentLineRelations.push({
       relationType: "WORKSHOP_RETURN_FROM_PICK",
       upstreamFamily: "WORKSHOP_MATERIAL",
-      upstreamDocumentType: "WorkshopMaterialOrder",
+      upstreamDocumentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
       upstreamDocumentId: upstreamLine.orderId,
       upstreamLineId: upstreamLine.id,
       downstreamFamily: "WORKSHOP_MATERIAL",
-      downstreamDocumentType: "WorkshopMaterialOrder",
+      downstreamDocumentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
       downstreamDocumentId: returnLine.orderId,
       downstreamLineId: returnLine.id,
       linkedQty: returnLine.quantity,
@@ -480,7 +489,7 @@ function buildSourceBackfillPlan(
     ) {
       staleClearRecords.push({
         lineId: classification.lineId,
-        documentTable: "customer_stock_order_line",
+        documentTable: "sales_stock_order_line",
       });
     }
   }
@@ -512,7 +521,7 @@ interface ReplayLineInput {
   materialId: number;
   workshopId: number;
   quantity: string;
-  documentType: string;
+  documentType: BusinessDocumentTypeValue;
   documentId: number;
   documentNumber: string;
   businessModule: string;
@@ -547,7 +556,7 @@ function buildInventoryReplayPlan(
       materialId: line.materialId,
       workshopId: line.workshopId,
       quantity: line.quantity,
-      documentType: "StockInOrder",
+      documentType: STOCK_IN_DOCUMENT_TYPE,
       documentId: line.orderId,
       documentNumber: line.documentNo,
       businessModule: "inbound",
@@ -567,10 +576,10 @@ function buildInventoryReplayPlan(
       materialId: line.materialId,
       workshopId: line.workshopId,
       quantity: line.quantity,
-      documentType: "CustomerStockOrder",
+      documentType: SALES_STOCK_DOCUMENT_TYPE,
       documentId: line.orderId,
       documentNumber: line.documentNo,
-      businessModule: "customer",
+      businessModule: "sales",
       direction: "OUT" as const,
       operationType: "OUTBOUND_OUT",
       lifecycleStatus: line.lifecycleStatus,
@@ -584,10 +593,10 @@ function buildInventoryReplayPlan(
       materialId: line.materialId,
       workshopId: line.workshopId,
       quantity: line.quantity,
-      documentType: "CustomerStockOrder",
+      documentType: SALES_STOCK_DOCUMENT_TYPE,
       documentId: line.orderId,
       documentNumber: line.documentNo,
-      businessModule: "customer",
+      businessModule: "sales",
       direction: "IN" as const,
       operationType: "SALES_RETURN_IN",
       lifecycleStatus: line.lifecycleStatus,
@@ -601,7 +610,7 @@ function buildInventoryReplayPlan(
       materialId: line.materialId,
       workshopId: line.workshopId,
       quantity: line.quantity,
-      documentType: "WorkshopMaterialOrder",
+      documentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
       documentId: line.orderId,
       documentNumber: line.documentNo,
       businessModule: "workshop-material",
@@ -618,7 +627,7 @@ function buildInventoryReplayPlan(
       materialId: line.materialId,
       workshopId: line.workshopId,
       quantity: line.quantity,
-      documentType: "WorkshopMaterialOrder",
+      documentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
       documentId: line.orderId,
       documentNumber: line.documentNo,
       businessModule: "workshop-material",
@@ -790,7 +799,7 @@ function buildInventoryReplayPlan(
 
     const sourceIdempotencyKey = buildIdempotencyKey(
       "replay",
-      "CustomerStockOrder",
+      SALES_STOCK_DOCUMENT_TYPE,
       upstreamLine.orderId,
       upstreamLine.id,
     );
@@ -808,7 +817,7 @@ function buildInventoryReplayPlan(
     sourceUsageInserts.push({
       materialId: line.materialId,
       sourceLogIdempotencyKey: sourceIdempotencyKey,
-      consumerDocumentType: "CustomerStockOrder",
+      consumerDocumentType: SALES_STOCK_DOCUMENT_TYPE,
       consumerDocumentId: line.orderId,
       consumerLineId: line.id,
       allocatedQty: line.quantity,
@@ -858,7 +867,7 @@ function buildInventoryReplayPlan(
 
     const sourceIdempotencyKey = buildIdempotencyKey(
       "replay",
-      "WorkshopMaterialOrder",
+      WORKSHOP_MATERIAL_DOCUMENT_TYPE,
       upstreamLine.orderId,
       upstreamLine.id,
     );
@@ -876,7 +885,7 @@ function buildInventoryReplayPlan(
     sourceUsageInserts.push({
       materialId: line.materialId,
       sourceLogIdempotencyKey: sourceIdempotencyKey,
-      consumerDocumentType: "WorkshopMaterialOrder",
+      consumerDocumentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
       consumerDocumentId: line.orderId,
       consumerLineId: line.id,
       allocatedQty: line.quantity,
@@ -891,19 +900,19 @@ function buildInventoryReplayPlan(
   };
 }
 
-function buildWorkflowProjectionPlan(
+function buildAuditProjectionPlan(
   stockInOrders: AdmittedOrderRow[],
   outboundOrders: AdmittedOrderRow[],
   salesReturnOrders: AdmittedOrderRow[],
   pickOrders: AdmittedOrderRow[],
   workshopReturnOrders: AdmittedOrderRow[],
-): WorkflowProjectionPlan {
-  const workflowDocumentInserts: WorkflowAuditDocumentInsert[] = [];
+): AuditProjectionPlan {
+  const auditDocumentInserts: AuditDocumentInsert[] = [];
 
-  function addWorkflowRows(
+  function addAuditRows(
     orders: AdmittedOrderRow[],
     documentFamily: DocumentFamilyValue,
-    documentType: string,
+    documentType: BusinessDocumentTypeValue,
   ): void {
     for (const order of orders) {
       if (order.auditStatusSnapshot === "NOT_REQUIRED") {
@@ -914,7 +923,7 @@ function buildWorkflowProjectionPlan(
         continue;
       }
 
-      workflowDocumentInserts.push({
+      auditDocumentInserts.push({
         documentFamily,
         documentType,
         documentId: order.id,
@@ -924,17 +933,21 @@ function buildWorkflowProjectionPlan(
     }
   }
 
-  addWorkflowRows(stockInOrders, "STOCK_IN", "StockInOrder");
-  addWorkflowRows(outboundOrders, "CUSTOMER_STOCK", "CustomerStockOrder");
-  addWorkflowRows(salesReturnOrders, "CUSTOMER_STOCK", "CustomerStockOrder");
-  addWorkflowRows(pickOrders, "WORKSHOP_MATERIAL", "WorkshopMaterialOrder");
-  addWorkflowRows(
+  addAuditRows(stockInOrders, "STOCK_IN", STOCK_IN_DOCUMENT_TYPE);
+  addAuditRows(outboundOrders, "SALES_STOCK", SALES_STOCK_DOCUMENT_TYPE);
+  addAuditRows(salesReturnOrders, "SALES_STOCK", SALES_STOCK_DOCUMENT_TYPE);
+  addAuditRows(
+    pickOrders,
+    "WORKSHOP_MATERIAL",
+    WORKSHOP_MATERIAL_DOCUMENT_TYPE,
+  );
+  addAuditRows(
     workshopReturnOrders,
     "WORKSHOP_MATERIAL",
-    "WorkshopMaterialOrder",
+    WORKSHOP_MATERIAL_DOCUMENT_TYPE,
   );
 
-  workflowDocumentInserts.sort((a, b) => {
+  auditDocumentInserts.sort((a, b) => {
     const familyCompare = a.documentFamily.localeCompare(b.documentFamily);
 
     if (familyCompare !== 0) {
@@ -945,7 +958,7 @@ function buildWorkflowProjectionPlan(
   });
 
   return {
-    workflowDocumentInserts,
+    auditDocumentInserts,
   };
 }
 
@@ -990,7 +1003,7 @@ export function buildPostAdmissionMigrationPlan(
     workshopReturnClassifications,
   );
 
-  const workflow = buildWorkflowProjectionPlan(
+  const audit = buildAuditProjectionPlan(
     baseline.stockInOrders,
     baseline.outboundOrders,
     baseline.salesReturnOrders,
@@ -1014,7 +1027,7 @@ export function buildPostAdmissionMigrationPlan(
     inventoryLogInserts: replay.logInserts.length,
     sourceUsageInserts: replay.sourceUsageInserts.length,
     sourceUsageGaps: replay.unresolvedSourceUsageGaps.length,
-    workflowDocumentInserts: workflow.workflowDocumentInserts.length,
+    auditDocumentInserts: audit.auditDocumentInserts.length,
   };
 
   const globalBlockers: PostAdmissionMigrationPlan["globalBlockers"] = [];
@@ -1056,7 +1069,7 @@ export function buildPostAdmissionMigrationPlan(
     relation,
     backfill,
     replay,
-    workflow,
+    audit,
     globalBlockers,
     warnings: [],
     counts,

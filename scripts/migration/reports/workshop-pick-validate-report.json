@@ -20,7 +20,7 @@
   "dependencyBaseline": {
     "actualBlockedMaterialCount": 21,
     "actualMapCounts": {
-      "customer": 184,
+      "sales": 184,
       "material": 437,
       "materialCategory": 8,
       "personnel": 51,
@@ -29,7 +29,7 @@
     },
     "expectedBlockedMaterialCount": 21,
     "expectedMapCounts": {
-      "customer": 184,
+      "sales": 184,
       "material": 437,
       "materialCategory": 8,
       "personnel": 51,
@@ -60,7 +60,7 @@
       "inventory_balance": 0,
       "inventory_log": 0,
       "inventory_source_usage": 0,
-      "workflow_audit_document": 0
+      "audit_document": 0
     },
     "lineBatchMapRows": 145,
     "lineTargetRows": 145,

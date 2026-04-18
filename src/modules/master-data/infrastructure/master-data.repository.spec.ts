@@ -1,66 +1,250 @@
+import { Logger } from "@nestjs/common";
+import { Prisma } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataRepository } from "./master-data.repository";
 
 describe("MasterDataRepository", () => {
-  it("creates canonical workshops with duplicate-safe bootstrap", async () => {
-    const createMany = jest.fn().mockResolvedValue({ count: 2 });
+  it("reconciles canonical workshops and disables legacy pseudo-workshops", async () => {
+    const findFirst = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: 192,
+        workshopName: "装备车间",
+        status: "ACTIVE",
+      })
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    const update = jest.fn().mockResolvedValue({});
+    const create = jest.fn().mockResolvedValue({});
+    const updateMany = jest.fn().mockResolvedValue({ count: 2 });
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          workshop: {
+            findFirst,
+            update,
+            create,
+            updateMany,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      workshop: {
-        createMany,
-      },
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalWorkshops();
 
-    expect(createMany).toHaveBeenCalledWith({
-      data: [
-        {
-          workshopCode: "MAIN",
-          workshopName: "主仓",
-          status: "ACTIVE",
-          createdBy: "system-bootstrap",
-          updatedBy: "system-bootstrap",
-        },
-        {
-          workshopCode: "RD",
-          workshopName: "研发小仓",
-          status: "ACTIVE",
-          createdBy: "system-bootstrap",
-          updatedBy: "system-bootstrap",
-        },
-      ],
-      skipDuplicates: true,
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 192 },
+      data: {
+        workshopName: "装备车间",
+        status: "ACTIVE",
+        updatedBy: "system-bootstrap",
+      },
+    });
+    expect(create).toHaveBeenCalledTimes(3);
+    expect(create).toHaveBeenNthCalledWith(1, {
+      data: {
+        workshopName: "硐室车间",
+        status: "ACTIVE",
+        createdBy: "system-bootstrap",
+        updatedBy: "system-bootstrap",
+      },
+    });
+    expect(create).toHaveBeenNthCalledWith(2, {
+      data: {
+        workshopName: "配件车间",
+        status: "ACTIVE",
+        createdBy: "system-bootstrap",
+        updatedBy: "system-bootstrap",
+      },
+    });
+    expect(create).toHaveBeenNthCalledWith(3, {
+      data: {
+        workshopName: "电子车间",
+        status: "ACTIVE",
+        createdBy: "system-bootstrap",
+        updatedBy: "system-bootstrap",
+      },
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        workshopName: { in: ["主仓", "研发小仓"] },
+        createdBy: "system-bootstrap",
+        status: "ACTIVE",
+      },
+      data: {
+        status: "DISABLED",
+        updatedBy: "system-bootstrap",
+      },
     });
   });
 
-  it("creates canonical stock scopes with duplicate-safe bootstrap", async () => {
-    const createMany = jest.fn().mockResolvedValue({ count: 2 });
+  it("updates an existing canonical workshop matched by name", async () => {
+    const findFirst = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: 9,
+        workshopName: "装备车间",
+        status: "DISABLED",
+      })
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    const update = jest.fn().mockResolvedValue({});
+    const create = jest.fn().mockResolvedValue({});
+    const updateMany = jest.fn().mockResolvedValue({ count: 0 });
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          workshop: {
+            findFirst,
+            update,
+            create,
+            updateMany,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      stockScope: {
-        createMany,
+      $transaction,
+    } as unknown as PrismaService);
+
+    await repository.ensureCanonicalWorkshops();
+
+    expect(findFirst).toHaveBeenCalledTimes(4);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 9 },
+      data: {
+        workshopName: "装备车间",
+        status: "ACTIVE",
+        updatedBy: "system-bootstrap",
       },
+    });
+  });
+
+  it("reconciles canonical stock scopes by scopeCode", async () => {
+    const upsert = jest.fn().mockResolvedValue({});
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          stockScope: {
+            upsert,
+          },
+        }),
+      );
+    const repository = new MasterDataRepository({
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalStockScopes();
 
-    expect(createMany).toHaveBeenCalledWith({
-      data: [
-        {
-          scopeCode: "MAIN",
-          scopeName: "主仓",
-          status: "ACTIVE",
-          createdBy: "system-bootstrap",
-          updatedBy: "system-bootstrap",
-        },
-        {
-          scopeCode: "RD_SUB",
-          scopeName: "研发小仓",
-          status: "ACTIVE",
-          createdBy: "system-bootstrap",
-          updatedBy: "system-bootstrap",
-        },
-      ],
-      skipDuplicates: true,
+    expect(upsert).toHaveBeenCalledTimes(2);
+    expect(upsert).toHaveBeenNthCalledWith(1, {
+      where: { scopeCode: "MAIN" },
+      update: {
+        scopeName: "主仓",
+        scopeType: "MAIN",
+        status: "ACTIVE",
+        updatedBy: "system-bootstrap",
+      },
+      create: {
+        scopeCode: "MAIN",
+        scopeName: "主仓",
+        scopeType: "MAIN",
+        status: "ACTIVE",
+        createdBy: "system-bootstrap",
+        updatedBy: "system-bootstrap",
+      },
+    });
+    expect(upsert).toHaveBeenNthCalledWith(2, {
+      where: { scopeCode: "RD_SUB" },
+      update: {
+        scopeName: "研发小仓",
+        scopeType: "RD_SUB",
+        status: "ACTIVE",
+        updatedBy: "system-bootstrap",
+      },
+      create: {
+        scopeCode: "RD_SUB",
+        scopeName: "研发小仓",
+        scopeType: "RD_SUB",
+        status: "ACTIVE",
+        createdBy: "system-bootstrap",
+        updatedBy: "system-bootstrap",
+      },
+    });
+  });
+
+  it("lists material categories in single-level sort order", async () => {
+    const findMany = jest.fn().mockResolvedValue([]);
+    const count = jest.fn().mockResolvedValue(0);
+    const repository = new MasterDataRepository({
+      materialCategory: {
+        findMany,
+        count,
+      },
+    } as unknown as PrismaService);
+
+    await repository.findMaterialCategories({
+      keyword: "电子",
+      limit: 20,
+      offset: 5,
+      status: "ACTIVE",
+    });
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: {
+        status: "ACTIVE",
+        OR: [
+          { categoryCode: { contains: "电子" } },
+          { categoryName: { contains: "电子" } },
+        ],
+      },
+      take: 20,
+      skip: 5,
+      orderBy: [{ sortOrder: "asc" }, { categoryCode: "asc" }],
+    });
+    expect(count).toHaveBeenCalledWith({
+      where: {
+        status: "ACTIVE",
+        OR: [
+          { categoryCode: { contains: "电子" } },
+          { categoryName: { contains: "电子" } },
+        ],
+      },
+    });
+  });
+
+  it("creates material categories without any parent relation field", async () => {
+    const create = jest.fn().mockResolvedValue({ id: 1 });
+    const repository = new MasterDataRepository({
+      materialCategory: {
+        create,
+      },
+    } as unknown as PrismaService);
+
+    await repository.createMaterialCategory(
+      {
+        categoryCode: "ELEC",
+        categoryName: "电子元器件",
+        sortOrder: 10,
+      },
+      "1",
+    );
+
+    expect(create).toHaveBeenCalledWith({
+      data: {
+        categoryCode: "ELEC",
+        categoryName: "电子元器件",
+        sortOrder: 10,
+        status: "ACTIVE",
+        createdBy: "1",
+        updatedBy: "1",
+      },
     });
   });
 
@@ -87,6 +271,9 @@ describe("MasterDataRepository", () => {
         OR: [
           { supplierCode: { contains: "赛福特" } },
           { supplierName: { contains: "赛福特" } },
+          { contactPerson: { contains: "赛福特" } },
+          { contactPhone: { contains: "赛福特" } },
+          { address: { contains: "赛福特" } },
         ],
       },
       take: 20,
@@ -99,6 +286,9 @@ describe("MasterDataRepository", () => {
         OR: [
           { supplierCode: { contains: "赛福特" } },
           { supplierName: { contains: "赛福特" } },
+          { contactPerson: { contains: "赛福特" } },
+          { contactPhone: { contains: "赛福特" } },
+          { address: { contains: "赛福特" } },
         ],
       },
     });
@@ -116,6 +306,9 @@ describe("MasterDataRepository", () => {
       {
         supplierCode: "SUP-001",
         supplierName: "赛福特供应商",
+        contactPerson: "张三",
+        contactPhone: "13800000000",
+        address: "苏州工业园区",
       },
       "1",
     );
@@ -124,6 +317,9 @@ describe("MasterDataRepository", () => {
       data: {
         supplierCode: "SUP-001",
         supplierName: "赛福特供应商",
+        contactPerson: "张三",
+        contactPhone: "13800000000",
+        address: "苏州工业园区",
         status: "ACTIVE",
         creationMode: "MANUAL",
         createdBy: "1",
@@ -176,6 +372,7 @@ describe("MasterDataRepository", () => {
       1,
       {
         supplierName: "已更新供应商",
+        contactPhone: "13800000000",
         status: "DISABLED",
       },
       "9",
@@ -185,9 +382,108 @@ describe("MasterDataRepository", () => {
       where: { id: 1 },
       data: {
         supplierName: "已更新供应商",
+        contactPhone: "13800000000",
         status: "DISABLED",
         updatedBy: "9",
       },
     });
+  });
+
+  it("keeps material suggestions available when one source table is missing", async () => {
+    const warnSpy = jest.spyOn(Logger.prototype, "warn").mockImplementation();
+    const materialFindMany = jest
+      .fn()
+      .mockResolvedValue([{ unitCode: "个" }, { unitCode: "套" }]);
+    const stockInFindMany = jest
+      .fn()
+      .mockResolvedValue([{ unitCodeSnapshot: "件" }]);
+    const missingTableError = new Prisma.PrismaClientKnownRequestError(
+      "Table `sales_stock_order_line` does not exist",
+      {
+        code: "P2021",
+        clientVersion: "test",
+      },
+    );
+    const salesFindMany = jest.fn().mockRejectedValue(missingTableError);
+    const noopFindMany = jest.fn().mockResolvedValue([]);
+    const repository = new MasterDataRepository({
+      material: {
+        findMany: materialFindMany,
+      },
+      stockInOrderLine: {
+        findMany: stockInFindMany,
+      },
+      salesStockOrderLine: {
+        findMany: salesFindMany,
+      },
+      workshopMaterialOrderLine: {
+        findMany: noopFindMany,
+      },
+      rdProjectMaterialLine: {
+        findMany: noopFindMany,
+      },
+      rdHandoffOrderLine: {
+        findMany: noopFindMany,
+      },
+      rdProcurementRequestLine: {
+        findMany: noopFindMany,
+      },
+      rdStocktakeOrderLine: {
+        findMany: noopFindMany,
+      },
+    } as unknown as PrismaService);
+
+    await expect(
+      repository.findMaterialSuggestionValues("unitCode", 10),
+    ).resolves.toEqual(["个", "件", "套"]);
+
+    expect(salesFindMany).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Skipping field suggestion source "unitCodeSnapshot"',
+      ),
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it("rethrows unexpected material suggestion source errors", async () => {
+    const databaseUnavailableError = new Prisma.PrismaClientKnownRequestError(
+      "Database connection failed",
+      {
+        code: "P1001",
+        clientVersion: "test",
+      },
+    );
+    const repository = new MasterDataRepository({
+      material: {
+        findMany: jest.fn().mockRejectedValue(databaseUnavailableError),
+      },
+      stockInOrderLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      salesStockOrderLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      workshopMaterialOrderLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      rdProjectMaterialLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      rdHandoffOrderLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      rdProcurementRequestLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      rdStocktakeOrderLine: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+    } as unknown as PrismaService);
+
+    await expect(
+      repository.findMaterialSuggestionValues("unitCode", 10),
+    ).rejects.toBe(databaseUnavailableError);
   });
 });

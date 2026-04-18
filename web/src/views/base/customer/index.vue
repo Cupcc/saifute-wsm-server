@@ -2,22 +2,10 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="客户编码" prop="customerCode">
-        <el-input
-          v-model="queryParams.customerCode"
-          placeholder="请输入客户编码"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.customerCode" scope="customer" field="customerCode" placeholder="请选择或输入客户编码" width="240px" />
       </el-form-item>
       <el-form-item label="客户名称" prop="customerName">
-        <el-input
-          v-model="queryParams.customerName"
-          placeholder="请输入客户名称"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.customerName" scope="customer" field="customerName" placeholder="请选择或输入客户名称" width="240px" />
       </el-form-item>
       <el-form-item label="客户简称" prop="customerShortName">
         <el-input
@@ -129,7 +117,7 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['base:customer:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['base:customer:remove']" v-if="!scope.row.children || scope.row.children.length === 0">作废</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['base:customer:remove']" v-if="!scope.row.children || scope.row.children.length === 0">停用</el-button>
         </template>
       </el-table-column>
     </adaptive-table>
@@ -140,10 +128,10 @@
     <el-dialog :title="title" v-model="open" width="500px" append-to-body draggable>
       <el-form ref="customerRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="客户编码" prop="customerCode">
-          <el-input v-model="form.customerCode" placeholder="请输入客户编码" />
+          <combo-input v-model="form.customerCode" scope="customer" field="customerCode" :disabled="Boolean(form.customerId)" placeholder="请选择或输入客户编码" />
         </el-form-item>
         <el-form-item label="客户名称" prop="customerName">
-          <el-input v-model="form.customerName" placeholder="请输入客户名称" />
+          <combo-input v-model="form.customerName" scope="customer" field="customerName" placeholder="请选择或输入客户名称" />
         </el-form-item>
         <el-form-item label="客户简称" prop="customerShortName">
           <el-input v-model="form.customerShortName" placeholder="请输入客户简称" />
@@ -200,12 +188,13 @@ import {
   listTree,
   updateCustomer,
 } from "@/api/base/customer";
-import request from "@/utils/request";
+import { clearSuggestionsCache } from "@/api/base/suggestions";
 
 const { proxy } = getCurrentInstance();
 const { saifute_customer_type } = proxy.useDict("saifute_customer_type");
 
 const customerList = ref([]);
+const customerRef = ref();
 const open = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
@@ -223,6 +212,7 @@ const data = reactive({
   queryParams: {
     customerCode: null,
     customerName: null,
+    parentId: null,
     customerShortName: null,
     customerType: null,
     contactPerson: null,
@@ -391,9 +381,9 @@ function reset() {
     delFlag: null,
     voidDescription: null,
     createBy: null,
-    createTime: null,
+    createdAt: null,
     updateBy: null,
-    updateTime: null,
+    updatedAt: null,
   };
   proxy.resetForm("customerRef");
 }
@@ -422,6 +412,7 @@ function handleView(row) {
   const _customerId = row.customerId;
   getCustomer(_customerId).then((response) => {
     form.value = response.data;
+    getCustomerTree();
     open.value = true;
     title.value = "查看客户";
     isView.value = true;
@@ -431,6 +422,7 @@ function handleView(row) {
 /** 新增按钮操作 */
 function handleAdd() {
   reset();
+  getCustomerTree();
   open.value = true;
   title.value = "添加客户";
   isView.value = false;
@@ -442,6 +434,7 @@ function handleUpdate(row) {
   const _customerId = row.customerId || ids.value;
   getCustomer(_customerId).then((response) => {
     form.value = response.data;
+    getCustomerTree();
     open.value = true;
     title.value = "修改客户";
     isView.value = false;
@@ -449,55 +442,35 @@ function handleUpdate(row) {
 }
 
 /** 提交按钮 */
-function submitForm() {
-  proxy.$refs["customerRef"].validate((valid) => {
-    if (valid) {
-      if (form.value.customerId != null) {
-        updateCustomer(form.value).then((response) => {
-          proxy.$modal.msgSuccess("修改成功");
-          open.value = false;
-          getList();
-        });
-      } else {
-        addCustomer(form.value).then((response) => {
-          proxy.$modal.msgSuccess("新增成功");
-          open.value = false;
-          getList();
-        });
-      }
-    }
-  });
+async function submitForm() {
+  const valid = await customerRef.value?.validate().catch(() => false);
+  if (!valid) {
+    return;
+  }
+
+  const request = form.value.customerId
+    ? updateCustomer(form.value)
+    : addCustomer(form.value);
+
+  await request;
+  clearSuggestionsCache();
+  proxy.$modal.msgSuccess(form.value.customerId ? "修改成功" : "新增成功");
+  open.value = false;
+  getList();
 }
 
 /** 作废按钮操作 */
-function handleDelete(row) {
-  const _customerIds = row.customerId || ids.value;
-  proxy.$modal
-    .prompt("请输入作废理由", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      closeOnClickModal: false,
-      inputPattern: /^[\s\S]*.*[^\s][\s\S]*$/,
-      inputErrorMessage: "作废理由不能为空",
-    })
-    .then(({ value }) => {
-      // 构造作废数据
-      const data = {
-        customerId: _customerIds,
-        voidDescription: value,
-      };
-      // 调用作废接口，这里使用POST方法传递数据
-      return request({
-        url: "/base/customer/abandoned",
-        method: "post",
-        data: data,
-      });
-    })
-    .then(() => {
-      getList();
-      proxy.$modal.msgSuccess("作废成功");
-    })
-    .catch(() => {});
+async function handleDelete(row) {
+  const customerId = row.customerId || ids.value;
+
+  try {
+    await proxy.$modal.confirm(`确认停用客户「${row.customerName}」吗？`);
+    await delCustomer(customerId);
+    proxy.$modal.msgSuccess("停用成功");
+    getList();
+  } catch {
+    // 用户取消确认时保持页面静默。
+  }
 }
 
 /** 展开/折叠操作 */

@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -13,28 +12,33 @@ import {
   InventoryOperationType,
   Prisma,
   WorkshopMaterialOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
+import {
+  buildCompactDocumentNo,
+  createWithGeneratedDocumentNo,
+} from "../../../shared/common/document-number.util";
+import { BusinessDocumentType } from "../../../shared/domain/business-document-type";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
-import { InventoryService } from "../../inventory-core/application/inventory.service";
+import { ApprovalService } from "../../approval/application/approval.service";
+import {
+  FIFO_SOURCE_OPERATION_TYPES,
+  InventoryService,
+} from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import {
   applyScrapStatusesForOrder,
   RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE,
   reverseScrapStatusesForOrder,
 } from "../../rd-subwarehouse/application/rd-material-status.helper";
-import {
-  resolveStockScopeFromWorkshopIdentity,
-  type StockScopeCode,
-} from "../../session/domain/user-session";
-import { WorkflowService } from "../../workflow/application/workflow.service";
+import { type StockScopeCode } from "../../session/domain/user-session";
 import type { CreateWorkshopMaterialOrderDto } from "../dto/create-workshop-material-order.dto";
 import type { CreateWorkshopMaterialOrderLineDto } from "../dto/create-workshop-material-order-line.dto";
 import type { QueryWorkshopMaterialOrderDto } from "../dto/query-workshop-material-order.dto";
+import type { UpdateWorkshopMaterialOrderDto } from "../dto/update-workshop-material-order.dto";
 import { WorkshopMaterialRepository } from "../infrastructure/workshop-material.repository";
 
-const DOCUMENT_TYPE = "WorkshopMaterialOrder";
+const DOCUMENT_TYPE = BusinessDocumentType.WorkshopMaterialOrder;
 const BUSINESS_MODULE = "workshop-material";
-const RD_SUBWAREHOUSE_CODE = "RD";
 
 function toOperationType(
   orderType: WorkshopMaterialOrderType,
@@ -51,6 +55,19 @@ function toOperationType(
   }
 }
 
+function toCreateDocumentPrefix(orderType: WorkshopMaterialOrderType) {
+  switch (orderType) {
+    case WorkshopMaterialOrderType.PICK:
+      return "LL";
+    case WorkshopMaterialOrderType.RETURN:
+      return "TL";
+    case WorkshopMaterialOrderType.SCRAP:
+      return "BF";
+    default:
+      throw new BadRequestException(`Unsupported orderType: ${orderType}`);
+  }
+}
+
 @Injectable()
 export class WorkshopMaterialService {
   constructor(
@@ -58,7 +75,7 @@ export class WorkshopMaterialService {
     private readonly repository: WorkshopMaterialRepository,
     private readonly masterDataService: MasterDataService,
     private readonly inventoryService: InventoryService,
-    private readonly workflowService: WorkflowService,
+    private readonly approvalService: ApprovalService,
   ) {}
 
   async listPickOrders(query: QueryWorkshopMaterialOrderDto) {
@@ -75,14 +92,18 @@ export class WorkshopMaterialService {
     });
   }
 
-  async listScrapOrders(query: QueryWorkshopMaterialOrderDto) {
+  async listScrapOrders(
+    query: QueryWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+  ) {
     return this.listOrders({
       ...query,
       orderType: WorkshopMaterialOrderType.SCRAP,
     });
   }
 
-  async listOrders(query: QueryWorkshopMaterialOrderDto) {
+  async listOrders(
+    query: QueryWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+  ) {
     const limit = Math.min(query.limit ?? 50, 100);
     const offset = query.offset ?? 0;
     return this.repository.findOrders({
@@ -94,6 +115,7 @@ export class WorkshopMaterialService {
       bizDateFrom: query.bizDateFrom ? new Date(query.bizDateFrom) : undefined,
       bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,
       workshopId: query.workshopId,
+      stockScope: query.stockScope,
       limit,
       offset,
     });
@@ -145,7 +167,7 @@ export class WorkshopMaterialService {
   }
 
   async createScrapOrder(
-    dto: CreateWorkshopMaterialOrderDto,
+    dto: CreateWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
     createdBy?: string,
   ) {
     if (dto.orderType !== WorkshopMaterialOrderType.SCRAP) {
@@ -154,32 +176,63 @@ export class WorkshopMaterialService {
     return this.createOrder(dto, createdBy);
   }
 
-  async createOrder(dto: CreateWorkshopMaterialOrderDto, createdBy?: string) {
-    const existing = await this.repository.findOrderByDocumentNo(
-      dto.documentNo,
+  async updatePickOrder(
+    id: number,
+    dto: UpdateWorkshopMaterialOrderDto,
+    updatedBy?: string,
+  ) {
+    return this.updateOrder(id, WorkshopMaterialOrderType.PICK, dto, updatedBy);
+  }
+
+  async updateReturnOrder(
+    id: number,
+    dto: UpdateWorkshopMaterialOrderDto,
+    updatedBy?: string,
+  ) {
+    return this.updateOrder(
+      id,
+      WorkshopMaterialOrderType.RETURN,
+      dto,
+      updatedBy,
     );
-    if (existing) {
-      throw new ConflictException(`单据编号已存在: ${dto.documentNo}`);
-    }
+  }
 
-    await this.validateMasterData(dto);
+  async updateScrapOrder(
+    id: number,
+    dto: UpdateWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+    updatedBy?: string,
+  ) {
+    return this.updateOrder(
+      id,
+      WorkshopMaterialOrderType.SCRAP,
+      dto,
+      updatedBy,
+    );
+  }
 
+  async createOrder(
+    dto: CreateWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+    createdBy?: string,
+  ) {
     const bizDate = new Date(dto.bizDate);
+    const workshopId = this.requireWorkshopId(dto.workshopId);
+    const createDto = { ...dto, workshopId };
+    await this.validateMasterData(createDto);
+
     const { handlerNameSnapshot } = await this.resolveHandlerSnapshot(
       dto.handlerPersonnelId,
+      dto.handlerName,
     );
-    const workshop = await this.masterDataService.getWorkshopById(
-      dto.workshopId,
-    );
+    const workshop = await this.masterDataService.getWorkshopById(workshopId);
     const inventoryStockScope = this.resolveInventoryStockScope(
       dto.orderType,
-      workshop,
+      dto.stockScope,
     );
     const stockScopeRecord =
       await this.masterDataService.getStockScopeByCode(inventoryStockScope);
     const isRdScrapOrder =
       dto.orderType === WorkshopMaterialOrderType.SCRAP &&
-      workshop.workshopCode === RD_SUBWAREHOUSE_CODE;
+      inventoryStockScope === "RD_SUB";
     const rdRequestCache = new Map<
       number,
       {
@@ -216,218 +269,768 @@ export class WorkshopMaterialService {
         ? AuditStatusSnapshot.NOT_REQUIRED
         : AuditStatusSnapshot.PENDING;
 
-    return this.prisma.runInTransaction(async (tx) => {
-      const order = await this.repository.createOrder(
-        {
-          documentNo: dto.documentNo,
-          orderType: dto.orderType,
-          bizDate,
-          handlerPersonnelId: dto.handlerPersonnelId,
-          stockScopeId: stockScopeRecord.id,
-          workshopId: dto.workshopId,
-          handlerNameSnapshot,
-          workshopNameSnapshot: workshop.workshopName,
-          totalQty,
-          totalAmount,
-          remark: dto.remark,
-          auditStatusSnapshot: auditStatus,
-          createdBy,
-          updatedBy: createdBy,
-        },
-        linesWithSnapshots.map((l, idx) => {
-          const lineDto = dto.lines[idx] as CreateWorkshopMaterialOrderLineDto;
-          return {
-            ...l,
-            sourceDocumentType:
-              lineDto.sourceDocumentType ??
-              (isRdScrapOrder
-                ? RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE
-                : undefined),
-            sourceDocumentId: lineDto.sourceDocumentId ?? undefined,
-            sourceDocumentLineId: lineDto.sourceDocumentLineId ?? undefined,
+    const prefix = toCreateDocumentPrefix(dto.orderType);
+
+    return createWithGeneratedDocumentNo((attempt) => {
+      const documentNo = buildCompactDocumentNo(prefix, bizDate, attempt);
+      return this.prisma.runInTransaction(async (tx) => {
+        const order = await this.repository.createOrder(
+          {
+            documentNo,
+            orderType: dto.orderType,
+            bizDate,
+            handlerPersonnelId: dto.handlerPersonnelId,
+            stockScopeId: stockScopeRecord.id,
+            workshopId,
+            handlerNameSnapshot,
+            workshopNameSnapshot: workshop.workshopName,
+            totalQty,
+            totalAmount,
+            remark: dto.remark,
+            auditStatusSnapshot: auditStatus,
             createdBy,
             updatedBy: createdBy,
-          };
-        }),
-        tx,
-      );
+          },
+          linesWithSnapshots.map((l, idx) => {
+            const lineDto = dto.lines[
+              idx
+            ] as CreateWorkshopMaterialOrderLineDto;
+            return {
+              ...l,
+              sourceDocumentType:
+                lineDto.sourceDocumentType ??
+                (isRdScrapOrder
+                  ? RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE
+                  : undefined),
+              sourceDocumentId: lineDto.sourceDocumentId ?? undefined,
+              sourceDocumentLineId: lineDto.sourceDocumentLineId ?? undefined,
+              createdBy,
+              updatedBy: createdBy,
+            };
+          }),
+          tx,
+        );
 
-      const operationType = toOperationType(dto.orderType);
-      const logIdByLineId = new Map<number, number>();
+        const operationType = toOperationType(dto.orderType);
+        const logIdByLineId = new Map<number, number>();
 
-      if (
-        dto.orderType === WorkshopMaterialOrderType.PICK ||
-        dto.orderType === WorkshopMaterialOrderType.SCRAP
-      ) {
-        for (const line of order.lines) {
-          const log = await this.inventoryService.decreaseStock(
-            {
-              materialId: line.materialId,
-              stockScope: inventoryStockScope,
-              quantity: line.quantity,
-              operationType,
-              businessModule: BUSINESS_MODULE,
-              businessDocumentType: DOCUMENT_TYPE,
-              businessDocumentId: order.id,
-              businessDocumentNumber: order.documentNo,
-              businessDocumentLineId: line.id,
-              operatorId: createdBy,
-              idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:line:${line.id}`,
-            },
-            tx,
-          );
-          logIdByLineId.set(line.id, log.id);
-          const lineDto = dto.lines[line.lineNo - 1];
-          if (lineDto?.sourceLogId) {
-            await this.inventoryService.allocateInventorySource(
+        if (
+          dto.orderType === WorkshopMaterialOrderType.PICK ||
+          dto.orderType === WorkshopMaterialOrderType.SCRAP
+        ) {
+          // Determine eligible source operation types for this stock scope.
+          // RD_SUB scope uses RD_HANDOFF_IN; MAIN scope uses acceptance/production.
+          const sourceTypes =
+            inventoryStockScope === "RD_SUB"
+              ? (["RD_HANDOFF_IN"] as typeof FIFO_SOURCE_OPERATION_TYPES)
+              : FIFO_SOURCE_OPERATION_TYPES.filter(
+                  (t) => t !== "RD_HANDOFF_IN",
+                );
+
+          for (const line of order.lines) {
+            const lineDto = dto.lines[line.lineNo - 1];
+            const settlement = await this.inventoryService.settleConsumerOut(
               {
-                sourceLogId: lineDto.sourceLogId,
-                consumerDocumentType: DOCUMENT_TYPE,
-                consumerDocumentId: order.id,
-                consumerLineId: line.id,
-                targetAllocatedQty: line.quantity,
+                materialId: line.materialId,
+                stockScope: inventoryStockScope,
+                bizDate,
+                quantity: line.quantity,
+                operationType,
+                businessModule: BUSINESS_MODULE,
+                businessDocumentType: DOCUMENT_TYPE,
+                businessDocumentId: order.id,
+                businessDocumentNumber: order.documentNo,
+                businessDocumentLineId: line.id,
                 operatorId: createdBy,
+                idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:line:${line.id}`,
+                consumerLineId: line.id,
+                sourceLogId: lineDto?.sourceLogId ?? undefined,
+                sourceOperationTypes: sourceTypes,
+              },
+              tx,
+            );
+            logIdByLineId.set(line.id, settlement.outLog.id);
+            await this.repository.updateOrderLineCost(
+              line.id,
+              {
+                costUnitPrice: settlement.settledUnitCost,
+                costAmount: settlement.settledCostAmount,
               },
               tx,
             );
           }
-        }
 
-        if (isRdScrapOrder) {
-          await applyScrapStatusesForOrder(
-            {
-              orderId: order.id,
-              documentNo: order.documentNo,
-              lines: order.lines,
-              operatorId: createdBy,
-              logIdByLineId,
-            },
-            tx,
-          );
-        }
-      } else {
-        // Pre-validate cumulative return quantities before writing any relations.
-        // Groups incoming lines by source pick-line ID to catch split-line over-returns
-        // within a single request, then checks against existing active downstream returns.
-        const incomingQtyByPickLine = new Map<number, Prisma.Decimal>();
-        const pickLineToPickOrderId = new Map<number, number>();
-        for (let i = 0; i < order.lines.length; i++) {
-          const lineDto = dto.lines[i] as CreateWorkshopMaterialOrderLineDto;
-          if (!lineDto?.sourceDocumentId || !lineDto?.sourceDocumentLineId)
-            continue;
-          const pickLineId = lineDto.sourceDocumentLineId;
-          const pickOrderId = lineDto.sourceDocumentId;
-          pickLineToPickOrderId.set(pickLineId, pickOrderId);
-          const prev =
-            incomingQtyByPickLine.get(pickLineId) ?? new Prisma.Decimal(0);
-          incomingQtyByPickLine.set(
-            pickLineId,
-            prev.add(new Prisma.Decimal(order.lines[i].quantity)),
-          );
-        }
-        // For each unique (pickOrderId, pickLineId) pair, enforce the cumulative cap.
-        const checkedPickOrders = new Map<
-          number,
-          Map<number, Prisma.Decimal>
-        >();
-        for (const [pickLineId, incomingQty] of incomingQtyByPickLine) {
-          const pickOrderId = pickLineToPickOrderId.get(pickLineId);
-          if (pickOrderId === undefined) continue;
-          if (!checkedPickOrders.has(pickOrderId)) {
-            const activeMap =
-              await this.repository.sumActiveReturnedQtyByPickLine(
-                pickOrderId,
-                tx,
-              );
-            checkedPickOrders.set(pickOrderId, activeMap);
-          }
-          const activeMap =
-            checkedPickOrders.get(pickOrderId) ??
-            new Map<number, Prisma.Decimal>();
-          const pickOrder = await this.repository.findOrderById(
-            pickOrderId,
-            tx,
-          );
-          if (
-            !pickOrder ||
-            pickOrder.orderType !== WorkshopMaterialOrderType.PICK ||
-            pickOrder.lifecycleStatus === DocumentLifecycleStatus.VOIDED
-          ) {
-            // Detailed error is raised inside validateAndRecordReturnRelation below
-            continue;
-          }
-          const pickLine = pickOrder.lines.find((l) => l.id === pickLineId);
-          if (!pickLine) continue;
-          const alreadyReturned =
-            activeMap.get(pickLineId) ?? new Prisma.Decimal(0);
-          if (
-            alreadyReturned
-              .add(incomingQty)
-              .gt(new Prisma.Decimal(pickLine.quantity))
-          ) {
-            throw new BadRequestException(
-              `领料明细 ${pickLineId} 累计有效退料数量超过领料数量`,
-            );
-          }
-        }
-
-        for (const line of order.lines) {
-          await this.inventoryService.increaseStock(
-            {
-              materialId: line.materialId,
-              stockScope: inventoryStockScope,
-              quantity: line.quantity,
-              operationType,
-              businessModule: BUSINESS_MODULE,
-              businessDocumentType: DOCUMENT_TYPE,
-              businessDocumentId: order.id,
-              businessDocumentNumber: order.documentNo,
-              businessDocumentLineId: line.id,
-              operatorId: createdBy,
-              idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:line:${line.id}`,
-            },
-            tx,
-          );
-        }
-
-        for (let i = 0; i < order.lines.length; i++) {
-          const line = order.lines[i];
-          const lineDto = dto.lines[i];
-          if (
-            lineDto?.sourceDocumentType &&
-            lineDto?.sourceDocumentId &&
-            lineDto?.sourceDocumentLineId
-          ) {
-            await this.validateAndRecordReturnRelation(
-              order.id,
-              line.id,
-              line.quantity,
-              lineDto.sourceDocumentType,
-              lineDto.sourceDocumentId,
-              lineDto.sourceDocumentLineId,
-              createdBy,
+          if (isRdScrapOrder) {
+            await applyScrapStatusesForOrder(
+              {
+                orderId: order.id,
+                documentNo: order.documentNo,
+                lines: order.lines,
+                operatorId: createdBy,
+                logIdByLineId,
+              },
               tx,
             );
           }
+        } else {
+          // Pre-validate cumulative return quantities before writing any relations.
+          // Groups incoming lines by source pick-line ID to catch split-line over-returns
+          // within a single request, then checks against existing active downstream returns.
+          const incomingQtyByPickLine = new Map<number, Prisma.Decimal>();
+          const pickLineToPickOrderId = new Map<number, number>();
+          for (let i = 0; i < order.lines.length; i++) {
+            const lineDto = dto.lines[i] as CreateWorkshopMaterialOrderLineDto;
+            if (!lineDto?.sourceDocumentId || !lineDto?.sourceDocumentLineId) {
+              continue;
+            }
+            const pickLineId = lineDto.sourceDocumentLineId;
+            const pickOrderId = lineDto.sourceDocumentId;
+            pickLineToPickOrderId.set(pickLineId, pickOrderId);
+            const prev =
+              incomingQtyByPickLine.get(pickLineId) ?? new Prisma.Decimal(0);
+            incomingQtyByPickLine.set(
+              pickLineId,
+              prev.add(new Prisma.Decimal(order.lines[i].quantity)),
+            );
+          }
+          // For each unique (pickOrderId, pickLineId) pair, enforce the cumulative cap.
+          const checkedPickOrders = new Map<
+            number,
+            Map<number, Prisma.Decimal>
+          >();
+          for (const [pickLineId, incomingQty] of incomingQtyByPickLine) {
+            const pickOrderId = pickLineToPickOrderId.get(pickLineId);
+            if (pickOrderId === undefined) continue;
+            if (!checkedPickOrders.has(pickOrderId)) {
+              const activeMap =
+                await this.repository.sumActiveReturnedQtyByPickLine(
+                  pickOrderId,
+                  tx,
+                );
+              checkedPickOrders.set(pickOrderId, activeMap);
+            }
+            const activeMap =
+              checkedPickOrders.get(pickOrderId) ??
+              new Map<number, Prisma.Decimal>();
+            const pickOrder = await this.repository.findOrderById(
+              pickOrderId,
+              tx,
+            );
+            if (
+              !pickOrder ||
+              pickOrder.orderType !== WorkshopMaterialOrderType.PICK ||
+              pickOrder.lifecycleStatus === DocumentLifecycleStatus.VOIDED
+            ) {
+              // Detailed error is raised inside validateAndRecordReturnRelation below
+              continue;
+            }
+            const pickLine = pickOrder.lines.find((l) => l.id === pickLineId);
+            if (!pickLine) continue;
+            const alreadyReturned =
+              activeMap.get(pickLineId) ?? new Prisma.Decimal(0);
+            if (
+              alreadyReturned
+                .add(incomingQty)
+                .gt(new Prisma.Decimal(pickLine.quantity))
+            ) {
+              throw new BadRequestException(
+                `领料明细 ${pickLineId} 累计有效退料数量超过领料数量`,
+              );
+            }
+          }
+
+          for (const line of order.lines) {
+            await this.inventoryService.increaseStock(
+              {
+                materialId: line.materialId,
+                stockScope: inventoryStockScope,
+                bizDate,
+                quantity: line.quantity,
+                operationType,
+                businessModule: BUSINESS_MODULE,
+                businessDocumentType: DOCUMENT_TYPE,
+                businessDocumentId: order.id,
+                businessDocumentNumber: order.documentNo,
+                businessDocumentLineId: line.id,
+                operatorId: createdBy,
+                idempotencyKey: `${DOCUMENT_TYPE}:${order.id}:line:${line.id}`,
+              },
+              tx,
+            );
+          }
+
+          for (let i = 0; i < order.lines.length; i++) {
+            const line = order.lines[i];
+            const lineDto = dto.lines[i];
+            if (
+              lineDto?.sourceDocumentType &&
+              lineDto?.sourceDocumentId &&
+              lineDto?.sourceDocumentLineId
+            ) {
+              await this.validateAndRecordReturnRelation(
+                order.id,
+                line.id,
+                line.quantity,
+                lineDto.sourceDocumentType,
+                lineDto.sourceDocumentId,
+                lineDto.sourceDocumentLineId,
+                createdBy,
+                tx,
+              );
+            }
+          }
         }
+
+        if (auditStatus === AuditStatusSnapshot.PENDING) {
+          await this.approvalService.createOrRefreshApprovalDocument(
+            {
+              documentFamily: DocumentFamily.WORKSHOP_MATERIAL,
+              documentType: DOCUMENT_TYPE,
+              documentId: order.id,
+              documentNumber: order.documentNo,
+              submittedBy: createdBy,
+              createdBy,
+            },
+            tx,
+          );
+        }
+
+        return order;
+      });
+    });
+  }
+
+  async updateOrder(
+    id: number,
+    orderType: WorkshopMaterialOrderType,
+    dto: UpdateWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+    updatedBy?: string,
+  ) {
+    const existing = await this.getOrderById(id, orderType);
+    this.assertOrderMutable(existing);
+    this.assertUpdateHeaderCompatibility(existing, dto);
+
+    const effectiveDto = this.toEffectiveUpdateDto(existing, dto);
+    await this.validateMasterData(effectiveDto);
+
+    const bizDate = new Date(effectiveDto.bizDate);
+    const workshopId = this.requireWorkshopId(effectiveDto.workshopId);
+    const { handlerNameSnapshot } = await this.resolveHandlerSnapshot(
+      effectiveDto.handlerPersonnelId,
+      effectiveDto.handlerName,
+    );
+    const workshop = await this.masterDataService.getWorkshopById(workshopId);
+    const inventoryStockScope = this.resolveInventoryStockScope(
+      effectiveDto.orderType,
+      effectiveDto.stockScope,
+    );
+    const stockScopeRecord =
+      await this.masterDataService.getStockScopeByCode(inventoryStockScope);
+    const isRdScrapOrder =
+      effectiveDto.orderType === WorkshopMaterialOrderType.SCRAP &&
+      inventoryStockScope === "RD_SUB";
+    const rdRequestCache = new Map<
+      number,
+      {
+        lifecycleStatus: DocumentLifecycleStatus;
+        lines: Array<{ id: number; materialId: number }>;
+      } | null
+    >();
+
+    const linesWithSnapshots = await Promise.all(
+      effectiveDto.lines.map(async (line, idx) => {
+        const lineWriteData = await this.buildLineWriteData(line, idx + 1);
+        if (isRdScrapOrder) {
+          await this.assertRdScrapSourceLine(
+            line,
+            lineWriteData.materialId,
+            rdRequestCache,
+          );
+        }
+        return lineWriteData;
+      }),
+    );
+
+    const totalQty = linesWithSnapshots.reduce(
+      (sum, line) => sum.add(line.quantity),
+      new Prisma.Decimal(0),
+    );
+    const totalAmount = linesWithSnapshots.reduce(
+      (sum, line) => sum.add(line.amount),
+      new Prisma.Decimal(0),
+    );
+    const auditStatus =
+      effectiveDto.orderType === WorkshopMaterialOrderType.SCRAP
+        ? AuditStatusSnapshot.NOT_REQUIRED
+        : AuditStatusSnapshot.PENDING;
+
+    return this.prisma.runInTransaction(async (tx) => {
+      const currentOrder = await this.repository.findOrderById(id, tx);
+      if (!currentOrder) {
+        throw new NotFoundException(`车间物料单不存在: ${id}`);
       }
+      if (currentOrder.orderType !== orderType) {
+        throw new NotFoundException(
+          `单据类型不匹配: 期望 ${orderType}, 实际 ${currentOrder.orderType}`,
+        );
+      }
+      this.assertOrderMutable(currentOrder);
+
+      const nextRevision = currentOrder.revisionNo + 1;
+
+      await this.reverseCurrentOrderEffects(
+        currentOrder,
+        nextRevision,
+        updatedBy,
+        tx,
+      );
+
+      await this.repository.deleteOrderLinesByOrderId(id, tx);
+
+      const recreatedLines = await this.createReplacementLines(
+        id,
+        linesWithSnapshots,
+        effectiveDto.lines,
+        updatedBy,
+        isRdScrapOrder,
+        tx,
+      );
+
+      await this.postOrderEffects(
+        {
+          orderId: id,
+          documentNo: currentOrder.documentNo,
+          orderType: currentOrder.orderType,
+          inventoryStockScope,
+          bizDate,
+          lines: recreatedLines,
+          inputLines: effectiveDto.lines,
+          isRdScrapOrder,
+          nextRevision,
+          operatorId: updatedBy,
+        },
+        tx,
+      );
+
+      await this.repository.updateOrder(
+        id,
+        {
+          bizDate,
+          handlerPersonnelId: effectiveDto.handlerPersonnelId,
+          stockScopeId: stockScopeRecord.id,
+          workshopId,
+          handlerNameSnapshot,
+          workshopNameSnapshot: workshop.workshopName,
+          totalQty,
+          totalAmount,
+          remark: effectiveDto.remark,
+          auditStatusSnapshot: auditStatus,
+          revisionNo: { increment: 1 },
+          updatedBy,
+        },
+        tx,
+      );
 
       if (auditStatus === AuditStatusSnapshot.PENDING) {
-        await this.workflowService.createOrRefreshAuditDocument(
+        await this.approvalService.createOrRefreshApprovalDocument(
           {
             documentFamily: DocumentFamily.WORKSHOP_MATERIAL,
             documentType: DOCUMENT_TYPE,
-            documentId: order.id,
-            documentNumber: order.documentNo,
-            submittedBy: createdBy,
-            createdBy,
+            documentId: id,
+            documentNumber: currentOrder.documentNo,
+            submittedBy: updatedBy,
+            createdBy: updatedBy,
+          },
+          tx,
+        );
+      } else {
+        await this.approvalService.markApprovalNotRequired(
+          DOCUMENT_TYPE,
+          id,
+          updatedBy,
+          tx,
+        );
+      }
+
+      return this.repository.findOrderById(id, tx);
+    });
+  }
+
+  private async reverseCurrentOrderEffects(
+    order: Awaited<ReturnType<WorkshopMaterialRepository["findOrderById"]>>,
+    nextRevision: number,
+    operatorId: string | undefined,
+    tx: Prisma.TransactionClient,
+  ) {
+    if (!order) {
+      throw new NotFoundException("车间物料单不存在");
+    }
+
+    if (order.orderType === WorkshopMaterialOrderType.PICK) {
+      const hasReturn = await this.repository.hasActiveReturnDownstream(
+        order.id,
+        tx,
+      );
+      if (hasReturn) {
+        throw new BadRequestException("存在未作废的退料单下游，不能修改领料单");
+      }
+
+      await this.inventoryService.releaseAllSourceUsagesForConsumer(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: order.id,
+          operatorId,
+        },
+        tx,
+      );
+    }
+
+    if (order.orderType === WorkshopMaterialOrderType.SCRAP) {
+      await this.inventoryService.releaseAllSourceUsagesForConsumer(
+        {
+          consumerDocumentType: DOCUMENT_TYPE,
+          consumerDocumentId: order.id,
+          operatorId,
+        },
+        tx,
+      );
+      await reverseScrapStatusesForOrder(
+        {
+          orderId: order.id,
+          documentNo: order.documentNo,
+          operatorId,
+          note: `改单重算报废状态: ${order.documentNo}`,
+        },
+        tx,
+      );
+    }
+
+    if (order.orderType === WorkshopMaterialOrderType.RETURN) {
+      for (const line of order.lines) {
+        if (
+          line.sourceDocumentId != null &&
+          line.sourceDocumentLineId != null
+        ) {
+          await this.restoreSourceUsageForReturnVoid(
+            line.sourceDocumentId,
+            line.sourceDocumentLineId,
+            new Prisma.Decimal(line.quantity),
+            operatorId,
+            tx,
+          );
+        }
+      }
+      await this.repository.deactivateDocumentRelationsForReturn(order.id, tx);
+      await this.repository.deleteDocumentLineRelationsForReturn(order.id, tx);
+    }
+
+    const logs = await this.inventoryService.getLogsForDocument(
+      {
+        businessDocumentType: DOCUMENT_TYPE,
+        businessDocumentId: order.id,
+      },
+      tx,
+    );
+
+    if (logs.length === 0) {
+      throw new BadRequestException("未找到可重算的库存流水");
+    }
+
+    for (const log of logs) {
+      await this.inventoryService.reverseStock(
+        {
+          logIdToReverse: log.id,
+          idempotencyKey: `${DOCUMENT_TYPE}:rev:${order.id}:r${nextRevision}:log:${log.id}`,
+          note: `改单重算冲回: ${order.documentNo}`,
+        },
+        tx,
+      );
+    }
+  }
+
+  private async createReplacementLines(
+    orderId: number,
+    linesWithSnapshots: Array<
+      Awaited<ReturnType<WorkshopMaterialService["buildLineWriteData"]>>
+    >,
+    inputLines: CreateWorkshopMaterialOrderLineDto[],
+    operatorId: string | undefined,
+    isRdScrapOrder: boolean,
+    tx: Prisma.TransactionClient,
+  ) {
+    const createdLines = [] as Array<
+      Awaited<ReturnType<WorkshopMaterialRepository["createOrderLine"]>>
+    >;
+
+    for (let idx = 0; idx < linesWithSnapshots.length; idx++) {
+      const lineData = linesWithSnapshots[idx];
+      const inputLine = inputLines[idx];
+      const createdLine = await this.repository.createOrderLine(
+        {
+          orderId,
+          ...lineData,
+          sourceDocumentType:
+            inputLine?.sourceDocumentType ??
+            (isRdScrapOrder ? RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE : undefined),
+          sourceDocumentId: inputLine?.sourceDocumentId ?? undefined,
+          sourceDocumentLineId: inputLine?.sourceDocumentLineId ?? undefined,
+          createdBy: operatorId,
+          updatedBy: operatorId,
+        },
+        tx,
+      );
+      createdLines.push(createdLine);
+    }
+
+    return createdLines;
+  }
+
+  private async postOrderEffects(
+    params: {
+      orderId: number;
+      documentNo: string;
+      orderType: WorkshopMaterialOrderType;
+      inventoryStockScope: StockScopeCode;
+      bizDate: Date;
+      lines: Array<
+        Awaited<ReturnType<WorkshopMaterialRepository["createOrderLine"]>>
+      >;
+      inputLines: CreateWorkshopMaterialOrderLineDto[];
+      isRdScrapOrder: boolean;
+      nextRevision: number;
+      operatorId?: string;
+    },
+    tx: Prisma.TransactionClient,
+  ) {
+    const operationType = toOperationType(params.orderType);
+    const logIdByLineId = new Map<number, number>();
+
+    if (
+      params.orderType === WorkshopMaterialOrderType.PICK ||
+      params.orderType === WorkshopMaterialOrderType.SCRAP
+    ) {
+      const sourceTypes =
+        params.inventoryStockScope === "RD_SUB"
+          ? (["RD_HANDOFF_IN"] as typeof FIFO_SOURCE_OPERATION_TYPES)
+          : FIFO_SOURCE_OPERATION_TYPES.filter((t) => t !== "RD_HANDOFF_IN");
+
+      for (const line of params.lines) {
+        const lineDto = params.inputLines[line.lineNo - 1];
+        const settlement = await this.inventoryService.settleConsumerOut(
+          {
+            materialId: line.materialId,
+            stockScope: params.inventoryStockScope,
+            bizDate: params.bizDate,
+            quantity: line.quantity,
+            operationType,
+            businessModule: BUSINESS_MODULE,
+            businessDocumentType: DOCUMENT_TYPE,
+            businessDocumentId: params.orderId,
+            businessDocumentNumber: params.documentNo,
+            businessDocumentLineId: line.id,
+            operatorId: params.operatorId,
+            idempotencyKey: `${DOCUMENT_TYPE}:${params.orderId}:rev:${params.nextRevision}:line:${line.id}`,
+            consumerLineId: line.id,
+            sourceLogId: lineDto?.sourceLogId ?? undefined,
+            sourceOperationTypes: sourceTypes,
+          },
+          tx,
+        );
+        logIdByLineId.set(line.id, settlement.outLog.id);
+        await this.repository.updateOrderLineCost(
+          line.id,
+          {
+            costUnitPrice: settlement.settledUnitCost,
+            costAmount: settlement.settledCostAmount,
           },
           tx,
         );
       }
 
-      return order;
-    });
+      if (params.isRdScrapOrder) {
+        await applyScrapStatusesForOrder(
+          {
+            orderId: params.orderId,
+            documentNo: params.documentNo,
+            lines: params.lines,
+            operatorId: params.operatorId,
+            logIdByLineId,
+          },
+          tx,
+        );
+      }
+      return;
+    }
+
+    await this.validateReturnReplayQuantities(
+      params.lines,
+      params.inputLines,
+      tx,
+    );
+
+    for (const line of params.lines) {
+      await this.inventoryService.increaseStock(
+        {
+          materialId: line.materialId,
+          stockScope: params.inventoryStockScope,
+          bizDate: params.bizDate,
+          quantity: line.quantity,
+          operationType,
+          businessModule: BUSINESS_MODULE,
+          businessDocumentType: DOCUMENT_TYPE,
+          businessDocumentId: params.orderId,
+          businessDocumentNumber: params.documentNo,
+          businessDocumentLineId: line.id,
+          operatorId: params.operatorId,
+          idempotencyKey: `${DOCUMENT_TYPE}:${params.orderId}:rev:${params.nextRevision}:line:${line.id}`,
+        },
+        tx,
+      );
+    }
+
+    for (let idx = 0; idx < params.lines.length; idx++) {
+      const line = params.lines[idx];
+      const lineDto = params.inputLines[idx];
+      if (
+        lineDto?.sourceDocumentType &&
+        lineDto?.sourceDocumentId &&
+        lineDto?.sourceDocumentLineId
+      ) {
+        await this.validateAndRecordReturnRelation(
+          params.orderId,
+          line.id,
+          new Prisma.Decimal(line.quantity),
+          lineDto.sourceDocumentType,
+          lineDto.sourceDocumentId,
+          lineDto.sourceDocumentLineId,
+          params.operatorId,
+          tx,
+        );
+      }
+    }
+  }
+
+  private async validateReturnReplayQuantities(
+    orderLines: Array<
+      Awaited<ReturnType<WorkshopMaterialRepository["createOrderLine"]>>
+    >,
+    inputLines: CreateWorkshopMaterialOrderLineDto[],
+    tx: Prisma.TransactionClient,
+  ) {
+    const incomingQtyByPickLine = new Map<number, Prisma.Decimal>();
+    const pickLineToPickOrderId = new Map<number, number>();
+
+    for (let idx = 0; idx < orderLines.length; idx++) {
+      const lineDto = inputLines[idx];
+      if (!lineDto?.sourceDocumentId || !lineDto?.sourceDocumentLineId) {
+        continue;
+      }
+      const pickLineId = lineDto.sourceDocumentLineId;
+      const pickOrderId = lineDto.sourceDocumentId;
+      pickLineToPickOrderId.set(pickLineId, pickOrderId);
+      const prev =
+        incomingQtyByPickLine.get(pickLineId) ?? new Prisma.Decimal(0);
+      incomingQtyByPickLine.set(
+        pickLineId,
+        prev.add(new Prisma.Decimal(orderLines[idx].quantity)),
+      );
+    }
+
+    const checkedPickOrders = new Map<number, Map<number, Prisma.Decimal>>();
+    for (const [pickLineId, incomingQty] of incomingQtyByPickLine) {
+      const pickOrderId = pickLineToPickOrderId.get(pickLineId);
+      if (pickOrderId === undefined) {
+        continue;
+      }
+      if (!checkedPickOrders.has(pickOrderId)) {
+        const activeMap = await this.repository.sumActiveReturnedQtyByPickLine(
+          pickOrderId,
+          tx,
+        );
+        checkedPickOrders.set(pickOrderId, activeMap);
+      }
+      const activeMap =
+        checkedPickOrders.get(pickOrderId) ?? new Map<number, Prisma.Decimal>();
+      const pickOrder = await this.repository.findOrderById(pickOrderId, tx);
+      if (
+        !pickOrder ||
+        pickOrder.orderType !== WorkshopMaterialOrderType.PICK ||
+        pickOrder.lifecycleStatus === DocumentLifecycleStatus.VOIDED
+      ) {
+        continue;
+      }
+      const pickLine = pickOrder.lines.find((line) => line.id === pickLineId);
+      if (!pickLine) {
+        continue;
+      }
+      const alreadyReturned =
+        activeMap.get(pickLineId) ?? new Prisma.Decimal(0);
+      if (
+        alreadyReturned
+          .add(incomingQty)
+          .gt(new Prisma.Decimal(pickLine.quantity))
+      ) {
+        throw new BadRequestException(
+          `领料明细 ${pickLineId} 累计有效退料数量超过领料数量`,
+        );
+      }
+    }
+  }
+
+  private assertOrderMutable(
+    order: Pick<
+      NonNullable<
+        Awaited<ReturnType<WorkshopMaterialRepository["findOrderById"]>>
+      >,
+      "lifecycleStatus" | "inventoryEffectStatus"
+    >,
+  ) {
+    if (order.lifecycleStatus === DocumentLifecycleStatus.VOIDED) {
+      throw new BadRequestException("已作废的单据不能修改");
+    }
+    if (order.inventoryEffectStatus !== InventoryEffectStatus.POSTED) {
+      throw new BadRequestException("库存状态异常，无法修改");
+    }
+  }
+
+  private assertUpdateHeaderCompatibility(
+    existing: Pick<
+      NonNullable<
+        Awaited<ReturnType<WorkshopMaterialRepository["findOrderById"]>>
+      >,
+      "documentNo" | "orderType"
+    >,
+    dto: UpdateWorkshopMaterialOrderDto,
+  ) {
+    if (dto.documentNo && dto.documentNo !== existing.documentNo) {
+      throw new BadRequestException("改单不支持修改单据编号");
+    }
+    if (dto.orderType && dto.orderType !== existing.orderType) {
+      throw new BadRequestException("改单不支持修改单据类型");
+    }
+  }
+
+  private toEffectiveUpdateDto(
+    existing: NonNullable<
+      Awaited<ReturnType<WorkshopMaterialRepository["findOrderById"]>>
+    >,
+    dto: UpdateWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+  ): CreateWorkshopMaterialOrderDto & { stockScope?: StockScopeCode } {
+    return {
+      documentNo: existing.documentNo,
+      orderType: existing.orderType,
+      bizDate: dto.bizDate ?? existing.bizDate.toISOString().slice(0, 10),
+      handlerPersonnelId:
+        dto.handlerPersonnelId ?? existing.handlerPersonnelId ?? undefined,
+      handlerName: dto.handlerName ?? existing.handlerNameSnapshot ?? undefined,
+      workshopId: dto.workshopId ?? existing.workshopId,
+      remark: dto.remark ?? existing.remark ?? undefined,
+      stockScope:
+        dto.stockScope ??
+        (existing.stockScope?.scopeCode as StockScopeCode | undefined) ??
+        undefined,
+      lines: dto.lines,
+    };
   }
 
   private async validateAndRecordReturnRelation(
@@ -460,40 +1063,22 @@ export class WorkshopMaterialService {
       );
     }
 
-    // Paginate through ALL source usages for this pick order so no usages are
-    // silently truncated, then filter to just the specific pick line.
-    const usagePageSize = 200;
-    let usagePage = await this.inventoryService.listSourceUsages(
-      {
-        consumerDocumentType: DOCUMENT_TYPE,
-        consumerDocumentId: sourceDocumentId,
-        limit: usagePageSize,
-        offset: 0,
-      },
-      tx,
-    );
-    const allDocUsages = [...usagePage.items];
-    let usageOffset = usagePageSize;
-    while (usagePage.items.length === usagePageSize) {
-      usagePage = await this.inventoryService.listSourceUsages(
+    // Line-scoped lookup avoids document-level truncation when a large pick
+    // order has many source-usage rows across multiple lines.
+    const lineUsages = (
+      await this.inventoryService.listSourceUsagesForConsumerLine(
         {
           consumerDocumentType: DOCUMENT_TYPE,
           consumerDocumentId: sourceDocumentId,
-          limit: usagePageSize,
-          offset: usageOffset,
+          consumerLineId: sourceDocumentLineId,
         },
         tx,
-      );
-      allDocUsages.push(...usagePage.items);
-      usageOffset += usagePageSize;
-    }
+      )
+    ).sort((a, b) => Number(a.sourceLogId) - Number(b.sourceLogId));
 
     // Release source usage only up to the quantity returned in this operation,
     // processing usages in deterministic (sourceLogId ascending) order so that
     // partial returns are always applied against the oldest allocations first.
-    const lineUsages = allDocUsages
-      .filter((u) => u.consumerLineId === sourceDocumentLineId)
-      .sort((a, b) => Number(a.sourceLogId) - Number(b.sourceLogId));
     let remainingToRelease = new Prisma.Decimal(linkedQty);
     for (const usage of lineUsages) {
       if (remainingToRelease.lte(0)) break;
@@ -526,7 +1111,6 @@ export class WorkshopMaterialService {
         `领料来源库存释放不足: pickOrderId=${sourceDocumentId}, pickLineId=${sourceDocumentLineId}，退料需释放 ${new Prisma.Decimal(linkedQty).toFixed()} 但实际只能释放 ${new Prisma.Decimal(linkedQty).sub(remainingToRelease).toFixed()}`,
       );
     }
-
     const client = tx ?? this.prisma;
     await client.documentRelation.upsert({
       where: {
@@ -644,37 +1228,25 @@ export class WorkshopMaterialService {
           );
         }
 
-        const usages = await this.inventoryService.listSourceUsages(
+        await this.inventoryService.releaseAllSourceUsagesForConsumer(
           {
             consumerDocumentType: DOCUMENT_TYPE,
             consumerDocumentId: id,
-            limit: 1000,
-            offset: 0,
+            operatorId: voidedBy,
           },
           tx,
         );
-        for (const usage of usages.items) {
-          const allocatedQty = new Prisma.Decimal(usage.allocatedQty);
-          const releasedQty = new Prisma.Decimal(usage.releasedQty);
-          if (releasedQty.gte(allocatedQty)) {
-            continue;
-          }
-
-          await this.inventoryService.releaseInventorySource(
-            {
-              sourceLogId: usage.sourceLogId,
-              consumerDocumentType: DOCUMENT_TYPE,
-              consumerDocumentId: id,
-              consumerLineId: usage.consumerLineId,
-              targetReleasedQty: allocatedQty,
-              operatorId: voidedBy,
-            },
-            tx,
-          );
-        }
       }
 
       if (orderType === WorkshopMaterialOrderType.SCRAP) {
+        await this.inventoryService.releaseAllSourceUsagesForConsumer(
+          {
+            consumerDocumentType: DOCUMENT_TYPE,
+            consumerDocumentId: id,
+            operatorId: voidedBy,
+          },
+          tx,
+        );
         await reverseScrapStatusesForOrder(
           {
             orderId: id,
@@ -744,7 +1316,7 @@ export class WorkshopMaterialService {
         tx,
       );
 
-      await this.workflowService.markAuditNotRequired(
+      await this.approvalService.markApprovalNotRequired(
         DOCUMENT_TYPE,
         id,
         voidedBy,
@@ -768,37 +1340,18 @@ export class WorkshopMaterialService {
     operatorId?: string,
     tx?: Prisma.TransactionClient,
   ): Promise<void> {
-    const usagePageSize = 200;
-    let usagePage = await this.inventoryService.listSourceUsages(
-      {
-        consumerDocumentType: DOCUMENT_TYPE,
-        consumerDocumentId: pickOrderId,
-        limit: usagePageSize,
-        offset: 0,
-      },
-      tx,
-    );
-    const allDocUsages = [...usagePage.items];
-    let usageOffset = usagePageSize;
-    while (usagePage.items.length === usagePageSize) {
-      usagePage = await this.inventoryService.listSourceUsages(
+    const lineUsages = (
+      await this.inventoryService.listSourceUsagesForConsumerLine(
         {
           consumerDocumentType: DOCUMENT_TYPE,
           consumerDocumentId: pickOrderId,
-          limit: usagePageSize,
-          offset: usageOffset,
+          consumerLineId: pickLineId,
         },
         tx,
-      );
-      allDocUsages.push(...usagePage.items);
-      usageOffset += usagePageSize;
-    }
+      )
+    ).sort((a, b) => Number(b.sourceLogId) - Number(a.sourceLogId));
 
     // Reverse order: undo the youngest release first (mirrors forward allocation order).
-    const lineUsages = allDocUsages
-      .filter((u) => u.consumerLineId === pickLineId)
-      .sort((a, b) => Number(b.sourceLogId) - Number(a.sourceLogId));
-
     let remainingToRestore = new Prisma.Decimal(quantityToRestore);
     for (const usage of lineUsages) {
       if (remainingToRestore.lte(0)) break;
@@ -820,10 +1373,18 @@ export class WorkshopMaterialService {
       );
       remainingToRestore = remainingToRestore.sub(toRestoreNow);
     }
+
+    if (remainingToRestore.gt(0)) {
+      throw new BadRequestException(
+        `领料来源库存恢复不足: pickOrderId=${pickOrderId}, pickLineId=${pickLineId}，需恢复 ${quantityToRestore.toFixed()} 但实际只能恢复 ${quantityToRestore.sub(remainingToRestore).toFixed()}`,
+      );
+    }
   }
 
   private async validateMasterData(dto: CreateWorkshopMaterialOrderDto) {
-    await this.masterDataService.getWorkshopById(dto.workshopId);
+    await this.masterDataService.getWorkshopById(
+      this.requireWorkshopId(dto.workshopId),
+    );
     if (dto.handlerPersonnelId) {
       await this.masterDataService.getPersonnelById(dto.handlerPersonnelId);
     }
@@ -832,12 +1393,22 @@ export class WorkshopMaterialService {
     }
   }
 
-  private async resolveHandlerSnapshot(handlerPersonnelId?: number) {
+  private async resolveHandlerSnapshot(
+    handlerPersonnelId?: number,
+    handlerName?: string,
+  ) {
     if (!handlerPersonnelId) {
-      return { handlerNameSnapshot: null };
+      return { handlerNameSnapshot: handlerName?.trim() || null };
     }
     const p = await this.masterDataService.getPersonnelById(handlerPersonnelId);
     return { handlerNameSnapshot: p.personnelName };
+  }
+
+  private requireWorkshopId(workshopId?: number) {
+    if (!workshopId || workshopId < 1) {
+      throw new BadRequestException("workshopId 必填");
+    }
+    return workshopId;
   }
 
   private async buildLineWriteData(
@@ -913,17 +1484,12 @@ export class WorkshopMaterialService {
 
   private resolveInventoryStockScope(
     orderType: WorkshopMaterialOrderType,
-    workshop: { workshopCode: string; workshopName: string },
+    stockScope?: StockScopeCode,
   ): StockScopeCode {
     if (orderType !== WorkshopMaterialOrderType.SCRAP) {
       return "MAIN";
     }
 
-    return (
-      resolveStockScopeFromWorkshopIdentity({
-        workshopCode: workshop.workshopCode,
-        workshopName: workshop.workshopName,
-      }) ?? "MAIN"
-    );
+    return stockScope ?? "MAIN";
   }
 }

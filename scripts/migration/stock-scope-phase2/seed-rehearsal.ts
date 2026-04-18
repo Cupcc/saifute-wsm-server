@@ -10,9 +10,12 @@ import {
   type QueryResultWithInsertId,
   withPoolConnection,
 } from "../db";
+import { BusinessDocumentType } from "../shared/business-document-type";
 import { writeStableReport } from "../shared/report-writer";
 
 const REHEARSAL_CREATED_BY = "stock-scope-rehearsal";
+const STOCK_IN_DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
+const SALES_STOCK_DOCUMENT_TYPE = BusinessDocumentType.SalesStockOrder;
 
 type Queryable = {
   query<T = unknown>(sql: string, values?: readonly unknown[]): Promise<T>;
@@ -32,11 +35,11 @@ async function getTableCounts(connection: Queryable) {
       UNION ALL
       SELECT 'stock_in_order' AS tableName, COUNT(*) AS total FROM stock_in_order
       UNION ALL
-      SELECT 'customer_stock_order' AS tableName, COUNT(*) AS total FROM customer_stock_order
+      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS total FROM sales_stock_order
       UNION ALL
       SELECT 'workshop_material_order' AS tableName, COUNT(*) AS total FROM workshop_material_order
       UNION ALL
-      SELECT 'project' AS tableName, COUNT(*) AS total FROM project
+      SELECT 'rd_project' AS tableName, COUNT(*) AS total FROM rd_project
       UNION ALL
       SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS total FROM rd_handoff_order
       UNION ALL
@@ -121,45 +124,42 @@ async function seed(connection: Queryable) {
     connection,
     `
       INSERT INTO workshop (
-        workshopCode, workshopName, createdBy, createdAt, updatedBy, updatedAt
+        workshopName, createdBy, createdAt, updatedBy, updatedAt
       )
-      VALUES (?, ?, ?, NOW(), ?, NOW())
+      VALUES (?, ?, NOW(), ?, NOW())
       ON DUPLICATE KEY UPDATE
-        workshopName = VALUES(workshopName),
         updatedBy = VALUES(updatedBy),
         id = LAST_INSERT_ID(id)
     `,
-    ["MAIN", "主仓", REHEARSAL_CREATED_BY, REHEARSAL_CREATED_BY],
+    ["主仓", REHEARSAL_CREATED_BY, REHEARSAL_CREATED_BY],
   );
 
   const rdWorkshopId = await insertOne(
     connection,
     `
       INSERT INTO workshop (
-        workshopCode, workshopName, createdBy, createdAt, updatedBy, updatedAt
+        workshopName, createdBy, createdAt, updatedBy, updatedAt
       )
-      VALUES (?, ?, ?, NOW(), ?, NOW())
+      VALUES (?, ?, NOW(), ?, NOW())
       ON DUPLICATE KEY UPDATE
-        workshopName = VALUES(workshopName),
         updatedBy = VALUES(updatedBy),
         id = LAST_INSERT_ID(id)
     `,
-    ["RD", "研发小仓", REHEARSAL_CREATED_BY, REHEARSAL_CREATED_BY],
+    ["研发小仓", REHEARSAL_CREATED_BY, REHEARSAL_CREATED_BY],
   );
 
   const workshopAttrId = await insertOne(
     connection,
     `
       INSERT INTO workshop (
-        workshopCode, workshopName, createdBy, createdAt, updatedBy, updatedAt
+        workshopName, createdBy, createdAt, updatedBy, updatedAt
       )
-      VALUES (?, ?, ?, NOW(), ?, NOW())
+      VALUES (?, ?, NOW(), ?, NOW())
       ON DUPLICATE KEY UPDATE
-        workshopName = VALUES(workshopName),
         updatedBy = VALUES(updatedBy),
         id = LAST_INSERT_ID(id)
     `,
-    ["WS-ATTR", "装配车间", REHEARSAL_CREATED_BY, REHEARSAL_CREATED_BY],
+    ["装配车间", REHEARSAL_CREATED_BY, REHEARSAL_CREATED_BY],
   );
 
   const materialId = await insertOne(
@@ -207,10 +207,10 @@ async function seed(connection: Queryable) {
     ],
   );
 
-  const customerStockOrderId = await insertOne(
+  const salesStockOrderId = await insertOne(
     connection,
     `
-      INSERT INTO customer_stock_order (
+      INSERT INTO sales_stock_order (
         documentNo, orderType, bizDate, customerId, handlerPersonnelId,
         workshopId, workshopNameSnapshot, totalQty, totalAmount,
         createdBy, createdAt, updatedBy, updatedAt
@@ -257,7 +257,7 @@ async function seed(connection: Queryable) {
   const projectId = await insertOne(
     connection,
     `
-      INSERT INTO project (
+      INSERT INTO rd_project (
         projectCode, projectName, bizDate, customerId, supplierId,
         managerPersonnelId, workshopId, workshopNameSnapshot, totalQty, totalAmount,
         createdBy, createdAt, updatedBy, updatedAt
@@ -375,7 +375,7 @@ async function seed(connection: Queryable) {
         businessModule, businessDocumentType, businessDocumentId, businessDocumentNumber,
         businessDocumentLineId, changeQty, beforeQty, afterQty, operatorId, idempotencyKey, note
       )
-      VALUES (?, ?, ?, 'IN', 'ACCEPTANCE_IN', 'inbound', 'StockInOrder', ?, ?, NULL, 10, 0, 10, ?, ?, ?)
+      VALUES (?, ?, ?, 'IN', 'ACCEPTANCE_IN', 'inbound', '${STOCK_IN_DOCUMENT_TYPE}', ?, ?, NULL, 10, 0, 10, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         id = LAST_INSERT_ID(id)
     `,
@@ -398,7 +398,7 @@ async function seed(connection: Queryable) {
         materialId, workshopId, businessDocumentType, businessDocumentId, businessDocumentLineId,
         startNumber, endNumber, createdBy, createdAt, updatedBy, updatedAt
       )
-      VALUES (?, ?, 'CustomerStockOrder', ?, 1, 'A001', 'A005', ?, NOW(), ?, NOW())
+      VALUES (?, ?, '${SALES_STOCK_DOCUMENT_TYPE}', ?, 1, 'A001', 'A005', ?, NOW(), ?, NOW())
       ON DUPLICATE KEY UPDATE
         updatedBy = VALUES(updatedBy),
         id = LAST_INSERT_ID(id)
@@ -406,7 +406,7 @@ async function seed(connection: Queryable) {
     [
       materialId,
       mainWorkshopId,
-      customerStockOrderId,
+      salesStockOrderId,
       REHEARSAL_CREATED_BY,
       REHEARSAL_CREATED_BY,
     ],
@@ -421,7 +421,7 @@ async function seed(connection: Queryable) {
     workshopAttrId,
     materialId,
     stockInOrderId,
-    customerStockOrderId,
+    salesStockOrderId,
     workshopMaterialOrderId,
     projectId,
     rdProcurementRequestId,

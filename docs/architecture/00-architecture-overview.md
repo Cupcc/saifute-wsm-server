@@ -6,6 +6,13 @@
 
 便于清晰明确的了解项目架构
 
+### 1.1 文档边界
+
+- `00-architecture-overview.md` 是总览基线，负责记录模块清单、技术栈、共享基础设施、冻结约束和总依赖关系。
+- 它是“先看什么、哪些边界不能被改坏”的入口文档，不负责承载大量派生图、逐需求 review 说明或模块级深挖。
+- 如果需要从“需求约束 -> 架构边界 -> 图形化视图”的角度快速 review，请继续阅读 `docs/architecture/10-architecture-views.md`。
+- 若 `10-architecture-views.md` 与本文件、`docs/requirements/**`、`docs/architecture/20-wms-database-tables-and-schema.md` 存在表述冲突，应以前者之外的真源文档为准，并回改 `10-architecture-views.md`。
+
 ## 2. 源系统映射
 
 - 平台层：`ruoyi-framework`、`ruoyi-system`、`ruoyi-common`、`ruoyi-quartz`、`ruoyi-admin`
@@ -26,14 +33,18 @@
 共享写路径与审核：
 
 - `inventory-core`：库存现值、库存日志、来源追踪、预警、编号区间；**全库库存唯一写入口**
-- `workflow`：轻量审核记录与单据审核状态收口（`audit_document` 投影）
+- `approval`：轻量审核记录与单据审核状态收口（代码/API/Prisma/DB 统一使用 `approval` / `approval_document`）
 
 四类事务单据家族（各家族内可含多种业务单据类型，共用领域表与模块边界）：
 
 - `inbound`：入库家族（验收单、生产入库单等）
-- `customer`：客户收发家族（出库单、销售退货单等；对外路由前缀为 `/customer`）
+- `sales`：销售业务家族（销售出库单、销售退货单等；对外路由前缀为 `/sales`）
 - `workshop-material`：车间物料家族（领料、退料、报废等）
-- `project`：项目/BOM、项目物料消耗等（默认轻审核或不走审核，以模块文档为准）
+- `rd-project`：研发项目家族（研发 BOM、项目物料动作、项目台账等）
+
+与事务单据并列的项目视图域：
+
+- `sales-project`：销售项目主档、项目维度库存 / 发货统计、可选项目分配 / 预留；真实库存动作仍统一通过 `sales`
 
 #### 分析与辅助域（不拥有事务写模型或仅只读/编排）
 
@@ -96,7 +107,7 @@
 ### 业务与集成能力
 
 - `inventory-core`：所有库存写入的唯一入口，封装库存、库存日志、来源追踪的事务能力
-- `workflow`：第一阶段只兼容现有轻量审核模型，不引入 BPM 引擎
+- `approval`：当前只承接现有轻量审核模型，不引入 BPM 引擎；业务审核运行态不再保留 `approval` 兼容模块、路由、权限别名或数据库别名
 - `file-storage`：默认本地磁盘存储，保留 `/profile/**` 资源语义
 - `scheduler`：保留数据库驱动任务定义，调度实现由 NestJS 基础设施承接
 - `ai-assistant`：采用 OpenAI 兼容接口抽象 + 受控工具调用编排，不允许 AI 直接写业务数据
@@ -202,7 +213,7 @@ modules/<module>/
 - 认证模式保持“JWT 票据 + Redis 会话”，不切纯无状态 JWT
 - Redis 不可用时服务必须启动失败；不允许以内存实现或降级模式继续提供 `session` / `auth`
 - 权限模型保持“菜单/按钮权限字符串 + 数据权限”组合
-- `workflow` 第一阶段只兼容当前 `audit_document` 审核模型，不引入 BPM 引擎
+- `approval` 第一阶段只承接当前 `approval_document` 审核模型，不引入 BPM 引擎
 - `inventory-core` 必须保留库存日志和 `inventory_used` 来源追踪
 - 文件存储默认保留本地磁盘和 `/profile/**` 资源语义
 - 调度保留“数据库定义任务 + 执行日志”产品形态
@@ -220,7 +231,7 @@ flowchart TD
     ApiLayer --> scheduler
     ApiLayer --> masterData
     ApiLayer --> inventoryCore
-    ApiLayer --> workflow
+    ApiLayer --> approval
     ApiLayer --> inbound
     ApiLayer --> customer
     ApiLayer --> workshopMaterial
@@ -240,13 +251,13 @@ flowchart TD
     redisLayer --> configLayer
     inbound --> masterData
     inbound --> inventoryCore
-    inbound --> workflow
+    inbound --> approval
     customer --> masterData
     customer --> inventoryCore
-    customer --> workflow
+    customer --> approval
     workshopMaterial --> masterData
     workshopMaterial --> inventoryCore
-    workshopMaterial --> workflow
+    workshopMaterial --> approval
     project --> masterData
     project --> inventoryCore
     reporting --> masterData
@@ -279,9 +290,9 @@ flowchart TD
 5. `system-management`
 6. `master-data`
 7. `inventory-core`
-8. `workflow`
+8. `approval`
 9. `inbound`
-10. `customer`
+10. `sales`
 11. `workshop-material`
 12. `project`
 13. `reporting`

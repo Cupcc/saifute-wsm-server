@@ -18,6 +18,18 @@ type ValidationIssue = {
   details?: Record<string, unknown>;
 };
 
+async function getScopeTypeColumnPresence(connection: Queryable) {
+  return connection.query<Array<{ total: number }>>(
+    `
+      SELECT COUNT(*) AS total
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'stock_scope'
+        AND COLUMN_NAME = 'scopeType'
+    `,
+  );
+}
+
 async function getScopePresence(connection: Queryable) {
   return connection.query<Array<{ scopeCode: string; total: number }>>(
     `
@@ -47,14 +59,14 @@ async function getNullCounts(connection: Queryable) {
       SELECT 'stock_in_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM stock_in_order
       UNION ALL
-      SELECT 'customer_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
-      FROM customer_stock_order
+      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      FROM sales_stock_order
       UNION ALL
       SELECT 'workshop_material_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM workshop_material_order
       UNION ALL
-      SELECT 'project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
-      FROM project
+      SELECT 'rd_project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      FROM rd_project
       UNION ALL
       SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN sourceStockScopeId IS NULL OR targetStockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_handoff_order
@@ -91,8 +103,8 @@ async function getMainOrderDrift(connection: Queryable) {
       JOIN stock_scope ss ON ss.id = sio.stockScopeId
       WHERE ss.scopeCode <> 'MAIN'
       UNION ALL
-      SELECT 'customer_stock_order' AS tableName, COUNT(*) AS unexpectedRows
-      FROM customer_stock_order cso
+      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS unexpectedRows
+      FROM sales_stock_order cso
       JOIN stock_scope ss ON ss.id = cso.stockScopeId
       WHERE ss.scopeCode <> 'MAIN'
     `,
@@ -103,7 +115,7 @@ async function getWorkshopMaterialDrift(connection: Queryable) {
   return connection.query<
     Array<{
       orderType: string;
-      workshopCode: string;
+      workshopName: string;
       scopeCode: string;
       totalRows: number;
     }>
@@ -111,7 +123,7 @@ async function getWorkshopMaterialDrift(connection: Queryable) {
     `
       SELECT
         wmo.orderType AS orderType,
-        w.workshopCode AS workshopCode,
+        w.workshopName AS workshopName,
         ss.scopeCode AS scopeCode,
         COUNT(*) AS totalRows
       FROM workshop_material_order wmo
@@ -120,10 +132,10 @@ async function getWorkshopMaterialDrift(connection: Queryable) {
       WHERE
         (wmo.orderType IN ('PICK', 'RETURN') AND ss.scopeCode <> 'MAIN')
         OR
-        (wmo.orderType = 'SCRAP' AND w.workshopCode IN ('RD', 'RD_SUB') AND ss.scopeCode <> 'RD_SUB')
+        (wmo.orderType = 'SCRAP' AND w.workshopName = '研发小仓' AND ss.scopeCode <> 'RD_SUB')
         OR
-        (wmo.orderType = 'SCRAP' AND w.workshopCode = 'MAIN' AND ss.scopeCode <> 'MAIN')
-      GROUP BY wmo.orderType, w.workshopCode, ss.scopeCode
+        (wmo.orderType = 'SCRAP' AND w.workshopName = '主仓' AND ss.scopeCode <> 'MAIN')
+      GROUP BY wmo.orderType, w.workshopName, ss.scopeCode
     `,
   );
 }
@@ -194,6 +206,7 @@ async function main(): Promise<void> {
   try {
     const report = await withPoolConnection(targetPool, async (connection) => {
       const [
+        scopeTypeColumnPresence,
         scopePresence,
         nullCounts,
         balanceConflicts,
@@ -201,6 +214,7 @@ async function main(): Promise<void> {
         workshopMaterialDrift,
         rdDrift,
       ] = await Promise.all([
+        getScopeTypeColumnPresence(connection),
         getScopePresence(connection),
         getNullCounts(connection),
         getBalanceConflicts(connection),
@@ -210,6 +224,13 @@ async function main(): Promise<void> {
       ]);
 
       const validationIssues: ValidationIssue[] = [];
+
+      if (Number(scopeTypeColumnPresence[0]?.total ?? 0) === 0) {
+        validationIssues.push({
+          severity: "blocker",
+          reason: "stock_scope.scopeType column is missing.",
+        });
+      }
 
       const scopeCodes = new Set(scopePresence.map((row) => row.scopeCode));
       if (!scopeCodes.has("MAIN") || !scopeCodes.has("RD_SUB")) {
@@ -271,6 +292,8 @@ async function main(): Promise<void> {
       return {
         mode: "validate",
         targetDatabaseName,
+        scopeTypeColumnPresent:
+          Number(scopeTypeColumnPresence[0]?.total ?? 0) > 0,
         scopePresence,
         nullCounts,
         balanceConflicts,

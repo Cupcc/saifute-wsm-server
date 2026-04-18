@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -8,17 +7,19 @@ import {
   AuditStatusSnapshot,
   DocumentLifecycleStatus,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
+import {
+  buildDashedTimestampDocumentNo,
+  createWithGeneratedDocumentNo,
+} from "../../../shared/common/document-number.util";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
-import type {
-  ApplyRdProcurementStatusActionDto,
-  RdProcurementStatusActionType,
-} from "../dto/apply-rd-procurement-status-action.dto";
+import type { ApplyRdProcurementStatusActionDto } from "../dto/apply-rd-procurement-status-action.dto";
 import type { CreateRdProcurementRequestDto } from "../dto/create-rd-procurement-request.dto";
 import type { QueryRdProcurementRequestDto } from "../dto/query-rd-procurement-request.dto";
 import { RdProcurementRequestRepository } from "../infrastructure/rd-procurement-request.repository";
 import {
+  applyManualAcceptanceStatus,
   applyManualCancelStatus,
   applyManualReturnStatus,
   applyProcurementStartedStatus,
@@ -26,8 +27,6 @@ import {
   getStatusLedgerProjection,
   initializeRequestStatusTruth,
 } from "./rd-material-status.helper";
-
-const RD_SUBWAREHOUSE_CODE = "RD";
 
 @Injectable()
 export class RdProcurementRequestService {
@@ -72,19 +71,9 @@ export class RdProcurementRequestService {
   }
 
   async createRequest(dto: CreateRdProcurementRequestDto, createdBy?: string) {
-    const existing = await this.repository.findRequestByDocumentNo(
-      dto.documentNo,
-    );
-    if (existing) {
-      throw new ConflictException(`单据编号已存在: ${dto.documentNo}`);
-    }
+    const workshopId = this.requireWorkshopId(dto.workshopId);
 
-    const workshop = await this.masterDataService.getWorkshopById(
-      dto.workshopId,
-    );
-    if (workshop.workshopCode !== RD_SUBWAREHOUSE_CODE) {
-      throw new BadRequestException("研发采购需求只能归属研发小仓");
-    }
+    const workshop = await this.masterDataService.getWorkshopById(workshopId);
     const stockScopeRecord =
       await this.masterDataService.getStockScopeByCode("RD_SUB");
 
@@ -128,50 +117,57 @@ export class RdProcurementRequestService {
       new Prisma.Decimal(0),
     );
 
-    return this.prisma.runInTransaction(async (tx) => {
-      const request = await this.repository.createRequest(
-        {
-          documentNo: dto.documentNo,
-          bizDate,
-          projectCode: dto.projectCode,
-          projectName: dto.projectName,
-          supplierId: dto.supplierId,
-          handlerPersonnelId: dto.handlerPersonnelId,
-          stockScopeId: stockScopeRecord.id,
-          workshopId: dto.workshopId,
-          auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,
-          supplierCodeSnapshot: supplierSnapshot.supplierCodeSnapshot,
-          supplierNameSnapshot: supplierSnapshot.supplierNameSnapshot,
-          handlerNameSnapshot: handlerSnapshot.handlerNameSnapshot,
-          workshopNameSnapshot: workshop.workshopName,
-          totalQty,
-          totalAmount,
-          remark: dto.remark,
-          createdBy,
-          updatedBy: createdBy,
-        },
-        linesWithSnapshots.map((line) => ({
-          ...line,
-          createdBy,
-          updatedBy: createdBy,
-        })),
-        tx,
+    return createWithGeneratedDocumentNo((attempt) => {
+      const documentNo = buildDashedTimestampDocumentNo(
+        "RDPUR",
+        bizDate,
+        attempt,
       );
-
-      await initializeRequestStatusTruth(
-        {
-          requestId: request.id,
-          documentNo: request.documentNo,
-          lines: request.lines.map((line) => ({
-            id: line.id,
-            quantity: line.quantity,
+      return this.prisma.runInTransaction(async (tx) => {
+        const request = await this.repository.createRequest(
+          {
+            documentNo,
+            bizDate,
+            projectCode: dto.projectCode,
+            projectName: dto.projectName,
+            supplierId: dto.supplierId,
+            handlerPersonnelId: dto.handlerPersonnelId,
+            stockScopeId: stockScopeRecord.id,
+            workshopId,
+            auditStatusSnapshot: AuditStatusSnapshot.NOT_REQUIRED,
+            supplierCodeSnapshot: supplierSnapshot.supplierCodeSnapshot,
+            supplierNameSnapshot: supplierSnapshot.supplierNameSnapshot,
+            handlerNameSnapshot: handlerSnapshot.handlerNameSnapshot,
+            workshopNameSnapshot: workshop.workshopName,
+            totalQty,
+            totalAmount,
+            remark: dto.remark,
+            createdBy,
+            updatedBy: createdBy,
+          },
+          linesWithSnapshots.map((line) => ({
+            ...line,
+            createdBy,
+            updatedBy: createdBy,
           })),
-          operatorId: createdBy,
-        },
-        tx,
-      );
+          tx,
+        );
 
-      return this.withStatusProjection(request, tx);
+        await initializeRequestStatusTruth(
+          {
+            requestId: request.id,
+            documentNo: request.documentNo,
+            lines: request.lines.map((line) => ({
+              id: line.id,
+              quantity: line.quantity,
+            })),
+            operatorId: createdBy,
+          },
+          tx,
+        );
+
+        return this.withStatusProjection(request, tx);
+      });
     });
   }
 
@@ -185,11 +181,7 @@ export class RdProcurementRequestService {
     }
 
     return this.prisma.runInTransaction(async (tx) => {
-      const hasActiveAcceptanceOrders =
-        await this.repository.hasActiveAcceptanceOrders(id, tx);
-      if (hasActiveAcceptanceOrders) {
-        throw new BadRequestException("该采购需求已关联有效验收单，不能作废");
-      }
+      await this.assertCanVoidRequest(request.lines, tx);
 
       for (const line of request.lines) {
         await applyRequestVoidStatus(
@@ -296,6 +288,20 @@ export class RdProcurementRequestService {
           },
           tx,
         );
+      case "ACCEPTANCE_CONFIRMED":
+        return applyManualAcceptanceStatus(
+          {
+            requestId,
+            requestDocumentNo,
+            requestLineId,
+            quantity: dto.quantity,
+            note: dto.note,
+            reason: dto.reason,
+            referenceNo: dto.referenceNo,
+            operatorId,
+          },
+          tx,
+        );
       case "MANUAL_CANCELLED":
         return applyManualCancelStatus(
           {
@@ -333,6 +339,25 @@ export class RdProcurementRequestService {
     }
   }
 
+  private async assertCanVoidRequest(
+    lines: Array<{ id: number }>,
+    tx: Prisma.TransactionClient,
+  ) {
+    for (const line of lines) {
+      const projection = await getStatusLedgerProjection(line.id, tx);
+      const hasClosedFacts =
+        projection.acceptedQty.gt(0) ||
+        projection.handedOffQty.gt(0) ||
+        projection.scrappedQty.gt(0) ||
+        projection.returnedQty.gt(0);
+      if (hasClosedFacts) {
+        throw new BadRequestException(
+          "该采购需求已存在验收/交接/报废/退回事实，不能作废",
+        );
+      }
+    }
+  }
+
   private async withStatusProjection<
     T extends {
       lines: Array<
@@ -361,5 +386,12 @@ export class RdProcurementRequestService {
 
   private assertNeverAction(actionType: never): never {
     throw new BadRequestException(`不支持的 RD 状态动作: ${actionType}`);
+  }
+
+  private requireWorkshopId(workshopId?: number) {
+    if (!workshopId || workshopId < 1) {
+      throw new BadRequestException("workshopId 必填");
+    }
+    return workshopId;
   }
 }

@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_project_material_line (
   UNIQUE KEY uq_map_project_material_line_target (target_table, target_id)
 );
 
-CREATE TABLE IF NOT EXISTS migration_staging.map_customer_stock_order (
+CREATE TABLE IF NOT EXISTS migration_staging.map_sales_stock_order (
   id BIGINT NOT NULL AUTO_INCREMENT,
   legacy_table VARCHAR(128) NOT NULL,
   legacy_id BIGINT NOT NULL,
@@ -150,11 +150,11 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_customer_stock_order (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_customer_stock_order_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_customer_stock_order_target (target_table, target_id)
+  UNIQUE KEY uq_map_sales_stock_order_legacy (legacy_table, legacy_id),
+  UNIQUE KEY uq_map_sales_stock_order_target (target_table, target_id)
 );
 
-CREATE TABLE IF NOT EXISTS migration_staging.map_customer_stock_order_line (
+CREATE TABLE IF NOT EXISTS migration_staging.map_sales_stock_order_line (
   id BIGINT NOT NULL AUTO_INCREMENT,
   legacy_table VARCHAR(128) NOT NULL,
   legacy_id BIGINT NOT NULL,
@@ -164,8 +164,8 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_customer_stock_order_line (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_customer_stock_order_line_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_customer_stock_order_line_target (target_table, target_id)
+  UNIQUE KEY uq_map_sales_stock_order_line_legacy (legacy_table, legacy_id),
+  UNIQUE KEY uq_map_sales_stock_order_line_target (target_table, target_id)
 );
 
 CREATE TABLE IF NOT EXISTS migration_staging.map_workshop_material_order (

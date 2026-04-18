@@ -45,7 +45,7 @@ describe("RbacService", () => {
       "InboundBusiness",
       "WorkshopMaterialBusiness",
       "InventoryBusiness",
-      "CustomerBusiness",
+      "SalesBusiness",
       "RdSubwarehouse",
     ]);
     const rdRouteNames =
@@ -62,16 +62,37 @@ describe("RbacService", () => {
     expect(rdRouteNames).not.toEqual(
       expect.arrayContaining([
         "RdWorkbench",
-        "RdProjectConsumption",
+        "RdProjectLedger",
         "RdStocktakeOrders",
       ]),
     );
+
+    const masterDataRouteNames =
+      routes
+        .find((route) => route.name === "MasterData")
+        ?.children?.map((route) => route.name) ?? [];
+    expect(masterDataRouteNames).toContain("StockInventory");
+
+    const inventoryRouteNames =
+      routes
+        .find((route) => route.name === "InventoryBusiness")
+        ?.children?.map((route) => route.name) ?? [];
+    expect(inventoryRouteNames).not.toContain("StockInventory");
   });
 
   it("should only return rd console routes for rd users", async () => {
     const routes = await rbacService.getRoutesForUser(5);
     expect(routes).toHaveLength(1);
     expect(routes[0]?.name).toBe("RdSubwarehouse");
+    const rdRouteNames = routes[0]?.children?.map((route) => route.name) ?? [];
+    expect(rdRouteNames).toEqual(
+      expect.arrayContaining([
+        "RdWorkbench",
+        "RdInventorySummary",
+        "RdMaterialCategorySummary",
+        "RdMonthlyReporting",
+      ]),
+    );
   });
 
   it("should keep full routes for admin user", async () => {
@@ -83,14 +104,40 @@ describe("RbacService", () => {
     expect(routeNames).toContain("RdWorkbench");
   });
 
-  it("should keep fixed workshop scope for current user", async () => {
+  it("should avoid binding rd users to a pseudo workshop scope", async () => {
     const user = await rbacService.getCurrentUser(5);
     expect(user.consoleMode).toBe("rd-subwarehouse");
     expect(user.workshopScope).toEqual({
-      mode: "FIXED",
-      workshopId: 6,
-      workshopCode: "RD",
-      workshopName: "研发小仓",
+      mode: "ALL",
+      workshopId: null,
+      workshopName: null,
     });
+    expect(user.stockScope).toEqual({
+      mode: "FIXED",
+      stockScope: "RD_SUB",
+      stockScopeName: "研发小仓",
+    });
+  });
+
+  it("should keep canonical approval permissions only", async () => {
+    const user = await rbacService.getCurrentUser(1);
+    const documentPermissions = [
+      ...new Set(
+        user.permissions.filter((permission) =>
+          permission.startsWith("approval:document:"),
+        ),
+      ),
+    ].sort();
+
+    expect(documentPermissions).toEqual(
+      [
+        "approval:document:status",
+        "approval:document:list",
+        "approval:document:create",
+        "approval:document:approve",
+        "approval:document:reject",
+        "approval:document:reset",
+      ].sort(),
+    );
   });
 });

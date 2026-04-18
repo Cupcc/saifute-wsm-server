@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { DocumentFamily, Prisma } from "../../../generated/prisma/client";
+import { DocumentFamily, Prisma } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type DbClient = Prisma.TransactionClient | PrismaService;
@@ -80,7 +80,7 @@ export class InboundRepository {
         where,
         take: params.limit,
         skip: params.offset,
-        orderBy: { bizDate: "desc" },
+        orderBy: [{ bizDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
         include: { lines: true },
       }),
       client.stockInOrder.count({ where }),

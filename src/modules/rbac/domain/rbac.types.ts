@@ -1,5 +1,6 @@
 import type {
   SessionConsoleMode,
+  SessionStockScopeSnapshot,
   SessionUserSnapshot,
   SessionWorkshopScopeSnapshot,
 } from "../../session/domain/user-session";
@@ -28,7 +29,7 @@ export interface ManagedDeptRecord {
   phone: string;
   email: string;
   status: "0" | "1";
-  createTime: string;
+  createdAt: string;
 }
 
 export interface ManagedPostRecord {
@@ -38,7 +39,7 @@ export interface ManagedPostRecord {
   postSort: number;
   status: "0" | "1";
   remark: string;
-  createTime: string;
+  createdAt: string;
 }
 
 export interface ManagedMenuRecord {
@@ -71,7 +72,7 @@ export interface ManagedRoleRecord {
   menuIds: number[];
   deptIds: number[];
   remark: string;
-  createTime: string;
+  createdAt: string;
 }
 
 export interface ManagedUserRecord {
@@ -86,11 +87,12 @@ export interface ManagedUserRecord {
   status: "0" | "1";
   deleted: boolean;
   remark: string;
-  createTime: string;
+  createdAt: string;
   postIds: number[];
   roleIds: number[];
   passwordHash: string;
   consoleMode: SessionConsoleMode;
+  stockScope: SessionStockScopeSnapshot;
   workshopScope: SessionWorkshopScopeSnapshot;
   extraPermissions: string[];
 }
@@ -101,7 +103,7 @@ export interface ManagedDictTypeRecord {
   dictType: string;
   status: "0" | "1";
   remark: string;
-  createTime: string;
+  createdAt: string;
 }
 
 export interface ManagedDictDataRecord {
@@ -115,7 +117,7 @@ export interface ManagedDictDataRecord {
   isDefault: "Y" | "N";
   status: "0" | "1";
   remark: string;
-  createTime: string;
+  createdAt: string;
 }
 
 export interface ManagedConfigRecord {
@@ -125,7 +127,7 @@ export interface ManagedConfigRecord {
   configValue: string;
   configType: "Y" | "N";
   remark: string;
-  createTime: string;
+  createdAt: string;
 }
 
 export interface ManagedNoticeRecord {
@@ -135,17 +137,5 @@ export interface ManagedNoticeRecord {
   noticeContent: string;
   status: "0" | "1";
   remark: string;
-  createTime: string;
-}
-
-export interface SystemManagementStateSnapshot {
-  depts: ManagedDeptRecord[];
-  posts: ManagedPostRecord[];
-  menus: ManagedMenuRecord[];
-  roles: ManagedRoleRecord[];
-  dictTypes: ManagedDictTypeRecord[];
-  dictData: ManagedDictDataRecord[];
-  configs: ManagedConfigRecord[];
-  notices: ManagedNoticeRecord[];
-  users: ManagedUserRecord[];
+  createdAt: string;
 }

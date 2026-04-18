@@ -127,7 +127,6 @@ export interface MaterialCategoryTargetInsert {
 }
 
 export interface WorkshopTargetInsert {
-  workshopCode: string;
   workshopName: string;
   status: MasterDataStatusValue;
   createdBy: string | null;
@@ -139,6 +138,10 @@ export interface WorkshopTargetInsert {
 export interface SupplierTargetInsert {
   supplierCode: string;
   supplierName: string;
+  supplierShortName: string | null;
+  contactPerson: string | null;
+  contactPhone: string | null;
+  address: string | null;
   status: MasterDataStatusValue;
   creationMode: "MANUAL";
   sourceDocumentType: null;
@@ -150,12 +153,9 @@ export interface SupplierTargetInsert {
 }
 
 export interface PersonnelTargetInsert {
-  personnelCode: string;
   personnelName: string;
+  contactPhone: string | null;
   status: MasterDataStatusValue;
-  creationMode: "MANUAL";
-  sourceDocumentType: null;
-  sourceDocumentId: null;
   createdBy: string | null;
   createdAt: string | null;
   updatedBy: string | null;

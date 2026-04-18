@@ -10,7 +10,7 @@ export type InventoryOperationType =
   | "PICK_OUT"
   | "RETURN_IN"
   | "SCRAP_OUT"
-  | "PROJECT_CONSUMPTION_OUT";
+  | "RD_PROJECT_OUT";
 
 export interface InventoryEvent {
   bizDate: string;

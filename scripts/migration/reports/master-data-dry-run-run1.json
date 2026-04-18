@@ -195,7 +195,7 @@
     "missingMaterialUnitCount": 21
   },
   "counts": {
-    "customer": {
+    "sales": {
       "archivedPayloads": 52,
       "blocked": 0,
       "planned": 184,
@@ -234,7 +234,7 @@
   },
   "duplicateRewrites": [
     {
-      "entity": "customer",
+      "entity": "sales",
       "keptLegacyId": 14,
       "originalCode": "2",
       "rewritten": [
@@ -485,7 +485,7 @@
     "workshop",
     "supplier",
     "personnel",
-    "customer",
+    "sales",
     "material"
   ],
   "migrationBatch": "batch1-master-data",

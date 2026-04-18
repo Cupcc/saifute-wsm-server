@@ -8,18 +8,33 @@
       label-width="84px"
     >
       <el-form-item label="供应商编码" prop="supplierCode">
+        <combo-input v-model="queryParams.supplierCode" scope="supplier" field="supplierCode" placeholder="请选择或输入供应商编码" width="240px" />
+      </el-form-item>
+      <el-form-item label="供应商名称" prop="supplierName">
+        <combo-input v-model="queryParams.supplierName" scope="supplier" field="supplierName" placeholder="请选择或输入供应商名称" width="240px" />
+      </el-form-item>
+      <el-form-item label="联系人" prop="contactPerson">
         <el-input
-          v-model="queryParams.supplierCode"
-          placeholder="请输入供应商编码"
+          v-model="queryParams.contactPerson"
+          placeholder="请输入联系人"
           clearable
           style="width: 240px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="供应商名称" prop="supplierName">
+      <el-form-item label="联系方式" prop="contactPhone">
         <el-input
-          v-model="queryParams.supplierName"
-          placeholder="请输入供应商名称"
+          v-model="queryParams.contactPhone"
+          placeholder="请输入联系方式"
+          clearable
+          style="width: 240px"
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="供应商地址" prop="address">
+        <el-input
+          v-model="queryParams.address"
+          placeholder="请输入供应商地址"
           clearable
           style="width: 240px"
           @keyup.enter="handleQuery"
@@ -70,6 +85,30 @@
         align="center"
         prop="supplierName"
       />
+      <el-table-column
+        v-if="columns[2].visible"
+        sortable
+        show-overflow-tooltip
+        label="联系人"
+        align="center"
+        prop="contactPerson"
+      />
+      <el-table-column
+        v-if="columns[3].visible"
+        sortable
+        show-overflow-tooltip
+        label="联系方式"
+        align="center"
+        prop="contactPhone"
+      />
+      <el-table-column
+        v-if="columns[4].visible"
+        sortable
+        show-overflow-tooltip
+        label="供应商地址"
+        align="center"
+        prop="address"
+      />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button
@@ -105,17 +144,26 @@
     <el-dialog
       v-model="open"
       :title="title"
-      width="420px"
+      width="520px"
       append-to-body
       draggable
       v-loading="dialogLoading"
     >
       <el-form ref="supplierRef" :model="form" :rules="rules" label-width="92px">
         <el-form-item label="供应商编码" prop="supplierCode">
-          <el-input v-model="form.supplierCode" placeholder="请输入供应商编码" />
+          <combo-input v-model="form.supplierCode" scope="supplier" field="supplierCode" placeholder="请选择或输入供应商编码" />
         </el-form-item>
         <el-form-item label="供应商名称" prop="supplierName">
-          <el-input v-model="form.supplierName" placeholder="请输入供应商名称" />
+          <combo-input v-model="form.supplierName" scope="supplier" field="supplierName" placeholder="请选择或输入供应商名称" />
+        </el-form-item>
+        <el-form-item label="联系人" prop="contactPerson">
+          <el-input v-model="form.contactPerson" placeholder="请输入联系人" maxlength="128" />
+        </el-form-item>
+        <el-form-item label="联系方式" prop="contactPhone">
+          <el-input v-model="form.contactPhone" placeholder="请输入联系方式" maxlength="32" />
+        </el-form-item>
+        <el-form-item label="供应商地址" prop="address">
+          <el-input v-model="form.address" placeholder="请输入供应商地址" maxlength="255" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -136,6 +184,7 @@ import {
   listSupplier,
   updateSupplier,
 } from "@/api/base/supplier";
+import { clearSuggestionsCache } from "@/api/base/suggestions";
 
 const { proxy } = getCurrentInstance();
 
@@ -154,6 +203,9 @@ const data = reactive({
     pageSize: 30,
     supplierCode: null,
     supplierName: null,
+    contactPerson: null,
+    contactPhone: null,
+    address: null,
   },
   rules: {
     supplierCode: [
@@ -170,6 +222,9 @@ const { queryParams, form, rules } = toRefs(data);
 const columns = ref([
   { key: 0, label: "供应商编码", visible: true },
   { key: 1, label: "供应商名称", visible: true },
+  { key: 2, label: "联系人", visible: true },
+  { key: 3, label: "联系方式", visible: true },
+  { key: 4, label: "供应商地址", visible: true },
 ]);
 
 function getList() {
@@ -194,6 +249,9 @@ function reset() {
     supplierId: null,
     supplierCode: null,
     supplierName: null,
+    contactPerson: "",
+    contactPhone: "",
+    address: "",
   };
   proxy.resetForm("supplierRef");
 }
@@ -239,6 +297,7 @@ function submitForm() {
       : addSupplier(form.value);
 
     request.then(() => {
+      clearSuggestionsCache();
       proxy.$modal.msgSuccess(form.value.supplierId ? "修改成功" : "新增成功");
       open.value = false;
       getList();
