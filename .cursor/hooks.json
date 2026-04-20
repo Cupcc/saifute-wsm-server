@@ -11,6 +11,13 @@
         "command": "node .cursor/hooks/task-start-notify.js"
       }
     ],
+    "subagentStop": [
+      {
+        "command": "node .cursor/hooks/subagent-structured-output.js",
+        "matcher": "generalPurpose",
+        "loop_limit": 1
+      }
+    ],
     "afterFileEdit": [
       {
         "command": "node .cursor/hooks/biome-after-edit.js",
@@ -33,6 +40,11 @@
       {
         "command": "node .cursor/hooks/risky-shell-guard.js",
         "matcher": "rm -rf|git reset --hard|git checkout --|prisma migrate reset|prisma db push|docker compose down -v|docker-compose down -v|pnpm add|pnpm remove|pnpm up|npm install|npm uninstall|npm update"
+      }
+    ],
+    "stop": [
+      {
+        "command": "node .cursor/hooks/stop-notify.js"
       }
     ]
   }

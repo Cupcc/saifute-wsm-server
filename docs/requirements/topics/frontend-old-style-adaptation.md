@@ -5,7 +5,6 @@
 - ID: `topic-frontend-old-style-adaptation`
 - Status: `confirmed`
 - Scope: `topic-level`
-- Owner: `user`
 
 ## 主题定义
 
@@ -35,13 +34,13 @@
 
 ## 能力清单
 
-| 编号 | 能力 | 验收口径 | 阶段 | 状态 | 关联需求 |
+| 编号 | 能力 | 验收口径 | 阶段 | 状态 | 关联任务 |
 | --- | --- | --- | --- | --- | --- |
-| `F1` | 登录页 / Layout / 菜单壳层回归 | 登录页、壳层、顶部 / 侧边栏 / 标签页、一级菜单分组和 RD 双视角行为与目标口径一致 | Phase 1 | `已完成` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
-| `F2` | `/index` 旧版图表首页回归 | 富权限账号首页恢复旧版统计卡 + 图表节奏，RD 保持独立首页行为，并兼容当前 reporting 接口 | Phase 2 | `已完成` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
-| `F3` | 业务列表页旧风格节奏细化 | 各业务列表页恢复“查询 + 表格 + 操作”的主要节奏 | Phase 3 | `未开始` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
-| `F4` | 详情页与编辑流适配 | 详情、表单、编辑流在不破坏现有接口契约前提下回归旧风格体验 | Phase 4 | `未开始` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
-| `F5` | 多角色体验一致性 | `admin` / `operator` / `rd-operator` 等角色在各自权限范围内具备稳定可用体验，并保持当前权限契约不被风格回归破坏 | Phase 4 | `进行中` | `docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md` |
+| `F1` | 登录页 / Layout / 菜单壳层回归 | 登录页、壳层、顶部 / 侧边栏 / 标签页、一级菜单分组和 RD 双视角行为与目标口径一致 | Phase 1 | `已完成` | `-` |
+| `F2` | `/index` 旧版图表首页回归 | 富权限账号首页恢复旧版统计卡 + 图表节奏，RD 保持独立首页行为，并兼容当前 reporting 接口 | Phase 2 | `已完成` | `-` |
+| `F3` | 业务列表页旧风格节奏细化 | 各业务列表页恢复”查询 + 表格 + 操作”的主要节奏 | Phase 3 | `未开始` | `-` |
+| `F4` | 详情页与编辑流适配 | 详情、表单、编辑流在不破坏现有接口契约前提下回归旧风格体验 | Phase 4 | `未开始` | `-` |
+| `F5` | 多角色体验一致性 | `admin` / `operator` / `rd-operator` 等角色在各自权限范围内具备稳定可用体验，并保持当前权限契约不被风格回归破坏 | Phase 4 | `进行中` | `-` |
 
 ## 阶段路线图
 
@@ -59,8 +58,5 @@
 ## 文档关系（可选）
 
 - 项目级长期背景：`docs/requirements/PROJECT_REQUIREMENTS.md`
-- 已归档阶段基线：`docs/requirements/archive/retained-completed/req-20260326-1900-frontend-old-style-adaptation.md`
-- 已完成阶段任务：
-  - `docs/tasks/archive/retained-completed/task-20260326-1940-frontend-old-style-phase1-shell-integration.md`
-  - `docs/tasks/archive/retained-completed/task-20260327-1000-frontend-home-legacy-chart-restore.md`
-- 后续继续推进时，应另开新的前端切片 requirement / task。
+- 已归档历史：req / task 文档已归档，历史见 git log。
+- 后续继续推进时，直接从本 topic 能力合同创建 `docs/tasks/task-*.md`（`Related requirement` 指向本 topic 对应 `Fx`）。

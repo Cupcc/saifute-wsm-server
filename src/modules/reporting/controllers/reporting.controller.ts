@@ -1,4 +1,11 @@
-import { Controller, Get, Query, StreamableFile } from "@nestjs/common";
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  Query,
+  StreamableFile,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { SkipResponseEnvelope } from "../../../shared/common/interceptors/skip-response-envelope.decorator";
 import { CurrentUser } from "../../../shared/decorators/current-user.decorator";
 import { Permissions } from "../../../shared/decorators/permissions.decorator";
@@ -13,6 +20,8 @@ import {
   QueryTrendSeriesDto,
 } from "../dto/query-reporting.dto";
 
+const WAREHOUSE_MANAGER_ROLE = "warehouse-manager";
+
 @Controller("reporting")
 export class ReportingController {
   constructor(
@@ -20,9 +29,12 @@ export class ReportingController {
     private readonly workshopScopeService: WorkshopScopeService,
   ) {}
 
-  @Permissions("reporting:home:view")
   @Get("home")
   async getHomeDashboard(@CurrentUser() user?: SessionUserSnapshot) {
+    this.assertReportingAccess(user, {
+      permissions: ["reporting:home:view"],
+      roles: [WAREHOUSE_MANAGER_ROLE],
+    });
     const inventoryScope =
       await this.workshopScopeService.getResolvedStockScope(user);
     return this.reportingService.getHomeDashboard(inventoryScope?.stockScope);
@@ -45,12 +57,15 @@ export class ReportingController {
     });
   }
 
-  @Permissions("reporting:material-category-summary:view")
   @Get("material-category-summary")
   async getMaterialCategorySummary(
     @Query() query: QueryMaterialCategorySummaryDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
+    this.assertReportingAccess(user, {
+      permissions: ["reporting:material-category-summary:view"],
+      roles: [WAREHOUSE_MANAGER_ROLE],
+    });
     const inventoryScope =
       await this.workshopScopeService.resolveInventoryQueryScope(
         user,
@@ -62,12 +77,15 @@ export class ReportingController {
     });
   }
 
-  @Permissions("reporting:trends:view")
   @Get("trends")
   async getTrendSeries(
     @Query() query: QueryTrendSeriesDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
+    this.assertReportingAccess(user, {
+      permissions: ["reporting:trends:view"],
+      roles: [WAREHOUSE_MANAGER_ROLE],
+    });
     const inventoryScope =
       await this.workshopScopeService.getResolvedStockScope(user);
     return this.reportingService.getTrendSeries(
@@ -99,5 +117,33 @@ export class ReportingController {
       disposition: `attachment; filename="${exportResult.fileName}"`,
       type: exportResult.contentType,
     });
+  }
+
+  private assertReportingAccess(
+    user: SessionUserSnapshot | undefined,
+    options: {
+      permissions?: string[];
+      roles?: string[];
+    },
+  ) {
+    if (!user) {
+      throw new UnauthorizedException("当前请求未携带用户上下文");
+    }
+    if (user.userId === 1) {
+      return;
+    }
+
+    const hasPermission =
+      options.permissions?.some((permission) =>
+        user.permissions.includes(permission),
+      ) ?? false;
+    const hasRole =
+      options.roles?.some((role) => user.roles.includes(role)) ?? false;
+
+    if (hasPermission || hasRole) {
+      return;
+    }
+
+    throw new ForbiddenException("当前用户缺少所需权限");
   }
 }

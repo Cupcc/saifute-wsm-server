@@ -1,7 +1,7 @@
 <script setup name="SupplierStatement">
 import { computed, getCurrentInstance, ref } from "vue";
 import { listProductMaterial } from "@/api/article/product";
-import { listSupplierByKeyword } from "@/api/base/supplier";
+import { listSupplierByKeywordIncludingDisabled } from "@/api/base/supplier";
 import { listNoPage } from "@/api/entry/detail";
 import { formatDate } from "@/utils/index.js";
 
@@ -60,7 +60,7 @@ const grandTotal = computed(() => {
 // 搜索供应商
 function searchSupplier(query) {
   supplierLoading.value = true;
-  listSupplierByKeyword(query)
+  listSupplierByKeywordIncludingDisabled(query)
     .then((response) => {
       supplierOptions.value = response.rows || [];
       supplierLoading.value = false;

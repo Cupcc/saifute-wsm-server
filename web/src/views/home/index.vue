@@ -62,10 +62,15 @@ const REQUIRED_DASHBOARD_PERMISSIONS = [
 ];
 
 const isRdConsole = computed(() => userStore.consoleMode === "rd-subwarehouse");
-const showRichDashboard = computed(() =>
-  REQUIRED_DASHBOARD_PERMISSIONS.every((permission) =>
-    userStore.permissions.includes(permission),
-  ),
+const hasDashboardRoleFallback = computed(() =>
+  ["warehouse-manager"].some((role) => userStore.roles.includes(role)),
+);
+const showRichDashboard = computed(
+  () =>
+    hasDashboardRoleFallback.value ||
+    REQUIRED_DASHBOARD_PERMISSIONS.every((permission) =>
+      userStore.permissions.includes(permission),
+    ),
 );
 const consoleLabel = computed(() =>
   userStore.consoleMode === "rd-subwarehouse" ? "研发小仓" : "默认工作台",

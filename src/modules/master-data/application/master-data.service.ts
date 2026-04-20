@@ -1,16 +1,26 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  type OnModuleInit,
 } from "@nestjs/common";
+import { Prisma } from "../../../generated/prisma/client";
 import type { CreateMaterialDto } from "../dto/create-material.dto";
+import type { CreateSupplierDto } from "../dto/create-supplier.dto";
 import type { QueryMasterDataDto } from "../dto/query-master-data.dto";
 import type { UpdateMaterialDto } from "../dto/update-material.dto";
+import type { UpdateSupplierDto } from "../dto/update-supplier.dto";
 import { MasterDataRepository } from "../infrastructure/master-data.repository";
 
 @Injectable()
-export class MasterDataService {
+export class MasterDataService implements OnModuleInit {
   constructor(private readonly repository: MasterDataRepository) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.repository.ensureCanonicalWorkshops();
+    await this.repository.ensureCanonicalStockScopes();
+  }
 
   async listMaterials(query: QueryMasterDataDto) {
     const limit = Math.min(query.limit ?? 50, 100);
@@ -76,6 +86,109 @@ export class MasterDataService {
       throw new NotFoundException(`供应商不存在: ${id}`);
     }
     return supplier;
+  }
+
+  async createSupplier(dto: CreateSupplierDto, createdBy?: string) {
+    const existing = await this.repository.findSupplierByCode(dto.supplierCode);
+    if (existing) {
+      throw new ConflictException(`供应商编码已存在: ${dto.supplierCode}`);
+    }
+
+    try {
+      return await this.repository.createSupplier(
+        {
+          supplierCode: dto.supplierCode,
+          supplierName: dto.supplierName,
+        },
+        createdBy,
+      );
+    } catch (error) {
+      this.throwSupplierCodeConflict(error, dto.supplierCode);
+    }
+  }
+
+  async updateSupplier(id: number, dto: UpdateSupplierDto, updatedBy?: string) {
+    const existing = await this.repository.findSupplierById(id);
+    if (!existing) {
+      throw new NotFoundException(`供应商不存在: ${id}`);
+    }
+
+    if (dto.supplierCode && dto.supplierCode !== existing.supplierCode) {
+      const duplicated = await this.repository.findSupplierByCode(
+        dto.supplierCode,
+      );
+      if (duplicated) {
+        throw new ConflictException(`供应商编码已存在: ${dto.supplierCode}`);
+      }
+    }
+
+    try {
+      return await this.repository.updateSupplier(
+        id,
+        {
+          supplierCode: dto.supplierCode,
+          supplierName: dto.supplierName,
+        },
+        updatedBy,
+      );
+    } catch (error) {
+      this.throwSupplierCodeConflict(error, dto.supplierCode);
+    }
+  }
+
+  async deactivateSupplier(id: number, updatedBy?: string) {
+    const existing = await this.repository.findSupplierById(id);
+    if (!existing) {
+      throw new NotFoundException(`供应商不存在: ${id}`);
+    }
+    if (existing.status === "DISABLED") {
+      return existing;
+    }
+
+    return this.repository.updateSupplier(
+      id,
+      {
+        status: "DISABLED",
+      },
+      updatedBy,
+    );
+  }
+
+  async ensureSupplier(
+    params: {
+      supplierCode: string;
+      supplierName: string;
+      sourceDocumentType?: string;
+      sourceDocumentId?: number;
+    },
+    createdBy?: string,
+  ) {
+    const existing = await this.repository.findSupplierByCode(
+      params.supplierCode,
+    );
+    if (existing) {
+      return existing;
+    }
+
+    if (!params.sourceDocumentType || !params.sourceDocumentId) {
+      throw new BadRequestException(
+        "自动补建供应商必须提供来源单据类型和来源单据 ID",
+      );
+    }
+
+    try {
+      return await this.repository.createAutoSupplier(
+        {
+          supplierCode: params.supplierCode,
+          supplierName: params.supplierName,
+          sourceDocumentType: params.sourceDocumentType,
+          sourceDocumentId: params.sourceDocumentId,
+        },
+        createdBy,
+      );
+    } catch (error) {
+      this.throwSupplierCodeConflict(error, params.supplierCode);
+    }
   }
 
   async getCustomerById(id: number) {
@@ -151,6 +264,7 @@ export class MasterDataService {
       keyword: query.keyword,
       limit,
       offset,
+      status: query.includeDisabled ? undefined : "ACTIVE",
     });
   }
 
@@ -172,5 +286,19 @@ export class MasterDataService {
       limit,
       offset,
     });
+  }
+
+  private throwSupplierCodeConflict(
+    error: unknown,
+    supplierCode: string | undefined,
+  ): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new ConflictException(`供应商编码已存在: ${supplierCode ?? ""}`);
+    }
+
+    throw error;
   }
 }

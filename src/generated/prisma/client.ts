@@ -219,3 +219,68 @@ export type SchedulerJobLog = Prisma.SchedulerJobLogModel;
  *
  */
 export type SystemManagementSnapshot = Prisma.SystemManagementSnapshotModel;
+/**
+ * Model SysDept
+ *
+ */
+export type SysDept = Prisma.SysDeptModel;
+/**
+ * Model SysPost
+ *
+ */
+export type SysPost = Prisma.SysPostModel;
+/**
+ * Model SysMenu
+ *
+ */
+export type SysMenu = Prisma.SysMenuModel;
+/**
+ * Model SysRole
+ *
+ */
+export type SysRole = Prisma.SysRoleModel;
+/**
+ * Model SysUser
+ *
+ */
+export type SysUser = Prisma.SysUserModel;
+/**
+ * Model SysDictType
+ *
+ */
+export type SysDictType = Prisma.SysDictTypeModel;
+/**
+ * Model SysDictData
+ *
+ */
+export type SysDictData = Prisma.SysDictDataModel;
+/**
+ * Model SysConfig
+ *
+ */
+export type SysConfig = Prisma.SysConfigModel;
+/**
+ * Model SysNotice
+ *
+ */
+export type SysNotice = Prisma.SysNoticeModel;
+/**
+ * Model SysUserRole
+ *
+ */
+export type SysUserRole = Prisma.SysUserRoleModel;
+/**
+ * Model SysUserPost
+ *
+ */
+export type SysUserPost = Prisma.SysUserPostModel;
+/**
+ * Model SysRoleMenu
+ *
+ */
+export type SysRoleMenu = Prisma.SysRoleMenuModel;
+/**
+ * Model SysRoleDept
+ *
+ */
+export type SysRoleDept = Prisma.SysRoleDeptModel;
