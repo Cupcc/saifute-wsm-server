@@ -19,7 +19,8 @@
 映射规则：
 
 - `base` 中纯主数据能力 -> `master-data`
-- `article` 中项目/BOM 相关能力 -> `project`
+- `article` 中历史研发项目 / BOM 相关能力 -> `rd-project`
+- 对外销售项目物料计划与项目视图能力 -> `sales-project`
 
 ## 领域对象与核心用例
 
@@ -76,7 +77,8 @@
 
 ## 与其他模块的依赖关系
 
-- 被 `inventory-core`、`inbound`、`customer`、`workshop-material`、`project` 依赖
+- 被 `inventory-core`、`inbound`、`sales`、`workshop-material`、`rd-project` 依赖
+- 未来销售项目主档与项目视图由 `sales-project` 继续依赖
 - 依赖 `rbac` 提供权限与数据权限
 - 变更审计接入 `audit-log`
 
@@ -93,9 +95,9 @@
 
 ## 优化后表设计冻结
 
-- 对应主表：`material_category`、`material`、`customer`、`supplier`、`personnel`、`workshop`
+- 对应主表：`material_category`、`material`、`sales`、`supplier`、`personnel`、`workshop`
 - 第一阶段不把客户、供应商、人员合并成统一主体表
-- 自动补建先保留在各主表，通过 `creationMode`、`sourceDocumentType`、`sourceDocumentId` 追溯来源
+- 自动补建只保留在 `material`、`sales`、`supplier` 三张主表，通过 `creationMode`、`sourceDocumentType`、`sourceDocumentId` 追溯来源；`personnel`、`workshop` 仅支持手工维护
 - 单据侧只拿快照，不允许直接联查主数据内部结构
 - 详细业务流程与字段建议见 `docs/architecture/20-wms-database-tables-and-schema.md`
 

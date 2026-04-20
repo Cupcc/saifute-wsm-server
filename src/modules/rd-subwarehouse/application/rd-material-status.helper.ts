@@ -3,18 +3,20 @@ import {
   Prisma,
   RdMaterialStatus,
   RdMaterialStatusEventType,
-  type RdMaterialStatusHistory,
   type RdMaterialStatusLedger,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
+import { BusinessDocumentType } from "../../../shared/domain/business-document-type";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type DbClient = Prisma.TransactionClient | PrismaService;
 type DecimalLike = Prisma.Decimal | number | string;
 
-export const RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE = "RdProcurementRequest";
-export const STOCK_IN_ORDER_DOCUMENT_TYPE = "StockInOrder";
-export const RD_HANDOFF_ORDER_DOCUMENT_TYPE = "RdHandoffOrder";
-export const WORKSHOP_MATERIAL_ORDER_DOCUMENT_TYPE = "WorkshopMaterialOrder";
+export const RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE =
+  BusinessDocumentType.RdProcurementRequest;
+export const STOCK_IN_ORDER_DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
+export const RD_HANDOFF_ORDER_DOCUMENT_TYPE = BusinessDocumentType.RdHandoffOrder;
+export const WORKSHOP_MATERIAL_ORDER_DOCUMENT_TYPE =
+  BusinessDocumentType.WorkshopMaterialOrder;
 
 type LedgerStatusField =
   | "pendingQty"
@@ -635,6 +637,42 @@ export async function applyProcurementStartedStatus(
       sourceDocumentId: params.requestId,
       sourceDocumentLineId: params.requestLineId,
       sourceDocumentNumber: params.requestDocumentNo,
+      note: params.note,
+      operatorId: params.operatorId,
+    },
+    db,
+  );
+}
+
+export async function applyManualAcceptanceStatus(
+  params: {
+    requestLineId: number;
+    quantity: DecimalLike;
+    requestId: number;
+    requestDocumentNo: string;
+    operatorId?: string;
+    note?: string;
+    reason?: string;
+    referenceNo?: string;
+  },
+  db: DbClient,
+) {
+  return transferStatusQuantity(
+    {
+      requestLineId: params.requestLineId,
+      eventType: RdMaterialStatusEventType.ACCEPTANCE_CONFIRMED,
+      toStatus: RdMaterialStatus.ACCEPTED,
+      quantity: params.quantity,
+      fromStatuses: [
+        RdMaterialStatus.IN_PROCUREMENT,
+        RdMaterialStatus.PENDING_PROCUREMENT,
+      ],
+      sourceDocumentType: RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE,
+      sourceDocumentId: params.requestId,
+      sourceDocumentLineId: params.requestLineId,
+      sourceDocumentNumber: params.requestDocumentNo,
+      referenceNo: params.referenceNo,
+      reason: params.reason,
       note: params.note,
       operatorId: params.operatorId,
     },

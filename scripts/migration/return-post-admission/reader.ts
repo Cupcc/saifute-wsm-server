@@ -22,7 +22,7 @@ export async function readPostAdmissionBaseline(connection: {
         lifecycleStatus,
         auditStatusSnapshot,
         inventoryEffectStatus
-      FROM customer_stock_order
+      FROM sales_stock_order
       WHERE orderType = 'SALES_RETURN'
       ORDER BY bizDate ASC, documentNo ASC
     `,
@@ -40,13 +40,13 @@ export async function readPostAdmissionBaseline(connection: {
         lifecycleStatus,
         auditStatusSnapshot,
         inventoryEffectStatus
-      FROM customer_stock_order
+      FROM sales_stock_order
       WHERE orderType = 'OUTBOUND'
       ORDER BY bizDate ASC, documentNo ASC
     `,
   );
 
-  const salesReturnLines = await readCustomerStockOrderLines(
+  const salesReturnLines = await readSalesStockOrderLines(
     connection,
     "SALES_RETURN",
   );
@@ -127,7 +127,7 @@ export async function readPostAdmissionBaseline(connection: {
   };
 }
 
-async function readCustomerStockOrderLines(
+async function readSalesStockOrderLines(
   connection: {
     query<T = unknown>(sql: string, values?: readonly unknown[]): Promise<T>;
   },
@@ -151,8 +151,8 @@ async function readCustomerStockOrderLines(
         order_row.customerId,
         order_row.lifecycleStatus,
         order_row.inventoryEffectStatus
-      FROM customer_stock_order_line line_row
-      INNER JOIN customer_stock_order order_row
+      FROM sales_stock_order_line line_row
+      INNER JOIN sales_stock_order order_row
         ON order_row.id = line_row.orderId
       WHERE order_row.orderType = ?
       ORDER BY order_row.bizDate ASC, order_row.documentNo ASC, line_row.lineNo ASC
@@ -178,8 +178,8 @@ async function readOutboundLines(connection: {
         order_row.customerId,
         order_row.lifecycleStatus,
         order_row.inventoryEffectStatus
-      FROM customer_stock_order_line line_row
-      INNER JOIN customer_stock_order order_row
+      FROM sales_stock_order_line line_row
+      INNER JOIN sales_stock_order order_row
         ON order_row.id = line_row.orderId
       WHERE order_row.orderType = 'OUTBOUND'
       ORDER BY order_row.bizDate ASC, order_row.documentNo ASC, line_row.lineNo ASC
@@ -288,7 +288,7 @@ export async function readSharedTableCounts(connection: {
       UNION ALL
       SELECT 'inventory_source_usage' AS tableName, COUNT(*) AS total FROM inventory_source_usage
       UNION ALL
-      SELECT 'workflow_audit_document' AS tableName, COUNT(*) AS total FROM workflow_audit_document
+      SELECT 'approval_document' AS tableName, COUNT(*) AS total FROM approval_document
       UNION ALL
       SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS total FROM factory_number_reservation
     `,

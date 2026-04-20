@@ -2,7 +2,7 @@ import {
   Prisma,
   RdMaterialStatus,
   RdMaterialStatusEventType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import {
   RD_PROCUREMENT_REQUEST_DOCUMENT_TYPE,
   reverseStatusHistory,
@@ -35,7 +35,7 @@ describe("rd-material-status.helper", () => {
           ...data,
         })),
       },
-    } as any;
+    } as unknown as Parameters<typeof transferStatusQuantity>[1];
 
     await transferStatusQuantity(
       {
@@ -62,7 +62,8 @@ describe("rd-material-status.helper", () => {
         }),
       }),
     );
-    const updateCall = db.rdMaterialStatusLedger.update.mock.calls[0]?.[0];
+    const updateCall = (db.rdMaterialStatusLedger.update as jest.Mock).mock
+      .calls[0]?.[0];
     expect(updateCall.data.pendingQty.toString()).toBe("6");
     expect(updateCall.data.inProcurementQty.toString()).toBe("4");
     expect(db.rdMaterialStatusHistory.create).toHaveBeenCalledWith(
@@ -123,7 +124,7 @@ describe("rd-material-status.helper", () => {
         findUnique: jest.fn().mockResolvedValue(ledger),
         update: jest.fn().mockResolvedValue(undefined),
       },
-    } as any;
+    } as unknown as Parameters<typeof reverseStatusHistory>[1];
 
     await reverseStatusHistory(
       {
@@ -133,7 +134,8 @@ describe("rd-material-status.helper", () => {
       db,
     );
 
-    const updateCall = db.rdMaterialStatusLedger.update.mock.calls[0]?.[0];
+    const updateCall = (db.rdMaterialStatusLedger.update as jest.Mock).mock
+      .calls[0]?.[0];
     expect(updateCall.data.pendingQty.toString()).toBe("10");
     expect(updateCall.data.inProcurementQty.toString()).toBe("0");
     expect(db.rdMaterialStatusHistory.update).toHaveBeenCalledWith(

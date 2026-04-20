@@ -9,8 +9,9 @@ import {
   Res,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
-import { OperLogStatus } from "../../../generated/prisma/client";
+import { OperLogStatus } from "../../../../generated/prisma/client";
 import { SkipResponseEnvelope } from "../../../shared/common/interceptors/skip-response-envelope.decorator";
+import { resolveRequestIp } from "../../../shared/common/request-ip.util";
 import { CurrentUser } from "../../../shared/decorators/current-user.decorator";
 import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import { AuditLogService } from "../../audit-log/application/audit-log.service";
@@ -76,7 +77,7 @@ export class AiAssistantController {
         path: request.originalUrl || request.url,
         operatorId: currentUser.userId,
         operatorName: currentUser.username,
-        ip: this.resolveClientIp(request),
+        ip: resolveRequestIp(request),
         userAgent,
         result: OperLogStatus.SUCCESS,
         durationMs: Date.now() - startedAt,
@@ -97,7 +98,7 @@ export class AiAssistantController {
         path: request.originalUrl || request.url,
         operatorId: currentUser.userId,
         operatorName: currentUser.username,
-        ip: this.resolveClientIp(request),
+        ip: resolveRequestIp(request),
         userAgent,
         result: OperLogStatus.FAILURE,
         durationMs: Date.now() - startedAt,
@@ -114,21 +115,5 @@ export class AiAssistantController {
 
   private formatSseEvent(event: AiStreamEvent): string {
     return `event: ${event.event}\ndata: ${JSON.stringify(event.data)}\n\n`;
-  }
-
-  private resolveClientIp(request: Request): string {
-    const forwardedFor = request.headers["x-forwarded-for"];
-    const forwardedIp = Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : forwardedFor;
-    const candidate =
-      forwardedIp?.split(",")[0]?.trim() ||
-      request.ip ||
-      request.socket.remoteAddress ||
-      "unknown";
-
-    return candidate === "::1"
-      ? "127.0.0.1"
-      : candidate.replace(/^::ffff:/, "");
   }
 }

@@ -23,6 +23,13 @@ const SUPPORTED_BACKEND_ROUTE_GROUPS = [
     icon: "tree",
   },
   {
+    key: "stock",
+    path: "/stock",
+    name: "Stock",
+    title: "库存管理",
+    icon: "build",
+  },
+  {
     key: "entry",
     path: "/entry",
     name: "Entry",
@@ -30,9 +37,9 @@ const SUPPORTED_BACKEND_ROUTE_GROUPS = [
     icon: "edit",
   },
   {
-    key: "customer",
-    path: "/customer",
-    name: "CustomerBusiness",
+    key: "sales",
+    path: "/sales",
+    name: "SalesBusiness",
     title: "销售管理",
     icon: "guide",
   },
@@ -42,13 +49,6 @@ const SUPPORTED_BACKEND_ROUTE_GROUPS = [
     name: "WorkshopBusiness",
     title: "生产车间",
     icon: "guide",
-  },
-  {
-    key: "stock",
-    path: "/stock",
-    name: "Stock",
-    title: "库存管理",
-    icon: "build",
   },
   {
     key: "rd",
@@ -125,11 +125,11 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     icon: "form",
     visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
   },
-  RdProjectConsumption: {
+  RdProjectLedger: {
     group: "rd",
-    path: "project-consumption",
-    component: "rd/project-consumption/index",
-    title: "项目领用",
+    path: "projects",
+    component: "rd/projects/index",
+    title: "研发项目",
     icon: "education",
     visibleInModes: [CONSOLE_MODES.DEFAULT, CONSOLE_MODES.RD],
   },
@@ -157,12 +157,35 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     icon: "tree-table",
     visibleInModes: [CONSOLE_MODES.RD],
   },
+  RdMonthlyReporting: {
+    group: "rd",
+    path: "monthly-reporting",
+    component: "reporting/monthly-reporting/index",
+    title: "月度对账",
+    icon: "table",
+    visibleInModes: [CONSOLE_MODES.RD],
+  },
+  RdMonthlyReportingMaterialCategory: {
+    group: "rd",
+    path: "monthly-reporting-material-category",
+    component: "reporting/monthly-reporting/index",
+    title: "物料分类月报",
+    icon: "tree-table",
+    visibleInModes: [CONSOLE_MODES.RD],
+  },
   BaseMaterial: {
     group: "base",
     path: "material",
     component: "base/material/index",
     title: "物料管理",
     icon: "list",
+  },
+  BaseMaterialCategory: {
+    group: "base",
+    path: "material-category",
+    component: "base/material-category/index",
+    title: "物料分类管理",
+    icon: "tree-table",
   },
   BaseCustomer: {
     group: "base",
@@ -191,6 +214,13 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     component: "base/workshop/index",
     title: "车间管理",
     icon: "education",
+  },
+  BaseStockScope: {
+    group: "base",
+    path: "stock-scope",
+    component: "base/stock-scope/index",
+    title: "库存范围管理",
+    icon: "guide",
   },
   EntryOrder: {
     group: "entry",
@@ -290,33 +320,40 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     title: "编号区间",
     icon: "number",
   },
-  CustomerOrder: {
-    group: "customer",
+  SalesOrder: {
+    group: "sales",
     path: "order",
-    component: "customer/order/index",
+    component: "sales/order/index",
     title: "出库单",
     icon: "form",
   },
-  CustomerDetail: {
-    group: "customer",
+  SalesDetail: {
+    group: "sales",
     path: "detail",
-    component: "customer/detail/index",
+    component: "sales/detail/index",
     title: "出库明细",
     icon: "list",
   },
-  CustomerSalesReturnOrder: {
-    group: "customer",
+  SalesReturnOrder: {
+    group: "sales",
     path: "salesReturnOrder",
-    component: "customer/salesReturnOrder/index",
+    component: "sales/salesReturnOrder/index",
     title: "销售退货单",
     icon: "refresh",
   },
-  CustomerSalesReturnDetail: {
-    group: "customer",
+  SalesReturnDetail: {
+    group: "sales",
     path: "salesReturnDetail",
-    component: "customer/salesReturnDetail/index",
+    component: "sales/salesReturnDetail/index",
     title: "销售退货明细",
     icon: "list",
+  },
+  SalesProjectLedger: {
+    group: "sales",
+    path: "project",
+    component: "sales-project/index",
+    title: "销售项目",
+    icon: "education",
   },
   SystemUser: {
     group: "system",
@@ -409,34 +446,30 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     title: "报表首页",
     icon: "dashboard",
   },
-  InventorySummary: {
+  MonthlyReporting: {
     group: "reporting",
-    path: "inventory-summary",
-    component: "reporting/inventory-summary/index",
-    title: "库存汇总",
+    path: "monthly-reporting",
+    component: "reporting/monthly-reporting/index",
+    title: "月度对账",
     icon: "table",
   },
-  MaterialCategorySummary: {
+  MonthlyReportingMaterialCategory: {
     group: "reporting",
-    path: "material-category-summary",
-    component: "reporting/material-category-summary/index",
-    title: "分类分布",
+    path: "monthly-reporting-material-category",
+    component: "reporting/monthly-reporting/index",
+    title: "物料分类月报",
     icon: "tree-table",
-  },
-  ReportingTrends: {
-    group: "reporting",
-    path: "trends",
-    component: "reporting/trends/index",
-    title: "趋势分析",
-    icon: "time",
   },
 };
 
 const FRONTEND_ROUTE_PERMISSION_FALLBACK = {
-  CustomerOrder: ["customer:order:list"],
-  CustomerDetail: ["customer:order:list"],
-  CustomerSalesReturnOrder: ["customer:sales-return:list"],
-  CustomerSalesReturnDetail: ["customer:sales-return:list"],
+  BaseMaterialCategory: ["master:material-category:list"],
+  SalesOrder: ["sales:order:list"],
+  SalesDetail: ["sales:order:list"],
+  SalesReturnOrder: ["sales:return:list"],
+  SalesReturnDetail: ["sales:return:list"],
+  MonthlyReportingMaterialCategory: ["reporting:monthly-reporting:view"],
+  RdMonthlyReportingMaterialCategory: ["reporting:monthly-reporting:view"],
 };
 
 function collectBackendRouteNames(routes, routeNames = new Set()) {

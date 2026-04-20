@@ -1,5 +1,7 @@
 import type { MigrationConnectionLike, QueryResultWithInsertId } from "../db";
+import { BusinessDocumentType } from "../shared/business-document-type";
 import type {
+  AuditDocumentInsert,
   DocumentLineRelationInsert,
   DocumentRelationInsert,
   InventoryLogInsert,
@@ -8,17 +10,20 @@ import type {
   PostAdmissionMigrationPlan,
   SourceBackfillRecord,
   StaleClearRecord,
-  WorkflowAuditDocumentInsert,
 } from "./types";
+
+const SALES_STOCK_DOCUMENT_TYPE = BusinessDocumentType.SalesStockOrder;
+const WORKSHOP_MATERIAL_DOCUMENT_TYPE =
+  BusinessDocumentType.WorkshopMaterialOrder;
 
 async function applySourceBackfill(
   connection: MigrationConnectionLike,
   record: SourceBackfillRecord,
-  documentType: "CustomerStockOrder" | "WorkshopMaterialOrder",
+  documentType: string,
 ): Promise<void> {
   const targetTable =
-    documentType === "CustomerStockOrder"
-      ? "customer_stock_order_line"
+    documentType === SALES_STOCK_DOCUMENT_TYPE
+      ? "sales_stock_order_line"
       : "workshop_material_order_line";
 
   await connection.query(
@@ -120,10 +125,10 @@ async function clearInventoryTables(
   await connection.query(`DELETE FROM inventory_balance`);
 }
 
-async function clearWorkflowAuditDocuments(
+async function clearAuditDocuments(
   connection: MigrationConnectionLike,
 ): Promise<void> {
-  await connection.query(`DELETE FROM workflow_audit_document`);
+  await connection.query(`DELETE FROM approval_document`);
 }
 
 async function clearDocumentRelations(
@@ -281,13 +286,13 @@ async function upsertInventorySourceUsage(
   );
 }
 
-async function upsertWorkflowAuditDocument(
+async function upsertAuditDocument(
   connection: MigrationConnectionLike,
-  doc: WorkflowAuditDocumentInsert,
+  doc: AuditDocumentInsert,
 ): Promise<void> {
   await connection.query(
     `
-      INSERT INTO workflow_audit_document (
+      INSERT INTO approval_document (
         documentFamily,
         documentType,
         documentId,
@@ -391,14 +396,14 @@ export async function executePostAdmissionPlan(
   let inventoryBalancesInserted = 0;
   let inventoryLogsInserted = 0;
   let sourceUsageInserted = 0;
-  let workflowDocumentsInserted = 0;
+  let auditDocumentsInserted = 0;
 
   await connection.beginTransaction();
 
   try {
     await clearDocumentRelations(connection);
     await clearInventoryTables(connection);
-    await clearWorkflowAuditDocuments(connection);
+    await clearAuditDocuments(connection);
 
     staleSourceFieldsCleared = await clearStaleReturnLineSourceFields(
       connection,
@@ -407,9 +412,9 @@ export async function executePostAdmissionPlan(
 
     for (const record of plan.backfill.backfillRecords) {
       const docType =
-        record.sourceDocumentType === "CustomerStockOrder"
-          ? "CustomerStockOrder"
-          : "WorkshopMaterialOrder";
+        record.sourceDocumentType === SALES_STOCK_DOCUMENT_TYPE
+          ? SALES_STOCK_DOCUMENT_TYPE
+          : WORKSHOP_MATERIAL_DOCUMENT_TYPE;
       await applySourceBackfill(connection, record, docType);
       sourceBackfillsApplied += 1;
     }
@@ -597,9 +602,9 @@ export async function executePostAdmissionPlan(
       sourceUsageInserted += 1;
     }
 
-    for (const doc of plan.workflow.workflowDocumentInserts) {
-      await upsertWorkflowAuditDocument(connection, doc);
-      workflowDocumentsInserted += 1;
+    for (const doc of plan.audit.auditDocumentInserts) {
+      await upsertAuditDocument(connection, doc);
+      auditDocumentsInserted += 1;
     }
 
     await connection.commit();
@@ -616,6 +621,6 @@ export async function executePostAdmissionPlan(
     inventoryBalancesInserted,
     inventoryLogsInserted,
     sourceUsageInserted,
-    workflowDocumentsInserted,
+    auditDocumentsInserted,
   };
 }

@@ -1,12 +1,36 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import {
+  createAllSessionStockScope,
   createAllSessionWorkshopScope,
   type SessionUserSnapshot,
-  toSessionStockScopeSnapshotFromWorkshopScope,
 } from "../../session/domain/user-session";
 import type { RbacUserRecord, RouteNode } from "../domain/rbac.types";
 import { InMemoryRbacRepository } from "../infrastructure/in-memory-rbac.repository";
+
+const DOCUMENT_PERMISSION_ACTIONS = [
+  "status",
+  "list",
+  "create",
+  "approve",
+  "reject",
+  "reset",
+] as const;
+
+const DOCUMENT_PERMISSION_NAMESPACES = ["approval:document"] as const;
+
+const PERMISSION_ALIAS_MAP = Object.fromEntries(
+  DOCUMENT_PERMISSION_NAMESPACES.flatMap((namespace) =>
+    DOCUMENT_PERMISSION_ACTIONS.map((action) => {
+      const key = `${namespace}:${action}`;
+      const aliases = DOCUMENT_PERMISSION_NAMESPACES.filter(
+        (candidate) => candidate !== namespace,
+      ).map((candidate) => `${candidate}:${action}`);
+
+      return [key, aliases];
+    }),
+  ),
+) as Record<string, string[]>;
 
 @Injectable()
 export class RbacService {
@@ -35,6 +59,10 @@ export class RbacService {
     const workshopScope = user.workshopScope
       ? { ...user.workshopScope }
       : createAllSessionWorkshopScope();
+    const stockScope = user.stockScope
+      ? { ...user.stockScope }
+      : createAllSessionStockScope();
+    const permissions = this.expandPermissionAliases(user.permissions);
 
     return {
       userId: user.userId,
@@ -42,12 +70,10 @@ export class RbacService {
       displayName: user.displayName,
       avatarUrl: user.avatarUrl ?? null,
       roles: [...user.roles],
-      permissions: [...user.permissions],
+      permissions,
       department: user.department ? { ...user.department } : null,
       consoleMode: user.consoleMode ?? "default",
-      stockScope: user.stockScope
-        ? { ...user.stockScope }
-        : toSessionStockScopeSnapshotFromWorkshopScope(workshopScope),
+      stockScope,
       workshopScope,
     };
   }
@@ -72,9 +98,10 @@ export class RbacService {
       return allRoutes;
     }
 
+    const permissions = this.expandPermissionAliases(user.permissions);
     const filteredRoutes = this.filterRoutesByPermissions(
       allRoutes,
-      user.permissions,
+      permissions,
     );
     return this.filterRoutesByConsoleMode(
       filteredRoutes,
@@ -109,70 +136,66 @@ export class RbacService {
     const normalizedWorkshopScope =
       user.workshopScope ?? createAllSessionWorkshopScope();
     const normalizedStockScope =
-      user.stockScope ??
-      toSessionStockScopeSnapshotFromWorkshopScope(normalizedWorkshopScope);
+      user.stockScope ?? createAllSessionStockScope();
 
-    if (
-      normalizedWorkshopScope.mode !== "FIXED" ||
-      normalizedWorkshopScope.workshopId ||
-      !normalizedWorkshopScope.workshopCode
-    ) {
-      return {
-        ...user,
-        stockScope: normalizedStockScope,
-        workshopScope: normalizedWorkshopScope,
-      };
-    }
-
-    try {
-      const workshop = await this.masterDataService.getWorkshopByCode(
-        normalizedWorkshopScope.workshopCode,
-      );
-      return this.withResolvedWorkshop(user, workshop);
-    } catch {
-      if (!normalizedWorkshopScope.workshopName) {
-        return {
-          ...user,
-          stockScope: normalizedStockScope,
-          workshopScope: normalizedWorkshopScope,
-        };
-      }
-
-      try {
-        const workshop = await this.masterDataService.getWorkshopByName(
-          normalizedWorkshopScope.workshopName,
-        );
-        return this.withResolvedWorkshop(user, workshop);
-      } catch {
-        return {
-          ...user,
-          stockScope: normalizedStockScope,
-          workshopScope: normalizedWorkshopScope,
-        };
-      }
-    }
-  }
-
-  private withResolvedWorkshop(
-    user: SessionUserSnapshot,
-    workshop: {
-      id: number;
-      workshopCode: string;
-      workshopName: string;
-    },
-  ): SessionUserSnapshot {
-    const workshopScope = {
-      mode: "FIXED" as const,
-      workshopId: workshop.id,
-      workshopCode: workshop.workshopCode,
-      workshopName: workshop.workshopName,
-    };
+    const resolvedWorkshopScope = await this.resolveWorkshopScopeByName(
+      normalizedWorkshopScope,
+    );
+    const resolvedStockScope =
+      await this.resolveStockScopeByCode(normalizedStockScope);
 
     return {
       ...user,
-      stockScope: toSessionStockScopeSnapshotFromWorkshopScope(workshopScope),
-      workshopScope,
+      stockScope: resolvedStockScope,
+      workshopScope: resolvedWorkshopScope,
     };
+  }
+
+  private async resolveWorkshopScopeByName(
+    scope: SessionUserSnapshot["workshopScope"],
+  ) {
+    if (
+      !scope ||
+      scope.mode !== "FIXED" ||
+      scope.workshopId ||
+      !scope.workshopName
+    ) {
+      return scope ?? createAllSessionWorkshopScope();
+    }
+
+    try {
+      const workshop = await this.masterDataService.getWorkshopByName(
+        scope.workshopName,
+      );
+      return {
+        mode: "FIXED" as const,
+        workshopId: workshop.id,
+        workshopName: workshop.workshopName,
+      };
+    } catch {
+      return scope;
+    }
+  }
+
+  private async resolveStockScopeByCode(
+    scope: SessionUserSnapshot["stockScope"],
+  ) {
+    if (!scope || scope.mode !== "FIXED" || !scope.stockScope) {
+      return scope ?? createAllSessionStockScope();
+    }
+
+    try {
+      const stockScope = await this.masterDataService.getStockScopeByCode(
+        scope.stockScope,
+      );
+      return {
+        mode: "FIXED" as const,
+        stockScope: stockScope.scopeCode as typeof scope.stockScope,
+        stockScopeName: stockScope.scopeName,
+      };
+    } catch {
+      return scope;
+    }
   }
 
   private filterRoutesByPermissions(
@@ -200,6 +223,30 @@ export class RbacService {
       });
       return result;
     }, []);
+  }
+
+  private expandPermissionAliases(permissions: string[]): string[] {
+    const expanded = new Set(permissions.filter(Boolean));
+    const queue = [...expanded];
+
+    while (queue.length > 0) {
+      const permission = queue.shift();
+      if (!permission) {
+        continue;
+      }
+
+      const aliases = PERMISSION_ALIAS_MAP[permission] ?? [];
+      for (const alias of aliases) {
+        if (expanded.has(alias)) {
+          continue;
+        }
+
+        expanded.add(alias);
+        queue.push(alias);
+      }
+    }
+
+    return [...expanded];
   }
 
   private filterRoutesByConsoleMode(

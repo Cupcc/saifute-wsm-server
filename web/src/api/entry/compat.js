@@ -66,7 +66,6 @@ function mapInboundLine(line, config, order, audit = null) {
     [config.noKey]: order.documentNo,
     [config.dateKey]: order.bizDate,
     materialId: line.materialId,
-    rdProcurementRequestLineId: line.rdProcurementRequestLineId ?? null,
     materialCode: line.materialCodeSnapshot,
     quantity,
     unitPrice,
@@ -81,6 +80,9 @@ function mapInboundLine(line, config, order, audit = null) {
     auditStatus: toAuditStatus(order.auditStatusSnapshot),
     auditor: audit?.decidedBy ?? null,
     auditTime: audit?.decidedAt ?? null,
+    createBy: order.createdBy ?? "",
+    createdAt: order.createdAt ?? null,
+    updatedAt: order.updatedAt ?? null,
     material: {
       materialId: line.materialId,
       materialCode: line.materialCodeSnapshot,
@@ -99,16 +101,14 @@ function mapInboundOrder(order, config, audit = null) {
     supplierName: order.supplierNameSnapshot ?? "",
     workshopId: order.workshopId,
     workshopName: order.workshopNameSnapshot ?? "",
-    rdProcurementRequestId: order.rdProcurementRequestId ?? null,
-    rdProcurementRequestNo: order.rdProcurementRequestNoSnapshot ?? "",
-    rdProcurementProjectCode: order.rdProcurementProjectCodeSnapshot ?? "",
-    rdProcurementProjectName: order.rdProcurementProjectNameSnapshot ?? "",
-    chargeBy: order.handlerNameSnapshot ?? "",
     attn: order.handlerNameSnapshot ?? "",
     totalAmount: Number(order.totalAmount ?? 0).toFixed(2),
     totalQty: Number(order.totalQty ?? 0),
     remark: order.remark ?? "",
     createBy: order.createdBy ?? "",
+    createdAt: order.createdAt ?? null,
+    updateBy: order.updatedBy ?? "",
+    updatedAt: order.updatedAt ?? null,
     auditStatus: toAuditStatus(order.auditStatusSnapshot),
     auditor: audit?.decidedBy ?? null,
     auditTime: audit?.decidedAt ?? null,
@@ -118,9 +118,9 @@ function mapInboundOrder(order, config, audit = null) {
   };
 }
 
-async function fetchAuditDocument(config, documentId) {
+async function fetchApprovalDocument(config, documentId) {
   const response = await request({
-    url: "/api/workflow/audits/document",
+    url: "/api/approval/documents/detail",
     method: "get",
     params: {
       documentType: config.documentType,
@@ -155,23 +155,27 @@ async function resolveSupplierId(data) {
   return response.rows?.[0]?.supplierId;
 }
 
-function buildInboundPayload(data, config, handlerPersonnelId, supplierId) {
+function buildInboundPayload(
+  data,
+  config,
+  handlerPersonnelId,
+  supplierId,
+  isUpdate,
+) {
   const lines = Array.isArray(data.details) ? data.details : [];
   return {
-    documentNo: data[config.noKey],
+    ...(isUpdate ? { documentNo: data[config.noKey] } : {}),
     orderType: config.orderType,
     bizDate: data[config.dateKey],
     supplierId,
-    handlerPersonnelId,
+    handlerPersonnelId: handlerPersonnelId ?? null,
+    handlerName:
+      typeof data.attn === "string" && data.attn.trim() ? data.attn.trim() : undefined,
     workshopId: data.workshopId,
-    rdProcurementRequestId: data.rdProcurementRequestId ?? undefined,
     remark: data.remark,
     lines: lines.map((line) => ({
       ...(line[config.detailIdKey] ? { id: line[config.detailIdKey] } : {}),
       materialId: line.materialId,
-      ...(line.rdProcurementRequestLineId
-        ? { rdProcurementRequestLineId: line.rdProcurementRequestLineId }
-        : {}),
       quantity: toDecimalString(line.quantity),
       unitPrice: toDecimalString(line.unitPrice),
       remark: line.remark,
@@ -218,7 +222,7 @@ export async function getInboundOrder(id, mode = "order") {
       url: `${config.itemUrl}/${id}`,
       method: "get",
     }),
-    fetchAuditDocument(config, id).catch(() => null),
+    fetchApprovalDocument(config, id).catch(() => null),
   ]);
 
   return {
@@ -228,6 +232,7 @@ export async function getInboundOrder(id, mode = "order") {
 
 export async function submitInboundOrder(data, mode = "order") {
   const config = MODE_CONFIG[mode];
+  const orderId = data[config.idKey];
   const [handlerPersonnelId, supplierId] = await Promise.all([
     resolveHandlerPersonnelId(data.attn).catch(() => undefined),
     mode === "order"
@@ -240,8 +245,8 @@ export async function submitInboundOrder(data, mode = "order") {
     config,
     handlerPersonnelId,
     supplierId,
+    Boolean(orderId),
   );
-  const orderId = data[config.idKey];
 
   return request({
     url: orderId ? `${config.itemUrl}/${orderId}` : config.itemUrl,

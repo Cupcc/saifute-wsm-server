@@ -8,7 +8,7 @@ import {
 import {
   SchedulerConcurrencyPolicy,
   SchedulerMisfirePolicy,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 
 export class CreateSchedulerJobDto {
   @IsString()

@@ -62,22 +62,10 @@
 		    </el-select>
 	    </el-form-item>
       <el-form-item label="物料名称" prop="materialName">
-        <el-input
-          v-model="queryParams.materialName"
-          placeholder="请输入物料名称"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.materialName" scope="material" field="materialName" placeholder="请选择或输入物料名称" width="240px" />
       </el-form-item>
       <el-form-item label="规格型号" prop="specification">
-        <el-input
-          v-model="queryParams.specification"
-          placeholder="请输入规格型号"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
+        <combo-input v-model="queryParams.specification" scope="material" field="specModel" placeholder="请选择或输入规格型号" width="240px" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -121,7 +109,25 @@
     <adaptive-table border stripe v-loading="loading" :data="returnDetailList">
       <el-table-column type="index" width="60" align="center" />
       <el-table-column sortable show-overflow-tooltip label="退料单号" align="center" prop="returnNo" v-if="columns[0].visible"/>
-      <el-table-column sortable show-overflow-tooltip label="退料日期" align="center" prop="returnDate" v-if="columns[1].visible" />
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="退料日期"
+        align="center"
+        prop="returnDate"
+        v-if="columns[1].visible"
+        width="200"
+        :sort-method="compareReturnDateRows"
+      >
+        <template #default="scope">
+          <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+            <span>{{ formatDocumentDate(scope.row.returnDate) }}</span>
+            <span style="font-size: 12px; color: #909399;">
+              创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+            </span>
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column sortable show-overflow-tooltip label="部门" align="center" prop="workshopName" v-if="columns[2].visible" />
       <el-table-column sortable show-overflow-tooltip label="物料名称" align="center" prop="materialName" v-if="columns[3].visible" />
       <el-table-column sortable show-overflow-tooltip label="规格型号" align="center" prop="specification" v-if="columns[4].visible" />
@@ -151,7 +157,7 @@
           <el-input v-model="form.returnReason" placeholder="请输入退料原因：1-质量问题 2-规格不符 3-多发退回 4-其他" />
         </el-form-item>
         <el-form-item label="单位" prop="unit">
-          <el-input v-model="form.unit" placeholder="请输入单位" />
+          <combo-input v-model="form.unit" scope="material" field="unitCode" placeholder="请选择或输入单位" />
         </el-form-item>
         <el-form-item label="单价" prop="unitPrice">
           <el-input v-model="form.unitPrice" placeholder="请输入单价" />
@@ -229,6 +235,63 @@ const columns = ref([
   { key: 7, label: `小计`, visible: true },
   { key: 8, label: `备注`, visible: true },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function compareReturnDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.returnDate).localeCompare(
+    formatDocumentDate(right?.returnDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.detailId ?? 0) - Number(right?.detailId ?? 0);
+}
 
 /** 加载物料选项数据 */
 function searchMaterial(query) {

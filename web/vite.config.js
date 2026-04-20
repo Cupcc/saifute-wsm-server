@@ -81,12 +81,14 @@ export default defineConfig(({ mode, command }) => {
         "/dev-api": {
           target: baseUrl,
           changeOrigin: true,
+          xfwd: true,
           rewrite: (p) => p.replace(/^\/dev-api/, ""),
         },
         // springdoc proxy
         "^/v3/api-docs/(.*)": {
           target: baseUrl,
           changeOrigin: true,
+          xfwd: true,
         },
       },
     },

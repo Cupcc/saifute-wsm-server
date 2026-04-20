@@ -6,7 +6,7 @@
     "useIgnoreFile": false
   },
   "files": {
-    "includes": ["**", "!!**/dist"]
+    "includes": ["**", "!!**/dist", "!!web"]
   },
   "formatter": {
     "enabled": true,
@@ -40,11 +40,26 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.vue"],
+      "includes": ["src/**/*.ts"],
       "linter": {
         "rules": {
-          "correctness": {
-            "noUnusedVariables": "off"
+          "nursery": {
+            "noExcessiveLinesPerFile": {
+              "level": "warn",
+              "options": {
+                "maxLines": 500
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/generated/**/*.ts"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
           }
         }
       }

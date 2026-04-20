@@ -131,9 +131,23 @@
     <adaptive-table border stripe v-loading="loading" :data="pickDetailList">
       <el-table-column type="index" width="60" align="center" />
       <el-table-column sortable show-overflow-tooltip label="领料单号" align="center" prop="pickNo" v-if="columns[0].visible" />
-      <el-table-column sortable show-overflow-tooltip label="领料日期" align="center" prop="pickDate" v-if="columns[1].visible" width="180">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="领料日期"
+        align="center"
+        prop="pickDate"
+        v-if="columns[1].visible"
+        width="200"
+        :sort-method="comparePickDateRows"
+      >
         <template #default="scope">
-          {{ formatDate(scope.row.pickDate) }}
+          <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+            <span>{{ formatDocumentDate(scope.row.pickDate) }}</span>
+            <span style="font-size: 12px; color: #909399;">
+              创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+            </span>
+          </span>
         </template>
       </el-table-column>
       <el-table-column sortable show-overflow-tooltip label="部门" align="center" prop="workshopName" v-if="columns[2].visible" />
@@ -392,16 +406,61 @@ function searchWorkshop(query) {
     });
 }
 
-/**
- * 格式化日期显示
- */
-function formatDate(date) {
-  if (!date) return "";
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function comparePickDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.pickDate).localeCompare(
+    formatDocumentDate(right?.pickDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.detailId ?? 0) - Number(right?.detailId ?? 0);
 }
 
 /** 合计计算 */

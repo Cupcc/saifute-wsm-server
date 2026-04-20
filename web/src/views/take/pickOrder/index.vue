@@ -21,23 +21,7 @@
         ></el-date-picker>
       </el-form-item>
       <el-form-item label="领料人" prop="picker">
-        <el-select
-          v-model="queryParams.picker"
-          filterable
-          remote
-          reserve-keyword
-          placeholder="请输入人员姓名搜索"
-          :remote-method="searchPersonnelForQuery"
-          :loading="personnelLoading"
-          clearable
-          style="width: 240px">
-          <el-option
-            v-for="item in personnelOptions"
-            :key="item.personnelId"
-            :label="item.name"
-            :value="item.name">
-          </el-option>
-        </el-select>
+        <combo-input v-model="queryParams.picker" scope="personnel" field="personnelName" placeholder="请选择或输入领料人" width="240px" />
       </el-form-item>
 	    <el-form-item label="部门" prop="workshopId">
 		    <el-select v-model="queryParams.workshopId" filterable remote reserve-keyword placeholder="请输入部门名称搜索"
@@ -73,13 +57,7 @@
 		    </el-select>
 	    </el-form-item>
 	    <el-form-item label="物料名称" prop="materialName">
-		    <el-input
-			    v-model="queryParams.materialName"
-			    placeholder="请输入物料名称"
-			    clearable
-			    style="width: 240px"
-			    @keyup.enter="handleQuery"
-		    />
+		    <combo-input v-model="queryParams.materialName" scope="material" field="materialName" placeholder="请选择或输入物料名称" width="240px" />
 	    </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -110,7 +88,8 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
-    <adaptive-table border stripe v-loading="loading" :data="pickOrderList" @selection-change="handleSelectionChange">
+    <adaptive-table border stripe v-loading="loading" :data="pickOrderList" @selection-change="handleSelectionChange" @row-click="handleRowClick">
+      <el-table-column type="selection" width="50" align="center" />
       <el-table-column type="index" width="50" align="center" />
       <el-table-column sortable show-overflow-tooltip label="领料单号" align="center" prop="pickNo" v-if="columns[0].visible">
         <template #default="scope">
@@ -119,10 +98,24 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="领料日期" align="center" prop="pickDate" width="180" v-if="columns[1].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="领料日期"
+        align="center"
+        prop="pickDate"
+        width="200"
+        :sort-method="comparePickDateRows"
+        v-if="columns[1].visible"
+      >
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">
-            <span>{{ parseTime(scope.row.pickDate, '{y}-{m}-{d}') }}</span>
+            <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+              <span>{{ formatDocumentDate(scope.row.pickDate) }}</span>
+              <span style="font-size: 12px; color: #909399;">
+                创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+              </span>
+            </span>
           </el-button>
         </template>
       </el-table-column>
@@ -133,21 +126,14 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[3].visible">
-        <template #default="scope">
-          <el-button link type="primary" @click="handleDetail(scope.row)">
-            {{ scope.row.chargeBy }}
-          </el-button>
-        </template>
-      </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[4].visible">
+      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[3].visible">
         <template #default="scope">
           <el-button link type="primary" @click="handleDetail(scope.row)">
             {{ scope.row.createBy }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[5].visible">
+      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[4].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             <span v-if="scope.row.auditStatus === '0' || scope.row.auditStatus === 0" style="color: #E6A23C;">未审核</span>
@@ -179,7 +165,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="领料单号" prop="pickNo">
-              <el-input v-model="form.pickNo" placeholder="请输入领料单号" :disabled="!!form.pickId" />
+              <el-input v-model="form.pickNo" placeholder="请输入领料单号" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -189,7 +175,6 @@
                 type="date"
                 value-format="YYYY-MM-DD"
                 placeholder="请选择领料日期"
-                :disabled="!!form.pickId"
                 @change="handlePickDateChange">
               </el-date-picker>
             </el-form-item>
@@ -198,29 +183,7 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="领料人" prop="picker">
-              <el-select
-                v-model="form.picker"
-                filterable
-                allow-create
-                remote
-                reserve-keyword
-                placeholder="请输入人员姓名搜索"
-                :remote-method="searchPersonnel"
-                :loading="personnelLoading"
-                style="width: 100%"
-                :disabled="!!form.pickId">
-                <el-option
-                  v-for="item in personnelOptions"
-                  :key="item.personnelId"
-                  :label="item.name"
-                  :value="item.name">
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="负责人" prop="chargeBy">
-              <el-input v-model="form.chargeBy" placeholder="请输入负责人" :disabled="!!form.pickId"/>
+              <combo-input v-model="form.picker" scope="personnel" field="personnelName" placeholder="请选择或输入领料人" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -236,7 +199,8 @@
 			          :remote-method="searchWorkshopForForm"
 			          :loading="workshopLoadingForForm"
 			          style="width: 100%"
-			          :disabled="form.intoId != null">
+			          :disabled="form.intoId != null"
+			          @change="handleWorkshopChange">
 			          <el-option
 				          v-for="item in workshopOptionsForForm"
 				          :key="item.workshopId"
@@ -254,7 +218,7 @@
           </el-col>
 	        <el-col :span="24">
 		        <el-form-item label="备注" prop="remark">
-			        <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" :disabled="!!form.pickId"/>
+			        <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
 		        </el-form-item>
 	        </el-col>
         </el-row>
@@ -272,7 +236,7 @@
                   placeholder="请输入物料名称或规格型号搜索"
                   :remote-method="(query) => searchMaterialForDetail(query, scope.$index)"
                   :loading="materialLoading"
-                  style="width: 100%" :disabled="!!form.pickId"
+                  style="width: 100%"
                   @change="(val) => handleMaterialSelect(val, scope.$index)">
                   <el-option
                     v-for="item in materialOptions"
@@ -294,7 +258,6 @@
                   :min="0"
                   :max="form.pickId ? undefined : getMaxQuantity(scope.row)"
                   controls-position="right"
-                  :disabled="!!form.pickId"
                   style="width: 100%"
                   @change="(val) => handleMaterialOrQuantityChange(undefined, val, scope.$index)" />
               </template>
@@ -313,12 +276,12 @@
             <el-table-column label="备注" prop="remark">
               <template #default="scope">
                 <el-input v-model="scope.row.remark"
-                          type="textarea" :autosize="{ minRows: 1 }" placeholder="请输入备注" :disabled="!!form.pickId" />
+                          type="textarea" :autosize="{ minRows: 1 }" placeholder="请输入备注" />
               </template>
             </el-table-column>
             <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
               <template #default="scope">
-                <el-button link type="primary" icon="Delete" @click="handleDeleteDetail(scope.$index)" :disabled="!!form.pickId">删除</el-button>
+                <el-button link type="primary" icon="Delete" @click="handleDeleteDetail(scope.$index)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -326,7 +289,7 @@
         <el-row>
           <el-col :span="24">
 	          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-right: 20px">
-	            <el-button type="primary" plain icon="Plus" @click="handleAddDetail" :disabled="!!form.pickId">添加明细</el-button>
+	            <el-button type="primary" plain icon="Plus" @click="handleAddDetail">添加明细</el-button>
               <span>合计金额: {{ form.totalAmount }}</span>
             </div>
           </el-col>
@@ -354,13 +317,12 @@
               <el-descriptions-item label="领料单号">{{ detailData.pickNo }}</el-descriptions-item>
               <el-descriptions-item label="领料日期">{{ parseTime(detailData.pickDate, '{y}-{m}-{d}') }}</el-descriptions-item>
               <el-descriptions-item label="领料人">{{ detailData.picker }}</el-descriptions-item>
-              <el-descriptions-item label="负责人">{{ detailData.chargeBy }}</el-descriptions-item>
               <el-descriptions-item label="部门">{{ detailData.workshopName }}</el-descriptions-item>
               <el-descriptions-item label="总金额">{{ detailData.totalAmount }}</el-descriptions-item>
               <el-descriptions-item label="创建人">{{ detailData.createBy }}</el-descriptions-item>
-              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
+              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createdAt, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
               <el-descriptions-item label="更新人">{{ detailData.updateBy }}</el-descriptions-item>
-              <el-descriptions-item label="更新时间">{{ parseTime(detailData.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
+              <el-descriptions-item label="更新时间">{{ parseTime(detailData.updatedAt, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
               <el-descriptions-item label="审核结果">
                 <span v-if="detailData.auditStatus === '0' || detailData.auditStatus === 0" style="color: #E6A23C;">未审核</span>
                 <span v-else-if="detailData.auditStatus === '1' || detailData.auditStatus === 1" style="color: #67C23A;">审核通过</span>
@@ -403,14 +365,14 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button
-            type="success" v-hasPermi="['audit:document:add']"
+            type="success" v-hasPermi="['approval:document:approve']"
             v-if="(detailData.auditStatus === '0' || detailData.auditStatus === 0) && (username !== detailData.createBy || username === 'admin')"
             @click="handleAudit(1)"
           >
             通过
           </el-button>
           <el-button
-            type="danger" v-hasPermi="['audit:document:add']"
+            type="danger" v-hasPermi="['approval:document:reject']"
             v-if="(detailData.auditStatus === '0' || detailData.auditStatus === 0) && (username !== detailData.createBy || username === 'admin')"
             @click="handleAudit(2)"
           >
@@ -439,9 +401,10 @@
 </template>
 
 <script setup name="PickOrder">
-import { auditDocument } from "@/api/audit/audit";
+import { approvalDocument } from "@/api/approval/approval";
 import { listMaterialByCodeOrName } from "@/api/base/material.js";
 import { listPersonnel } from "@/api/base/personnel";
+import { clearSuggestionsCache } from "@/api/base/suggestions";
 import { listByNameOrContact } from "@/api/base/workshop.js";
 import { selectSaifuteInventoryListGroupByMaterial } from "@/api/stock/inventory.js";
 import { getUsedByMaterialIdAndQuantity } from "@/api/stock/used.js";
@@ -524,10 +487,66 @@ const columns = ref([
   { key: 0, label: `领料单号`, visible: true },
   { key: 1, label: `领料日期`, visible: true },
   { key: 2, label: `领料人`, visible: true },
-  { key: 3, label: `负责人`, visible: false },
-  { key: 4, label: `创建人`, visible: false },
-  { key: 5, label: `审核结果`, visible: true },
+  { key: 3, label: `创建人`, visible: false },
+  { key: 4, label: `审核结果`, visible: true },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function comparePickDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.pickDate).localeCompare(
+    formatDocumentDate(right?.pickDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.pickId ?? 0) - Number(right?.pickId ?? 0);
+}
 
 /** 查询领料单列表 */
 function getList() {
@@ -562,14 +581,14 @@ function reset() {
     projectId: null,
     pickDate: null,
     picker: null,
-    chargeBy: null,
+    workshopId: null,
     remark: null,
     delFlag: null,
     voidDescription: null,
     createBy: null,
-    createTime: null,
+    createdAt: null,
     updateBy: null,
-    updateTime: null,
+    updatedAt: null,
     totalAmount: null,
     details: [],
   };
@@ -639,12 +658,15 @@ async function handlePickDateChange(val) {
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
+  const pickId = resolveSelectedPickId(row);
+  if (!pickId) {
+    return;
+  }
   reset();
   title.value = "修改领料单";
   open.value = true;
   dialogLoading.value = true;
-  const _pickId = row.pickId || ids.value[0];
-  getPickOrder(_pickId)
+  getPickOrder(pickId)
     .then((response) => {
       const orderData = response.data;
       form.value = {
@@ -653,24 +675,33 @@ function handleUpdate(row) {
         projectId: orderData.projectId,
         pickDate: orderData.pickDate,
         picker: orderData.picker,
+        workshopId: orderData.workshopId,
         chargeBy: orderData.chargeBy,
         remark: orderData.remark,
         delFlag: orderData.delFlag,
         voidDescription: orderData.voidDescription,
         createBy: orderData.createBy,
-        createTime: orderData.createTime,
+        createdAt: orderData.createdAt,
         updateBy: orderData.updateBy,
-        updateTime: orderData.updateTime,
+        updatedAt: orderData.updatedAt,
         totalAmount: orderData.totalAmount,
         details: [],
       };
+      workshopOptionsForForm.value = orderData.workshopId
+        ? [
+            {
+              workshopId: orderData.workshopId,
+              workshopName: orderData.workshopName,
+            },
+          ]
+        : [];
       if (orderData.details && orderData.details.length > 0) {
         form.value.details = orderData.details.map((detail) => ({
           detailId: detail.detailId,
           materialId: detail.materialId,
           quantity: detail.quantity,
           unitPrice: detail.unitPrice,
-          instruction: detail.instruction,
+          instruction: detail.instruction ?? "",
           remark: detail.remark,
         }));
         const materialIds = orderData.details
@@ -700,6 +731,10 @@ function handleUpdate(row) {
 function submitForm() {
   proxy.$refs["pickOrderRef"].validate((valid) => {
     if (valid) {
+      if (!form.value.details || form.value.details.length === 0) {
+        proxy.$modal.msgError("至少需要添加一条明细");
+        return;
+      }
       // 如果存在pickId，则为修改操作
       if (form.value.pickId != null) {
         // 修改操作需要验证所有字段
@@ -725,6 +760,7 @@ function submitForm() {
 
         // 调用修改接口（包含明细数据）
         updatePickOrder(form.value).then((response) => {
+          clearSuggestionsCache();
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
@@ -753,6 +789,7 @@ function submitForm() {
         }
 
         addPickOrder(form.value).then((response) => {
+          clearSuggestionsCache();
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
@@ -773,6 +810,16 @@ function handleSelectionChange(selection) {
   ids.value = selection.map((item) => item.pickId);
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
+}
+
+/** 点击行时同步工具栏状态 */
+function handleRowClick(row) {
+  if (!row?.pickId) {
+    return;
+  }
+  ids.value = [row.pickId];
+  single.value = false;
+  multiple.value = false;
 }
 
 /** 详情按钮操作 */
@@ -803,12 +850,25 @@ function handleDeleteDetail(index) {
 
 /** 作废按钮操作 */
 function handleVoid(row) {
+  const pickId = resolveSelectedPickId(row);
+  if (!pickId) {
+    return;
+  }
   abandonForm.value = {
-    pickId: row.pickId || ids.value,
+    pickId,
     voidDescription: "",
   };
   abandonOpen.value = true;
   proxy.resetForm("abandonRef");
+}
+
+function resolveSelectedPickId(row) {
+  const pickId = row?.pickId ?? ids.value[0];
+  if (!pickId) {
+    proxy.$modal.msgError("请选择一条领料单记录");
+    return null;
+  }
+  return pickId;
 }
 
 /** 取消作废操作 */
@@ -910,6 +970,16 @@ function searchWorkshopForForm(query) {
     .catch(() => {
       workshopLoadingForForm.value = false;
     });
+}
+
+function handleWorkshopChange(workshopId) {
+  const selectedWorkshop = workshopOptionsForForm.value.find(
+    (item) => item.workshopId === workshopId,
+  );
+  const defaultHandlerName =
+    selectedWorkshop?.defaultHandlerPersonnelName || null;
+
+  form.value.picker = defaultHandlerName;
 }
 
 /**
@@ -1054,7 +1124,7 @@ function handleAudit(status) {
     auditStatus: status,
   };
 
-  auditDocument(auditData)
+  approvalDocument(auditData)
     .then((response) => {
       proxy.$modal.msgSuccess(status === 1 ? "审核通过" : "审核不通过");
       detailOpen.value = false;
@@ -1076,7 +1146,6 @@ async function handleAiPrefill(formData) {
   await handleAdd();
   await nextTick();
 
-  if (formData.chargeBy) form.value.chargeBy = formData.chargeBy;
   if (formData.remark) form.value.remark = formData.remark;
 
   // 领料人
@@ -1098,7 +1167,12 @@ async function handleAiPrefill(formData) {
         workshopName: formData.workshopName,
       });
       workshopOptionsForForm.value = res.rows || [];
-      if (res.rows?.length > 0) form.value.workshopId = res.rows[0].workshopId;
+      if (res.rows?.length > 0) {
+        form.value.workshopId = res.rows[0].workshopId;
+        if (!formData.picker) {
+          handleWorkshopChange(res.rows[0].workshopId);
+        }
+      }
     } catch {
       /* 静默处理 */
     }

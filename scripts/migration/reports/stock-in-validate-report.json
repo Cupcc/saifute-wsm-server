@@ -22,7 +22,7 @@
   "dependencyBaseline": {
     "actualBlockedMaterialCount": 21,
     "actualMapCounts": {
-      "customer": 184,
+      "sales": 184,
       "material": 437,
       "materialCategory": 8,
       "personnel": 51,
@@ -31,7 +31,7 @@
     },
     "expectedBlockedMaterialCount": 21,
     "expectedMapCounts": {
-      "customer": 184,
+      "sales": 184,
       "material": 437,
       "materialCategory": 8,
       "personnel": 51,

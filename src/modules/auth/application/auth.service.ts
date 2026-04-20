@@ -6,6 +6,10 @@ import {
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import type { Request } from "express";
+import {
+  normalizeIpAddress,
+  resolveRequestIp,
+} from "../../../shared/common/request-ip.util";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import {
   AUTH_AUDIT_ACTION,
@@ -150,11 +154,12 @@ export class AuthService {
     await this.authStateRepository.clearPasswordFailures(loginDto.username);
 
     const sessionUser = this.rbacService.toSessionUser(user);
-    const { accessToken, session } = await this.sessionService.createSession({
-      user: sessionUser,
-      ip: clientIp,
-      device: userAgent,
-    });
+    const { accessToken, refreshToken, session } =
+      await this.sessionService.createSession({
+        user: sessionUser,
+        ip: clientIp,
+        device: userAgent,
+      });
 
     this.emitAuthAuditEvent(
       createAuthAuditEvent({
@@ -170,9 +175,22 @@ export class AuthService {
 
     return {
       accessToken,
+      refreshToken,
       sessionId: session.sessionId,
       expiresAt: session.expiresAt,
       user: sessionUser,
+    };
+  }
+
+  async refresh(refreshToken: string) {
+    const nextSession = await this.sessionService.refreshSession(refreshToken);
+
+    return {
+      accessToken: nextSession.accessToken,
+      refreshToken: nextSession.refreshToken,
+      sessionId: nextSession.session.sessionId,
+      expiresAt: nextSession.session.expiresAt,
+      user: nextSession.session.user,
     };
   }
 
@@ -221,22 +239,16 @@ export class AuthService {
 
   private isBlockedIp(ip: string): boolean {
     return this.appConfigService.authIpBlacklist.some(
-      (blockedIp) => this.normalizeIp(blockedIp) === this.normalizeIp(ip),
+      (blockedIp) => normalizeIpAddress(blockedIp) === normalizeIpAddress(ip),
     );
   }
 
   private resolveClientIp(request: Request): string {
-    const forwardedFor = request.headers["x-forwarded-for"];
-    const forwardedIp = Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : forwardedFor;
-    const candidate =
-      forwardedIp?.split(",")[0]?.trim() ||
-      request.ip ||
-      request.socket.remoteAddress ||
-      "unknown";
+    return resolveRequestIp(request);
+  }
 
-    return this.normalizeIp(candidate);
+  private emitAuthAuditEvent(event: AuthAuditEvent): void {
+    this.eventEmitter.emit(AUTH_AUDIT_EVENT, event);
   }
 
   private resolveUserAgent(request: Request): string {
@@ -246,17 +258,5 @@ export class AuthService {
     }
 
     return userAgent ?? "unknown";
-  }
-
-  private normalizeIp(ip: string): string {
-    if (ip === "::1") {
-      return "127.0.0.1";
-    }
-
-    return ip.replace(/^::ffff:/, "");
-  }
-
-  private emitAuthAuditEvent(event: AuthAuditEvent): void {
-    this.eventEmitter.emit(AUTH_AUDIT_EVENT, event);
   }
 }

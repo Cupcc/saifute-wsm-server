@@ -25,7 +25,7 @@ export class CreateMaterialDto {
 
   @IsNumber()
   @IsOptional()
-  categoryId?: number;
+  categoryId?: number | null;
 
   @IsString()
   @IsNotEmpty()

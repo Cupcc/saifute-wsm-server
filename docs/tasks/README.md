@@ -15,7 +15,7 @@ docs/tasks/
     └── cleanup-candidate/             # provisional; do not delete until user explicitly confirms
 ```
 
-Active task docs live at the root alongside `TASK_CENTER.md`, `README.md`, and `_template.md`. Each root `task-*.md` lists a `Related requirement` pointing to a `docs/requirements/topics/*.md` capability (e.g., `docs/requirements/topics/system-management-module.md (F4)`). Task–requirement cross-links are also indexed in `docs/requirements/REQUIREMENT_CENTER.md`. Once a task is no longer active, move it into the appropriate `archive/` bucket in the same turn.
+Active task docs live at the root alongside `TASK_CENTER.md`, `README.md`, and `_template.md`. Each root `task-*.md` lists a `Related requirement` pointing to a `docs/requirements/domain/*.md` capability (e.g., `docs/requirements/domain/system-management-module.md (F4)`). Task–requirement cross-links are also indexed in `docs/requirements/REQUIREMENT_CENTER.md`. Once a task is no longer active, move it into the appropriate `archive/` bucket in the same turn.
 
 ## Layering
 
@@ -39,8 +39,8 @@ Keep those layers separate so the board stays short, the README stays stable, an
 - `planner` creates or updates the task doc and owns planning-phase edits.
 - `coder` reads the task doc as the execution brief and treats it as read-only unless documentation ownership is explicitly reassigned.
 - `code-reviewer` updates the task doc with review status, validation results, follow-up state, and the acceptance-ready evidence handoff.
-- `acceptance-qa` is invoked when `light` or `full` acceptance adds value; in `full` mode it maintains acceptance specs, updates `Latest Verification` as the default complete test report, writes the acceptance result back to the task doc, and updates the topic ability status in the linked `docs/requirements/topics/*.md` when an ability completes. A separate acceptance run is optional and used only when a standalone report is justified.
-- The parent orchestrator decides whether to continue the fix loop, invoke `acceptance-qa`, or create a commit; commit remains a parent-owned action and should follow the current user ask or workflow policy.
+- `acceptance-qa` is invoked when `light` or `full` acceptance adds value; in `full` mode it maintains acceptance specs, updates `Latest Verification` as the default complete test report, writes the acceptance result back to the task doc, and updates the domain ability status in the linked `docs/requirements/domain/*.md` when an ability completes. A separate acceptance run is optional and used only when a standalone report is justified.
+- The parent orchestrator decides whether to continue the fix loop, invoke `acceptance-qa`, or close and archive the scope once delivery evidence is sufficient.
 
 ## Lifecycle Guidance
 
@@ -73,25 +73,28 @@ Maintain the live directory-wide classification in `TASK_CENTER.md`, not in this
 
 ## Workflow
 
-1. Create a new task doc from `docs/tasks/_template.md` when the task is not trivially small.
-2. Update `TASK_CENTER.md` when a new active task doc is introduced or when a task clearly changes lifecycle bucket.
-3. If the user is operating from a confirmed topic, have `planner` directly create the task doc from one explicit unfinished topic capability (no intermediate `req-*.md` needed).
-4. Have `planner` fill the goal, requirement alignment, scope, implementation plan, coder handoff fields, validation expectations, and parallelization safety.
-5. Have `planner` or `parent` choose `Acceptance mode: none | light | full` based on runtime impact, user risk, auditability need, and workflow cost. If the linked topic capability is in autonomous-delivery mode, or the user asked for a complete test report, default to `full` unless the scope is trivially small and docs-only.
-6. If `Acceptance mode = full`, have `acceptance-qa` prepare or update the relevant acceptance spec early, ensuring each in-scope `[AC-*]` maps to at least one acceptance case.
-7. If `Acceptance mode = light`, keep the default path lightweight and defer separate spec or run unless reuse, auditability, or complexity justifies them.
-8. Have `coder` implement from the task doc instead of inventing a new execution scope.
-9. Have `code-reviewer` record review status, validation, findings, and next action in the same task doc.
-10. If review finds open `[blocking]` or `[important]` items, route the work back to `coder` and keep the task doc current.
-11. If review passes and `Acceptance mode = none`, write `skipped` with rationale and close the task.
-12. If review passes and `Acceptance mode = light`, prefer the lightest sufficient path: fill the task doc `## Acceptance`, add direct evidence, and only create spec or run if the work has already crossed into full-mode complexity.
-13. If review passes and `Acceptance mode = full`, have `acceptance-qa` create or update the relevant acceptance spec, verify the minimum coverage baseline, and update `Latest Verification` as the default complete test report for the slice. Create a separate acceptance run only when a standalone report is justified.
-14. In `full` mode, have `acceptance-qa` verify environment readiness before execution. If required accounts, data, permissions, endpoints, or dependencies are not ready, mark the current acceptance record `blocked`, record `environment-gap`, and route to the parent or environment owner without consuming a rejection round.
-15. Have `acceptance-qa` execute acceptance testing, verify requirement alignment, fill the task doc `## Acceptance`, and update the topic capability status in the linked topic doc when an ability completes.
-16. If `acceptance-qa` rejects, route to `planner` (`requirement-misunderstanding`), `coder` (`implementation-gap`), or `code-reviewer` or parent (`evidence-gap`) and repeat from the appropriate step.
-17. If `acceptance-qa` blocks, route to `parent` or environment owner (`environment-gap`) and resume acceptance after the environment is ready.
-18. Default soft limit: 2 rejection rounds before escalating to user. If each loop is clearly converging and the fix cost remains low, the parent may continue beyond 2 rounds; otherwise escalate.
-19. If the scoped work is accepted, conditionally accepted, or skipped, archive the task doc and update `TASK_CENTER.md` before ending the turn. Do not archive while the current acceptance record remains `blocked`.
+1. If an active root-level `task-*.md` already matches the scope, reuse it as the primary runtime handoff instead of creating a replacement task doc just because the chat is new.
+2. Create a new task doc from `docs/tasks/_template.md` only when the task is not trivially small and no valid active task doc already covers the scope.
+3. Update `TASK_CENTER.md` when a new active task doc is introduced or when a task clearly changes lifecycle bucket.
+4. If the user is operating from a confirmed domain, have `planner` create or repair the task doc from one explicit unfinished domain capability only when planning is actually needed (no intermediate `req-*.md` needed).
+5. Have `planner` fill the goal, requirement alignment, scope, implementation plan, coder handoff fields, validation expectations, and parallelization safety when the task doc needs planning work.
+6. Have `planner` make an explicit browser decision for non-trivial work. This decision must be based on user-flow risk, not on whether `docs/acceptance-tests/cases/*.json` already exists.
+7. At minimum, the planner should record: `User-visible flow affected`, `Cross-module write path`, `Irreversible or high-cost business effect`, `Existing automated user-flow coverage`, `Browser test required`, and a short `Browser waiver reason` when the answer is `no`.
+8. Have `planner` or `parent` choose `Acceptance mode: none | light | full` based on runtime impact, user risk, auditability need, and workflow cost. If the linked domain capability is in autonomous-delivery mode, or the user asked for a complete test report, default to `full` unless the scope is trivially small and docs-only.
+9. If `Acceptance mode = full`, have `acceptance-qa` prepare or update the relevant acceptance spec early, ensuring each in-scope `[AC-*]` maps to at least one acceptance case.
+10. If `Acceptance mode = light`, keep the default path lightweight and defer separate spec or run unless reuse, auditability, or complexity justifies them.
+11. Have `coder` implement from the task doc instead of inventing a new execution scope.
+12. Have `code-reviewer` record review status, validation, findings, and next action in the same task doc.
+13. If review finds open `[blocking]` or `[important]` items, route the work back to `coder` and keep the task doc current.
+14. If review passes and `Acceptance mode = none`, write `skipped` with rationale and close the task.
+15. If review passes and `Acceptance mode = light`, prefer the lightest sufficient path: fill the task doc `## Acceptance`, add direct evidence, and only create spec or run if the work has already crossed into full-mode complexity.
+16. If review passes and `Acceptance mode = full`, have `acceptance-qa` create or update the relevant acceptance spec, verify the minimum coverage baseline, and update `Latest Verification` as the default complete test report for the slice. Create a separate acceptance run only when a standalone report is justified.
+17. In `full` mode, have `acceptance-qa` verify environment readiness before execution. If required accounts, data, permissions, endpoints, or dependencies are not ready, mark the current acceptance record `blocked`, record `environment-gap`, and route to the parent or environment owner without consuming a rejection round.
+18. Have `acceptance-qa` execute acceptance testing, verify requirement alignment, fill the task doc `## Acceptance`, and update the domain capability status in the linked domain doc when an ability completes.
+19. If `acceptance-qa` rejects, route to `planner` (`requirement-misunderstanding`) only when requirement or task-doc truth needs repair; otherwise route to `coder` (`implementation-gap`) or `code-reviewer` or parent (`evidence-gap`) and repeat from the appropriate step.
+20. If `acceptance-qa` blocks, route to `parent` or environment owner (`environment-gap`) and resume acceptance after the environment is ready.
+21. Default soft limit: 2 rejection rounds before escalating to user. If each loop is clearly converging and the fix cost remains low, the parent may continue beyond 2 rounds; otherwise escalate.
+22. If the scoped work is accepted, conditionally accepted, or skipped, archive the task doc and update `TASK_CENTER.md` before ending the turn. Do not archive while the current acceptance record remains `blocked`.
 
 ## Task-Doc Field Expectations
 
@@ -100,6 +103,7 @@ Maintain the live directory-wide classification in `TASK_CENTER.md`, not in this
 - `## Metadata` should include `Lifecycle disposition`, which starts as `active` and should move to `retained-completed` or `cleanup-candidate` when the task is no longer active.
 - `## Coder Handoff` should record `owned paths`, `forbidden shared files`, and the `validation command for that scope`.
 - `## Reviewer Handoff` should record the `Acceptance evidence package`, whether a complete test report is required, and the `Acceptance test expectations`.
+- `## Reviewer Handoff` should also record the browser decision inputs: `User-visible flow affected`, `Cross-module write path`, `Irreversible or high-cost business effect`, `Existing automated user-flow coverage`, and `Browser waiver reason` when browser is not required.
 - `## Acceptance` should record the chosen path, criterion-by-criterion evidence, and the final acceptance verdict.
 - If the planner marks `## Parallelization Safety` as safe, the task doc should add one handoff subsection per writer with those same fields.
 - `## Final Status` should explain why a completed task should stay retained or become a cleanup candidate.
@@ -110,7 +114,7 @@ Use this mode when the user wants AI to finish a scope end-to-end and judge comp
 
 Rules:
 
-1. The linked topic capability must already be `confirmed`.
+1. The linked domain capability must already be `confirmed`.
 2. The requirement must state `In scope`, `Out of scope / non-goals`, `[AC-*]`, evidence expectations, and a completion definition.
 3. The task should default to `Acceptance mode = full` unless the scope is truly trivial and docs-only.
 4. `acceptance-qa` must maintain or create an acceptance spec if reusable coverage is needed.
@@ -119,17 +123,17 @@ Rules:
 
 Authoritative sources: `.cursor/skills/saifute-subagent-orchestration/SKILL.md` (orchestration workflow and completion protocol) and `.cursor/agents/acceptance-qa.md` (acceptance judgment semantics and report format).
 
-## Topic-First Derivation
+## Domain-First Derivation
 
-Use this when the user wants to maintain only `topics/*.md`, while delegating execution to AI.
+Use this when the user wants to maintain only `domain/*.md`, while delegating execution to AI.
 
 Rules:
 
-1. The topic must already be `confirmed`.
-2. The planner picks one explicit unfinished topic capability and creates the task doc directly — no intermediate `req-*.md`.
-3. The planner must inherit the topic contract mechanically: no new product semantics, no widened scope, no silent multi-capability bundling.
-4. If the topic capability lacks `In scope`, `Out of scope / non-goals`, completion criteria, evidence expectation, or default acceptance mode, the planner must stop for clarification instead of improvising.
-5. The task Metadata must include `Related requirement: docs/requirements/topics/*.md (Fx)` to preserve traceability.
+1. The domain must already be `confirmed`.
+2. The planner picks one explicit unfinished domain capability and creates the task doc directly — no intermediate `req-*.md`.
+3. The planner must inherit the domain contract mechanically: no new product semantics, no widened scope, no silent multi-capability bundling.
+4. If the domain capability lacks `In scope`, `Out of scope / non-goals`, completion criteria, evidence expectation, or default acceptance mode, the planner must stop for clarification instead of improvising.
+5. The task Metadata must include `Related requirement: docs/requirements/domain/*.md (Fx)` to preserve traceability.
 
 ## Maintenance Rules
 

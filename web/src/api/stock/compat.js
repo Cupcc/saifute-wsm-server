@@ -1,6 +1,10 @@
 import request from "@/utils/request";
 
 const REPORTING_PAGE_LIMIT = 100;
+const STOCK_SCOPE_LABELS = {
+  MAIN: "主仓",
+  RD_SUB: "研发小仓",
+};
 const LEGACY_OPERATION_TYPE_MAP = {
   1: "ACCEPTANCE_IN",
   2: "PRODUCTION_RECEIPT_IN",
@@ -77,6 +81,92 @@ async function fetchAllInventorySummaryItems(query = {}) {
   return items;
 }
 
+function toQueryText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function matchesTextField(value, keyword) {
+  return String(value || "").includes(keyword);
+}
+
+function matchesMaterialKeyword(row, keyword) {
+  return (
+    matchesTextField(row.materialCode, keyword) ||
+    matchesTextField(row.materialName, keyword) ||
+    matchesTextField(row.specification, keyword)
+  );
+}
+
+function matchesInventoryQuery(row, query = {}) {
+  if (query.materialId && row.materialId !== query.materialId) {
+    return false;
+  }
+  const keyword = toQueryText(query.keyword);
+  if (keyword && !matchesMaterialKeyword(row, keyword)) {
+    return false;
+  }
+  if (
+    query.materialCode2 &&
+    !String(row.materialCode || "").includes(query.materialCode2)
+  ) {
+    return false;
+  }
+  if (
+    query.materialName &&
+    !String(row.materialName || "").includes(query.materialName)
+  ) {
+    return false;
+  }
+  if (
+    query.specification &&
+    !String(row.specification || "").includes(query.specification)
+  ) {
+    return false;
+  }
+  if (Array.isArray(query.category) && query.category.length > 0) {
+    return query.category.includes(row.category);
+  }
+  if (
+    query.stockScope &&
+    Object.hasOwn(row, "stockScope") &&
+    row.stockScope !== query.stockScope
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function buildInventorySummaryRows(items, query = {}) {
+  return items
+    .map((item) => {
+      const material = item.material ?? {};
+      const stockScope = item.stockScope ?? null;
+
+      return {
+        inventoryId: item.id ?? `${item.materialId}-${stockScope ?? "ALL"}`,
+        materialId: item.materialId,
+        materialCode: material.materialCode ?? item.materialCode,
+        materialName: material.materialName ?? item.materialName,
+        specification: material.specModel ?? item.specModel ?? "",
+        category:
+          material.categoryId !== undefined && material.categoryId !== null
+            ? String(material.categoryId)
+            : item.categoryId
+              ? String(item.categoryId)
+              : null,
+        stockScope,
+        stockScopeName: stockScope
+          ? STOCK_SCOPE_LABELS[stockScope] ?? stockScope
+          : "未指定",
+        currentQty: Number(item.quantityOnHand ?? 0),
+        warningMinQty: material.warningMinQty ?? item.warningMinQty,
+        warningMaxQty: material.warningMaxQty ?? item.warningMaxQty,
+      };
+    })
+    .filter((row) => matchesInventoryQuery(row, query));
+}
+
 function buildInventoryRows(items, query = {}) {
   const grouped = new Map();
 
@@ -102,39 +192,15 @@ function buildInventoryRows(items, query = {}) {
     grouped.set(item.materialId, current);
   }
 
-  return [...grouped.values()].filter((row) => {
-    if (query.materialId && row.materialId !== query.materialId) {
-      return false;
-    }
-    if (
-      query.materialCode2 &&
-      !String(row.materialCode || "").includes(query.materialCode2)
-    ) {
-      return false;
-    }
-    if (
-      query.materialName &&
-      !String(row.materialName || "").includes(query.materialName)
-    ) {
-      return false;
-    }
-    if (
-      query.specification &&
-      !String(row.specification || "").includes(query.specification)
-    ) {
-      return false;
-    }
-    if (Array.isArray(query.category) && query.category.length > 0) {
-      return query.category.includes(row.category);
-    }
-    return true;
-  });
+  return [...grouped.values()].filter((row) =>
+    matchesInventoryQuery(row, query),
+  );
 }
 
 export async function listInventorySummary(query = {}) {
   const { pageNum, pageSize } = buildPageQuery(query);
   const items = await fetchAllInventorySummaryItems(query);
-  const rows = buildInventoryRows(items, query);
+  const rows = buildInventorySummaryRows(items, query);
 
   return {
     rows: rows.slice((pageNum - 1) * pageSize, pageNum * pageSize),

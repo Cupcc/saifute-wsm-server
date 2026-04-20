@@ -20,9 +20,9 @@ import { MAP_TABLE_BY_ENTITY, TARGET_TABLE_BY_ENTITY } from "./writer";
 
 const CODE_COLUMN_BY_ENTITY: Record<MasterDataEntity, string> = {
   materialCategory: "categoryCode",
-  workshop: "workshopCode",
+  workshop: "workshopName",
   supplier: "supplierCode",
-  personnel: "personnelCode",
+  personnel: "personnelName",
   customer: "customerCode",
   material: "materialCode",
 };
@@ -578,33 +578,36 @@ async function main(): Promise<void> {
         );
         const workshopRowsByCode = await getTargetRowsByCode<{
           id: number;
-          workshopCode: string;
           workshopName: string;
           status: string;
         }>(
           targetConnection,
-          "SELECT id, workshopCode, workshopName, status FROM workshop",
-          "workshopCode",
+          "SELECT id, workshopName, status FROM workshop",
+          "workshopName",
         );
         const supplierRowsByCode = await getTargetRowsByCode<{
           id: number;
           supplierCode: string;
           supplierName: string;
+          supplierShortName: string | null;
+          contactPerson: string | null;
+          contactPhone: string | null;
+          address: string | null;
           status: string;
         }>(
           targetConnection,
-          "SELECT id, supplierCode, supplierName, status FROM supplier",
+          "SELECT id, supplierCode, supplierName, supplierShortName, contactPerson, contactPhone, address, status FROM supplier",
           "supplierCode",
         );
-        const personnelRowsByCode = await getTargetRowsByCode<{
+        const personnelRowsByName = await getTargetRowsByCode<{
           id: number;
-          personnelCode: string;
           personnelName: string;
+          contactPhone: string | null;
           status: string;
         }>(
           targetConnection,
-          "SELECT id, personnelCode, personnelName, status FROM personnel",
-          "personnelCode",
+          "SELECT id, personnelName, contact_phone AS contactPhone, status FROM personnel",
+          "personnelName",
         );
         const customerRowsByCode = await getTargetRowsByCode<{
           id: number;
@@ -690,7 +693,7 @@ async function main(): Promise<void> {
             continue;
           }
 
-          const targetRow = workshopRowsByCode.get(record.target.workshopCode);
+          const targetRow = workshopRowsByCode.get(record.target.workshopName);
 
           if (!targetRow) {
             validationIssues.push({
@@ -698,7 +701,7 @@ async function main(): Promise<void> {
               entity: "workshop",
               legacyTable: record.legacyTable,
               legacyId: record.legacyId,
-              targetCode: record.target.workshopCode,
+              targetCode: record.target.workshopName,
               reason: "Expected workshop row is missing for a migrated record.",
             });
             continue;
@@ -708,7 +711,7 @@ async function main(): Promise<void> {
             entity: "workshop" as const,
             legacyTable: record.legacyTable,
             legacyId: record.legacyId,
-            targetCode: record.target.workshopCode,
+            targetCode: record.target.workshopName,
           };
 
           pushValueMismatch(
@@ -763,6 +766,34 @@ async function main(): Promise<void> {
           pushValueMismatch(
             validationIssues,
             context,
+            "supplier.supplierShortName",
+            record.target.supplierShortName,
+            targetRow.supplierShortName,
+          );
+          pushValueMismatch(
+            validationIssues,
+            context,
+            "supplier.contactPerson",
+            record.target.contactPerson,
+            targetRow.contactPerson,
+          );
+          pushValueMismatch(
+            validationIssues,
+            context,
+            "supplier.contactPhone",
+            record.target.contactPhone,
+            targetRow.contactPhone,
+          );
+          pushValueMismatch(
+            validationIssues,
+            context,
+            "supplier.address",
+            record.target.address,
+            targetRow.address,
+          );
+          pushValueMismatch(
+            validationIssues,
+            context,
             "supplier.status",
             record.target.status,
             targetRow.status,
@@ -774,8 +805,8 @@ async function main(): Promise<void> {
             continue;
           }
 
-          const targetRow = personnelRowsByCode.get(
-            record.target.personnelCode,
+          const targetRow = personnelRowsByName.get(
+            record.target.personnelName,
           );
 
           if (!targetRow) {
@@ -784,7 +815,7 @@ async function main(): Promise<void> {
               entity: "personnel",
               legacyTable: record.legacyTable,
               legacyId: record.legacyId,
-              targetCode: record.target.personnelCode,
+              targetCode: record.target.personnelName,
               reason:
                 "Expected personnel row is missing for a migrated record.",
             });
@@ -795,7 +826,7 @@ async function main(): Promise<void> {
             entity: "personnel" as const,
             legacyTable: record.legacyTable,
             legacyId: record.legacyId,
-            targetCode: record.target.personnelCode,
+            targetCode: record.target.personnelName,
           };
 
           pushValueMismatch(
@@ -804,6 +835,13 @@ async function main(): Promise<void> {
             "personnel.personnelName",
             record.target.personnelName,
             targetRow.personnelName,
+          );
+          pushValueMismatch(
+            validationIssues,
+            context,
+            "personnel.contactPhone",
+            record.target.contactPhone,
+            targetRow.contactPhone,
           );
           pushValueMismatch(
             validationIssues,

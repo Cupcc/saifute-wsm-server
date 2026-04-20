@@ -1,19 +1,17 @@
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from "@nestjs/common";
+import { NotFoundException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import {
   AuditStatusSnapshot,
   DocumentLifecycleStatus,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { RdProcurementRequestRepository } from "../infrastructure/rd-procurement-request.repository";
 import {
+  applyManualAcceptanceStatus,
   applyRequestVoidStatus,
+  getStatusLedgerProjection,
   initializeRequestStatusTruth,
 } from "./rd-material-status.helper";
 import { RdProcurementRequestService } from "./rd-procurement-request.service";
@@ -22,6 +20,7 @@ jest.mock("./rd-material-status.helper", () => ({
   initializeRequestStatusTruth: jest.fn().mockResolvedValue(undefined),
   applyRequestVoidStatus: jest.fn().mockResolvedValue(undefined),
   applyProcurementStartedStatus: jest.fn().mockResolvedValue(undefined),
+  applyManualAcceptanceStatus: jest.fn().mockResolvedValue(undefined),
   applyManualCancelStatus: jest.fn().mockResolvedValue(undefined),
   applyManualReturnStatus: jest.fn().mockResolvedValue(undefined),
   getStatusLedgerProjection: jest.fn().mockResolvedValue({
@@ -43,7 +42,7 @@ describe("RdProcurementRequestService", () => {
     documentNo: "RDPUR-001",
     bizDate: new Date("2026-03-29"),
     projectCode: "RD-PJT-001",
-    projectName: "研发治具归集",
+    projectName: "研发治具项目",
     supplierId: 10,
     handlerPersonnelId: 20,
     stockScopeId: 2,
@@ -102,7 +101,6 @@ describe("RdProcurementRequestService", () => {
         updatedAt: new Date(),
       },
     ],
-    acceptanceOrders: [],
   };
 
   let service: RdProcurementRequestService;
@@ -132,7 +130,6 @@ describe("RdProcurementRequestService", () => {
             findRequestByDocumentNo: jest.fn(),
             createRequest: jest.fn(),
             updateRequest: jest.fn(),
-            hasActiveAcceptanceOrders: jest.fn(),
           },
         },
         {
@@ -152,8 +149,14 @@ describe("RdProcurementRequestService", () => {
             }),
             getWorkshopById: jest.fn().mockResolvedValue({
               id: 9,
-              workshopCode: "RD",
               workshopName: "研发小仓",
+              defaultHandlerPersonnelId: null,
+              defaultHandlerPersonnel: null,
+              status: "ACTIVE",
+              createdBy: null,
+              createdAt: new Date("2026-03-29T00:00:00.000Z"),
+              updatedBy: null,
+              updatedAt: new Date("2026-03-29T00:00:00.000Z"),
             }),
             getSupplierById: jest.fn().mockResolvedValue({
               id: 10,
@@ -183,7 +186,7 @@ describe("RdProcurementRequestService", () => {
         documentNo: "RDPUR-001",
         bizDate: "2026-03-29",
         projectCode: "RD-PJT-001",
-        projectName: "研发治具归集",
+        projectName: "研发治具项目",
         supplierId: 10,
         handlerPersonnelId: 20,
         workshopId: 9,
@@ -197,58 +200,84 @@ describe("RdProcurementRequestService", () => {
     expect(initializeRequestStatusTruth).toHaveBeenCalled();
   });
 
-  it("throws when documentNo already exists", async () => {
-    repository.findRequestByDocumentNo.mockResolvedValue(mockRequest);
-
-    await expect(
-      service.createRequest({
-        documentNo: "RDPUR-001",
-        bizDate: "2026-03-29",
-        projectCode: "RD-PJT-001",
-        projectName: "研发治具归集",
-        workshopId: 9,
-        lines: [{ materialId: 100, quantity: "5" }],
-      }),
-    ).rejects.toThrow(ConflictException);
-  });
-
-  it("rejects non-RD workshops", async () => {
+  it("allows any workshop id while keeping RD_SUB ownership", async () => {
     repository.findRequestByDocumentNo.mockResolvedValue(null);
     masterDataService.getWorkshopById.mockResolvedValueOnce({
       id: 1,
-      workshopCode: "MAIN",
       workshopName: "主仓",
+      defaultHandlerPersonnelId: null,
+      defaultHandlerPersonnel: null,
+      status: "ACTIVE",
+      createdBy: null,
+      createdAt: new Date("2026-03-29T00:00:00.000Z"),
+      updatedBy: null,
+      updatedAt: new Date("2026-03-29T00:00:00.000Z"),
     } as Awaited<ReturnType<MasterDataService["getWorkshopById"]>>);
+    repository.createRequest.mockResolvedValue({
+      ...mockRequest,
+      id: 2,
+      documentNo: "RDPUR-002",
+      workshopId: 1,
+      workshopNameSnapshot: "主仓",
+    });
 
-    await expect(
-      service.createRequest({
-        documentNo: "RDPUR-002",
-        bizDate: "2026-03-29",
-        projectCode: "RD-PJT-002",
-        projectName: "研发夹具归集",
+    await service.createRequest({
+      documentNo: "RDPUR-002",
+      bizDate: "2026-03-29",
+      projectCode: "RD-PJT-002",
+      projectName: "研发夹具项目",
+      workshopId: 1,
+      lines: [{ materialId: 100, quantity: "2" }],
+    });
+
+    expect(repository.createRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stockScopeId: 2,
         workshopId: 1,
-        lines: [{ materialId: 100, quantity: "2" }],
+        workshopNameSnapshot: "主仓",
       }),
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it("blocks void when active acceptance orders exist", async () => {
-    repository.findRequestById.mockResolvedValue(mockRequest);
-    repository.hasActiveAcceptanceOrders.mockResolvedValue(true);
-
-    await expect(service.voidRequest(1, "blocked", "5")).rejects.toThrow(
-      "该采购需求已关联有效验收单，不能作废",
+      expect.anything(),
+      expect.anything(),
     );
   });
 
-  it("voids request when no active acceptance order exists", async () => {
+  it("blocks void when accepted facts already exist", async () => {
+    repository.findRequestById.mockResolvedValue(mockRequest);
+    (getStatusLedgerProjection as jest.Mock).mockResolvedValueOnce({
+      requestLineId: 11,
+      pendingQty: new Prisma.Decimal(0),
+      inProcurementQty: new Prisma.Decimal(0),
+      canceledQty: new Prisma.Decimal(0),
+      acceptedQty: new Prisma.Decimal(1),
+      handedOffQty: new Prisma.Decimal(0),
+      scrappedQty: new Prisma.Decimal(0),
+      returnedQty: new Prisma.Decimal(0),
+      lastEventAt: null,
+    });
+
+    await expect(service.voidRequest(1, "blocked", "5")).rejects.toThrow(
+      "该采购需求已存在验收/交接/报废/退回事实，不能作废",
+    );
+  });
+
+  it("voids request when only open quantities remain", async () => {
     repository.findRequestById
       .mockResolvedValueOnce(mockRequest)
       .mockResolvedValueOnce({
         ...mockRequest,
         lifecycleStatus: DocumentLifecycleStatus.VOIDED,
       });
-    repository.hasActiveAcceptanceOrders.mockResolvedValue(false);
+    (getStatusLedgerProjection as jest.Mock).mockResolvedValueOnce({
+      requestLineId: 11,
+      pendingQty: new Prisma.Decimal(5),
+      inProcurementQty: new Prisma.Decimal(0),
+      canceledQty: new Prisma.Decimal(0),
+      acceptedQty: new Prisma.Decimal(0),
+      handedOffQty: new Prisma.Decimal(0),
+      scrappedQty: new Prisma.Decimal(0),
+      returnedQty: new Prisma.Decimal(0),
+      lastEventAt: null,
+    });
 
     const result = await service.voidRequest(1, "cancel", "5");
 
@@ -262,6 +291,36 @@ describe("RdProcurementRequestService", () => {
     );
     expect(applyRequestVoidStatus).toHaveBeenCalled();
     expect(result?.lifecycleStatus).toBe(DocumentLifecycleStatus.VOIDED);
+  });
+
+  it("applies acceptance confirmation inside RD collaboration", async () => {
+    repository.findRequestById
+      .mockResolvedValueOnce(mockRequest)
+      .mockResolvedValueOnce(mockRequest);
+
+    await service.applyStatusAction(
+      1,
+      {
+        actionType: "ACCEPTANCE_CONFIRMED",
+        lineId: 11,
+        quantity: "2",
+        referenceNo: "YS-20260410-001",
+        reason: "研发协同确认到货",
+      },
+      "5",
+    );
+
+    expect(applyManualAcceptanceStatus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId: 1,
+        requestLineId: 11,
+        quantity: "2",
+        referenceNo: "YS-20260410-001",
+        reason: "研发协同确认到货",
+        operatorId: "5",
+      }),
+      expect.anything(),
+    );
   });
 
   it("throws when request does not exist", async () => {

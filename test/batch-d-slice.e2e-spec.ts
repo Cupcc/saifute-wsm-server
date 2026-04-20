@@ -6,6 +6,7 @@ import { Reflector } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
 import { static as expressStatic } from "express";
 import * as request from "supertest";
+import { Prisma, SalesStockOrderType } from "../generated/prisma/client";
 import { AppModule } from "../src/app.module";
 import { HttpExceptionFilter } from "../src/shared/common/filters/http-exception.filter";
 import { ResponseEnvelopeInterceptor } from "../src/shared/common/interceptors/response-envelope.interceptor";
@@ -290,6 +291,278 @@ describe("Batch D slice acceptance (e2e)", () => {
       "attachment",
     );
     expect(exportResponse.text).toContain("materialCode");
+  });
+
+  it("should keep monthly reporting scoped for rd-sub users", async () => {
+    appContext = await bootstrapApp();
+    const server = appContext.app.getHttpServer();
+    const rdLogin = await login(server, "rd-operator", "rd123456");
+    const token = rdLogin.body.data.accessToken as string;
+
+    await request(server)
+      .get("/api/reporting/monthly-reporting")
+      .set("Authorization", `Bearer ${token}`)
+      .query({ yearMonth: "2026-04" })
+      .expect(200);
+
+    await request(server)
+      .get("/api/reporting/monthly-reporting")
+      .set("Authorization", `Bearer ${token}`)
+      .query({ yearMonth: "2026-04", stockScope: "MAIN" })
+      .expect(403);
+  });
+
+  it("should expose monthly reporting drill-down details with source-month evidence", async () => {
+    appContext = await bootstrapApp();
+    const server = appContext.app.getHttpServer();
+    const prisma = appContext.app.get<PrismaE2eStub>(PrismaService);
+    prisma.salesStockOrder.findMany = jest
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          id: 2,
+          documentNo: "XSTH-QA-001",
+          bizDate: new Date("2026-03-31T16:30:00.000Z"),
+          createdAt: new Date("2026-04-30T16:30:00.000Z"),
+          orderType: SalesStockOrderType.SALES_RETURN,
+          workshopId: 192,
+          workshop: {
+            workshopName: "装备车间",
+          },
+          stockScope: {
+            scopeCode: "MAIN",
+            scopeName: "主仓",
+          },
+          totalQty: new Prisma.Decimal("1"),
+          totalAmount: new Prisma.Decimal("20"),
+          lines: [
+            {
+              costAmount: new Prisma.Decimal("12.34"),
+              sourceDocumentId: 1,
+            },
+          ],
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 1,
+          bizDate: new Date("2026-03-31T15:30:00.000Z"),
+          documentNo: "CK-QA-001",
+        },
+      ]);
+    const adminLogin = await login(server, "admin", "admin123");
+    const token = adminLogin.body.data.accessToken as string;
+
+    const detailResponse = await request(server)
+      .get("/api/reporting/monthly-reporting/details")
+      .set("Authorization", `Bearer ${token}`)
+      .query({
+        yearMonth: "2026-04",
+        stockScope: "MAIN",
+        topicKey: "SALES_RETURN",
+        keyword: "CK-QA-001",
+      })
+      .expect(200);
+
+    expect(detailResponse.body.data.total).toBe(1);
+    expect(detailResponse.body.data.items[0]).toMatchObject({
+      documentNo: "XSTH-QA-001",
+      documentTypeLabel: "销售退货单",
+      stockScopeName: "主仓",
+      workshopName: "装备车间",
+      amount: "20.00",
+      cost: "12.34",
+      abnormalLabels: ["补录影响", "跨月修正"],
+      sourceBizMonth: "2026-03",
+      sourceDocumentNo: "CK-QA-001",
+    });
+  });
+
+  it("should expose material-category monthly reporting summary, line details, and export", async () => {
+    appContext = await bootstrapApp();
+    const server = appContext.app.getHttpServer();
+    const prisma = appContext.app.get<PrismaE2eStub>(PrismaService);
+    prisma.stockInOrderLine.findMany = jest.fn().mockResolvedValue([
+      {
+        id: 101,
+        lineNo: 1,
+        materialId: 501,
+        materialCodeSnapshot: "M-RAW-001",
+        materialNameSnapshot: "原料 A",
+        materialSpecSnapshot: "25kg",
+        unitCodeSnapshot: "KG",
+        quantity: new Prisma.Decimal("3"),
+        amount: new Prisma.Decimal("30"),
+        materialCategoryIdSnapshot: 11,
+        materialCategoryCodeSnapshot: "CHEM",
+        materialCategoryNameSnapshot: "化工",
+        materialCategoryPathSnapshot: [
+          { id: 10, categoryCode: "RAW", categoryName: "原料" },
+          { id: 11, categoryCode: "CHEM", categoryName: "化工" },
+        ],
+        order: {
+          id: 201,
+          documentNo: "YS-001",
+          bizDate: new Date("2026-04-05T00:00:00.000Z"),
+          createdAt: new Date("2026-04-05T08:00:00.000Z"),
+          orderType: "ACCEPTANCE",
+          stockScope: {
+            scopeCode: "MAIN",
+            scopeName: "主仓",
+          },
+          workshopId: 192,
+          workshopNameSnapshot: "装备车间",
+          workshop: {
+            workshopName: "装备车间",
+          },
+        },
+      },
+    ]);
+    prisma.salesStockOrderLine.findMany = jest.fn().mockResolvedValue([
+      {
+        id: 301,
+        lineNo: 2,
+        materialId: 601,
+        materialCodeSnapshot: "M-RAW-002",
+        materialNameSnapshot: "原料 B",
+        materialSpecSnapshot: "10kg",
+        unitCodeSnapshot: "KG",
+        quantity: new Prisma.Decimal("1"),
+        amount: new Prisma.Decimal("8"),
+        costAmount: new Prisma.Decimal("6"),
+        salesProjectId: 701,
+        salesProjectCodeSnapshot: "SP-701",
+        salesProjectNameSnapshot: "销售项目 A",
+        sourceDocumentId: 9001,
+        materialCategoryIdSnapshot: 11,
+        materialCategoryCodeSnapshot: "CHEM",
+        materialCategoryNameSnapshot: "化工",
+        materialCategoryPathSnapshot: JSON.stringify([
+          { id: 10, categoryCode: "RAW", categoryName: "原料" },
+          { id: 11, categoryCode: "CHEM", categoryName: "化工" },
+        ]),
+        order: {
+          id: 401,
+          documentNo: "XSTH-001",
+          bizDate: new Date("2026-03-31T16:30:00.000Z"),
+          createdAt: new Date("2026-04-30T16:30:00.000Z"),
+          orderType: SalesStockOrderType.SALES_RETURN,
+          stockScope: {
+            scopeCode: "MAIN",
+            scopeName: "主仓",
+          },
+          workshopId: 192,
+          workshop: {
+            workshopName: "装备车间",
+          },
+        },
+      },
+    ]);
+    prisma.salesStockOrder.findMany = jest.fn().mockResolvedValue([
+      {
+        id: 9001,
+        bizDate: new Date("2026-03-31T15:30:00.000Z"),
+        documentNo: "CK-BASE-001",
+      },
+    ]);
+    const adminLogin = await login(server, "admin", "admin123");
+    const token = adminLogin.body.data.accessToken as string;
+
+    const summaryResponse = await request(server)
+      .get("/api/reporting/monthly-reporting")
+      .set("Authorization", `Bearer ${token}`)
+      .query({
+        yearMonth: "2026-04",
+        viewMode: "MATERIAL_CATEGORY",
+        stockScope: "MAIN",
+      })
+      .expect(200);
+
+    expect(summaryResponse.body.data).toMatchObject({
+      viewMode: "MATERIAL_CATEGORY",
+      summary: {
+        categoryCount: 1,
+        lineCount: 2,
+        acceptanceInboundAmount: "30.00",
+        salesReturnAmount: "8.00",
+        netAmount: "38.00",
+      },
+    });
+    expect(summaryResponse.body.data.categories).toEqual([
+      expect.objectContaining({
+        nodeKey: "11:CHEM:化工",
+        categoryId: 11,
+        categoryCode: "CHEM",
+        categoryName: "化工",
+        acceptanceInboundAmount: "30.00",
+        salesReturnAmount: "8.00",
+      }),
+    ]);
+
+    const detailResponse = await request(server)
+      .get("/api/reporting/monthly-reporting/details")
+      .set("Authorization", `Bearer ${token}`)
+      .query({
+        yearMonth: "2026-04",
+        viewMode: "MATERIAL_CATEGORY",
+        stockScope: "MAIN",
+        topicKey: "SALES_RETURN",
+        keyword: "销售项目 A",
+      })
+      .expect(200);
+
+    expect(detailResponse.body.data.total).toBe(1);
+    expect(detailResponse.body.data.items[0]).toMatchObject({
+      documentNo: "XSTH-001",
+      lineNo: 2,
+      categoryCode: "CHEM",
+      categoryName: "化工",
+      salesProjectCode: "SP-701",
+      salesProjectName: "销售项目 A",
+      abnormalLabels: ["补录影响", "跨月修正"],
+      sourceBizMonth: "2026-03",
+      sourceDocumentNo: "CK-BASE-001",
+    });
+
+    const exportResponse = await request(server)
+      .post("/api/reporting/monthly-reporting/export")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        yearMonth: "2026-04",
+        viewMode: "MATERIAL_CATEGORY",
+        stockScope: "MAIN",
+      })
+      .expect(201);
+
+    expect(exportResponse.headers["content-type"]).toContain(
+      "application/vnd.ms-excel",
+    );
+    expect(exportResponse.text).toContain('<Worksheet ss:Name="分类汇总">');
+    expect(exportResponse.text).toContain('<Worksheet ss:Name="单据行明细">');
+    expect(exportResponse.text).toContain("化工");
+    expect(exportResponse.text).not.toContain("分类路径");
+    expect(exportResponse.text).not.toContain("层级");
+  });
+
+  it("should export monthly reporting data as a downloadable excel file", async () => {
+    appContext = await bootstrapApp();
+    const server = appContext.app.getHttpServer();
+    const adminLogin = await login(server, "admin", "admin123");
+    const token = adminLogin.body.data.accessToken as string;
+
+    const exportResponse = await request(server)
+      .post("/api/reporting/monthly-reporting/export")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ yearMonth: "2026-04" })
+      .expect(201);
+
+    expect(exportResponse.headers["content-type"]).toContain(
+      "application/vnd.ms-excel",
+    );
+    expect(exportResponse.headers["content-disposition"]).toContain(
+      "attachment",
+    );
+    expect(exportResponse.text).toContain("<Workbook");
   });
 
   it("should create, run, pause, resume, and list scheduler jobs", async () => {

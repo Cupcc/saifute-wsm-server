@@ -1,35 +1,34 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="部门名称" prop="workshopName">
+    <el-form
+      ref="queryRef"
+      :model="queryParams"
+      :inline="true"
+      v-show="showSearch"
+      label-width="84px"
+    >
+      <el-form-item label="车间名称" prop="workshopName">
         <el-input
           v-model="queryParams.workshopName"
-          placeholder="请输入部门名称"
+          placeholder="请输入车间名称"
           clearable
           style="width: 240px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="经办人" prop="contactPerson">
+      <el-form-item label="默认经办人" prop="defaultHandlerPersonnelName">
         <el-input
-          v-model="queryParams.contactPerson"
-          placeholder="请输入经办人"
-          clearable
-          style="width: 240px"
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="负责人" prop="chargeBy">
-        <el-input
-          v-model="queryParams.chargeBy"
-          placeholder="请输入负责人"
+          v-model="queryParams.defaultHandlerPersonnelName"
+          placeholder="请输入默认经办人"
           clearable
           style="width: 240px"
           @keyup.enter="handleQuery"
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+        <el-button type="primary" icon="Search" @click="handleQuery">
+          搜索
+        </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
@@ -42,43 +41,102 @@
           icon="Plus"
           @click="handleAdd"
           v-hasPermi="['base:workshop:add']"
-        >新增</el-button>
+        >
+          新增
+        </el-button>
       </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
+      <right-toolbar
+        v-model:showSearch="showSearch"
+        :columns="columns"
+        @queryTable="getList"
+      />
     </el-row>
 
     <adaptive-table border stripe v-loading="loading" :data="workshopList">
       <el-table-column type="index" width="50" align="center" />
-      <el-table-column sortable show-overflow-tooltip label="部门名称" align="center" prop="workshopName" v-if="columns[0].visible" />
-      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="contactPerson" v-if="columns[1].visible" />
-      <el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[2].visible" />
+      <el-table-column
+        v-if="columns[0].visible"
+        sortable
+        show-overflow-tooltip
+        label="车间名称"
+        align="center"
+        prop="workshopName"
+      />
+      <el-table-column
+        v-if="columns[1].visible"
+        sortable
+        show-overflow-tooltip
+        label="默认经办人"
+        align="center"
+        prop="defaultHandlerPersonnelName"
+      >
+        <template #default="scope">
+          {{ scope.row.defaultHandlerPersonnelName || "-" }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['base:workshop:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['base:workshop:remove']">作废</el-button>
+          <el-button
+            link
+            type="primary"
+            icon="Edit"
+            @click="handleUpdate(scope.row)"
+            v-hasPermi="['base:workshop:edit']"
+          >
+            修改
+          </el-button>
+          <el-button
+            link
+            type="primary"
+            icon="Delete"
+            @click="handleDelete(scope.row)"
+            v-hasPermi="['base:workshop:remove']"
+          >
+            停用
+          </el-button>
         </template>
       </el-table-column>
     </adaptive-table>
-    
+
     <pagination
-      v-show="total>0"
-      :total="total"
+      v-show="total > 0"
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
+      :total="total"
       @pagination="getList"
     />
 
-    <!-- 添加或修改部门对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body draggable v-loading="dialogLoading">
-      <el-form ref="workshopRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="部门名称" prop="workshopName">
-          <el-input v-model="form.workshopName" placeholder="请输入部门名称" />
+    <el-dialog
+      v-model="open"
+      :title="title"
+      width="420px"
+      append-to-body
+      draggable
+      v-loading="dialogLoading"
+    >
+      <el-form ref="workshopRef" :model="form" :rules="rules" label-width="92px">
+        <el-form-item label="车间名称" prop="workshopName">
+          <el-input v-model="form.workshopName" placeholder="请输入车间名称" />
         </el-form-item>
-        <el-form-item label="经办人" prop="contactPerson">
-          <el-input v-model="form.contactPerson" placeholder="请输入经办人" />
-        </el-form-item>
-        <el-form-item label="负责人" prop="chargeBy">
-          <el-input v-model="form.chargeBy" placeholder="请输入负责人" />
+        <el-form-item label="默认经办人" prop="defaultHandlerPersonnelId">
+          <el-select
+            v-model="form.defaultHandlerPersonnelId"
+            filterable
+            remote
+            clearable
+            reserve-keyword
+            placeholder="请输入经办人名称搜索"
+            :remote-method="searchPersonnel"
+            :loading="personnelLoading"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in personnelOptions"
+              :key="item.personnelId"
+              :label="item.name"
+              :value="item.personnelId"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -88,32 +146,6 @@
         </div>
       </template>
     </el-dialog>
-	
-	<!-- 作废部门对话框 -->
-	<el-dialog title="作废" v-model="cancelOpen" width="500px" append-to-body draggable>
-		<el-form ref="cancelRef" :model="cancelForm" :rules="cancelRules" label-width="80px">
-			<el-form-item label="作废理由" prop="voidDescription">
-				<el-input
-					v-model="cancelForm.voidDescription"
-					type="textarea"
-					placeholder="请输入作废理由"
-					maxlength="200"
-					show-word-limit
-				/>
-			</el-form-item>
-		</el-form>
-		<template #footer>
-			<div class="dialog-footer">
-				<el-button
-					type="primary"
-					@click="confirmCancel"
-					:disabled="!cancelForm.voidDescription || cancelForm.voidDescription.trim() === ''">
-					确 定
-				</el-button>
-				<el-button @click="cancelOpen = false">取 消</el-button>
-			</div>
-		</template>
-	</el-dialog>
   </div>
 </template>
 
@@ -125,189 +157,163 @@ import {
   listWorkshop,
   updateWorkshop,
 } from "@/api/base/workshop";
+import { listPersonnel } from "@/api/base/personnel";
 
 const { proxy } = getCurrentInstance();
 
+const workshopRef = ref();
 const workshopList = ref([]);
 const open = ref(false);
-const cancelOpen = ref(false); // 添加作废对话框控制变量
 const loading = ref(true);
 const dialogLoading = ref(false);
 const showSearch = ref(true);
-const ids = ref([]);
-const single = ref(true);
-const multiple = ref(true);
 const total = ref(0);
 const title = ref("");
+const personnelLoading = ref(false);
+const personnelOptions = ref([]);
 
 const data = reactive({
   form: {},
-  cancelForm: {}, // 添加作废表单数据
   queryParams: {
     pageNum: 1,
     pageSize: 30,
     workshopName: null,
-    contactPerson: null,
-    chargeBy: null,
+    defaultHandlerPersonnelName: null,
   },
   rules: {
     workshopName: [
-      { required: true, message: "部门名称不能为空", trigger: "blur" },
-    ],
-    contactPerson: [
-      { required: true, message: "经办人不能为空", trigger: "blur" },
+      { required: true, message: "车间名称不能为空", trigger: "blur" },
     ],
   },
 });
 
-// 添加作废表单规则
-const cancelRules = ref({
-  voidDescription: [
-    { required: true, message: "作废理由不能为空", trigger: "blur" },
-  ],
-});
-
 const { queryParams, form, rules } = toRefs(data);
-const { cancelForm } = toRefs(data); // 添加对cancelForm的引用
 
-// 添加columns数组定义
 const columns = ref([
-  { key: 0, label: `部门名称`, visible: true },
-  { key: 1, label: `经办人`, visible: true },
-  { key: 2, label: `负责人`, visible: true },
+  { key: 0, label: "车间名称", visible: true },
+  { key: 1, label: "默认经办人", visible: true },
 ]);
 
-/** 查询部门列表 */
 function getList() {
   loading.value = true;
-  listWorkshop(queryParams.value).then((response) => {
-    workshopList.value = response.rows;
-    total.value = response.total;
-    loading.value = false;
-  });
+  listWorkshop(queryParams.value)
+    .then((response) => {
+      workshopList.value = response.rows;
+      total.value = response.total;
+    })
+    .finally(() => {
+      loading.value = false;
+    });
 }
 
-// 取消按钮
 function cancel() {
   open.value = false;
   reset();
 }
 
-// 表单重置
 function reset() {
   form.value = {
     workshopId: null,
     workshopName: null,
-    contactPerson: null,
-    chargeBy: null,
-    delFlag: null,
-    voidDescription: null,
-    createBy: null,
-    createTime: null,
-    updateBy: null,
-    updateTime: null,
+    defaultHandlerPersonnelId: null,
+    defaultHandlerPersonnelName: "",
   };
+  personnelOptions.value = [];
   proxy.resetForm("workshopRef");
 }
 
-/** 搜索按钮操作 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
   getList();
 }
 
-/** 重置按钮操作 */
 function resetQuery() {
   proxy.resetForm("queryRef");
   handleQuery();
 }
 
-// 多选框选中数据
-function handleSelectionChange(selection) {
-  ids.value = selection.map((item) => item.workshopId);
-  single.value = selection.length !== 1;
-  multiple.value = !selection.length;
-}
-
-/** 新增按钮操作 */
 function handleAdd() {
   reset();
+  title.value = "添加车间";
   open.value = true;
-  title.value = "添加部门";
 }
 
-/** 修改按钮操作 */
 function handleUpdate(row) {
   reset();
-  const _workshopId = row.workshopId || ids.value;
-  title.value = "修改部门";
+  title.value = "修改车间";
   open.value = true;
   dialogLoading.value = true;
-  getWorkshop(_workshopId)
+  getWorkshop(row.workshopId)
     .then((response) => {
       form.value = response.data;
+      ensurePersonnelOption(response.data);
     })
     .finally(() => {
       dialogLoading.value = false;
     });
 }
 
-/** 提交按钮 */
-function submitForm() {
-  proxy.$refs["workshopRef"].validate((valid) => {
-    if (valid) {
-      if (form.value.workshopId != null) {
-        updateWorkshop(form.value).then((response) => {
-          proxy.$modal.msgSuccess("修改成功");
-          open.value = false;
-          getList();
-        });
-      } else {
-        addWorkshop(form.value).then((response) => {
-          proxy.$modal.msgSuccess("新增成功");
-          open.value = false;
-          getList();
-        });
-      }
-    }
-  });
+function ensurePersonnelOption(item) {
+  if (!item?.defaultHandlerPersonnelId || !item?.defaultHandlerPersonnelName) {
+    return;
+  }
+
+  const exists = personnelOptions.value.some(
+    (option) => option.personnelId === item.defaultHandlerPersonnelId,
+  );
+  if (exists) {
+    return;
+  }
+
+  personnelOptions.value = [
+    ...personnelOptions.value,
+    {
+      personnelId: item.defaultHandlerPersonnelId,
+      name: item.defaultHandlerPersonnelName,
+    },
+  ];
 }
 
-/** 作废按钮操作 */
-function handleDelete(row) {
-  // 重置作废表单
-  cancelForm.value = {
-    voidDescription: "",
-    workshopId: null,
-  };
-  // 打开作废对话框
-  cancelOpen.value = true;
-  // 保存当前要作废的部门ID
-  const _workshopId = row.workshopId || ids.value;
-  cancelForm.value.workshopId = _workshopId;
+function searchPersonnel(keyword) {
+  personnelLoading.value = true;
+  listPersonnel({
+    name: keyword,
+    pageNum: 1,
+    pageSize: 100,
+  })
+    .then((response) => {
+      personnelOptions.value = response.rows || [];
+    })
+    .finally(() => {
+      personnelLoading.value = false;
+    });
 }
 
-/** 确认作废操作 */
-function confirmCancel() {
-  proxy.$refs["cancelRef"].validate((valid) => {
-    if (valid) {
-      // 构造作废数据
-      const updateData = {
-        workshopId: cancelForm.value.workshopId,
-        voidDescription: cancelForm.value.voidDescription,
-      };
-      // 调用作废接口
-      delWorkshop(updateData)
-        .then(() => {
-          getList();
-          cancelOpen.value = false;
-          proxy.$modal.msgSuccess("作废成功");
-        })
-        .catch(() => {
-          cancelOpen.value = false;
-        });
-    }
-  });
+async function submitForm() {
+  const valid = await workshopRef.value?.validate().catch(() => false);
+  if (!valid) {
+    return;
+  }
+
+  const request = form.value.workshopId
+    ? updateWorkshop(form.value)
+    : addWorkshop(form.value);
+
+  await request;
+  proxy.$modal.msgSuccess(form.value.workshopId ? "修改成功" : "新增成功");
+  open.value = false;
+  getList();
+}
+
+async function handleDelete(row) {
+  try {
+    await proxy.$modal.confirm(`确认停用车间「${row.workshopName}」吗？`);
+    await delWorkshop(row.workshopId);
+    proxy.$modal.msgSuccess("停用成功");
+    getList();
+  } catch {
+    // 用户取消确认时保持页面静默。
+  }
 }
 
 getList();

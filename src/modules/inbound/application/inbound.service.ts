@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -12,8 +11,14 @@ import {
   InventoryOperationType,
   Prisma,
   StockInOrderType,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
+import {
+  buildCompactDocumentNo,
+  createWithGeneratedDocumentNo,
+} from "../../../shared/common/document-number.util";
+import { BusinessDocumentType } from "../../../shared/domain/business-document-type";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
+import { ApprovalService } from "../../approval/application/approval.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import {
@@ -21,15 +26,14 @@ import {
   reverseAcceptanceStatusesForOrder,
 } from "../../rd-subwarehouse/application/rd-material-status.helper";
 import { RdProcurementRequestService } from "../../rd-subwarehouse/application/rd-procurement-request.service";
-import { WorkflowService } from "../../workflow/application/workflow.service";
 import type { CreateInboundOrderDto } from "../dto/create-inbound-order.dto";
 import type { QueryInboundOrderDto } from "../dto/query-inbound-order.dto";
 import type { UpdateInboundOrderDto } from "../dto/update-inbound-order.dto";
 import { InboundRepository } from "../infrastructure/inbound.repository";
 
-const DOCUMENT_TYPE = "StockInOrder";
+const DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
 const BUSINESS_MODULE = "inbound";
-const MAIN_WAREHOUSE_CODE = "MAIN";
+const DEFAULT_MATERIAL_CATEGORY_CODE = "UNCATEGORIZED";
 
 function toOperationType(orderType: StockInOrderType): InventoryOperationType {
   switch (orderType) {
@@ -42,6 +46,17 @@ function toOperationType(orderType: StockInOrderType): InventoryOperationType {
   }
 }
 
+function toCreateDocumentPrefix(orderType: StockInOrderType) {
+  switch (orderType) {
+    case StockInOrderType.ACCEPTANCE:
+      return "YS";
+    case StockInOrderType.PRODUCTION_RECEIPT:
+      return "RK";
+    default:
+      throw new BadRequestException(`Unsupported orderType: ${orderType}`);
+  }
+}
+
 @Injectable()
 export class InboundService {
   constructor(
@@ -49,7 +64,7 @@ export class InboundService {
     private readonly repository: InboundRepository,
     private readonly masterDataService: MasterDataService,
     private readonly inventoryService: InventoryService,
-    private readonly workflowService: WorkflowService,
+    private readonly approvalService: ApprovalService,
     private readonly rdProcurementRequestService: RdProcurementRequestService,
   ) {}
 
@@ -90,37 +105,27 @@ export class InboundService {
   }
 
   async createOrder(dto: CreateInboundOrderDto, createdBy?: string) {
-    const existing = await this.repository.findOrderByDocumentNo(
-      dto.documentNo,
-    );
-    if (existing) {
-      throw new ConflictException(`单据编号已存在: ${dto.documentNo}`);
-    }
-
     const bizDate = new Date(dto.bizDate);
-    const workshop = await this.masterDataService.getWorkshopById(
-      dto.workshopId,
-    );
-    this.assertMainWarehouse(workshop);
-    const rdProcurementLink = await this.resolveRdProcurementLink(
-      dto.orderType,
-      workshop,
-      dto.rdProcurementRequestId,
-      dto.supplierId,
-    );
-    await this.validateMasterData(dto, rdProcurementLink.supplierId);
+    const workshop = dto.workshopId
+      ? await this.masterDataService.getWorkshopById(dto.workshopId)
+      : null;
+    await this.validateMasterData(dto, dto.supplierId);
     const { supplierCodeSnapshot, supplierNameSnapshot } =
-      await this.resolveSupplierSnapshot(rdProcurementLink.supplierId);
+      await this.resolveSupplierSnapshot(dto.supplierId);
     const { handlerNameSnapshot } = await this.resolveHandlerSnapshot(
-      dto.handlerPersonnelId,
+      dto.handlerPersonnelId ?? undefined,
+      dto.handlerName,
     );
     const stockScopeRecord =
       await this.masterDataService.getStockScopeByCode("MAIN");
-    const seenRdProcurementLineIds = new Set<number>();
     const linesWithSnapshots: Array<{
       lineNo: number;
       materialId: number;
       rdProcurementRequestLineId: number | null;
+      materialCategoryIdSnapshot: number;
+      materialCategoryCodeSnapshot: string;
+      materialCategoryNameSnapshot: string;
+      materialCategoryPathSnapshot: Prisma.JsonArray;
       materialCodeSnapshot: string;
       materialNameSnapshot: string;
       materialSpecSnapshot: string;
@@ -132,10 +137,7 @@ export class InboundService {
     }> = [];
     for (let index = 0; index < dto.lines.length; index++) {
       linesWithSnapshots.push(
-        await this.buildLineWriteData(dto.lines[index], index + 1, {
-          rdProcurementLineMap: rdProcurementLink.lineMap,
-          seenRdProcurementLineIds,
-        }),
+        await this.buildLineWriteData(dto.lines[index], index + 1),
       );
     }
 
@@ -148,90 +150,91 @@ export class InboundService {
       new Prisma.Decimal(0),
     );
 
-    return this.prisma.runInTransaction(async (tx) => {
-      await this.assertRdProcurementAcceptedQtyWithinLimit(
-        rdProcurementLink.lineMap,
-        linesWithSnapshots,
-        undefined,
-        tx,
-      );
+    const prefix = toCreateDocumentPrefix(dto.orderType);
 
-      const order = await this.repository.createOrder(
-        {
-          documentNo: dto.documentNo,
-          orderType: dto.orderType,
-          bizDate,
-          supplierId: rdProcurementLink.supplierId,
-          handlerPersonnelId: dto.handlerPersonnelId,
-          stockScopeId: stockScopeRecord.id,
-          workshopId: dto.workshopId,
-          rdProcurementRequestId: rdProcurementLink.request?.id,
-          supplierCodeSnapshot,
-          supplierNameSnapshot,
-          handlerNameSnapshot,
-          workshopNameSnapshot: workshop.workshopName,
-          ...this.toRdProcurementOrderSnapshots(rdProcurementLink.request),
-          totalQty,
-          totalAmount,
-          remark: dto.remark,
-          auditStatusSnapshot: AuditStatusSnapshot.PENDING,
-          createdBy,
-          updatedBy: createdBy,
-        },
-        linesWithSnapshots.map((l) => ({
-          ...l,
-          createdBy,
-          updatedBy: createdBy,
-        })),
-        tx,
-      );
-
-      const operationType = toOperationType(dto.orderType);
-      const logIdByLineId = new Map<number, number>();
-      for (const line of order.lines) {
-        const log = await this.inventoryService.increaseStock(
+    return createWithGeneratedDocumentNo((attempt) => {
+      const documentNo = buildCompactDocumentNo(prefix, bizDate, attempt);
+      return this.prisma.runInTransaction(async (tx) => {
+        const order = await this.repository.createOrder(
           {
-            materialId: line.materialId,
-            stockScope: "MAIN",
-            quantity: line.quantity,
-            operationType,
-            businessModule: BUSINESS_MODULE,
-            businessDocumentType: DOCUMENT_TYPE,
-            businessDocumentId: order.id,
-            businessDocumentNumber: order.documentNo,
-            businessDocumentLineId: line.id,
+            documentNo,
+            orderType: dto.orderType,
+            bizDate,
+            supplierId: dto.supplierId,
+            handlerPersonnelId: dto.handlerPersonnelId ?? null,
+            stockScopeId: stockScopeRecord.id,
+            workshopId: workshop?.id ?? null,
+            rdProcurementRequestId: null,
+            supplierCodeSnapshot,
+            supplierNameSnapshot,
+            handlerNameSnapshot,
+            workshopNameSnapshot: workshop?.workshopName ?? null,
+            ...this.toRdProcurementOrderSnapshots(null),
+            totalQty,
+            totalAmount,
+            remark: dto.remark,
+            auditStatusSnapshot: AuditStatusSnapshot.PENDING,
+            createdBy,
+            updatedBy: createdBy,
+          },
+          linesWithSnapshots.map((l) => ({
+            ...l,
+            createdBy,
+            updatedBy: createdBy,
+          })),
+          tx,
+        );
+
+        const operationType = toOperationType(dto.orderType);
+        const logIdByLineId = new Map<number, number>();
+        for (const line of order.lines) {
+          const log = await this.inventoryService.increaseStock(
+            {
+              materialId: line.materialId,
+              stockScope: "MAIN",
+              bizDate,
+              quantity: line.quantity,
+              operationType,
+              businessModule: BUSINESS_MODULE,
+              businessDocumentType: DOCUMENT_TYPE,
+              businessDocumentId: order.id,
+              businessDocumentNumber: order.documentNo,
+              businessDocumentLineId: line.id,
+              operatorId: createdBy,
+              idempotencyKey: `StockInOrder:${order.id}:line:${line.id}`,
+              unitCost: new Prisma.Decimal(line.unitPrice),
+              costAmount: new Prisma.Decimal(line.amount),
+            },
+            tx,
+          );
+          logIdByLineId.set(line.id, log.id);
+        }
+
+        await applyAcceptanceStatusesForOrder(
+          {
+            orderId: order.id,
+            documentNo: order.documentNo,
+            lines: order.lines,
             operatorId: createdBy,
-            idempotencyKey: `StockInOrder:${order.id}:line:${line.id}`,
+            logIdByLineId,
           },
           tx,
         );
-        logIdByLineId.set(line.id, log.id);
-      }
 
-      await applyAcceptanceStatusesForOrder(
-        {
-          orderId: order.id,
-          documentNo: order.documentNo,
-          lines: order.lines,
-          operatorId: createdBy,
-          logIdByLineId,
-        },
-        tx,
-      );
+        await this.approvalService.createOrRefreshApprovalDocument(
+          {
+            documentFamily: DocumentFamily.STOCK_IN,
+            documentType: DOCUMENT_TYPE,
+            documentId: order.id,
+            documentNumber: order.documentNo,
+            submittedBy: createdBy,
+            createdBy,
+          },
+          tx,
+        );
 
-      await this.workflowService.createOrRefreshAuditDocument(
-        {
-          documentFamily: DocumentFamily.STOCK_IN,
-          documentType: DOCUMENT_TYPE,
-          documentId: order.id,
-          documentNumber: order.documentNo,
-          submittedBy: createdBy,
-          createdBy,
-        },
-        tx,
-      );
-
-      return order;
+        return order;
+      });
     });
   }
 
@@ -261,23 +264,30 @@ export class InboundService {
     const bizDate = dto.bizDate ? new Date(dto.bizDate) : existing.bizDate;
     const nextRevision = existing.revisionNo + 1;
     const linkedRdProcurementRequestId =
-      dto.rdProcurementRequestId ??
-      existing.rdProcurementRequestId ??
-      undefined;
-    const workshop = await this.masterDataService.getWorkshopById(
-      dto.workshopId ?? existing.workshopId,
-    );
-    this.assertMainWarehouse(workshop);
-    const rdProcurementLink = await this.resolveRdProcurementLink(
-      existing.orderType,
-      workshop,
-      linkedRdProcurementRequestId,
-      dto.supplierId ?? existing.supplierId ?? undefined,
-    );
+      existing.rdProcurementRequestId ?? undefined;
+    const hasWorkshopOverride = Object.hasOwn(dto, "workshopId");
+    const finalWorkshopId = hasWorkshopOverride
+      ? (dto.workshopId ?? null)
+      : existing.workshopId;
+    const workshop = finalWorkshopId
+      ? await this.masterDataService.getWorkshopById(finalWorkshopId)
+      : null;
+    const rdProcurementLink = linkedRdProcurementRequestId
+      ? await this.resolveRdProcurementLink(
+          existing.orderType,
+          linkedRdProcurementRequestId,
+          dto.supplierId ?? existing.supplierId ?? undefined,
+        )
+      : {
+          request: null,
+          supplierId: dto.supplierId ?? existing.supplierId ?? undefined,
+          lineMap: null,
+        };
     await this.validateMasterDataForUpdate(
       dto,
       existing.orderType,
       rdProcurementLink.supplierId,
+      finalWorkshopId,
     );
     const finalSupplierId = rdProcurementLink.supplierId;
     const supplierSnapshot = finalSupplierId
@@ -286,8 +296,14 @@ export class InboundService {
           supplierCodeSnapshot: existing.supplierCodeSnapshot,
           supplierNameSnapshot: existing.supplierNameSnapshot,
         };
-    const handlerSnapshot = dto.handlerPersonnelId
-      ? await this.resolveHandlerSnapshot(dto.handlerPersonnelId)
+    const hasHandlerOverride =
+      Object.hasOwn(dto, "handlerPersonnelId") ||
+      Object.hasOwn(dto, "handlerName");
+    const handlerSnapshot = hasHandlerOverride
+      ? await this.resolveHandlerSnapshot(
+          dto.handlerPersonnelId ?? undefined,
+          dto.handlerName,
+        )
       : { handlerNameSnapshot: existing.handlerNameSnapshot };
     const stockScopeRecord =
       await this.masterDataService.getStockScopeByCode("MAIN");
@@ -331,7 +347,7 @@ export class InboundService {
           .map((log) => [log.businessDocumentLineId as number, log.id]),
       );
       const seenLineIds = new Set<number>();
-      const workshopId = dto.workshopId ?? currentOrder.workshopId;
+      const workshopId = finalWorkshopId;
       const seenRdProcurementLineIds = new Set<number>();
 
       for (const line of dto.lines) {
@@ -359,6 +375,17 @@ export class InboundService {
           );
         }
 
+        const hasAllocations =
+          await this.inventoryService.hasUnreleasedAllocations(
+            currentLog.id,
+            tx,
+          );
+        if (hasAllocations) {
+          throw new BadRequestException(
+            `入库明细 ${currentLine.id} 已有下游消耗分配，不能删除或改量，请先撤销对应的出库/领料记录`,
+          );
+        }
+
         await this.inventoryService.reverseStock(
           {
             logIdToReverse: currentLog.id,
@@ -383,9 +410,7 @@ export class InboundService {
             {
               ...incomingLine,
               rdProcurementRequestLineId:
-                incomingLine.rdProcurementRequestLineId ??
-                currentLine.rdProcurementRequestLineId ??
-                undefined,
+                currentLine.rdProcurementRequestLineId ?? undefined,
             },
             index + 1,
             {
@@ -406,6 +431,17 @@ export class InboundService {
               );
             }
 
+            const hasAllocations =
+              await this.inventoryService.hasUnreleasedAllocations(
+                currentLog.id,
+                tx,
+              );
+            if (hasAllocations) {
+              throw new BadRequestException(
+                `入库明细 ${currentLine.id} 已有下游消耗分配，不能直接改量，请先撤销对应的出库/领料记录`,
+              );
+            }
+
             await this.inventoryService.reverseStock(
               {
                 logIdToReverse: currentLog.id,
@@ -421,6 +457,13 @@ export class InboundService {
             {
               lineNo: lineData.lineNo,
               materialId: lineData.materialId,
+              materialCategoryIdSnapshot: lineData.materialCategoryIdSnapshot,
+              materialCategoryCodeSnapshot:
+                lineData.materialCategoryCodeSnapshot,
+              materialCategoryNameSnapshot:
+                lineData.materialCategoryNameSnapshot,
+              materialCategoryPathSnapshot:
+                lineData.materialCategoryPathSnapshot,
               materialCodeSnapshot: lineData.materialCodeSnapshot,
               materialNameSnapshot: lineData.materialNameSnapshot,
               materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -436,10 +479,14 @@ export class InboundService {
           );
 
           if (inventoryNeedsRepost) {
+            const updatedLineUnitPrice = new Prisma.Decimal(
+              updatedLine.unitPrice,
+            );
             const log = await this.inventoryService.increaseStock(
               {
                 materialId: updatedLine.materialId,
                 stockScope: "MAIN",
+                bizDate,
                 quantity: updatedLine.quantity,
                 operationType,
                 businessModule: BUSINESS_MODULE,
@@ -449,6 +496,10 @@ export class InboundService {
                 businessDocumentLineId: updatedLine.id,
                 operatorId: updatedBy,
                 idempotencyKey: `StockInOrder:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
+                unitCost: updatedLineUnitPrice,
+                costAmount: updatedLineUnitPrice.mul(
+                  new Prisma.Decimal(updatedLine.quantity),
+                ),
               },
               tx,
             );
@@ -474,6 +525,10 @@ export class InboundService {
             lineNo: lineData.lineNo,
             materialId: lineData.materialId,
             rdProcurementRequestLineId: lineData.rdProcurementRequestLineId,
+            materialCategoryIdSnapshot: lineData.materialCategoryIdSnapshot,
+            materialCategoryCodeSnapshot: lineData.materialCategoryCodeSnapshot,
+            materialCategoryNameSnapshot: lineData.materialCategoryNameSnapshot,
+            materialCategoryPathSnapshot: lineData.materialCategoryPathSnapshot,
             materialCodeSnapshot: lineData.materialCodeSnapshot,
             materialNameSnapshot: lineData.materialNameSnapshot,
             materialSpecSnapshot: lineData.materialSpecSnapshot,
@@ -488,10 +543,12 @@ export class InboundService {
           tx,
         );
 
+        const createdLineUnitPrice = new Prisma.Decimal(createdLine.unitPrice);
         const log = await this.inventoryService.increaseStock(
           {
             materialId: createdLine.materialId,
             stockScope: "MAIN",
+            bizDate,
             quantity: createdLine.quantity,
             operationType,
             businessModule: BUSINESS_MODULE,
@@ -501,6 +558,10 @@ export class InboundService {
             businessDocumentLineId: createdLine.id,
             operatorId: updatedBy,
             idempotencyKey: `StockInOrder:${id}:rev:${nextRevision}:line:${createdLine.id}`,
+            unitCost: createdLineUnitPrice,
+            costAmount: createdLineUnitPrice.mul(
+              new Prisma.Decimal(createdLine.quantity),
+            ),
           },
           tx,
         );
@@ -530,16 +591,31 @@ export class InboundService {
         {
           bizDate,
           supplierId: finalSupplierId,
-          handlerPersonnelId:
-            dto.handlerPersonnelId ?? existing.handlerPersonnelId,
+          handlerPersonnelId: hasHandlerOverride
+            ? (dto.handlerPersonnelId ?? null)
+            : existing.handlerPersonnelId,
           stockScopeId: stockScopeRecord.id,
           workshopId,
-          rdProcurementRequestId: rdProcurementLink.request?.id ?? null,
+          rdProcurementRequestId:
+            rdProcurementLink.request?.id ?? existing.rdProcurementRequestId,
           supplierCodeSnapshot: supplierSnapshot.supplierCodeSnapshot,
           supplierNameSnapshot: supplierSnapshot.supplierNameSnapshot,
           handlerNameSnapshot: handlerSnapshot.handlerNameSnapshot,
-          workshopNameSnapshot: workshop.workshopName,
-          ...this.toRdProcurementOrderSnapshots(rdProcurementLink.request),
+          workshopNameSnapshot: workshop?.workshopName ?? null,
+          ...this.toRdProcurementOrderSnapshots(
+            rdProcurementLink.request
+              ? rdProcurementLink.request
+              : existing.rdProcurementRequestId
+                ? {
+                    id: existing.rdProcurementRequestId,
+                    documentNo: existing.rdProcurementRequestNoSnapshot ?? "",
+                    projectCode:
+                      existing.rdProcurementProjectCodeSnapshot ?? "",
+                    projectName:
+                      existing.rdProcurementProjectNameSnapshot ?? "",
+                  }
+                : null,
+          ),
           totalQty,
           totalAmount,
           remark: dto.remark ?? existing.remark,
@@ -561,7 +637,7 @@ export class InboundService {
         tx,
       );
 
-      await this.workflowService.createOrRefreshAuditDocument(
+      await this.approvalService.createOrRefreshApprovalDocument(
         {
           documentFamily: DocumentFamily.STOCK_IN,
           documentType: DOCUMENT_TYPE,
@@ -619,6 +695,13 @@ export class InboundService {
       }
 
       for (let i = 0; i < logs.length; i++) {
+        const hasAllocations =
+          await this.inventoryService.hasUnreleasedAllocations(logs[i].id, tx);
+        if (hasAllocations) {
+          throw new BadRequestException(
+            `入库流水 ${logs[i].id} 已有下游消耗分配，不能作废，请先撤销对应的出库/领料记录`,
+          );
+        }
         await this.inventoryService.reverseStock(
           {
             logIdToReverse: logs[i].id,
@@ -643,7 +726,7 @@ export class InboundService {
         tx,
       );
 
-      await this.workflowService.markAuditNotRequired(
+      await this.approvalService.markApprovalNotRequired(
         DOCUMENT_TYPE,
         id,
         voidedBy,
@@ -659,7 +742,7 @@ export class InboundService {
     supplierId?: number,
   ) {
     this.ensureSupplierRequirement(dto.orderType, supplierId);
-    await this.masterDataService.getWorkshopById(dto.workshopId);
+    this.ensureWorkshopRequirement(dto.orderType, dto.workshopId);
     if (supplierId) {
       await this.masterDataService.getSupplierById(supplierId);
     }
@@ -675,11 +758,10 @@ export class InboundService {
     dto: UpdateInboundOrderDto,
     orderType: StockInOrderType,
     supplierId?: number,
+    workshopId?: number | null,
   ) {
     this.ensureSupplierRequirement(orderType, supplierId);
-    if (dto.workshopId) {
-      await this.masterDataService.getWorkshopById(dto.workshopId);
-    }
+    this.ensureWorkshopRequirement(orderType, workshopId);
     if (supplierId) {
       await this.masterDataService.getSupplierById(supplierId);
     }
@@ -702,9 +784,12 @@ export class InboundService {
     };
   }
 
-  private async resolveHandlerSnapshot(handlerPersonnelId?: number) {
+  private async resolveHandlerSnapshot(
+    handlerPersonnelId?: number,
+    handlerName?: string,
+  ) {
     if (!handlerPersonnelId) {
-      return { handlerNameSnapshot: null };
+      return { handlerNameSnapshot: handlerName?.trim() || null };
     }
     const p = await this.masterDataService.getPersonnelById(handlerPersonnelId);
     return { handlerNameSnapshot: p.personnelName };
@@ -719,12 +804,15 @@ export class InboundService {
     }
   }
 
-  private assertMainWarehouse(workshop: {
-    workshopCode: string;
-    workshopName: string;
-  }) {
-    if (workshop.workshopCode !== MAIN_WAREHOUSE_CODE) {
-      throw new BadRequestException("入库单只能归属主仓");
+  private ensureWorkshopRequirement(
+    orderType: StockInOrderType,
+    workshopId?: number | null,
+  ) {
+    if (
+      orderType === StockInOrderType.PRODUCTION_RECEIPT &&
+      (!workshopId || workshopId < 1)
+    ) {
+      throw new BadRequestException("生产入库单必须选择部门");
     }
   }
 
@@ -752,6 +840,8 @@ export class InboundService {
     const material = await this.masterDataService.getMaterialById(
       line.materialId,
     );
+    const materialCategorySnapshot =
+      await this.buildMaterialCategorySnapshot(material);
     const quantity = new Prisma.Decimal(line.quantity);
     const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
     const amount = quantity.mul(unitPrice);
@@ -767,6 +857,10 @@ export class InboundService {
       lineNo,
       materialId: material.id,
       rdProcurementRequestLineId: requestLine?.id ?? null,
+      materialCategoryIdSnapshot: materialCategorySnapshot.id,
+      materialCategoryCodeSnapshot: materialCategorySnapshot.code,
+      materialCategoryNameSnapshot: materialCategorySnapshot.name,
+      materialCategoryPathSnapshot: materialCategorySnapshot.path,
       materialCodeSnapshot: material.materialCode,
       materialNameSnapshot: material.materialName,
       materialSpecSnapshot: material.specModel ?? "",
@@ -780,7 +874,6 @@ export class InboundService {
 
   private async resolveRdProcurementLink(
     orderType: StockInOrderType,
-    workshop: { id: number; workshopCode: string; workshopName: string },
     rdProcurementRequestId?: number,
     supplierId?: number,
   ) {
@@ -794,9 +887,6 @@ export class InboundService {
 
     if (orderType !== StockInOrderType.ACCEPTANCE) {
       throw new BadRequestException("只有验收单可以关联 RD 采购需求");
-    }
-    if (workshop.workshopCode !== MAIN_WAREHOUSE_CODE) {
-      throw new BadRequestException("关联 RD 采购需求的验收单必须先入主仓");
     }
 
     const request = await this.rdProcurementRequestService.getRequestById(
@@ -849,9 +939,7 @@ export class InboundService {
     }
 
     if (!rdProcurementRequestLineId) {
-      throw new BadRequestException(
-        "关联 RD 采购需求时，每条明细都必须绑定采购需求行",
-      );
+      return null;
     }
     if (seenRdProcurementLineIds?.has(rdProcurementRequestLineId)) {
       throw new BadRequestException(
@@ -962,5 +1050,57 @@ export class InboundService {
       rdProcurementProjectCodeSnapshot: request.projectCode,
       rdProcurementProjectNameSnapshot: request.projectName,
     };
+  }
+
+  private async buildMaterialCategorySnapshot(material: {
+    category: {
+      id: number;
+      categoryCode: string;
+      categoryName: string;
+    } | null;
+  }) {
+    const effectiveCategory = await this.resolveEffectiveMaterialCategory(
+      material.category,
+    );
+
+    return {
+      id: effectiveCategory.id,
+      code: effectiveCategory.categoryCode,
+      name: effectiveCategory.categoryName,
+      path: [
+        {
+          id: effectiveCategory.id,
+          categoryCode: effectiveCategory.categoryCode,
+          categoryName: effectiveCategory.categoryName,
+        } satisfies Prisma.JsonObject,
+      ] as Prisma.JsonArray,
+    };
+  }
+
+  private async resolveEffectiveMaterialCategory(
+    category: {
+      id: number;
+      categoryCode: string;
+      categoryName: string;
+    } | null,
+  ) {
+    if (category) {
+      return category;
+    }
+
+    const defaultCategory = await this.prisma.materialCategory.findUnique({
+      where: { categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE },
+      select: {
+        id: true,
+        categoryCode: true,
+        categoryName: true,
+      },
+    });
+    if (!defaultCategory) {
+      throw new BadRequestException(
+        "物料缺少有效分类，且默认未分类不存在，无法写入分类快照",
+      );
+    }
+    return defaultCategory;
   }
 }

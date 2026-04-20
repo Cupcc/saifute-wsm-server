@@ -1,0 +1,76 @@
+{
+  "module": "rd-subwarehouse",
+  "task": "task-20260414-1418-rd-sub-project-attribution-and-reporting-alignment.md",
+  "updatedAt": "2026-04-14",
+  "status": "planned",
+  "env": {
+    "defaultEnvFile": ".env.dev",
+    "localResetReseedAllowed": true,
+    "note": "If old RD_SUB fixtures conflict with project attribution, clear and reinject only in local/test, then record the exact reset scope in the acceptance run."
+  },
+  "cases": [
+    {
+      "id": "F6-BROWSER-1",
+      "capability": "F6",
+      "title": "RD handoff persistence requires rd-project attribution and is visible in inbound results",
+      "type": "api+browser",
+      "status": "planned",
+      "preconditions": [
+        "Login with an account that can create RD handoff documents through API and view inbound results in web",
+        "At least one active RD project exists",
+        "MAIN has a material available for handoff into RD_SUB"
+      ],
+      "steps": [
+        "Call the RD handoff create API with a procurement-request-backed line whose source request lacks a resolvable RD project, and verify the request is rejected",
+        "Create a valid handoff through API where every line can resolve to an effective RD project",
+        "Open the inbound results page and locate the created handoff",
+        "Open the detail drawer and review every effective line"
+      ],
+      "expected": [
+        "The write path does not allow a handoff line to persist without project attribution",
+        "The saved handoff result shows project attribution on every effective line"
+      ]
+    },
+    {
+      "id": "F6-BROWSER-2",
+      "capability": "F6",
+      "title": "Monthly reporting explains the same handoff by viewpoint",
+      "type": "browser",
+      "status": "planned",
+      "preconditions": [
+        "Use a coherent fixture set aligned to the new RD_SUB attribution model",
+        "At least one handoff and one downstream RD project action exist in the selected month"
+      ],
+      "steps": [
+        "Open monthly reporting for the target month",
+        "Review the MAIN or overall warehouse view for the handoff amount",
+        "Review the RD or RD project view for the same attributed handoff",
+        "Open drilldown details for the related handoff and project totals"
+      ],
+      "expected": [
+        "The same handoff can be interpreted as internal transfer, project inbound, or project activity depending on viewpoint",
+        "Drilldowns remain traceable and do not rely on guessed project attribution"
+      ]
+    },
+    {
+      "id": "F6-BROWSER-3",
+      "capability": "F6",
+      "title": "RD project and RD_SUB scoped views stay aligned after reversal or stock adjustment",
+      "type": "browser",
+      "status": "planned",
+      "preconditions": [
+        "Prepare an attributed RD handoff fixture",
+        "Prepare a scoped RD_SUB user if the permission flow needs coverage"
+      ],
+      "steps": [
+        "Open the attributed handoff, then perform a reversal or open a stocktake or adjustment flow",
+        "Verify the affected material remains project-attributed after the operation",
+        "Review RD project ledger and RD_SUB scoped views for the same material"
+      ],
+      "expected": [
+        "Reversal or adjustment does not produce long-lived unattributed RD_SUB stock",
+        "RD project ledger and RD_SUB scoped views remain explainable from the same fact chain"
+      ]
+    }
+  ]
+}

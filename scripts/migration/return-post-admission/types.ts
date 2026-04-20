@@ -1,3 +1,5 @@
+import type { BusinessDocumentTypeValue } from "../shared/business-document-type";
+
 export const POST_ADMISSION_MIGRATION_BATCH = "batch3f-return-post-admission";
 
 export const SALES_RETURN_ADMISSION_BATCH =
@@ -9,7 +11,7 @@ export type RelationClassification = "proven" | "unresolved" | "ambiguous";
 
 export type DocumentFamilyValue =
   | "STOCK_IN"
-  | "CUSTOMER_STOCK"
+  | "SALES_STOCK"
   | "WORKSHOP_MATERIAL"
   | "PROJECT";
 
@@ -149,10 +151,10 @@ export interface ReturnLineClassification {
 export interface DocumentRelationInsert {
   relationType: DocumentRelationTypeValue;
   upstreamFamily: DocumentFamilyValue;
-  upstreamDocumentType: string;
+  upstreamDocumentType: BusinessDocumentTypeValue;
   upstreamDocumentId: number;
   downstreamFamily: DocumentFamilyValue;
-  downstreamDocumentType: string;
+  downstreamDocumentType: BusinessDocumentTypeValue;
   downstreamDocumentId: number;
   isActive: boolean;
 }
@@ -160,11 +162,11 @@ export interface DocumentRelationInsert {
 export interface DocumentLineRelationInsert {
   relationType: DocumentRelationTypeValue;
   upstreamFamily: DocumentFamilyValue;
-  upstreamDocumentType: string;
+  upstreamDocumentType: BusinessDocumentTypeValue;
   upstreamDocumentId: number;
   upstreamLineId: number;
   downstreamFamily: DocumentFamilyValue;
-  downstreamDocumentType: string;
+  downstreamDocumentType: BusinessDocumentTypeValue;
   downstreamDocumentId: number;
   downstreamLineId: number;
   linkedQty: string;
@@ -172,14 +174,14 @@ export interface DocumentLineRelationInsert {
 
 export interface SourceBackfillRecord {
   lineId: number;
-  sourceDocumentType: string;
+  sourceDocumentType: BusinessDocumentTypeValue;
   sourceDocumentId: number;
   sourceDocumentLineId: number;
 }
 
 export interface StaleClearRecord {
   lineId: number;
-  documentTable: "customer_stock_order_line" | "workshop_material_order_line";
+  documentTable: "sales_stock_order_line" | "workshop_material_order_line";
 }
 
 export interface InventoryLogInsert {
@@ -190,7 +192,7 @@ export interface InventoryLogInsert {
   direction: StockDirectionValue;
   operationType: InventoryOperationTypeValue;
   businessModule: string;
-  businessDocumentType: string;
+  businessDocumentType: BusinessDocumentTypeValue;
   businessDocumentId: number;
   businessDocumentNumber: string;
   businessDocumentLineId: number | null;
@@ -210,16 +212,16 @@ export interface InventoryBalanceRecord {
 export interface InventorySourceUsageInsert {
   materialId: number;
   sourceLogIdempotencyKey: string;
-  consumerDocumentType: string;
+  consumerDocumentType: BusinessDocumentTypeValue;
   consumerDocumentId: number;
   consumerLineId: number;
   allocatedQty: string;
   status: SourceUsageStatusValue;
 }
 
-export interface WorkflowAuditDocumentInsert {
+export interface AuditDocumentInsert {
   documentFamily: DocumentFamilyValue;
-  documentType: string;
+  documentType: BusinessDocumentTypeValue;
   documentId: number;
   documentNumber: string;
   auditStatus: AuditStatusSnapshotValue;
@@ -252,8 +254,8 @@ export interface InventoryReplayPlan {
   }>;
 }
 
-export interface WorkflowProjectionPlan {
-  workflowDocumentInserts: WorkflowAuditDocumentInsert[];
+export interface AuditProjectionPlan {
+  auditDocumentInserts: AuditDocumentInsert[];
 }
 
 export interface PostAdmissionMigrationPlan {
@@ -261,7 +263,7 @@ export interface PostAdmissionMigrationPlan {
   relation: RelationClassificationPlan;
   backfill: SourceBackfillPlan;
   replay: InventoryReplayPlan;
-  workflow: WorkflowProjectionPlan;
+  audit: AuditProjectionPlan;
   globalBlockers: Array<{ reason: string; details?: Record<string, unknown> }>;
   warnings: Array<{ reason: string; details?: Record<string, unknown> }>;
   counts: PostAdmissionPlanCounts;
@@ -283,7 +285,7 @@ export interface PostAdmissionPlanCounts {
   inventoryLogInserts: number;
   sourceUsageInserts: number;
   sourceUsageGaps: number;
-  workflowDocumentInserts: number;
+  auditDocumentInserts: number;
 }
 
 export interface PostAdmissionExecutionResult {
@@ -294,5 +296,5 @@ export interface PostAdmissionExecutionResult {
   inventoryBalancesInserted: number;
   inventoryLogsInserted: number;
   sourceUsageInserted: number;
-  workflowDocumentsInserted: number;
+  auditDocumentsInserted: number;
 }

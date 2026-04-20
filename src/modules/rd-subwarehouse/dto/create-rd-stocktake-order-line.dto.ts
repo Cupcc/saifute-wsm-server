@@ -13,6 +13,10 @@ export class CreateRdStocktakeOrderLineDto {
   @Min(1)
   materialId!: number;
 
+  @IsInt()
+  @Min(1)
+  rdProjectId!: number;
+
   @IsString()
   @Matches(/^\d+(\.\d{1,6})?$/, {
     message: "countedQty must be a non-negative decimal string",

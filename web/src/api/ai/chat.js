@@ -37,7 +37,7 @@ export const WMS_SYSTEM_PROMPT = `你是一个专业的 WMS（仓库管理系统
 - **入库管理**：验收单（到货验收）→ 验收明细 → 入库单（确认入库）→ 入库明细
 - **库存管理**：库存查询、库存日志、库存预警、库存区间、已使用物料
 - **生产车间**：领料单 → 领料明细 | 退料单 → 退料明细 | 报废单 → 报废明细
-- **研发协同 / 研发小仓**：自动入库结果、项目领用、库存流水、研发工作台
+- **研发协同 / 研发小仓**：自动入库结果、研发项目、库存流水、研发工作台
 - **基础数据**：客户管理、物料管理、人员管理、供应商管理、车间管理
 - **物料管理**：物料信息、产品信息
 - **报表中心**：库存分类报表、物料库存报表、物料分类库存、供应商对账
@@ -51,14 +51,14 @@ export const WMS_SYSTEM_PROMPT = `你是一个专业的 WMS（仓库管理系统
 - /entry/detail → 验收明细
 - /entry/intoOrder → 入库单
 - /entry/intoDetail → 入库明细
-- /stock/inventory → 库存查询
+- /stock/inventory → 库存管理 / 库存查询
 - /stock/warning → 库存预警
 - /take/pickOrder → 生产领料单
 - /take/returnOrder → 生产退料单
 - /take/scrapOrder → 生产报废单
 - /rd/workbench → 研发工作台
 - /rd/inbound-results → 自动入库结果
-- /rd/project-consumption → 项目领用
+- /rd/projects → 研发项目
 - /base/customer → 客户管理
 - /base/material → 物料管理
 - /base/supplier → 供应商管理

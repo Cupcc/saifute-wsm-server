@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type DbClient = Prisma.TransactionClient | PrismaService;
@@ -124,6 +124,20 @@ export class RdHandoffRepository {
       where: { id },
       data,
       include: { lines: { orderBy: { lineNo: "asc" } } },
+    });
+  }
+
+  async updateOrderLineCost(
+    id: number,
+    data: { costUnitPrice: Prisma.Decimal; costAmount: Prisma.Decimal },
+    db?: DbClient,
+  ) {
+    return this.db(db).rdHandoffOrderLine.update({
+      where: { id },
+      data: {
+        costUnitPrice: data.costUnitPrice,
+        costAmount: data.costAmount,
+      },
     });
   }
 }

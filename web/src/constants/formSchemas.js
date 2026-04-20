@@ -33,7 +33,6 @@ export const FORM_SCHEMAS = {
         hint: "填写部门或车间名称，系统自动匹配",
       },
       attn: { label: "经办人", type: "string" },
-      chargeBy: { label: "负责人", type: "string" },
       remark: { label: "备注", type: "string" },
     },
     detailFields: {
@@ -71,7 +70,6 @@ export const FORM_SCHEMAS = {
         hint: "填写部门或车间名称，系统自动匹配",
       },
       attn: { label: "经办人", type: "string" },
-      chargeBy: { label: "负责人", type: "string" },
       remark: { label: "备注", type: "string" },
     },
     detailFields: {
@@ -108,7 +106,6 @@ export const FORM_SCHEMAS = {
         hint: "填写部门或车间名称，系统自动匹配",
       },
       picker: { label: "领料人", type: "string", hint: "填写领料人姓名" },
-      chargeBy: { label: "负责人", type: "string" },
       remark: { label: "备注", type: "string" },
     },
     detailFields: {

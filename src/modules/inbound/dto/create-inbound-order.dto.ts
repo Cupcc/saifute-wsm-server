@@ -12,14 +12,14 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
-import { StockInOrderType } from "../../../generated/prisma/client";
+import { StockInOrderType } from "../../../../generated/prisma/client";
 import { CreateInboundOrderLineDto } from "./create-inbound-order-line.dto";
 
 export class CreateInboundOrderDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(64)
-  documentNo!: string;
+  documentNo?: string;
 
   @IsEnum(StockInOrderType)
   orderType!: StockInOrderType;
@@ -35,16 +35,17 @@ export class CreateInboundOrderDto {
   @IsInt()
   @IsOptional()
   @Min(1)
-  handlerPersonnelId?: number;
+  handlerPersonnelId?: number | null;
 
-  @IsInt()
-  @Min(1)
-  workshopId!: number;
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  handlerName?: string;
 
   @IsInt()
   @IsOptional()
   @Min(1)
-  rdProcurementRequestId?: number;
+  workshopId?: number;
 
   @IsString()
   @IsOptional()

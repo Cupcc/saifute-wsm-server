@@ -1,4 +1,5 @@
 import type { MigrationConnectionLike } from "../db";
+import { BusinessDocumentType } from "../shared/business-document-type";
 import type { InventoryEvent } from "./types";
 
 interface DocumentLineRow {
@@ -16,6 +17,11 @@ interface DocumentLineRow {
 
 const DIRECTION_PRIORITY_IN = 0;
 const DIRECTION_PRIORITY_OUT = 1;
+const STOCK_IN_DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
+const SALES_STOCK_DOCUMENT_TYPE = BusinessDocumentType.SalesStockOrder;
+const WORKSHOP_MATERIAL_DOCUMENT_TYPE =
+  BusinessDocumentType.WorkshopMaterialOrder;
+const RD_PROJECT_DOCUMENT_TYPE = BusinessDocumentType.RdProject;
 
 function toDateString(value: string | null): string {
   if (!value) return "1970-01-01";
@@ -50,14 +56,14 @@ async function readStockInEvents(
         ? ("PRODUCTION_RECEIPT_IN" as const)
         : ("ACCEPTANCE_IN" as const),
     businessModule: "inbound",
-    businessDocumentType: "StockInOrder",
+    businessDocumentType: STOCK_IN_DOCUMENT_TYPE,
     businessDocumentId: row.orderId,
     businessDocumentNumber: row.documentNo,
     businessDocumentLineId: row.lineId,
     materialId: row.materialId,
     workshopId: row.workshopId,
     changeQty: String(row.quantity),
-    idempotencyKey: `StockInOrder:${row.orderId}:line:${row.lineId}`,
+    idempotencyKey: `${STOCK_IN_DOCUMENT_TYPE}:${row.orderId}:line:${row.lineId}`,
     operatorId: row.createdBy,
     occurredAt: toDateTimeString(row.createdAt),
     sortPriority: DIRECTION_PRIORITY_IN,
@@ -72,8 +78,8 @@ async function readCustomerEvents(
       o.id AS orderId, o.documentNo, o.orderType, o.bizDate, o.workshopId,
       l.id AS lineId, l.materialId, l.quantity,
       o.createdBy, o.createdAt
-    FROM customer_stock_order o
-    JOIN customer_stock_order_line l ON l.orderId = o.id
+    FROM sales_stock_order o
+    JOIN sales_stock_order_line l ON l.orderId = o.id
     WHERE o.lifecycleStatus = 'EFFECTIVE'
     ORDER BY o.bizDate ASC, o.id ASC, l.id ASC
   `);
@@ -86,15 +92,15 @@ async function readCustomerEvents(
       operationType: isSalesReturn
         ? ("SALES_RETURN_IN" as const)
         : ("OUTBOUND_OUT" as const),
-      businessModule: "customer",
-      businessDocumentType: "CustomerStockOrder",
+      businessModule: "sales",
+      businessDocumentType: SALES_STOCK_DOCUMENT_TYPE,
       businessDocumentId: row.orderId,
       businessDocumentNumber: row.documentNo,
       businessDocumentLineId: row.lineId,
       materialId: row.materialId,
       workshopId: row.workshopId,
       changeQty: String(row.quantity),
-      idempotencyKey: `CustomerStockOrder:${row.orderId}:line:${row.lineId}`,
+      idempotencyKey: `${SALES_STOCK_DOCUMENT_TYPE}:${row.orderId}:line:${row.lineId}`,
       operatorId: row.createdBy,
       occurredAt: toDateTimeString(row.createdAt),
       sortPriority: isSalesReturn
@@ -132,14 +138,14 @@ async function readWorkshopEvents(
       direction: isReturn ? ("IN" as const) : ("OUT" as const),
       operationType,
       businessModule: "workshop-material",
-      businessDocumentType: "WorkshopMaterialOrder",
+      businessDocumentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
       businessDocumentId: row.orderId,
       businessDocumentNumber: row.documentNo,
       businessDocumentLineId: row.lineId,
       materialId: row.materialId,
       workshopId: row.workshopId,
       changeQty: String(row.quantity),
-      idempotencyKey: `WorkshopMaterialOrder:${row.orderId}:line:${row.lineId}`,
+      idempotencyKey: `${WORKSHOP_MATERIAL_DOCUMENT_TYPE}:${row.orderId}:line:${row.lineId}`,
       operatorId: row.createdBy,
       occurredAt: toDateTimeString(row.createdAt),
       sortPriority: isReturn ? DIRECTION_PRIORITY_IN : DIRECTION_PRIORITY_OUT,
@@ -167,8 +173,8 @@ async function readProjectEvents(
       p.id AS projectId, p.projectCode, p.bizDate, p.workshopId,
       l.id AS lineId, l.materialId, l.quantity,
       p.createdBy, p.createdAt
-    FROM project p
-    JOIN project_material_line l ON l.projectId = p.id
+    FROM rd_project p
+    JOIN rd_project_material_line l ON l.projectId = p.id
     WHERE p.lifecycleStatus = 'EFFECTIVE'
     ORDER BY p.bizDate ASC, p.id ASC, l.id ASC
   `);
@@ -176,16 +182,16 @@ async function readProjectEvents(
   return rows.map((row) => ({
     bizDate: toDateString(row.bizDate),
     direction: "OUT" as const,
-    operationType: "PROJECT_CONSUMPTION_OUT" as const,
-    businessModule: "project",
-    businessDocumentType: "Project",
+    operationType: "RD_PROJECT_OUT" as const,
+    businessModule: "rd-project",
+    businessDocumentType: RD_PROJECT_DOCUMENT_TYPE,
     businessDocumentId: row.projectId,
     businessDocumentNumber: row.projectCode,
     businessDocumentLineId: row.lineId,
     materialId: row.materialId,
     workshopId: row.workshopId,
     changeQty: String(row.quantity),
-    idempotencyKey: `Project:${row.projectId}:line:${row.lineId}`,
+    idempotencyKey: `${RD_PROJECT_DOCUMENT_TYPE}:${row.projectId}:line:${row.lineId}`,
     operatorId: row.createdBy,
     occurredAt: toDateTimeString(row.createdAt),
     sortPriority: DIRECTION_PRIORITY_OUT,

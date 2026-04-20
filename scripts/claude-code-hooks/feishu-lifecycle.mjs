@@ -23,9 +23,12 @@
  */
 import {
   appendFileSync,
+  closeSync,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
+  readSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -110,6 +113,59 @@ function formatDuration(ms) {
   if (minutes > 0) parts.push(`${minutes}分钟`);
   if (seconds > 0 || parts.length === 0) parts.push(`${seconds}秒`);
   return parts.join("");
+}
+
+function extractTextContent(message) {
+  if (!message) return "";
+  const content = message.content ?? message;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    for (const block of content) {
+      if (block?.type === "text" && block.text) return block.text;
+    }
+  }
+  return "";
+}
+
+function extractFirstUserMessage(transcriptPath) {
+  try {
+    const MAX_READ = 204800; // 200KB — first user message is near the top
+    const fd = openSync(transcriptPath, "r");
+    try {
+      const buf = Buffer.alloc(MAX_READ);
+      const n = readSync(fd, buf, 0, MAX_READ, 0);
+      const text = buf.subarray(0, n).toString("utf8");
+      for (const line of text.split("\n")) {
+        if (!line.trim()) continue;
+        try {
+          const entry = JSON.parse(line);
+          if (
+            entry.type === "user" &&
+            entry.userType !== "system" &&
+            !entry.isMeta
+          ) {
+            const msgText = extractTextContent(entry.message)
+              .replace(/<[^>]*>/g, "")
+              .replace(/\s+/g, " ")
+              .trim();
+            if (msgText.length > 3) return msgText;
+          }
+        } catch {
+          /* skip malformed lines */
+        }
+      }
+    } finally {
+      closeSync(fd);
+    }
+  } catch {
+    /* non-critical */
+  }
+  return "";
+}
+
+function truncateText(text, maxLen = 100) {
+  if (text.length <= maxLen) return text;
+  return `${text.slice(0, maxLen - 1)}…`;
 }
 
 async function sendWebhook(event, msg, type = "info") {
@@ -199,7 +255,17 @@ async function handleSessionEnd(input) {
   const sessionId = input.session_id || stateData?.sessionId || "unknown";
   const reason = input.reason || "unknown";
 
-  const msg = `会话结束（${reason}）；本次会话运行：${durationText}；session_id：${sessionId}`;
+  // Read task summary captured by Stop hook, or try transcript as fallback
+  let taskSummary = stateData?.taskSummary || "";
+  if (!taskSummary && input.transcript_path) {
+    const firstMsg = extractFirstUserMessage(input.transcript_path);
+    if (firstMsg) taskSummary = truncateText(firstMsg, 100);
+  }
+
+  let msg = `会话结束（${reason}）`;
+  if (taskSummary) msg += `：${taskSummary}`;
+  msg += `；本次会话运行：${durationText}；session_id：${sessionId}`;
+
   await sendWebhook("session_complete", msg, "info");
 
   removeState("session-current.json");
@@ -253,6 +319,23 @@ async function handleSubagentStop(input) {
   removeState(`agent-${agentId}.json`);
 }
 
+async function handleStop(input) {
+  const transcriptPath = input.transcript_path;
+  if (!transcriptPath) return;
+
+  const stateData = readState("session-current.json");
+  if (!stateData) return;
+
+  // Only extract summary once per session (first user message won't change)
+  if (stateData.taskSummary) return;
+
+  const firstMsg = extractFirstUserMessage(transcriptPath);
+  if (firstMsg) {
+    stateData.taskSummary = truncateText(firstMsg, 100);
+    writeState("session-current.json", stateData);
+  }
+}
+
 // ─── Main ───────────────────────────────────────────────
 
 async function main() {
@@ -283,6 +366,9 @@ async function main() {
       break;
     case "SubagentStop":
       await handleSubagentStop(input);
+      break;
+    case "Stop":
+      await handleStop(input);
       break;
     default:
       process.stderr.write(

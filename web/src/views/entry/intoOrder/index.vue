@@ -34,23 +34,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="经办人" prop="attn">
-        <el-select
-          v-model="queryParams.attn"
-          filterable
-          remote
-          reserve-keyword
-          placeholder="请输入经办人姓名搜索"
-          :remote-method="searchPersonnel"
-          :loading="personnelLoading"
-          clearable
-          style="width: 240px">
-          <el-option
-            v-for="item in personnelOptions"
-            :key="item.personnelId"
-            :label="item.name"
-            :value="item.name">
-          </el-option>
-        </el-select>
+        <combo-input v-model="queryParams.attn" scope="personnel" field="personnelName" placeholder="请选择或输入经办人" width="240px" />
       </el-form-item>
 	    <el-form-item label="物料" prop="materialId">
 		    <el-select
@@ -74,13 +58,7 @@
 		    </el-select>
 	    </el-form-item>
 	    <el-form-item label="物料名称" prop="materialName">
-		    <el-input
-			    v-model="queryParams.materialName"
-			    placeholder="请输入物料名称"
-			    clearable
-			    style="width: 240px"
-			    @keyup.enter="handleQuery"
-		    />
+		    <combo-input v-model="queryParams.materialName" scope="material" field="materialName" placeholder="请选择或输入物料名称" width="240px" />
 	    </el-form-item>
 	    <el-form-item label="生产编号" prop="interval">
 		    <el-input
@@ -120,10 +98,24 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="入库日期" align="center" prop="intoDate" width="180" v-if="columns[1].visible">
+      <el-table-column
+        sortable
+        show-overflow-tooltip
+        label="入库日期"
+        align="center"
+        prop="intoDate"
+        width="200"
+        :sort-method="compareIntoDateRows"
+        v-if="columns[1].visible"
+      >
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
-            {{ parseTime(scope.row.intoDate, '{y}-{m}-{d}') }}
+            <span style="display: inline-flex; flex-direction: column; align-items: center; line-height: 1.35;">
+              <span>{{ formatDocumentDate(scope.row.intoDate) }}</span>
+              <span style="font-size: 12px; color: #909399;">
+                创建 {{ formatRecordDateTime(scope.row.createdAt) }}
+              </span>
+            </span>
           </el-button>
         </template>
       </el-table-column>
@@ -141,28 +133,21 @@
 			    </el-button>
 		    </template>
 	    </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="负责人" align="center" prop="chargeBy" v-if="columns[4].visible">
-        <template #default="scope">
-          <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
-            {{ scope.row.chargeBy }}
-          </el-button>
-        </template>
-      </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[5].visible">
+      <el-table-column sortable show-overflow-tooltip label="经办人" align="center" prop="attn" v-if="columns[4].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             {{ scope.row.attn }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[6].visible">
+      <el-table-column sortable show-overflow-tooltip label="创建人" align="center" prop="createBy" v-if="columns[5].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             {{ scope.row.createBy }}
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[7].visible">
+      <el-table-column sortable show-overflow-tooltip label="审核结果" align="center" prop="auditStatus" v-if="columns[6].visible">
         <template #default="scope">
           <el-button link type="primary" :underline="false" @click.stop="handleDetail(scope.row)">
             <span v-if="scope.row.auditStatus === '0' || scope.row.auditStatus === 0" style="color: #E6A23C;">未审核</span>
@@ -194,7 +179,11 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="入库单号" prop="intoNo">
-              <el-input v-model="form.intoNo" placeholder="请输入入库单号" :disabled="form.intoId != null"/>
+              <el-input
+                v-model="form.intoNo"
+                :placeholder="form.intoId ? '入库单号' : '保存后自动生成'"
+                disabled
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -204,7 +193,6 @@
                 type="date"
                 value-format="YYYY-MM-DD"
                 placeholder="请选择入库日期"
-                @change="handleDateChange"
                 :disabled="form.intoId != null">
               </el-date-picker>
             </el-form-item>
@@ -236,34 +224,11 @@
           </el-col>
           <el-col :span="12">
 	          <el-form-item label="经办人" prop="attn">
-		          <el-select
-			          v-model="form.attn"
-			          filterable
-			          remote
-			          reserve-keyword
-			          placeholder="请输入经办人姓名搜索"
-			          :remote-method="searchPersonnel"
-			          :loading="personnelLoading"
-			          allow-create
-			          default-first-option
-			          style="width: 100%"
-			          :disabled="form.intoId != null">
-			          <el-option
-				          v-for="item in personnelOptions"
-				          :key="item.personnelId"
-				          :label="item.name"
-				          :value="item.name">
-			          </el-option>
-		          </el-select>
+		          <combo-input v-model="form.attn" scope="personnel" field="personnelName" placeholder="请选择或输入经办人" :disabled="form.intoId != null" />
 	          </el-form-item>
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span="12">
-	          <el-form-item label="负责人" prop="chargeBy">
-		          <el-input v-model="form.chargeBy" placeholder="请输入负责人" :disabled="form.intoId != null"/>
-	          </el-form-item>
-          </el-col>
           <el-col :span="12">
 	          <el-form-item label="总金额" prop="totalAmount">
 		          <el-input v-model="form.totalAmount" placeholder="自动计算" disabled />
@@ -367,10 +332,9 @@
               <el-descriptions-item label="入库日期">{{ parseTime(detailData.intoDate, '{y}-{m}-{d}') }}</el-descriptions-item>
               <el-descriptions-item label="总金额">{{ detailData.totalAmount }}</el-descriptions-item>
               <el-descriptions-item label="部门">{{ detailData.workshopName }}</el-descriptions-item>
-              <el-descriptions-item label="负责人">{{ detailData.chargeBy }}</el-descriptions-item>
               <el-descriptions-item label="经办人">{{ detailData.attn }}</el-descriptions-item>
               <el-descriptions-item label="创建人">{{ detailData.createBy }}</el-descriptions-item>
-              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
+              <el-descriptions-item label="创建时间">{{ parseTime(detailData.createdAt, '{y}-{m}-{d} {h}:{i}:{s}') }}</el-descriptions-item>
               <el-descriptions-item label="审核结果">
                 <span v-if="detailData.auditStatus === '0' || detailData.auditStatus === 0" style="color: #E6A23C;">未审核</span>
                 <span v-else-if="detailData.auditStatus === '1' || detailData.auditStatus === 1" style="color: #67C23A;">审核通过</span>
@@ -409,7 +373,7 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button
-            type="success" v-hasPermi="['audit:document:add']"
+            type="success" v-hasPermi="['approval:document:approve']"
             v-if="(detailData.auditStatus === '0' || detailData.auditStatus === 0) && (username !== detailData.createBy || username === 'admin')"
             @click="handleAudit(1)"
             :loading="submitLoading"
@@ -417,7 +381,7 @@
             通过
           </el-button>
           <el-button
-            type="danger" v-hasPermi="['audit:document:add']"
+            type="danger" v-hasPermi="['approval:document:reject']"
             v-if="(detailData.auditStatus === '0' || detailData.auditStatus === 0) && (username !== detailData.createBy || username === 'admin')"
             @click="handleAudit(2)"
             :loading="submitLoading"
@@ -461,9 +425,10 @@
 </template>
 
 <script setup name="IntoOrder">
-import { auditDocument } from "@/api/audit/audit";
+import { approvalDocument } from "@/api/approval/approval";
 import { listMaterialByCodeOrName } from "@/api/base/material";
 import { listPersonnel } from "@/api/base/personnel";
+import { clearSuggestionsCache } from "@/api/base/suggestions";
 import { getWorkshop, listByNameOrContact } from "@/api/base/workshop";
 import { getLatestIntoDetailByMaterialId } from "@/api/entry/intoDetail";
 import {
@@ -475,8 +440,9 @@ import {
 } from "@/api/entry/intoOrder";
 import useAiActionStore from "@/store/modules/aiAction";
 import useUserStore from "@/store/modules/user";
-import { formatDateToYYYYMMDD, generateOrderNo } from "@/utils/orderNumber";
+import { formatDateToYYYYMMDD } from "@/utils/orderNumber";
 
+const userStore = useUserStore();
 const { proxy } = getCurrentInstance();
 
 const intoOrderList = ref([]);
@@ -526,7 +492,6 @@ const data = reactive({
     interval: null,
   },
   rules: {
-    intoNo: [{ required: true, message: "入库单号不能为空", trigger: "blur" }],
     intoDate: [
       { required: true, message: "入库日期不能为空", trigger: "change" },
     ],
@@ -543,7 +508,10 @@ const data = reactive({
 
 const { queryParams, form, rules, abandonForm, abandonRules } = toRefs(data);
 
-const username = computed(() => useUserStore().name);
+const username = computed(() => userStore.name);
+const operatorNickname = computed(
+  () => userStore.nickName || userStore.name || "",
+);
 
 // 添加columns数组定义
 const columns = ref([
@@ -551,11 +519,76 @@ const columns = ref([
   { key: 1, label: `入库日期`, visible: true },
   { key: 2, label: `总金额`, visible: true },
   { key: 3, label: `部门`, visible: true },
-  { key: 4, label: `负责人`, visible: false },
-  { key: 5, label: `经办人`, visible: true },
-  { key: 6, label: `创建人`, visible: false },
-  { key: 7, label: `审核结果`, visible: true },
+  { key: 4, label: `经办人`, visible: true },
+  { key: 5, label: `创建人`, visible: false },
+  { key: 6, label: `审核结果`, visible: true },
 ]);
+
+function formatDocumentDate(value) {
+  if (!value) {
+    return "-";
+  }
+  return String(value).slice(0, 10);
+}
+
+function formatRecordDateTime(value) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const text = String(value);
+    const monthDay = text.slice(5, 10);
+    const time = text.slice(11, 19);
+    if (monthDay && time) {
+      return `${monthDay} ${time}`;
+    }
+    return text;
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+  return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function toTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function compareIntoDateRows(left, right) {
+  const dateCompare = formatDocumentDate(left?.intoDate).localeCompare(
+    formatDocumentDate(right?.intoDate),
+  );
+  if (dateCompare !== 0) {
+    return dateCompare;
+  }
+
+  const createdAtCompare =
+    toTimestamp(left?.createdAt) - toTimestamp(right?.createdAt);
+  if (createdAtCompare !== 0) {
+    return createdAtCompare;
+  }
+
+  return Number(left?.intoId ?? 0) - Number(right?.intoId ?? 0);
+}
+
+function getWorkshopDefaultHandlerName(workshop) {
+  return (
+    workshop?.defaultHandlerPersonnelName ||
+    workshop?.contactPerson ||
+    workshop?.chargeBy ||
+    ""
+  );
+}
 
 /** 查询入库单列表 */
 function getList() {
@@ -657,7 +690,6 @@ function reset() {
     intoNo: null,
     intoDate: null,
     workshopId: null,
-    chargeBy: null,
     attn: null,
     totalAmount: null,
     remark: null,
@@ -776,43 +808,11 @@ function handleAdd() {
   reset();
   const today = new Date();
   form.value.intoDate = formatDateToYYYYMMDD(today);
+  form.value.attn = operatorNickname.value || null;
   isView.value = false;
   title.value = "添加入库单";
   open.value = true;
-  dialogLoading.value = true;
-  generateIntoNo(today)
-    .then((intoNo) => {
-      form.value.intoNo = intoNo;
-    })
-    .finally(() => {
-      dialogLoading.value = false;
-    });
-}
-
-/**
- * 生成入库单号
- */
-async function generateIntoNo(date) {
-  // 查询当天已有的入库单号，找出最大流水号
-  const params = {
-    params: {
-      beginTime: formatDateToYYYYMMDD(date),
-      endTime: formatDateToYYYYMMDD(date),
-    },
-  };
-
-  return generateOrderNo(date, "RK", listIntoOrder, params, "intoNo");
-}
-
-/**
- * 处理日期更改事件，重新生成入库单号
- */
-async function handleDateChange(val) {
-  if (val) {
-    const newDate = new Date(val);
-    const newIntoNo = await generateIntoNo(newDate);
-    form.value.intoNo = newIntoNo;
-  }
+  dialogLoading.value = false;
 }
 
 /** 修改按钮操作 */
@@ -836,7 +836,6 @@ function handleUpdate(row) {
         intoDate: orderData.intoDate,
         supplierId: orderData.supplierId,
         workshopId: orderData.workshopId,
-        chargeBy: orderData.chargeBy,
         attn: orderData.attn,
         totalAmount: orderData.totalAmount,
         remark: orderData.remark,
@@ -897,6 +896,7 @@ function submitForm() {
       if (form.value.intoId != null) {
         updateIntoOrder(form.value)
           .then((response) => {
+            clearSuggestionsCache();
             proxy.$modal.msgSuccess("修改成功");
             open.value = false;
             getList();
@@ -907,6 +907,7 @@ function submitForm() {
       } else {
         addIntoOrder(form.value)
           .then((response) => {
+            clearSuggestionsCache();
             proxy.$modal.msgSuccess("新增成功");
             open.value = false;
             getList();
@@ -969,7 +970,7 @@ function handleAudit(status) {
     .confirm(`确定要${status === 1 ? "审核通过" : "审核不通过"}该入库单吗？`)
     .then(() => {
       submitLoading.value = true;
-      return auditDocument(auditData);
+      return approvalDocument(auditData);
     })
     .then(() => {
       proxy.$modal.msgSuccess(status === 1 ? "审核通过成功" : "审核不通过成功");
@@ -1006,15 +1007,11 @@ function handleWorkshopChange(val) {
       (item) => item.workshopId === val,
     );
     if (selectedWorkshop) {
-      // 将部门的负责人赋值给负责人字段
-      form.value.chargeBy = selectedWorkshop.chargeBy;
-      // 将部门的经办人赋值给经办人字段
-      form.value.attn = selectedWorkshop.contactPerson;
+      // 仅在经办人为空时，才使用部门默认经办人兜底。
+      if (!form.value.attn) {
+        form.value.attn = getWorkshopDefaultHandlerName(selectedWorkshop);
+      }
     }
-  } else {
-    // 清空部门时，也清空负责人和经办人
-    form.value.chargeBy = "";
-    form.value.attn = "";
   }
 }
 
@@ -1086,7 +1083,6 @@ async function handleAiPrefill(formData) {
   await handleAdd();
   await nextTick();
 
-  if (formData.chargeBy) form.value.chargeBy = formData.chargeBy;
   if (formData.remark) form.value.remark = formData.remark;
 
   // 经办人

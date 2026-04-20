@@ -184,15 +184,16 @@ describe("master-data migration transformer", () => {
 
     expect(plan.migrationBatch).toBe("batch1-master-data");
     expect(plan.records.workshop[0]?.isSyntheticDefault).toBe(true);
-    expect(plan.records.workshop[0]?.target.workshopCode).toBe(
-      "WS-LEGACY-DEFAULT",
-    );
-    expect(plan.records.workshop[1]?.target.workshopCode).toBe("WS-LEGACY-6");
+    expect(plan.records.workshop[0]?.target.workshopName).toBe("历史默认车间");
+    expect(plan.records.workshop[1]?.target.workshopName).toBe("装备车间");
 
     expect(plan.records.supplier[0]?.target.supplierCode).toBe("SUP-LEGACY-5");
-    expect(plan.records.personnel[0]?.target.personnelCode).toBe(
-      "PERS-LEGACY-35",
-    );
+    expect(plan.records.supplier[0]?.target.supplierShortName).toBe("聚义");
+    expect(plan.records.supplier[0]?.target.contactPerson).toBe("周海");
+    expect(plan.records.supplier[0]?.target.contactPhone).toBe("123");
+    expect(plan.records.supplier[0]?.target.address).toBe("江苏");
+    expect(plan.records.personnel[0]?.target.personnelName).toBe("陈苗苗");
+    expect(plan.records.personnel[0]?.target.contactPhone).toBe("18800000000");
 
     expect(plan.records.customer[0]?.target.customerCode).toBe("2");
     expect(plan.records.customer[1]?.target.customerCode).toBe("2-LEGACY-14");

@@ -2,6 +2,7 @@ import { Inject, Injectable, type NestMiddleware } from "@nestjs/common";
 import type { NextFunction, Request, Response } from "express";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import type { Logger } from "winston";
+import { resolveRequestIp } from "../common/request-ip.util";
 
 @Injectable()
 export class HttpLoggingMiddleware implements NestMiddleware {
@@ -15,11 +16,13 @@ export class HttpLoggingMiddleware implements NestMiddleware {
     response.on("finish", () => {
       const durationMs = Date.now() - startedAt;
       const path = request.originalUrl || request.url;
-      const ip = this.resolveClientIp(request);
+      const ip = resolveRequestIp(request);
       const userAgent = this.resolveUserAgent(request);
       const contentLength = response.getHeader("content-length");
+      const level = this.resolveLogLevel(response.statusCode);
 
-      this.logger.info(
+      this.logger.log(
+        level,
         `${request.method} ${path} ${response.statusCode} ${durationMs}ms`,
         {
           context: "HTTP",
@@ -40,23 +43,6 @@ export class HttpLoggingMiddleware implements NestMiddleware {
 
     next();
   }
-
-  private resolveClientIp(request: Request): string {
-    const forwardedFor = request.headers["x-forwarded-for"];
-    const forwardedIp = Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : forwardedFor;
-    const candidate =
-      forwardedIp?.split(",")[0]?.trim() ||
-      request.ip ||
-      request.socket.remoteAddress ||
-      "unknown";
-
-    return candidate === "::1"
-      ? "127.0.0.1"
-      : candidate.replace(/^::ffff:/, "");
-  }
-
   private resolveUserAgent(request: Request): string {
     const userAgent = request.headers["user-agent"];
     if (Array.isArray(userAgent)) {
@@ -64,5 +50,15 @@ export class HttpLoggingMiddleware implements NestMiddleware {
     }
 
     return userAgent ?? "unknown";
+  }
+
+  private resolveLogLevel(statusCode: number): "info" | "warn" | "error" {
+    if (statusCode >= 500) {
+      return "error";
+    }
+    if (statusCode >= 400) {
+      return "warn";
+    }
+    return "info";
   }
 }

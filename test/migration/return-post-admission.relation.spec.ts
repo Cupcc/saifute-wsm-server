@@ -377,7 +377,7 @@ describe("return-post-admission relation classification", () => {
 
       const preLinkedLine: AdmittedLineRow = {
         ...firstLine,
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -417,7 +417,7 @@ describe("return-post-admission relation classification", () => {
 
       const preLinkedLine: AdmittedLineRow = {
         ...firstLine,
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -448,7 +448,7 @@ describe("return-post-admission relation classification", () => {
       const preLinkedLine: AdmittedLineRow = {
         ...firstLine,
         quantity: "500.000000",
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -485,7 +485,7 @@ describe("return-post-admission relation classification", () => {
       const preLinkedLine: AdmittedLineRow = {
         ...firstLine,
         bizDate: "2024-01-10",
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -684,8 +684,8 @@ describe("return-post-admission relation classification", () => {
 
       for (const rel of plan.backfill.documentRelations) {
         expect(rel.relationType).toBe("SALES_RETURN_FROM_OUTBOUND");
-        expect(rel.upstreamFamily).toBe("CUSTOMER_STOCK");
-        expect(rel.downstreamFamily).toBe("CUSTOMER_STOCK");
+        expect(rel.upstreamFamily).toBe("SALES_STOCK");
+        expect(rel.downstreamFamily).toBe("SALES_STOCK");
       }
 
       for (const lineRel of plan.backfill.documentLineRelations) {
@@ -729,7 +729,7 @@ describe("return-post-admission relation classification", () => {
 
       const alreadyLinked: AdmittedLineRow = {
         ...baseLine,
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -773,7 +773,7 @@ describe("return-post-admission relation classification", () => {
       const staleLine: AdmittedLineRow = {
         ...firstLine,
         quantity: "500.000000",
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -796,7 +796,7 @@ describe("return-post-admission relation classification", () => {
       );
 
       expect(clearRecord).toBeDefined();
-      expect(clearRecord?.documentTable).toBe("customer_stock_order_line");
+      expect(clearRecord?.documentTable).toBe("sales_stock_order_line");
       expect(plan.counts.staleSourceFieldsToClean).toBeGreaterThanOrEqual(1);
     });
 
@@ -811,7 +811,7 @@ describe("return-post-admission relation classification", () => {
       const staleLine: AdmittedLineRow = {
         ...firstLine,
         bizDate: "2024-01-10",
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -848,7 +848,7 @@ describe("return-post-admission relation classification", () => {
 
       const provenPreLinkedLine: AdmittedLineRow = {
         ...firstLine,
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -913,7 +913,7 @@ describe("return-post-admission relation classification", () => {
       const stalePrelinkedLine: AdmittedLineRow = {
         ...firstLine,
         quantity: "10.000000",
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };
@@ -953,7 +953,7 @@ describe("return-post-admission relation classification", () => {
         (r) => r.lineId === stalePrelinkedLine.id,
       );
       expect(clearRecord).toBeDefined();
-      expect(clearRecord?.documentTable).toBe("customer_stock_order_line");
+      expect(clearRecord?.documentTable).toBe("sales_stock_order_line");
 
       // backfill record must exist pointing to B (not A)
       const backfillRecord = plan.backfill.backfillRecords.find(
@@ -982,7 +982,7 @@ describe("return-post-admission relation classification", () => {
 
       const alreadyCorrectLine: AdmittedLineRow = {
         ...firstLine,
-        sourceDocumentType: "CustomerStockOrder",
+        sourceDocumentType: "SalesStockOrder",
         sourceDocumentId: 3000,
         sourceDocumentLineId: 3001,
       };

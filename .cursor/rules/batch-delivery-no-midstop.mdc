@@ -10,5 +10,4 @@ alwaysApply: false
   - Acceptance criteria for the requested scope are fully met
   - User explicitly narrowed scope (`review-only`, `docs-only`, `stop after this slice`)
   - Real blocker: conflicting user edits, ambiguous ownership across frozen boundaries, missing credentials/resources, repeated failures with multiple valid product decisions
-- `no-commit` does not narrow delivery scope; it only skips the commit step.
 - When pausing for a blocker, state which completion condition is unmet and why safe continuation is blocked.
