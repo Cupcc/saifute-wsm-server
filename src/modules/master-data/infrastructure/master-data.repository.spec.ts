@@ -5,72 +5,64 @@ import { MasterDataRepository } from "./master-data.repository";
 
 describe("MasterDataRepository", () => {
   it("reconciles canonical workshops and disables legacy pseudo-workshops", async () => {
-    const upsert = jest.fn().mockResolvedValue({});
+    const findFirst = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: 192,
+        workshopName: "装备车间",
+        status: "ACTIVE",
+      })
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    const update = jest.fn().mockResolvedValue({});
+    const create = jest.fn().mockResolvedValue({});
     const updateMany = jest.fn().mockResolvedValue({ count: 2 });
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          workshop: {
+            findFirst,
+            update,
+            create,
+            updateMany,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      workshop: {
-        upsert,
-        updateMany,
-      },
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalWorkshops();
 
-    expect(upsert).toHaveBeenCalledTimes(4);
-    expect(upsert).toHaveBeenNthCalledWith(1, {
-      where: {
-        workshopName: "装备车间",
-      },
-      update: {
-        status: "ACTIVE",
-        updatedBy: "system-bootstrap",
-      },
-      create: {
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 192 },
+      data: {
         workshopName: "装备车间",
         status: "ACTIVE",
-        createdBy: "system-bootstrap",
         updatedBy: "system-bootstrap",
       },
     });
-    expect(upsert).toHaveBeenNthCalledWith(2, {
-      where: {
-        workshopName: "硐室车间",
-      },
-      update: {
-        status: "ACTIVE",
-        updatedBy: "system-bootstrap",
-      },
-      create: {
+    expect(create).toHaveBeenCalledTimes(3);
+    expect(create).toHaveBeenNthCalledWith(1, {
+      data: {
         workshopName: "硐室车间",
         status: "ACTIVE",
         createdBy: "system-bootstrap",
         updatedBy: "system-bootstrap",
       },
     });
-    expect(upsert).toHaveBeenNthCalledWith(3, {
-      where: {
-        workshopName: "配件车间",
-      },
-      update: {
-        status: "ACTIVE",
-        updatedBy: "system-bootstrap",
-      },
-      create: {
+    expect(create).toHaveBeenNthCalledWith(2, {
+      data: {
         workshopName: "配件车间",
         status: "ACTIVE",
         createdBy: "system-bootstrap",
         updatedBy: "system-bootstrap",
       },
     });
-    expect(upsert).toHaveBeenNthCalledWith(4, {
-      where: {
-        workshopName: "电子车间",
-      },
-      update: {
-        status: "ACTIVE",
-        updatedBy: "system-bootstrap",
-      },
-      create: {
+    expect(create).toHaveBeenNthCalledWith(3, {
+      data: {
         workshopName: "电子车间",
         status: "ACTIVE",
         createdBy: "system-bootstrap",
@@ -91,30 +83,43 @@ describe("MasterDataRepository", () => {
   });
 
   it("updates an existing canonical workshop matched by name", async () => {
-    const upsert = jest.fn().mockResolvedValue({});
+    const findFirst = jest
+      .fn()
+      .mockResolvedValueOnce({
+        id: 9,
+        workshopName: "装备车间",
+        status: "DISABLED",
+      })
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+    const update = jest.fn().mockResolvedValue({});
+    const create = jest.fn().mockResolvedValue({});
     const updateMany = jest.fn().mockResolvedValue({ count: 0 });
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          workshop: {
+            findFirst,
+            update,
+            create,
+            updateMany,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      workshop: {
-        upsert,
-        updateMany,
-      },
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalWorkshops();
 
-    expect(upsert).toHaveBeenCalledTimes(4);
-    expect(upsert).toHaveBeenCalledWith({
-      where: {
-        workshopName: "装备车间",
-      },
-      update: {
-        status: "ACTIVE",
-        updatedBy: "system-bootstrap",
-      },
-      create: {
+    expect(findFirst).toHaveBeenCalledTimes(4);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 9 },
+      data: {
         workshopName: "装备车间",
         status: "ACTIVE",
-        createdBy: "system-bootstrap",
         updatedBy: "system-bootstrap",
       },
     });
@@ -122,10 +127,17 @@ describe("MasterDataRepository", () => {
 
   it("reconciles canonical stock scopes by scopeCode", async () => {
     const upsert = jest.fn().mockResolvedValue({});
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          stockScope: {
+            upsert,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      stockScope: {
-        upsert,
-      },
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalStockScopes();

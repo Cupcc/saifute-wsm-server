@@ -38,7 +38,6 @@ When the assigned scope touches NestJS code, consult `./.agents/skills/nestjs-be
 - Read only the relevant rules for the touched surface
 - Use them for module boundaries, DI, validation, guards, transactions, and layering when those concerns are in scope
 - If repo truth, frozen contracts, or task scope conflicts, stop and report it instead of refactoring beyond scope
-
 ## Scope Rules
 
 - Edit only owned paths explicitly assigned by the parent
