@@ -31,6 +31,14 @@ Read the smallest relevant set:
 
 If the parent handoff or task doc conflicts with the requirement, architecture, or current code in a way that changes scope or ownership, stop and report the blocker.
 
+## NestJS Implementation Constraint
+
+When the assigned scope touches NestJS code, consult `./.agents/skills/nestjs-best-practices/SKILL.md` before editing.
+
+- Read only the relevant rules for the touched surface
+- Use them for module boundaries, DI, validation, guards, transactions, and layering when those concerns are in scope
+- If repo truth, frozen contracts, or task scope conflicts, stop and report it instead of refactoring beyond scope
+
 ## Scope Rules
 
 - Edit only owned paths explicitly assigned by the parent

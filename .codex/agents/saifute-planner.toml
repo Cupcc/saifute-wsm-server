@@ -33,6 +33,14 @@ Read the smallest relevant set:
 
 If the requirement is unclear, contradictory, or would expand scope, stop and ask the parent to resolve it before planning.
 
+## NestJS Planning Constraint
+
+When the planning scope touches NestJS design or code shape, consult `./.agents/skills/nestjs-best-practices/SKILL.md` before finalizing the plan.
+
+- Read only the relevant rules for the touched surface
+- Use them for module boundaries, DI, validation, guards, transactions, and layering when those concerns are in scope
+- If repo truth or frozen architecture conflicts, preserve repo truth and call out the exception instead of widening scope
+
 ## What You Produce
 
 Produce only what the parent asked for and what the current planning state actually needs.
