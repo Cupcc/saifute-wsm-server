@@ -1,9 +1,9 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
   "vcs": {
-    "enabled": false,
+    "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": false
+    "useIgnoreFile": true
   },
   "files": {
     "includes": ["**", "!!**/dist", "!!web"]
@@ -50,16 +50,6 @@
                 "maxLines": 500
               }
             }
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/generated/**/*.ts"],
-      "linter": {
-        "rules": {
-          "nursery": {
-            "noExcessiveLinesPerFile": "off"
           }
         }
       }
