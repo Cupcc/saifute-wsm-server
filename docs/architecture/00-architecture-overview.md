@@ -152,10 +152,11 @@ modules/<module>/
 约束如下：
 
 - `controllers` 只处理协议转换、权限注解、DTO 校验
-- `application` 负责用例编排、事务边界、调用多个聚合
-- `domain` 只放领域规则、状态变更、校验
+- `application` 负责用例编排、事务边界、调用多个聚合；**不允许 import `@prisma/client`、`PrismaService` 或 Prisma 类型**——数据访问必须通过 infrastructure 层的 repository
+- `domain` 只放领域规则、状态变更、校验；不允许依赖任何外部框架（NestJS, Prisma, Express）
 - `infrastructure` 负责 Prisma repository、raw SQL query、Redis、文件、调度适配
 - `dto` 只定义接口输入输出，不承载业务逻辑
+- 层间依赖方向为 controllers → application → infrastructure，不允许反向；application 层和 domain 层不得依赖 infrastructure 的实现细节
 - 当前仓库同时承载后端与前端代码；前端工程位置统一为仓库根目录下的 `web/`，本地工作区与协作路径不再引用旧的独立前端仓库路径
 
 ### 4.1 大文件治理与重构约束
@@ -168,6 +169,17 @@ modules/<module>/
 - 新需求默认不得继续追加到现有超长文件；优先新增更小的协作者或 provider，并让旧大类在迁移期只保留 facade / delegation 角色。
 - 重构应先保持 controller、DTO、事务边界和外部合同稳定，再逐步内聚职责；除非用户明确要求，不以“大重写”替代分批迁移。
 - `spec` 文件应跟随生产代码边界收敛；当生产代码被拆成多个 use case 或协作者时，测试也应按相同职责拆分，而不是继续镜像单个巨型 service。
+
+### 4.2 单一职责量化标准
+
+以下阈值作为 God Object 识别和拆分触发条件：
+
+- **构造函数依赖注入** ≤ 5 个；超过表明 service 承担了多个职责域，应按 use case 拆分
+- **单个方法** ≤ 80 行；超过应提取子方法或创建协作者
+- **类的 public 方法** ≤ 15 个；超过应按职责域拆分为多个 service
+- **方法参数** ≤ 5 个；超过应封装为 command / query object
+
+详细规则与判定速查表见 `docs/architecture/40-code-quality-governance.md`。
 
 ## 5. 共享基础设施
 
@@ -218,6 +230,8 @@ modules/<module>/
 - 复杂列表、库存计算、统计报表、菜单/权限联查优先保留 raw SQL
 - 事务型单据必须通过应用层显式控制事务
 - 不允许业务模块直接跨模块查询对方底表；必须通过公开应用服务或查询服务访问
+- **跨模块通信只允许注入对方的 exported service，不允许注入对方的 repository**；如果需要某个查询能力，应在对方 service 上暴露查询方法
+- **`*.module.ts` 的 exports 只允许 service，不允许导出 repository**
 
 ## 7. 关键语义冻结
 
@@ -230,6 +244,8 @@ modules/<module>/
 - 调度保留“数据库定义任务 + 执行日志”产品形态
 
 ## 8. 模块依赖总图
+
+依赖方向规则：箭头只能指向同层或下层模块，不允许反向依赖。上层单据模块通过 service 接口消费下层能力，不直接注入下层 repository。完整的依赖方向图和边界违规规则见 `docs/architecture/40-code-quality-governance.md` §3。
 
 ```mermaid
 flowchart TD
@@ -290,6 +306,7 @@ flowchart TD
 - 若发现源系统语义与文档冲突，应先补文档再编码
 - 单据模块的库存、副作用、审核重置必须写进集成测试
 - 涉及业务流程、状态机和优化表设计时，以 `docs/architecture/20-wms-database-tables-and-schema.md` 为冻结基线
+- **所有代码变更必须符合 `docs/architecture/40-code-quality-governance.md` 中定义的质量基线**；该文档定义了分层纪律、模块边界、单一职责量化标准和复杂度控制规则
 
 ## 10. 推荐阅读顺序
 
