@@ -4,7 +4,7 @@
 
 本文档定义 Saifute WMS NestJS 仓库的代码质量治理规则。所有 agent 会话、子代理执行和人工 code review 均以此为判定基准。
 
-适用范围：`src/modules/**`、`src/shared/**` 下所有 TypeScript 生产代码和测试代码（`src/generated/` 除外）。
+适用范围：`src/modules/**`、`src/shared/**` 下所有 TypeScript 生产代码和测试代码（`generated/` 除外）。
 
 与其他文档的关系：
 
