@@ -7,11 +7,18 @@ describe("MasterDataRepository", () => {
   it("reconciles canonical workshops and disables legacy pseudo-workshops", async () => {
     const upsert = jest.fn().mockResolvedValue({});
     const updateMany = jest.fn().mockResolvedValue({ count: 2 });
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          workshop: {
+            upsert,
+            updateMany,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      workshop: {
-        upsert,
-        updateMany,
-      },
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalWorkshops();
@@ -33,9 +40,10 @@ describe("MasterDataRepository", () => {
         updatedBy: "system-bootstrap",
       });
     }
+    expect($transaction).toHaveBeenCalledTimes(1);
     expect(updateMany).toHaveBeenCalledWith({
       where: {
-        workshopName: { in: expect.any(Array) },
+        workshopName: { in: ["主仓", "研发小仓"] },
         createdBy: "system-bootstrap",
         status: "ACTIVE",
       },
@@ -44,27 +52,28 @@ describe("MasterDataRepository", () => {
         updatedBy: "system-bootstrap",
       },
     });
-    expect(
-      (
-        updateMany.mock.calls[0]?.[0] as {
-          where: { workshopName: { in: unknown[] } };
-        }
-      ).where.workshopName.in,
-    ).toHaveLength(2);
   });
 
-  it("uses upsert updates to reactivate canonical workshops", async () => {
+  it("reactivates canonical workshops through upsert updates", async () => {
     const upsert = jest.fn().mockResolvedValue({});
     const updateMany = jest.fn().mockResolvedValue({ count: 0 });
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          workshop: {
+            upsert,
+            updateMany,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      workshop: {
-        upsert,
-        updateMany,
-      },
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalWorkshops();
 
+    expect($transaction).toHaveBeenCalledTimes(1);
     expect(upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
@@ -85,26 +94,34 @@ describe("MasterDataRepository", () => {
 
   it("reconciles canonical stock scopes by scopeCode", async () => {
     const upsert = jest.fn().mockResolvedValue({});
+    const $transaction = jest
+      .fn()
+      .mockImplementation(async (handler: (tx: unknown) => Promise<unknown>) =>
+        handler({
+          stockScope: {
+            upsert,
+          },
+        }),
+      );
     const repository = new MasterDataRepository({
-      stockScope: {
-        upsert,
-      },
+      $transaction,
     } as unknown as PrismaService);
 
     await repository.ensureCanonicalStockScopes();
 
     expect(upsert).toHaveBeenCalledTimes(2);
+    expect($transaction).toHaveBeenCalledTimes(1);
     expect(upsert).toHaveBeenNthCalledWith(1, {
       where: { scopeCode: "MAIN" },
       update: {
-        scopeName: expect.any(String),
+        scopeName: "主仓",
         scopeType: "MAIN",
         status: "ACTIVE",
         updatedBy: "system-bootstrap",
       },
       create: {
         scopeCode: "MAIN",
-        scopeName: expect.any(String),
+        scopeName: "主仓",
         scopeType: "MAIN",
         status: "ACTIVE",
         createdBy: "system-bootstrap",
@@ -114,14 +131,14 @@ describe("MasterDataRepository", () => {
     expect(upsert).toHaveBeenNthCalledWith(2, {
       where: { scopeCode: "RD_SUB" },
       update: {
-        scopeName: expect.any(String),
+        scopeName: "研发小仓",
         scopeType: "RD_SUB",
         status: "ACTIVE",
         updatedBy: "system-bootstrap",
       },
       create: {
         scopeCode: "RD_SUB",
-        scopeName: expect.any(String),
+        scopeName: "研发小仓",
         scopeType: "RD_SUB",
         status: "ACTIVE",
         createdBy: "system-bootstrap",
