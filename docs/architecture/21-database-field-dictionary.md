@@ -143,7 +143,10 @@
 | 字段名                  | 数据类型                           | 必填  | 默认值      | 唯一  | 说明          |
 | -------------------- | ------------------------------ | --- | -------- | --- | ----------- |
 | `id`                 | INT                            | 是   | 自增       | PK  | 主键          |
+| `personnelCode`      | VARCHAR(64)                    | 否   | —        | 是   | 人员编码        |
+| `personnelType`      | VARCHAR(64)                    | 否   | —        | —   | 人员类型        |
 | `personnelName`      | VARCHAR(128)                   | 是   | —        | —   | 人员名称        |
+| `contactPhone`       | VARCHAR(32)                    | 否   | —        | —   | 联系电话        |
 | `status`             | ENUM(`ACTIVE`, `DISABLED`)     | 是   | `ACTIVE` | —   | 启用状态        |
 
 > 说明：`personnel` 只支持手工维护，不保留 `creationMode`、`sourceDocumentType`、`sourceDocumentId` 字段。

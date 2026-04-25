@@ -121,7 +121,14 @@
         </template>
       </el-table-column>
     </adaptive-table>
-    
+
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
 
 
     <!-- 添加或修改客户对话框 -->
@@ -206,10 +213,13 @@ const customerOptions = ref([]);
 const refreshTable = ref(true);
 const isExpandAll = ref(false);
 const isView = ref(false);
+const total = ref(0);
 
 const data = reactive({
   form: {},
   queryParams: {
+    pageNum: 1,
+    pageSize: 30,
     customerCode: null,
     customerName: null,
     parentId: null,
@@ -245,8 +255,9 @@ const columns = ref([
 /** 查询客户列表 */
 function getList() {
   loading.value = true;
-  listTree(queryParams.value).then((response) => {
+  listCustomer(queryParams.value).then((response) => {
     const customers = response.rows;
+    total.value = response.total || 0;
     // 构造树形结构
     customerList.value = proxy.handleTree(customers, "customerId");
     loading.value = false;
@@ -390,6 +401,7 @@ function reset() {
 
 /** 搜索按钮操作 */
 function handleQuery() {
+  queryParams.value.pageNum = 1;
   getList();
 }
 

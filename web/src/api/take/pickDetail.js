@@ -14,6 +14,7 @@ export async function listNoPage(query) {
   const response = await listWorkshopOrderDetails(query, "pickOrder");
   return {
     data: response.rows,
+    total: response.total,
   };
 }
 

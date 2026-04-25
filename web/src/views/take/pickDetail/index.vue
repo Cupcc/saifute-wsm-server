@@ -159,6 +159,13 @@
       <el-table-column sortable show-overflow-tooltip label="备注" align="center" prop="remark" v-if="columns[8].visible" />
     </adaptive-table>
     <span style="font-size: 16px; font-weight: bold; color: #f56c6c;text-align: right;">合计金额：{{ totalMoney }}</span>
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
     <!-- 添加或修改领料单明细对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body draggable v-loading="dialogLoading">
       <el-form ref="pickDetailRef" :model="form" :rules="rules" label-width="80px">
@@ -213,10 +220,13 @@ const single = ref(true);
 const multiple = ref(true);
 const title = ref("");
 const dialogLoading = ref(false);
+const total = ref(0);
 
 const data = reactive({
   form: {},
   queryParams: {
+    pageNum: 1,
+    pageSize: 30,
     pickNo: null,
     category: null,
     materialName: null,
@@ -280,6 +290,7 @@ function getList() {
     proxy.addDateRange(queryParams.value, daterangePickDate.value),
   ).then((response) => {
     pickDetailList.value = response.data;
+    total.value = response.total || 0;
     loading.value = false;
   });
 }
@@ -306,6 +317,7 @@ function reset() {
 
 /** 搜索按钮操作 */
 function handleQuery() {
+  queryParams.value.pageNum = 1;
   getList();
 }
 

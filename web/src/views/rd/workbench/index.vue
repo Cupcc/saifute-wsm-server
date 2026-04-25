@@ -78,6 +78,14 @@
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="180" />
       </el-table>
+
+      <pagination
+        v-show="recentInboundTotal > 0"
+        :total="recentInboundTotal"
+        v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize"
+        @pagination="loadPage"
+      />
     </el-card>
   </div>
 </template>
@@ -92,6 +100,11 @@ import useUserStore from "@/store/modules/user";
 const userStore = useUserStore();
 const loading = ref(false);
 const recentInboundRows = ref([]);
+const recentInboundTotal = ref(0);
+const queryParams = ref({
+  pageNum: 1,
+  pageSize: 30,
+});
 const dashboard = ref({
   inventory: {
     activeMaterialCount: 0,
@@ -139,10 +152,12 @@ async function loadPage() {
   loading.value = true;
   try {
     const today = getTodayBusinessDate();
+    const limit = queryParams.value.pageSize;
+    const offset = (queryParams.value.pageNum - 1) * limit;
     const [dashboardResponse, inboundResponse, todayInboundResponse] =
       await Promise.all([
         getReportingHome(),
-        listRdInboundResults({ limit: 5, offset: 0 }),
+        listRdInboundResults({ limit, offset }),
         listRdInboundResults({
           bizDateFrom: today,
           bizDateTo: today,
@@ -157,6 +172,7 @@ async function loadPage() {
       },
     };
     recentInboundRows.value = inboundResponse.data?.items || [];
+    recentInboundTotal.value = Number(inboundResponse.data?.total || 0);
   } finally {
     loading.value = false;
   }

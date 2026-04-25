@@ -39,8 +39,14 @@ export function listCustomer(query = {}) {
     },
   }).then((response) => {
     const result = buildRowsResponse(response.data, mapCustomer);
-    result.rows = applyCustomerTypeFilter(result.rows, query.customerType);
-    result.total = result.rows.length;
+    if (
+      query.customerType &&
+      query.customerType !== 11111 &&
+      query.customerType !== "11111"
+    ) {
+      result.rows = applyCustomerTypeFilter(result.rows, query.customerType);
+      result.total = result.rows.length;
+    }
     return result;
   });
 }

@@ -131,7 +131,15 @@
       <el-table-column sortable show-overflow-tooltip label="小计" align="center" prop="subtotal" v-if="columns[8].visible" />
       <el-table-column sortable show-overflow-tooltip label="备注" align="center" prop="remark" v-if="columns[9].visible" />
     </adaptive-table>
-    
+
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      v-model:page="queryParams.pageNum"
+      v-model:limit="queryParams.pageSize"
+      @pagination="getList"
+    />
+
     <!-- 添加或修改明细对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body draggable>
       <el-form ref="intoDetailRef" :model="form" :rules="rules" label-width="80px">
@@ -192,6 +200,7 @@ const ids = ref([]);
 const single = ref(true);
 const multiple = ref(true);
 const title = ref("");
+const total = ref(0);
 // 设置默认日期为当天
 const today = new Date().toISOString().slice(0, 10);
 const dateRange = ref([today, today]);
@@ -203,6 +212,8 @@ const workshopLoading = ref(false);
 const data = reactive({
   form: {},
   queryParams: {
+    pageNum: 1,
+    pageSize: 30,
     intoNo: null,
     materialId: null,
     materialName: null,
@@ -386,11 +397,13 @@ function getList() {
       } else {
         intoDetailList.value = [];
       }
+      total.value = response.total || 0;
       loading.value = false;
     })
     .catch((error) => {
       console.error("Error fetching detail list:", error);
       intoDetailList.value = [];
+      total.value = 0;
       loading.value = false;
     });
 }
@@ -418,6 +431,7 @@ function reset() {
 
 /** 搜索按钮操作 */
 function handleQuery() {
+  queryParams.value.pageNum = 1;
   getList();
 }
 
