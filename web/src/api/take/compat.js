@@ -318,6 +318,25 @@ function applyClientSideFilters(rows, query = {}, mode = "pickOrder") {
   return rows;
 }
 
+function includesText(value, keyword) {
+  if (!keyword) {
+    return true;
+  }
+  return String(value || "").includes(String(keyword).trim());
+}
+
+function filterWorkshopDetailRows(rows, query = {}) {
+  return rows.filter((row) => {
+    if (query.materialName && !includesText(row.materialName, query.materialName)) {
+      return false;
+    }
+    if (query.specification && !includesText(row.specification, query.specification)) {
+      return false;
+    }
+    return true;
+  });
+}
+
 function buildLinePayload(line, mode = "pickOrder", parentData = {}) {
   const quantity =
     mode === "returnOrder"
@@ -457,6 +476,31 @@ async function listOrdersInternal(query = {}, mode = "pickOrder") {
   };
 }
 
+async function listAllOrdersInternal(query = {}, mode = "pickOrder") {
+  const rows = [];
+  let pageNum = 1;
+  let total = 0;
+
+  do {
+    const response = await listOrdersInternal(
+      {
+        ...query,
+        pageNum,
+        pageSize: CLIENT_FILTER_FETCH_LIMIT,
+      },
+      mode,
+    );
+    rows.push(...response.rows);
+    total = response.total;
+    if (!response.rows.length) {
+      break;
+    }
+    pageNum += 1;
+  } while (rows.length < total);
+
+  return rows;
+}
+
 export function listWorkshopOrders(query = {}, mode = "pickOrder") {
   return listOrdersInternal(query, mode);
 }
@@ -515,16 +559,9 @@ export function voidWorkshopOrder(data, mode = "pickOrder") {
 export async function listWorkshopOrderDetails(query = {}, mode = "pickOrder") {
   const config = MODE_CONFIG[mode];
   const { pageNum, pageSize } = buildPageQuery(query);
-  const orders = await listOrdersInternal(
-    {
-      ...query,
-      pageNum: 1,
-      pageSize: CLIENT_FILTER_FETCH_LIMIT,
-    },
-    mode,
-  );
+  const orders = await listAllOrdersInternal(query, mode);
 
-  const rows = orders.rows.flatMap((row) =>
+  const rows = orders.flatMap((row) =>
     row.details.map((detail) => ({
       ...detail,
       [config.noKey]: row[config.noKey],
@@ -538,10 +575,11 @@ export async function listWorkshopOrderDetails(query = {}, mode = "pickOrder") {
       sourceId: row.sourceId,
     })),
   );
+  const filteredRows = filterWorkshopDetailRows(rows, query);
 
   return {
-    rows: rows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
-    total: rows.length,
+    rows: filteredRows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
+    total: filteredRows.length,
   };
 }
 

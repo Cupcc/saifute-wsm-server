@@ -26,12 +26,15 @@ const MODE_CONFIG = {
     detailIdKey: "detailId",
   },
 };
+const DETAIL_FETCH_LIMIT = 200;
 
 function buildPageQuery(query = {}) {
   const pageNum = Number(query.pageNum) > 0 ? Number(query.pageNum) : 1;
   const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 30;
 
   return {
+    pageNum,
+    pageSize,
     limit: pageSize,
     offset: (pageNum - 1) * pageSize,
   };
@@ -211,6 +214,53 @@ async function listOrdersInternal(query = {}, mode = "order") {
   };
 }
 
+async function listAllOrdersInternal(query = {}, mode = "order") {
+  const rows = [];
+  let pageNum = 1;
+  let total = 0;
+
+  do {
+    const response = await listOrdersInternal(
+      {
+        ...query,
+        pageNum,
+        pageSize: DETAIL_FETCH_LIMIT,
+      },
+      mode,
+    );
+    rows.push(...response.rows);
+    total = response.total;
+    if (!response.rows.length) {
+      break;
+    }
+    pageNum += 1;
+  } while (rows.length < total);
+
+  return rows;
+}
+
+function includesText(value, keyword) {
+  if (!keyword) {
+    return true;
+  }
+  return String(value || "").includes(String(keyword).trim());
+}
+
+function filterInboundDetailRows(rows, query = {}) {
+  return rows.filter((row) => {
+    if (query.materialName && !includesText(row.material?.materialName, query.materialName)) {
+      return false;
+    }
+    if (query.specification && !includesText(row.material?.specification, query.specification)) {
+      return false;
+    }
+    if (query.supplierName && !includesText(row.supplierName, query.supplierName)) {
+      return false;
+    }
+    return true;
+  });
+}
+
 export function listInboundOrders(query = {}, mode = "order") {
   return listOrdersInternal(query, mode);
 }
@@ -270,16 +320,10 @@ export function voidInboundOrder(data, mode = "order") {
 
 export async function listInboundDetails(query = {}, mode = "order") {
   const config = MODE_CONFIG[mode];
-  const orders = await listOrdersInternal(
-    {
-      ...query,
-      pageNum: 1,
-      pageSize: 100,
-    },
-    mode,
-  );
+  const { pageNum, pageSize } = buildPageQuery(query);
+  const orders = await listAllOrdersInternal(query, mode);
 
-  const rows = orders.rows.flatMap((row) =>
+  const rows = orders.flatMap((row) =>
     row.details.map((detail) => ({
       ...detail,
       [config.noKey]: row[config.noKey],
@@ -288,10 +332,11 @@ export async function listInboundDetails(query = {}, mode = "order") {
       workshopName: row.workshopName,
     })),
   );
+  const filteredRows = filterInboundDetailRows(rows, query);
 
   return {
-    rows,
-    total: rows.length,
+    rows: filteredRows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
+    total: filteredRows.length,
   };
 }
 

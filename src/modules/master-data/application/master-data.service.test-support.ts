@@ -55,6 +55,7 @@ export function createRepositoryMock() {
     createAutoSupplier: jest.fn(),
     findSuppliers: jest.fn(),
     findPersonnelById: jest.fn(),
+    findPersonnelByCode: jest.fn(),
     findPersonnel: jest.fn(),
     createPersonnel: jest.fn(),
     updatePersonnel: jest.fn(),

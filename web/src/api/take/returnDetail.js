@@ -13,6 +13,7 @@ export async function listNoPage(query) {
   const response = await listWorkshopOrderDetails(query, "returnOrder");
   return {
     data: response.rows,
+    total: response.total,
   };
 }
 

@@ -7,6 +7,14 @@ import type {
 } from "../domain/rbac.types";
 import { RbacState } from "./rbac-state";
 
+type PagedQuery = Record<string, string | undefined> & {
+  pageNum: string;
+};
+type PagedResult<T> = {
+  rows: T[];
+  total: number;
+};
+
 @Injectable()
 export class RbacResourceRepository {
   constructor(private readonly state: RbacState) {}
@@ -60,7 +68,9 @@ export class RbacResourceRepository {
     role.roleKey = String(data.roleKey ?? role.roleKey).trim();
     role.roleSort = this.state.requireNumber(data.roleSort ?? role.roleSort);
     role.status = this.state.normalizeStatus(data.status ?? role.status);
-    role.dataScope = this.state.normalizeDataScope(data.dataScope ?? role.dataScope);
+    role.dataScope = this.state.normalizeDataScope(
+      data.dataScope ?? role.dataScope,
+    );
     role.menuCheckStrictly = Boolean(
       data.menuCheckStrictly ?? role.menuCheckStrictly,
     );
@@ -75,7 +85,9 @@ export class RbacResourceRepository {
 
   updateRoleDataScope(data: Record<string, unknown>) {
     const role = this.requireRole(this.state.requireNumber(data.roleId));
-    role.dataScope = this.state.normalizeDataScope(data.dataScope ?? role.dataScope);
+    role.dataScope = this.state.normalizeDataScope(
+      data.dataScope ?? role.dataScope,
+    );
     role.deptIds = this.state.normalizeNumberList(data.deptIds ?? role.deptIds);
   }
 
@@ -95,7 +107,9 @@ export class RbacResourceRepository {
       if (assignedUsers.length > 0) {
         throw new Error("角色已分配给用户，无法删除");
       }
-      const index = this.state.roles.findIndex((item) => item.roleId === roleId);
+      const index = this.state.roles.findIndex(
+        (item) => item.roleId === roleId,
+      );
       if (index >= 0) {
         this.state.roles.splice(index, 1);
       }
@@ -105,13 +119,20 @@ export class RbacResourceRepository {
   getRoleMenuTree(roleId: number) {
     const role = this.requireRole(roleId);
     return {
-      menus: this.state.toTreeSelect(this.state.menus, "menuId", "parentId", "menuName"),
+      menus: this.state.toTreeSelect(
+        this.state.menus,
+        "menuId",
+        "parentId",
+        "menuName",
+      ),
       checkedKeys: [...role.menuIds],
     };
   }
 
+  listMenus(query: PagedQuery): PagedResult<ManagedMenuRecord>;
+  listMenus(query: Record<string, string | undefined>): ManagedMenuRecord[];
   listMenus(query: Record<string, string | undefined>) {
-    return this.state.menus
+    const rows = this.state.menus
       .filter((menu) => {
         if (query.menuName && !menu.menuName.includes(query.menuName)) {
           return false;
@@ -127,6 +148,12 @@ export class RbacResourceRepository {
           : left.parentId - right.parentId,
       )
       .map((menu) => structuredClone(menu));
+
+    if (query.pageNum || query.pageSize) {
+      return this.state.paginate(rows, query);
+    }
+
+    return rows;
   }
 
   getMenu(menuId: number) {
@@ -134,7 +161,12 @@ export class RbacResourceRepository {
   }
 
   getMenuTreeSelect() {
-    return this.state.toTreeSelect(this.state.menus, "menuId", "parentId", "menuName");
+    return this.state.toTreeSelect(
+      this.state.menus,
+      "menuId",
+      "parentId",
+      "menuName",
+    );
   }
 
   createMenu(data: Record<string, unknown>) {
@@ -167,35 +199,49 @@ export class RbacResourceRepository {
     menu.path = String(data.path ?? menu.path);
     menu.component = String(data.component ?? menu.component);
     menu.routeName = String(data.routeName ?? menu.routeName);
-    menu.menuType = this.state.normalizeMenuType(data.menuType ?? menu.menuType);
+    menu.menuType = this.state.normalizeMenuType(
+      data.menuType ?? menu.menuType,
+    );
     menu.visible = this.state.normalizeStatus(data.visible ?? menu.visible);
     menu.status = this.state.normalizeStatus(data.status ?? menu.status);
     menu.perms = String(data.perms ?? menu.perms);
     menu.icon = String(data.icon ?? menu.icon);
     menu.query = String(data.query ?? menu.query);
-    menu.isFrame = this.state.normalizeYesNoFlag(data.isFrame ?? menu.isFrame, "1");
-    menu.isCache = this.state.normalizeYesNoFlag(data.isCache ?? menu.isCache, "0");
+    menu.isFrame = this.state.normalizeYesNoFlag(
+      data.isFrame ?? menu.isFrame,
+      "1",
+    );
+    menu.isCache = this.state.normalizeYesNoFlag(
+      data.isCache ?? menu.isCache,
+      "0",
+    );
     return structuredClone(menu);
   }
 
   deleteMenus(menuIds: number[]) {
     menuIds.forEach((menuId) => {
-      const hasChildren = this.state.menus.some((item) => item.parentId === menuId);
+      const hasChildren = this.state.menus.some(
+        (item) => item.parentId === menuId,
+      );
       if (hasChildren) {
         throw new Error("存在子菜单，不允许删除");
       }
       this.state.roles.forEach((role) => {
         role.menuIds = role.menuIds.filter((item) => item !== menuId);
       });
-      const index = this.state.menus.findIndex((item) => item.menuId === menuId);
+      const index = this.state.menus.findIndex(
+        (item) => item.menuId === menuId,
+      );
       if (index >= 0) {
         this.state.menus.splice(index, 1);
       }
     });
   }
 
+  listDepts(query: PagedQuery): PagedResult<ManagedDeptRecord>;
+  listDepts(query: Record<string, string | undefined>): ManagedDeptRecord[];
   listDepts(query: Record<string, string | undefined>) {
-    return this.state.depts
+    const rows = this.state.depts
       .filter((dept) => {
         if (query.deptName && !dept.deptName.includes(query.deptName)) {
           return false;
@@ -211,6 +257,12 @@ export class RbacResourceRepository {
           : left.parentId - right.parentId,
       )
       .map((dept) => structuredClone(dept));
+
+    if (query.pageNum || query.pageSize) {
+      return this.state.paginate(rows, query);
+    }
+
+    return rows;
   }
 
   listDeptExcludeChild(deptId: number) {
@@ -279,7 +331,9 @@ export class RbacResourceRepository {
 
   deleteDepts(deptIds: number[]) {
     deptIds.forEach((deptId) => {
-      const hasChildren = this.state.depts.some((item) => item.parentId === deptId);
+      const hasChildren = this.state.depts.some(
+        (item) => item.parentId === deptId,
+      );
       if (hasChildren) {
         throw new Error("存在下级部门，不允许删除");
       }
@@ -289,7 +343,9 @@ export class RbacResourceRepository {
       if (hasUsers) {
         throw new Error("部门下存在用户，不允许删除");
       }
-      const index = this.state.depts.findIndex((item) => item.deptId === deptId);
+      const index = this.state.depts.findIndex(
+        (item) => item.deptId === deptId,
+      );
       if (index >= 0) {
         this.state.depts.splice(index, 1);
       }
@@ -299,16 +355,27 @@ export class RbacResourceRepository {
   getDeptTree(roleId?: number) {
     const checkedKeys = roleId ? [...this.requireRole(roleId).deptIds] : [];
     return {
-      depts: this.state.toTreeSelect(this.state.depts, "deptId", "parentId", "deptName"),
+      depts: this.state.toTreeSelect(
+        this.state.depts,
+        "deptId",
+        "parentId",
+        "deptName",
+      ),
       checkedKeys,
     };
   }
 
   getDeptTreeSelect() {
-    return this.state.toTreeSelect(this.state.depts, "deptId", "parentId", "deptName", {
-      disabledKey: "status",
-      disabledValue: "1",
-    });
+    return this.state.toTreeSelect(
+      this.state.depts,
+      "deptId",
+      "parentId",
+      "deptName",
+      {
+        disabledKey: "status",
+        disabledValue: "1",
+      },
+    );
   }
 
   listPosts(query: Record<string, string | undefined>) {
@@ -366,7 +433,9 @@ export class RbacResourceRepository {
       if (used) {
         throw new Error("岗位已分配给用户，无法删除");
       }
-      const index = this.state.posts.findIndex((item) => item.postId === postId);
+      const index = this.state.posts.findIndex(
+        (item) => item.postId === postId,
+      );
       if (index >= 0) {
         this.state.posts.splice(index, 1);
       }

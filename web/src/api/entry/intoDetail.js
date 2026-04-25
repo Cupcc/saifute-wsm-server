@@ -13,12 +13,16 @@ export async function listNoPage(query) {
   const response = await listInboundDetails(query, "intoOrder");
   return {
     data: response.rows,
+    total: response.total,
   };
 }
 
 // 查询明细详细
 export async function getIntoDetail(detailId) {
-  const response = await listInboundDetails({}, "intoOrder");
+  const response = await listInboundDetails(
+    { pageNum: 1, pageSize: 1000 },
+    "intoOrder",
+  );
   return {
     data: response.rows.find((item) => item.detailId === detailId) ?? null,
   };
