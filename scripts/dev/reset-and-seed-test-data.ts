@@ -71,7 +71,7 @@ function assertSafeDatabaseUrl(databaseUrl: string) {
     url.hostname === "127.0.0.1" || url.hostname === "localhost";
   const databaseName = url.pathname.replace(/^\/+/u, "");
 
-  if (!isLocalHost || databaseName !== "saifute-wsm") {
+  if (!isLocalHost || databaseName !== "saifute-wms") {
     throw new Error(
       `Refusing to reset non-dev database: host=${url.hostname} db=${databaseName}`,
     );
@@ -585,9 +585,17 @@ async function printVerification(
   console.log(
     `RD projects: ${summary.rdProjectItems.map((item) => `${item.rdProjectName}:${item.documentCount}`).join(", ")}`,
   );
-  console.log(
-    `RD handoff: ${summary.rdHandoffItems.map((item) => `${item.sourceWorkshopName}->${item.targetWorkshopName}:${item.documentCount}`).join(", ")}`,
-  );
+  const rdHandoffSummary = summary.rdProjectItems
+    .filter(
+      (item) =>
+        item.handoffInQuantity !== "0" || item.handoffInAmount !== "0.00",
+    )
+    .map(
+      (item) =>
+        `${item.rdProjectName}:qty=${item.handoffInQuantity},amount=${item.handoffInAmount}`,
+    )
+    .join(", ");
+  console.log(`RD handoff: ${rdHandoffSummary || "none"}`);
 }
 
 async function main() {
@@ -602,7 +610,7 @@ async function main() {
     (table) => !PRESERVED_TABLES.has(table),
   );
 
-  console.log(`Resetting ${tablesToReset.length} tables in saifute-wsm...`);
+  console.log(`Resetting ${tablesToReset.length} tables in saifute-wms...`);
   await truncateTables(databaseUrl, tablesToReset);
 
   const app = await NestFactory.createApplicationContext(AppModule, {

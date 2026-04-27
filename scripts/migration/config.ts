@@ -4,7 +4,7 @@ import { join } from "node:path";
 export const MIGRATION_STAGING_SCHEMA = "migration_staging";
 export const MATERIAL_CATEGORY_DICT_TYPE = "saifute_material_category";
 export const EXPECTED_LEGACY_DATABASE_NAME = "saifute";
-export const EXPECTED_TARGET_DATABASE_NAME = "saifute-wsm";
+export const EXPECTED_TARGET_DATABASE_NAME = "saifute-wms";
 export const ENV_EXAMPLE_TARGET_DATABASE_NAME = "saifute_wms";
 
 export interface MigrationEnvironment {
