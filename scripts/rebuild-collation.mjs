@@ -43,7 +43,7 @@ const rootDir = path.resolve(
   "..",
 );
 
-function buildSchemaSql() {
+function buildSchemaSql(targetCollation) {
   const diffArgs = [
     "exec",
     "prisma",
@@ -79,10 +79,13 @@ function buildSchemaSql() {
     );
   }
 
-  return diffOutput.slice(sqlStart).trim();
+  return diffOutput
+    .slice(sqlStart)
+    .replaceAll("utf8mb4_unicode_ci", targetCollation)
+    .trim();
 }
 
-const migrationSql = buildSchemaSql();
+const migrationSql = buildSchemaSql(requestedCollation);
 
 const connectionConfig = {
   host: parsedUrl.hostname || "127.0.0.1",
@@ -122,28 +125,9 @@ try {
   });
   await databaseConnection.query(migrationSql);
 
-  if (requestedCollation !== "utf8mb4_unicode_ci") {
-    await databaseConnection.query(
-      `ALTER DATABASE ${quoteIdentifier(database)} CHARACTER SET ${DEFAULT_CHARACTER_SET} COLLATE ${requestedCollation};`,
-    );
-
-    const baseTables = await databaseConnection.query(
-      `
-        SELECT table_name AS tableName
-        FROM information_schema.tables
-        WHERE table_schema = ?
-          AND table_type = 'BASE TABLE'
-        ORDER BY table_name
-      `,
-      [database],
-    );
-
-    for (const { tableName } of baseTables) {
-      await databaseConnection.query(
-        `ALTER TABLE ${quoteIdentifier(tableName)} CONVERT TO CHARACTER SET ${DEFAULT_CHARACTER_SET} COLLATE ${requestedCollation};`,
-      );
-    }
-  }
+  await databaseConnection.query(
+    `ALTER DATABASE ${quoteIdentifier(database)} CHARACTER SET ${DEFAULT_CHARACTER_SET} COLLATE ${requestedCollation};`,
+  );
 
   console.log(
     `Database ${database} rebuilt with ${requestedCollation} using the core Prisma migration.`,

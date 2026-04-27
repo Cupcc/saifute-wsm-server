@@ -2,7 +2,7 @@
 
 ## 1. 文档目标
 
-本文档用于一次性讲清楚旧 Java 库 `saifute` 到 NestJS 目标库 `saifute-wsm` 的数据迁移口径：
+本文档用于一次性讲清楚旧 Java 库 `saifute` 到 NestJS 目标库 `saifute-wms` 的数据迁移口径：
 
 - 旧库有哪些表，分别承担什么业务作用
 - 这些表进入现在哪些表、视图或 staging 结构

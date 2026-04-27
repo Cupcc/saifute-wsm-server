@@ -1,4 +1,4 @@
-DATABASE_URL="${DATABASE_URL:-mysql://placeholder:placeholder@127.0.0.1:3306/saifute-wsm}" \
+DATABASE_URL="${DATABASE_URL:-mysql://placeholder:placeholder@127.0.0.1:3306/saifute-wms}" \
   bun run prisma:generate
 
 bun run verify
