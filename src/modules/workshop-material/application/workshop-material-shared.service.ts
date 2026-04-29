@@ -89,7 +89,35 @@ export class WorkshopMaterialSharedService {
       documentNo: query.documentNo,
       handlerName: query.handlerName,
       materialId: query.materialId,
+      detailId: query.detailId,
+      materialCode: query.materialCode,
       materialName: query.materialName,
+      specification: query.specification,
+      sourceId: query.sourceId,
+      orderType: query.orderType,
+      bizDateFrom: query.bizDateFrom ? new Date(query.bizDateFrom) : undefined,
+      bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,
+      workshopId: query.workshopId,
+      stockScope: query.stockScope,
+      limit,
+      offset,
+    });
+  }
+
+  async listOrderLines(
+    query: QueryWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+  ) {
+    const limit = Math.min(query.limit ?? 50, 100);
+    const offset = query.offset ?? 0;
+    return this.repository.findOrderLines({
+      documentNo: query.documentNo,
+      handlerName: query.handlerName,
+      materialId: query.materialId,
+      detailId: query.detailId,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specification: query.specification,
+      sourceId: query.sourceId,
       orderType: query.orderType,
       bizDateFrom: query.bizDateFrom ? new Date(query.bizDateFrom) : undefined,
       bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,

@@ -9,6 +9,7 @@ import {
   Query,
   StreamableFile,
 } from "@nestjs/common";
+import { ApiFileResponse } from "../../../shared/api-docs";
 import { SkipResponseEnvelope } from "../../../shared/common/interceptors/skip-response-envelope.decorator";
 import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import { SystemManagementService } from "../application/system-management.service";
@@ -28,6 +29,7 @@ export class SystemPostController {
 
   @Post("export")
   @Permissions("system:post:export")
+  @ApiFileResponse({ description: "导出岗位文件" })
   exportPosts(@Body() query: Record<string, string | undefined>) {
     const exportResult = this.systemManagementService.exportPosts(query);
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {

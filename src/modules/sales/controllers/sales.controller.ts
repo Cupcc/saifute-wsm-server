@@ -31,6 +31,12 @@ export class SalesController {
   }
 
   @Permissions("sales:order:list")
+  @Get("orders/details")
+  async listOrderLines(@Query() query: QueryOutboundOrderDto) {
+    return this.salesService.listOrderLines(query);
+  }
+
+  @Permissions("sales:order:list")
   @Get("orders/:id")
   async getOrder(@Param("id", ParseIntPipe) id: number) {
     return this.salesService.getOrderById(id);
@@ -73,6 +79,12 @@ export class SalesController {
   @Get("sales-returns")
   async listSalesReturns(@Query() query: QuerySalesReturnDto) {
     return this.salesService.listSalesReturns(query);
+  }
+
+  @Permissions("sales:return:list")
+  @Get("sales-returns/details")
+  async listSalesReturnLines(@Query() query: QuerySalesReturnDto) {
+    return this.salesService.listSalesReturnLines(query);
   }
 
   @Permissions("sales:return:list")

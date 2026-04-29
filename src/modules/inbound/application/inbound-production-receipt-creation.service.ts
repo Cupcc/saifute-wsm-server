@@ -40,15 +40,42 @@ export class InboundProductionReceiptCreationService {
     bizDateFrom?: Date;
     bizDateTo?: Date;
     supplierId?: number;
+    supplierName?: string;
     handlerName?: string;
     materialId?: number;
+    detailId?: number;
+    materialCode?: string;
     materialName?: string;
+    specification?: string;
     stockScopeId?: number;
     workshopId?: number;
     limit: number;
     offset: number;
   }) {
     return this.repository.findOrders({
+      ...query,
+      orderType: StockInOrderType.PRODUCTION_RECEIPT,
+    });
+  }
+
+  async listOrderLines(query: {
+    documentNo?: string;
+    bizDateFrom?: Date;
+    bizDateTo?: Date;
+    supplierId?: number;
+    supplierName?: string;
+    handlerName?: string;
+    materialId?: number;
+    detailId?: number;
+    materialCode?: string;
+    materialName?: string;
+    specification?: string;
+    stockScopeId?: number;
+    workshopId?: number;
+    limit: number;
+    offset: number;
+  }) {
+    return this.repository.findOrderLines({
       ...query,
       orderType: StockInOrderType.PRODUCTION_RECEIPT,
     });

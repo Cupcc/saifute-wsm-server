@@ -20,11 +20,11 @@ export async function listNoPage(query) {
 // 查询明细详细
 export async function getDetail(detailId) {
   const response = await listInboundDetails(
-    { pageNum: 1, pageSize: 1000 },
+    { detailId, pageNum: 1, pageSize: 1 },
     "order",
   );
   return {
-    data: response.rows.find((item) => item.detailId === detailId) ?? null,
+    data: response.rows[0] ?? null,
   };
 }
 

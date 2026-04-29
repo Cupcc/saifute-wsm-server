@@ -42,6 +42,22 @@ export class WorkshopMaterialController {
   }
 
   @Permissions("workshop-material:pick-order:list")
+  @Get("pick-orders/details")
+  async listPickOrderLines(
+    @Query() query: QueryWorkshopMaterialOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    return this.workshopMaterialService.listPickOrderLines({
+      ...query,
+      workshopId,
+    });
+  }
+
+  @Permissions("workshop-material:pick-order:list")
   @Get("pick-orders/:id")
   async getPickOrder(
     @Param("id", ParseIntPipe) id: number,
@@ -124,6 +140,22 @@ export class WorkshopMaterialController {
       query.workshopId,
     );
     return this.workshopMaterialService.listReturnOrders({
+      ...query,
+      workshopId,
+    });
+  }
+
+  @Permissions("workshop-material:return-order:list")
+  @Get("return-orders/details")
+  async listReturnOrderLines(
+    @Query() query: QueryWorkshopMaterialOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    return this.workshopMaterialService.listReturnOrderLines({
       ...query,
       workshopId,
     });
@@ -217,6 +249,28 @@ export class WorkshopMaterialController {
         query.workshopId,
       );
     return this.workshopMaterialService.listScrapOrders({
+      ...query,
+      workshopId,
+      stockScope: inventoryScope?.stockScope,
+    });
+  }
+
+  @Permissions("workshop-material:scrap-order:list")
+  @Get("scrap-orders/details")
+  async listScrapOrderLines(
+    @Query() query: QueryWorkshopMaterialOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const workshopId = await this.workshopScopeService.resolveQueryWorkshopId(
+      user,
+      query.workshopId,
+    );
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
+    return this.workshopMaterialService.listScrapOrderLines({
       ...query,
       workshopId,
       stockScope: inventoryScope?.stockScope,

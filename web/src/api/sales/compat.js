@@ -4,6 +4,7 @@ import request from "@/utils/request";
 const MODE_CONFIG = {
   order: {
     listUrl: "/api/sales/orders",
+    detailUrl: "/api/sales/orders/details",
     itemUrl: "/api/sales/orders",
     voidUrl: "/api/sales/orders",
     idKey: "orderId",
@@ -11,6 +12,7 @@ const MODE_CONFIG = {
   },
   salesReturn: {
     listUrl: "/api/sales/sales-returns",
+    detailUrl: "/api/sales/sales-returns/details",
     itemUrl: "/api/sales/sales-returns",
     voidUrl: "/api/sales/sales-returns",
     idKey: "orderId",
@@ -19,7 +21,6 @@ const MODE_CONFIG = {
 };
 
 const CUSTOMER_DOCUMENT_TYPE = "SalesStockOrder";
-const DETAIL_FETCH_LIMIT = 100;
 
 function buildPageQuery(query = {}) {
   const pageNum = Number(query.pageNum) > 0 ? Number(query.pageNum) : 1;
@@ -46,13 +47,6 @@ function toAuditStatus(status) {
 function toNumber(value) {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function toDisplayString(value) {
-  if (value === null || typeof value === "undefined") {
-    return "";
-  }
-  return String(value);
 }
 
 function toDecimalString(value) {
@@ -246,39 +240,6 @@ async function listOrdersInternal(query = {}, mode = "order") {
   };
 }
 
-function applyDetailFilters(rows, query = {}) {
-  return rows.filter((row) => {
-    if (query.materialId && row.materialId !== Number(query.materialId)) {
-      return false;
-    }
-    if (
-      query.materialCode &&
-      !toDisplayString(row.materialCode).includes(
-        toDisplayString(query.materialCode),
-      )
-    ) {
-      return false;
-    }
-    if (
-      query.materialName &&
-      !toDisplayString(row.materialName).includes(
-        toDisplayString(query.materialName),
-      )
-    ) {
-      return false;
-    }
-    if (
-      query.specification &&
-      !toDisplayString(row.specification).includes(
-        toDisplayString(query.specification),
-      )
-    ) {
-      return false;
-    }
-    return true;
-  });
-}
-
 export function listSalesOrders(query = {}, mode = "order") {
   return listOrdersInternal(query, mode);
 }
@@ -327,43 +288,55 @@ export function voidSalesOrder(data, mode = "order") {
 }
 
 export async function listSalesOrderDetails(query = {}, mode = "order") {
-  const { pageNum, pageSize } = buildPageQuery(query);
-  const orders = await listOrdersInternal(
-    {
-      ...query,
-      pageNum: 1,
-      pageSize: DETAIL_FETCH_LIMIT,
+  const config = MODE_CONFIG[mode];
+  const { limit, offset } = buildPageQuery(query);
+  const response = await request({
+    url: config.detailUrl,
+    method: "get",
+    params: {
+      documentNo: query.documentNo,
+      detailId: query.detailId,
+      customerId: query.customerId,
+      workshopId: query.workshopId,
+      materialId: query.materialId,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specification: query.specification,
+      sourceOutboundOrderId: query.sourceOutboundOrderId,
+      bizDateFrom: query.params?.beginTime,
+      bizDateTo: query.params?.endTime,
+      limit,
+      offset,
     },
-    mode,
-  );
+  });
 
-  const rows = applyDetailFilters(
-    orders.rows.flatMap((row) =>
-      row.details.map((detail) => ({
-        ...detail,
-        sourceOutboundOrderId: row.sourceOutboundOrderId,
-      })),
-    ),
-    query,
-  );
+  const items = Array.isArray(response.data?.items) ? response.data.items : [];
+  const rows = items.map((item) => ({
+    ...mapOrderLine(item, item.order ?? {}),
+    sourceOutboundOrderId: item.sourceDocumentId ?? null,
+  }));
 
   return {
-    rows: rows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
-    total: rows.length,
+    rows,
+    total: Number(response.data?.total ?? rows.length),
   };
 }
 
 export async function getSalesOrderDetail(detailId, mode = "order") {
   const details = await listSalesOrderDetails(
     {
+      detailId,
       pageNum: 1,
-      pageSize: DETAIL_FETCH_LIMIT,
+      pageSize: 1,
     },
     mode,
   );
 
   return {
-    data: details.rows.find((item) => item.detailId === detailId) ?? null,
+    data:
+      details.rows.find(
+        (item) => Number(item.detailId) === Number(detailId),
+      ) ?? null,
   };
 }
 

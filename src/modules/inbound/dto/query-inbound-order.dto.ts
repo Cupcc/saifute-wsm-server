@@ -39,6 +39,12 @@ export class QueryInboundOrderDto {
   @Min(1)
   supplierId?: number;
 
+  /** 供应商名称关键字 */
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  supplierName?: string;
+
   /** 经办人姓名关键字 */
   @IsString()
   @IsOptional()
@@ -52,11 +58,30 @@ export class QueryInboundOrderDto {
   @Min(1)
   materialId?: number;
 
+  /** 明细 ID */
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  detailId?: number;
+
+  /** 物料编码关键字 */
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  materialCode?: string;
+
   /** 物料名称关键字 */
   @IsString()
   @IsOptional()
   @MaxLength(128)
   materialName?: string;
+
+  /** 规格型号关键字 */
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  specification?: string;
 
   /** 车间 ID */
   @IsInt()

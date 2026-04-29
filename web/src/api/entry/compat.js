@@ -5,6 +5,7 @@ import request from "@/utils/request";
 const MODE_CONFIG = {
   order: {
     listUrl: "/api/inbound/orders",
+    detailUrl: "/api/inbound/orders/details",
     itemUrl: "/api/inbound/orders",
     voidUrl: "/api/inbound/orders",
     documentType: "StockInOrder",
@@ -16,6 +17,7 @@ const MODE_CONFIG = {
   },
   intoOrder: {
     listUrl: "/api/inbound/into-orders",
+    detailUrl: "/api/inbound/into-orders/details",
     itemUrl: "/api/inbound/into-orders",
     voidUrl: "/api/inbound/into-orders",
     documentType: "StockInOrder",
@@ -26,8 +28,6 @@ const MODE_CONFIG = {
     detailIdKey: "detailId",
   },
 };
-const DETAIL_FETCH_LIMIT = 200;
-
 function buildPageQuery(query = {}) {
   const pageNum = Number(query.pageNum) > 0 ? Number(query.pageNum) : 1;
   const pageSize = Number(query.pageSize) > 0 ? Number(query.pageSize) : 30;
@@ -248,53 +248,6 @@ async function listOrdersInternal(query = {}, mode = "order") {
   };
 }
 
-async function listAllOrdersInternal(query = {}, mode = "order") {
-  const rows = [];
-  let pageNum = 1;
-  let total = 0;
-
-  do {
-    const response = await listOrdersInternal(
-      {
-        ...query,
-        pageNum,
-        pageSize: DETAIL_FETCH_LIMIT,
-      },
-      mode,
-    );
-    rows.push(...response.rows);
-    total = response.total;
-    if (!response.rows.length) {
-      break;
-    }
-    pageNum += 1;
-  } while (rows.length < total);
-
-  return rows;
-}
-
-function includesText(value, keyword) {
-  if (!keyword) {
-    return true;
-  }
-  return String(value || "").includes(String(keyword).trim());
-}
-
-function filterInboundDetailRows(rows, query = {}) {
-  return rows.filter((row) => {
-    if (query.materialName && !includesText(row.material?.materialName, query.materialName)) {
-      return false;
-    }
-    if (query.specification && !includesText(row.material?.specification, query.specification)) {
-      return false;
-    }
-    if (query.supplierName && !includesText(row.supplierName, query.supplierName)) {
-      return false;
-    }
-    return true;
-  });
-}
-
 export function listInboundOrders(query = {}, mode = "order") {
   return listOrdersInternal(query, mode);
 }
@@ -354,23 +307,36 @@ export function voidInboundOrder(data, mode = "order") {
 
 export async function listInboundDetails(query = {}, mode = "order") {
   const config = MODE_CONFIG[mode];
-  const { pageNum, pageSize } = buildPageQuery(query);
-  const orders = await listAllOrdersInternal(query, mode);
+  const { limit, offset } = buildPageQuery(query);
+  const { bizDateFrom, bizDateTo } = resolveBizDateRange(query);
+  const response = await request({
+    url: config.detailUrl,
+    method: "get",
+    params: {
+      documentNo: query[config.noKey],
+      detailId: query.detailId,
+      supplierId: query.supplierId,
+      supplierName: query.supplierName,
+      handlerName: query.attn,
+      materialId: query.materialId,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specification: query.specification,
+      workshopId: query.workshopId,
+      bizDateFrom,
+      bizDateTo,
+      limit,
+      offset,
+    },
+  });
 
-  const rows = orders.flatMap((row) =>
-    row.details.map((detail) => ({
-      ...detail,
-      [config.noKey]: row[config.noKey],
-      [config.dateKey]: row[config.dateKey],
-      supplierName: row.supplierName,
-      workshopName: row.workshopName,
-    })),
+  const items = Array.isArray(response.data?.items) ? response.data.items : [];
+  const rows = items.map((item) =>
+    mapInboundLine(item, config, item.order ?? {}),
   );
-  const filteredRows = filterInboundDetailRows(rows, query);
-
   return {
-    rows: filteredRows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
-    total: filteredRows.length,
+    rows,
+    total: Number(response.data?.total ?? rows.length),
   };
 }
 
@@ -378,18 +344,15 @@ export async function getLatestInboundDetailByMaterialId(
   materialId,
   mode = "order",
 ) {
-  const orders = await listOrdersInternal(
+  const details = await listInboundDetails(
     {
       materialId,
       pageNum: 1,
-      pageSize: 100,
+      pageSize: 1,
     },
     mode,
   );
-
-  const latest = orders.rows
-    .flatMap((row) => row.details)
-    .find((detail) => detail.materialId === materialId);
+  const latest = details.rows[0];
 
   return {
     data: latest

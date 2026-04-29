@@ -26,8 +26,28 @@ export class InboundService {
     });
   }
 
+  listOrderLines(query: QueryInboundOrderDto & { stockScopeId?: number }) {
+    return this.acceptanceCreation.listOrderLines({
+      ...query,
+      limit: query.limit ?? 50,
+      offset: query.offset ?? 0,
+      bizDateFrom: query.bizDateFrom ? new Date(query.bizDateFrom) : undefined,
+      bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,
+    });
+  }
+
   listIntoOrders(query: QueryInboundOrderDto & { stockScopeId?: number }) {
     return this.productionCreation.listOrders({
+      ...query,
+      limit: query.limit ?? 50,
+      offset: query.offset ?? 0,
+      bizDateFrom: query.bizDateFrom ? new Date(query.bizDateFrom) : undefined,
+      bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,
+    });
+  }
+
+  listIntoOrderLines(query: QueryInboundOrderDto & { stockScopeId?: number }) {
+    return this.productionCreation.listOrderLines({
       ...query,
       limit: query.limit ?? 50,
       offset: query.offset ?? 0,

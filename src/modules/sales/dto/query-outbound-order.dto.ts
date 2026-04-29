@@ -40,6 +40,33 @@ export class QueryOutboundOrderDto {
   @Min(1)
   workshopId?: number;
 
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  materialId?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  detailId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  materialCode?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  materialName?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  specification?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()

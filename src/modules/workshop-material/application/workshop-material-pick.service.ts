@@ -45,6 +45,10 @@ export class WorkshopMaterialPickService {
     return this.shared.listOrders({ ...query, orderType: this.orderType });
   }
 
+  async listPickOrderLines(query: QueryWorkshopMaterialOrderDto) {
+    return this.shared.listOrderLines({ ...query, orderType: this.orderType });
+  }
+
   async getPickOrderById(id: number) {
     return this.shared.getOrderById(id, this.orderType);
   }

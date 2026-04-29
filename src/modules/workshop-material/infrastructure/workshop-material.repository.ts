@@ -25,22 +25,20 @@ export class WorkshopMaterialRepository {
     return db ?? this.prisma;
   }
 
-  async findOrders(
-    params: {
-      documentNo?: string;
-      handlerName?: string;
-      materialId?: number;
-      materialName?: string;
-      orderType?: WorkshopMaterialOrderType;
-      bizDateFrom?: Date;
-      bizDateTo?: Date;
-      workshopId?: number;
-      stockScope?: StockScopeCode;
-      limit: number;
-      offset: number;
-    },
-    db?: DbClient,
-  ) {
+  private buildOrderWhere(params: {
+    documentNo?: string;
+    handlerName?: string;
+    materialId?: number;
+    materialCode?: string;
+    materialName?: string;
+    specification?: string;
+    sourceId?: number;
+    orderType?: WorkshopMaterialOrderType;
+    bizDateFrom?: Date;
+    bizDateTo?: Date;
+    workshopId?: number;
+    stockScope?: StockScopeCode;
+  }): Prisma.WorkshopMaterialOrderWhereInput {
     const where: Prisma.WorkshopMaterialOrderWhereInput = {
       lifecycleStatus: "EFFECTIVE",
     };
@@ -50,10 +48,19 @@ export class WorkshopMaterialRepository {
     if (params.handlerName) {
       where.handlerNameSnapshot = { contains: params.handlerName };
     }
-    if (params.materialId || params.materialName) {
+    if (
+      params.materialId ||
+      params.materialCode ||
+      params.materialName ||
+      params.specification ||
+      params.sourceId
+    ) {
       where.lines = {
         some: {
           ...(params.materialId ? { materialId: params.materialId } : {}),
+          ...(params.materialCode
+            ? { materialCodeSnapshot: { contains: params.materialCode } }
+            : {}),
           ...(params.materialName
             ? {
                 materialNameSnapshot: {
@@ -61,6 +68,10 @@ export class WorkshopMaterialRepository {
                 },
               }
             : {}),
+          ...(params.specification
+            ? { materialSpecSnapshot: { contains: params.specification } }
+            : {}),
+          ...(params.sourceId ? { sourceDocumentId: params.sourceId } : {}),
         },
       };
     }
@@ -87,6 +98,31 @@ export class WorkshopMaterialRepository {
       };
     }
 
+    return where;
+  }
+
+  async findOrders(
+    params: {
+      documentNo?: string;
+      handlerName?: string;
+      materialId?: number;
+      detailId?: number;
+      materialCode?: string;
+      materialName?: string;
+      specification?: string;
+      sourceId?: number;
+      orderType?: WorkshopMaterialOrderType;
+      bizDateFrom?: Date;
+      bizDateTo?: Date;
+      workshopId?: number;
+      stockScope?: StockScopeCode;
+      limit: number;
+      offset: number;
+    },
+    db?: DbClient,
+  ) {
+    const where = this.buildOrderWhere(params);
+
     const client = this.db(db);
     const [items, total] = await Promise.all([
       client.workshopMaterialOrder.findMany({
@@ -100,6 +136,68 @@ export class WorkshopMaterialRepository {
         },
       }),
       client.workshopMaterialOrder.count({ where }),
+    ]);
+
+    return { items, total };
+  }
+
+  async findOrderLines(
+    params: {
+      documentNo?: string;
+      handlerName?: string;
+      materialId?: number;
+      detailId?: number;
+      materialCode?: string;
+      materialName?: string;
+      specification?: string;
+      sourceId?: number;
+      orderType?: WorkshopMaterialOrderType;
+      bizDateFrom?: Date;
+      bizDateTo?: Date;
+      workshopId?: number;
+      stockScope?: StockScopeCode;
+      limit: number;
+      offset: number;
+    },
+    db?: DbClient,
+  ) {
+    const where: Prisma.WorkshopMaterialOrderLineWhereInput = {
+      order: this.buildOrderWhere(params),
+    };
+    if (params.detailId) {
+      where.id = params.detailId;
+    }
+    if (params.materialId) {
+      where.materialId = params.materialId;
+    }
+    if (params.materialCode) {
+      where.materialCodeSnapshot = { contains: params.materialCode };
+    }
+    if (params.materialName) {
+      where.materialNameSnapshot = { contains: params.materialName };
+    }
+    if (params.specification) {
+      where.materialSpecSnapshot = { contains: params.specification };
+    }
+    if (params.sourceId) {
+      where.sourceDocumentId = params.sourceId;
+    }
+
+    const client = this.db(db);
+    const [items, total] = await Promise.all([
+      client.workshopMaterialOrderLine.findMany({
+        where,
+        take: params.limit,
+        skip: params.offset,
+        orderBy: [
+          { order: { bizDate: "desc" } },
+          { order: { createdAt: "desc" } },
+          { orderId: "desc" },
+          { lineNo: "asc" },
+        ],
+        include: { order: { include: { stockScope: true } } },
+      }),
+      client.workshopMaterialOrderLine.count({ where }),
     ]);
 
     return { items, total };

@@ -9,6 +9,7 @@ import {
   Query,
   StreamableFile,
 } from "@nestjs/common";
+import { ApiFileResponse } from "../../../shared/api-docs";
 import { SkipResponseEnvelope } from "../../../shared/common/interceptors/skip-response-envelope.decorator";
 import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import { SystemManagementService } from "../application/system-management.service";
@@ -28,6 +29,7 @@ export class SystemDictTypeController {
 
   @Post("export")
   @Permissions("system:dict:export")
+  @ApiFileResponse({ description: "导出字典类型文件" })
   exportDictTypes(@Body() query: Record<string, string | undefined>) {
     const exportResult = this.systemManagementService.exportDictTypes(query);
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {

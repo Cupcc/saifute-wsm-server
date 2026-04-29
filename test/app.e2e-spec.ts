@@ -368,6 +368,9 @@ describe("Batch A acceptance (e2e)", () => {
       [],
     );
     expect(
+      swaggerResponse.body.paths["/api/auth/refresh"].post.security,
+    ).toEqual([]);
+    expect(
       swaggerResponse.body.paths["/api/auth/login"].post.requestBody.content[
         "application/json"
       ].schema,
@@ -402,6 +405,74 @@ describe("Batch A acceptance (e2e)", () => {
       code: expect.objectContaining({ type: "integer" }),
       data: expect.any(Object),
     });
+    for (const statusCode of ["400", "401", "403", "500"]) {
+      expect(
+        swaggerResponse.body.paths["/api/auth/login"].post.responses[
+          statusCode
+        ],
+      ).toMatchObject({
+        content: {
+          "application/json": {
+            schema: {
+              $ref: "#/components/schemas/ApiErrorResponseDto",
+            },
+          },
+        },
+      });
+    }
+    expect(
+      swaggerResponse.body.paths["/api/files/upload"].post.requestBody.content[
+        "multipart/form-data"
+      ].schema,
+    ).toMatchObject({
+      type: "object",
+      properties: {
+        file: {
+          type: "string",
+          format: "binary",
+        },
+      },
+      required: ["file"],
+    });
+    expect(
+      swaggerResponse.body.paths["/api/files/avatar"].post.requestBody.content[
+        "multipart/form-data"
+      ].schema,
+    ).toMatchObject({
+      properties: {
+        avatar: {
+          type: "string",
+          format: "binary",
+        },
+      },
+      required: ["avatar"],
+    });
+    expect(
+      swaggerResponse.body.paths["/api/files/download"].get.responses["200"]
+        .content["application/octet-stream"].schema,
+    ).toMatchObject({
+      type: "string",
+      format: "binary",
+    });
+    expect(
+      swaggerResponse.body.paths["/api/reporting/export"].get.responses["200"]
+        .content["application/octet-stream"].schema,
+    ).toMatchObject({
+      type: "string",
+      format: "binary",
+    });
+    expect(
+      swaggerResponse.body.paths["/api/system/user/export"].post.responses[
+        "200"
+      ].content["application/octet-stream"].schema,
+    ).toMatchObject({
+      type: "string",
+      format: "binary",
+    });
+    expect(
+      swaggerResponse.body.paths["/api/system/user/list"].get.responses["200"]
+        .content?.["application/json"]?.schema?.properties?.success,
+    ).toBeUndefined();
     expect(
       swaggerResponse.body.paths["/api/inbound/orders"].get.parameters,
     ).toEqual(

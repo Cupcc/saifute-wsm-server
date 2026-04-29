@@ -20,6 +20,10 @@ export class SalesService {
     return this.outboundService.listOrders(query);
   }
 
+  async listOrderLines(query: QueryOutboundOrderDto) {
+    return this.outboundService.listOrderLines(query);
+  }
+
   async getOrderById(id: number) {
     return this.outboundService.getOrderById(id);
   }
@@ -42,6 +46,10 @@ export class SalesService {
 
   async listSalesReturns(query: QuerySalesReturnDto) {
     return this.returnService.listSalesReturns(query);
+  }
+
+  async listSalesReturnLines(query: QuerySalesReturnDto) {
+    return this.returnService.listSalesReturnLines(query);
   }
 
   async getSalesReturnById(id: number) {

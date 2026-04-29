@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import type { Request } from "express";
-import { SkipResponseEnvelope } from "../../../shared/common/interceptors/skip-response-envelope.decorator";
+import { ApiFileResponse, ApiMultipartFile } from "../../../shared/api-docs";
 import { CurrentUser } from "../../../shared/decorators/current-user.decorator";
 import { AuditLog } from "../../audit-log/decorators/audit-log.decorator";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
@@ -27,6 +27,10 @@ export class FileStorageController {
 
   @AuditLog({ title: "普通文件上传", action: "UPLOAD_FILE" })
   @Post("upload")
+  @ApiMultipartFile({
+    fieldName: "file",
+    description: "普通文件上传，字段名固定为 file。",
+  })
   @UseInterceptors(ConfiguredFileInterceptor("file"))
   async uploadFile(
     @UploadedFile() file: UploadedBinaryFile | undefined,
@@ -41,6 +45,10 @@ export class FileStorageController {
 
   @AuditLog({ title: "头像上传", action: "UPLOAD_AVATAR" })
   @Post("avatar")
+  @ApiMultipartFile({
+    fieldName: "avatar",
+    description: "头像上传，字段名固定为 avatar。",
+  })
   @UseInterceptors(ConfiguredFileInterceptor("avatar"))
   async uploadAvatar(
     @UploadedFile() file: UploadedBinaryFile | undefined,
@@ -58,7 +66,7 @@ export class FileStorageController {
   }
 
   @AuditLog({ title: "文件下载", action: "DOWNLOAD_FILE" })
-  @SkipResponseEnvelope()
+  @ApiFileResponse({ description: "下载文件流" })
   @Get("download")
   async downloadFile(@Query() query: DownloadFileDto) {
     return this.fileStorageService.downloadFile(query.path);

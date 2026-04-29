@@ -48,6 +48,10 @@ export class WorkshopMaterialReturnService {
     return this.shared.listOrders({ ...query, orderType: this.orderType });
   }
 
+  async listReturnOrderLines(query: QueryWorkshopMaterialOrderDto) {
+    return this.shared.listOrderLines({ ...query, orderType: this.orderType });
+  }
+
   async getReturnOrderById(id: number) {
     return this.shared.getOrderById(id, this.orderType);
   }
