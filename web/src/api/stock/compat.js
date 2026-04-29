@@ -1,6 +1,5 @@
 import request from "@/utils/request";
 
-const REPORTING_PAGE_LIMIT = 100;
 const STOCK_SCOPE_LABELS = {
   MAIN: "主仓",
   RD_SUB: "研发小仓",
@@ -51,34 +50,53 @@ function mapOperationTypeToLegacyType(operationType) {
   }
 }
 
-async function fetchAllInventorySummaryItems(query = {}) {
-  let offset = 0;
-  let total = 0;
-  const items = [];
+function normalizeCategoryIds(category) {
+  if (category === null || typeof category === "undefined" || category === "") {
+    return undefined;
+  }
 
-  do {
-    const response = await request({
-      url: "/api/inventory/balances",
-      method: "get",
-      params: {
-        materialId: query.materialId,
-        workshopId: query.workshopId,
-        limit: REPORTING_PAGE_LIMIT,
-        offset,
-      },
-    });
-    const batch = Array.isArray(response.data?.items)
-      ? response.data.items
-      : [];
-    total = Number(response.data?.total ?? batch.length);
-    items.push(...batch);
-    offset += REPORTING_PAGE_LIMIT;
-    if (batch.length === 0) {
-      break;
-    }
-  } while (offset < total);
+  const categories = Array.isArray(category)
+    ? category
+    : String(category).split(",");
+  const categoryIds = categories
+    .map((item) => Number(item))
+    .filter((item) => Number.isInteger(item) && item > 0);
 
-  return items;
+  return categoryIds.length > 0 ? categoryIds.join(",") : undefined;
+}
+
+function resolveInventoryKeyword(query = {}) {
+  return (
+    query.keyword ||
+    query.query ||
+    query.materialCode ||
+    query.materialCode2 ||
+    query.materialName ||
+    query.specification ||
+    undefined
+  );
+}
+
+async function fetchInventorySummaryPage(query = {}) {
+  const { limit, offset } = buildPageQuery(query);
+  const response = await request({
+    url: "/api/inventory/balances",
+    method: "get",
+    params: {
+      materialId: query.materialId,
+      workshopId: query.workshopId,
+      keyword: resolveInventoryKeyword(query),
+      categoryIds: normalizeCategoryIds(query.category),
+      stockScope: query.stockScope,
+      limit,
+      offset,
+    },
+  });
+
+  return {
+    items: Array.isArray(response.data?.items) ? response.data.items : [],
+    total: Number(response.data?.total ?? 0),
+  };
 }
 
 function toQueryText(value) {
@@ -207,13 +225,12 @@ function buildInventoryRows(items, query = {}) {
 }
 
 export async function listInventorySummary(query = {}) {
-  const { pageNum, pageSize } = buildPageQuery(query);
-  const items = await fetchAllInventorySummaryItems(query);
+  const { items, total } = await fetchInventorySummaryPage(query);
   const rows = buildInventorySummaryRows(items, query);
 
   return {
-    rows: rows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
-    total: rows.length,
+    rows,
+    total,
   };
 }
 
@@ -229,15 +246,12 @@ export async function getInventorySummaryItem(materialId) {
 }
 
 export async function listInventoryGroupByMaterial(query = {}) {
-  const items = await fetchAllInventorySummaryItems({
-    ...query,
-    materialCode2: query.materialCode,
-  });
+  const { items, total } = await fetchInventorySummaryPage(query);
   const rows = buildInventoryRows(items, query);
   return {
     rows,
     data: rows,
-    total: rows.length,
+    total,
   };
 }
 

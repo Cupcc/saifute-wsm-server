@@ -27,6 +27,10 @@ export class WorkshopMaterialService {
     return this.pickService.listPickOrders(query);
   }
 
+  async listPickOrderLines(query: QueryWorkshopMaterialOrderDto) {
+    return this.pickService.listPickOrderLines(query);
+  }
+
   async getPickOrderById(id: number) {
     return this.pickService.getPickOrderById(id);
   }
@@ -54,6 +58,10 @@ export class WorkshopMaterialService {
 
   async listReturnOrders(query: QueryWorkshopMaterialOrderDto) {
     return this.returnService.listReturnOrders(query);
+  }
+
+  async listReturnOrderLines(query: QueryWorkshopMaterialOrderDto) {
+    return this.returnService.listReturnOrderLines(query);
   }
 
   async getReturnOrderById(id: number) {
@@ -85,6 +93,12 @@ export class WorkshopMaterialService {
     query: QueryWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
   ) {
     return this.scrapService.listScrapOrders(query);
+  }
+
+  async listScrapOrderLines(
+    query: QueryWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+  ) {
+    return this.scrapService.listScrapOrderLines(query);
   }
 
   async getScrapOrderById(id: number) {

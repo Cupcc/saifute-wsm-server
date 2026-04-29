@@ -16,23 +16,19 @@ export class InboundRepository {
     return db ?? this.prisma;
   }
 
-  async findOrders(
-    params: {
-      documentNo?: string;
-      orderType?: Prisma.StockInOrderWhereInput["orderType"];
-      bizDateFrom?: Date;
-      bizDateTo?: Date;
-      supplierId?: number;
-      handlerName?: string;
-      materialId?: number;
-      materialName?: string;
-      stockScopeId?: number;
-      workshopId?: number;
-      limit: number;
-      offset: number;
-    },
-    db?: DbClient,
-  ) {
+  private buildOrderWhere(params: {
+    documentNo?: string;
+    orderType?: Prisma.StockInOrderWhereInput["orderType"];
+    bizDateFrom?: Date;
+    bizDateTo?: Date;
+    supplierId?: number;
+    supplierName?: string;
+    handlerName?: string;
+    materialId?: number;
+    materialName?: string;
+    stockScopeId?: number;
+    workshopId?: number;
+  }): Prisma.StockInOrderWhereInput {
     const where: Prisma.StockInOrderWhereInput = {
       lifecycleStatus: "EFFECTIVE",
     };
@@ -53,6 +49,9 @@ export class InboundRepository {
     }
     if (params.supplierId) {
       where.supplierId = params.supplierId;
+    }
+    if (params.supplierName) {
+      where.supplierNameSnapshot = { contains: params.supplierName };
     }
     if (params.handlerName) {
       where.handlerNameSnapshot = { contains: params.handlerName };
@@ -78,6 +77,29 @@ export class InboundRepository {
       where.workshopId = params.workshopId;
     }
 
+    return where;
+  }
+
+  async findOrders(
+    params: {
+      documentNo?: string;
+      orderType?: Prisma.StockInOrderWhereInput["orderType"];
+      bizDateFrom?: Date;
+      bizDateTo?: Date;
+      supplierId?: number;
+      supplierName?: string;
+      handlerName?: string;
+      materialId?: number;
+      materialName?: string;
+      stockScopeId?: number;
+      workshopId?: number;
+      limit: number;
+      offset: number;
+    },
+    db?: DbClient,
+  ) {
+    const where = this.buildOrderWhere(params);
+
     const client = this.db(db);
     const [items, total] = await Promise.all([
       client.stockInOrder.findMany({
@@ -88,6 +110,66 @@ export class InboundRepository {
         include: { lines: true },
       }),
       client.stockInOrder.count({ where }),
+    ]);
+
+    return { items, total };
+  }
+
+  async findOrderLines(
+    params: {
+      documentNo?: string;
+      orderType?: Prisma.StockInOrderWhereInput["orderType"];
+      bizDateFrom?: Date;
+      bizDateTo?: Date;
+      supplierId?: number;
+      supplierName?: string;
+      handlerName?: string;
+      materialId?: number;
+      detailId?: number;
+      materialCode?: string;
+      materialName?: string;
+      specification?: string;
+      stockScopeId?: number;
+      workshopId?: number;
+      limit: number;
+      offset: number;
+    },
+    db?: DbClient,
+  ) {
+    const where: Prisma.StockInOrderLineWhereInput = {
+      order: this.buildOrderWhere(params),
+    };
+    if (params.detailId) {
+      where.id = params.detailId;
+    }
+    if (params.materialId) {
+      where.materialId = params.materialId;
+    }
+    if (params.materialCode) {
+      where.materialCodeSnapshot = { contains: params.materialCode };
+    }
+    if (params.materialName) {
+      where.materialNameSnapshot = { contains: params.materialName };
+    }
+    if (params.specification) {
+      where.materialSpecSnapshot = { contains: params.specification };
+    }
+
+    const client = this.db(db);
+    const [items, total] = await Promise.all([
+      client.stockInOrderLine.findMany({
+        where,
+        take: params.limit,
+        skip: params.offset,
+        orderBy: [
+          { order: { bizDate: "desc" } },
+          { order: { createdAt: "desc" } },
+          { orderId: "desc" },
+          { lineNo: "asc" },
+        ],
+        include: { order: true },
+      }),
+      client.stockInOrderLine.count({ where }),
     ]);
 
     return { items, total };

@@ -94,6 +94,23 @@ export class InboundController {
   }
 
   @Permissions("inbound:order:list")
+  @Get("orders/details")
+  async listOrderLines(
+    @Query() query: QueryInboundOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
+    return this.inboundService.listOrderLines({
+      ...query,
+      stockScopeId: inventoryScope?.stockScopeId,
+    });
+  }
+
+  @Permissions("inbound:order:list")
   @Get("orders/:id")
   async getOrder(
     @Param("id", ParseIntPipe) id: number,
@@ -174,6 +191,23 @@ export class InboundController {
         query.workshopId,
       );
     return this.inboundService.listIntoOrders({
+      ...query,
+      stockScopeId: inventoryScope?.stockScopeId,
+    });
+  }
+
+  @Permissions("inbound:into-order:list")
+  @Get("into-orders/details")
+  async listIntoOrderLines(
+    @Query() query: QueryInboundOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
+    return this.inboundService.listIntoOrderLines({
       ...query,
       stockScopeId: inventoryScope?.stockScopeId,
     });

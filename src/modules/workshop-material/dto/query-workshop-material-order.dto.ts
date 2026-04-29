@@ -27,10 +27,26 @@ export class QueryWorkshopMaterialOrderDto {
   @Min(1)
   materialId?: number;
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  detailId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  materialCode?: string;
+
   @IsString()
   @IsOptional()
   @MaxLength(128)
   materialName?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  specification?: string;
 
   @IsEnum(WorkshopMaterialOrderType)
   @IsOptional()
@@ -49,6 +65,17 @@ export class QueryWorkshopMaterialOrderDto {
   @Type(() => Number)
   @Min(1)
   workshopId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  sourceId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(16)
+  sourceType?: string;
 
   @IsOptional()
   @Type(() => Number)

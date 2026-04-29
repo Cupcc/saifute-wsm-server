@@ -23,28 +23,24 @@ export class SalesRepository {
     return db ?? this.prisma;
   }
 
-  async findOrders(
-    params: {
-      documentNo?: string;
-      orderType?: SalesStockOrderType;
-      bizDateFrom?: Date;
-      bizDateTo?: Date;
-      customerId?: number;
-      workshopId?: number;
-      limit: number;
-      offset: number;
-    },
-    db?: DbClient,
-  ) {
+  private buildOrderWhere(params: {
+    documentNo?: string;
+    orderType?: SalesStockOrderType;
+    bizDateFrom?: Date;
+    bizDateTo?: Date;
+    customerId?: number;
+    workshopId?: number;
+    materialId?: number;
+    materialCode?: string;
+    materialName?: string;
+    specification?: string;
+  }): Prisma.SalesStockOrderWhereInput {
     const where: Prisma.SalesStockOrderWhereInput = {
-      orderType: SalesStockOrderType.OUTBOUND,
+      orderType: params.orderType ?? SalesStockOrderType.OUTBOUND,
       lifecycleStatus: "EFFECTIVE",
     };
     if (params.documentNo) {
       where.documentNo = { contains: params.documentNo };
-    }
-    if (params.orderType) {
-      where.orderType = params.orderType;
     }
     if (params.bizDateFrom || params.bizDateTo) {
       where.bizDate = {};
@@ -61,6 +57,54 @@ export class SalesRepository {
     if (params.workshopId) {
       where.workshopId = params.workshopId;
     }
+    if (
+      params.materialId ||
+      params.materialCode ||
+      params.materialName ||
+      params.specification
+    ) {
+      where.lines = {
+        some: {
+          ...(params.materialId ? { materialId: params.materialId } : {}),
+          ...(params.materialCode
+            ? { materialCodeSnapshot: { contains: params.materialCode } }
+            : {}),
+          ...(params.materialName
+            ? {
+                materialNameSnapshot: {
+                  contains: params.materialName,
+                },
+              }
+            : {}),
+          ...(params.specification
+            ? { materialSpecSnapshot: { contains: params.specification } }
+            : {}),
+        },
+      };
+    }
+
+    return where;
+  }
+
+  async findOrders(
+    params: {
+      documentNo?: string;
+      orderType?: SalesStockOrderType;
+      bizDateFrom?: Date;
+      bizDateTo?: Date;
+      customerId?: number;
+      workshopId?: number;
+      materialId?: number;
+      detailId?: number;
+      materialCode?: string;
+      materialName?: string;
+      specification?: string;
+      limit: number;
+      offset: number;
+    },
+    db?: DbClient,
+  ) {
+    const where = this.buildOrderWhere(params);
 
     const client = this.db(db);
     const [items, total] = await Promise.all([
@@ -85,33 +129,20 @@ export class SalesRepository {
       customerId?: number;
       sourceOutboundOrderId?: number;
       workshopId?: number;
+      materialId?: number;
+      detailId?: number;
+      materialCode?: string;
+      materialName?: string;
+      specification?: string;
       limit: number;
       offset: number;
     },
     db?: DbClient,
   ) {
-    const where: Prisma.SalesStockOrderWhereInput = {
+    const where = this.buildOrderWhere({
+      ...params,
       orderType: SalesStockOrderType.SALES_RETURN,
-      lifecycleStatus: "EFFECTIVE",
-    };
-    if (params.documentNo) {
-      where.documentNo = { contains: params.documentNo };
-    }
-    if (params.bizDateFrom || params.bizDateTo) {
-      where.bizDate = {};
-      if (params.bizDateFrom) {
-        where.bizDate.gte = params.bizDateFrom;
-      }
-      if (params.bizDateTo) {
-        where.bizDate.lte = params.bizDateTo;
-      }
-    }
-    if (params.customerId) {
-      where.customerId = params.customerId;
-    }
-    if (params.workshopId) {
-      where.workshopId = params.workshopId;
-    }
+    });
     if (params.sourceOutboundOrderId) {
       const relations = await this.db(db).documentRelation.findMany({
         where: {
@@ -141,6 +172,67 @@ export class SalesRepository {
         include: { lines: { orderBy: { lineNo: "asc" } } },
       }),
       client.salesStockOrder.count({ where }),
+    ]);
+
+    return { items, total };
+  }
+
+  async findOrderLines(
+    params: {
+      documentNo?: string;
+      orderType: SalesStockOrderType;
+      bizDateFrom?: Date;
+      bizDateTo?: Date;
+      customerId?: number;
+      sourceOutboundOrderId?: number;
+      workshopId?: number;
+      materialId?: number;
+      detailId?: number;
+      materialCode?: string;
+      materialName?: string;
+      specification?: string;
+      limit: number;
+      offset: number;
+    },
+    db?: DbClient,
+  ) {
+    const where: Prisma.SalesStockOrderLineWhereInput = {
+      order: this.buildOrderWhere(params),
+    };
+    if (params.detailId) {
+      where.id = params.detailId;
+    }
+    if (params.materialId) {
+      where.materialId = params.materialId;
+    }
+    if (params.materialCode) {
+      where.materialCodeSnapshot = { contains: params.materialCode };
+    }
+    if (params.materialName) {
+      where.materialNameSnapshot = { contains: params.materialName };
+    }
+    if (params.specification) {
+      where.materialSpecSnapshot = { contains: params.specification };
+    }
+    if (params.sourceOutboundOrderId) {
+      where.sourceDocumentId = params.sourceOutboundOrderId;
+    }
+
+    const client = this.db(db);
+    const [items, total] = await Promise.all([
+      client.salesStockOrderLine.findMany({
+        where,
+        take: params.limit,
+        skip: params.offset,
+        orderBy: [
+          { order: { bizDate: "desc" } },
+          { order: { createdAt: "desc" } },
+          { orderId: "desc" },
+          { lineNo: "asc" },
+        ],
+        include: { order: true },
+      }),
+      client.salesStockOrderLine.count({ where }),
     ]);
 
     return { items, total };

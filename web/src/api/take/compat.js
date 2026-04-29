@@ -4,6 +4,7 @@ import request from "@/utils/request";
 const MODE_CONFIG = {
   pickOrder: {
     listUrl: "/api/workshop-material/pick-orders",
+    detailUrl: "/api/workshop-material/pick-orders/details",
     itemUrl: "/api/workshop-material/pick-orders",
     voidUrl: "/api/workshop-material/pick-orders",
     documentType: "WorkshopMaterialOrder",
@@ -15,6 +16,7 @@ const MODE_CONFIG = {
   },
   returnOrder: {
     listUrl: "/api/workshop-material/return-orders",
+    detailUrl: "/api/workshop-material/return-orders/details",
     itemUrl: "/api/workshop-material/return-orders",
     voidUrl: "/api/workshop-material/return-orders",
     documentType: "WorkshopMaterialOrder",
@@ -26,6 +28,7 @@ const MODE_CONFIG = {
   },
   scrapOrder: {
     listUrl: "/api/workshop-material/scrap-orders",
+    detailUrl: "/api/workshop-material/scrap-orders/details",
     itemUrl: "/api/workshop-material/scrap-orders",
     voidUrl: "/api/workshop-material/scrap-orders",
     documentType: "WorkshopMaterialOrder",
@@ -38,7 +41,6 @@ const MODE_CONFIG = {
 };
 
 const RETURN_SOURCE_TYPE = "1";
-const CLIENT_FILTER_FETCH_LIMIT = 200;
 
 function buildPageQuery(query = {}) {
   const pageNum = Number(query.pageNum) > 0 ? Number(query.pageNum) : 1;
@@ -112,9 +114,9 @@ function resolveBizDateRange(query = {}, mode = "pickOrder") {
   };
 }
 
-function hasClientSideFilter(query = {}, mode = "pickOrder") {
+function isUnsupportedServerFilter(query = {}, mode = "pickOrder") {
   if (mode === "returnOrder") {
-    return Boolean(query.sourceId || query.sourceType);
+    return Boolean(query.sourceType && String(query.sourceType) !== RETURN_SOURCE_TYPE);
   }
   if (mode === "scrapOrder") {
     return Boolean(query.disposalMethod);
@@ -283,59 +285,6 @@ async function fetchPickOrderNoMap(sourceDocumentIds = []) {
   return new Map(resolved);
 }
 
-function applyClientSideFilters(rows, query = {}, mode = "pickOrder") {
-  if (mode === "returnOrder") {
-    return rows.filter((row) => {
-      if (
-        query.sourceId &&
-        Number(row.sourceId ?? row.pickId ?? 0) !== Number(query.sourceId)
-      ) {
-        return false;
-      }
-      if (
-        query.sourceType &&
-        String(row.sourceType ?? "") !== String(query.sourceType)
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }
-
-  if (mode === "scrapOrder") {
-    return rows.filter((row) => {
-      if (
-        query.disposalMethod &&
-        String(row.disposalMethod ?? "") !== String(query.disposalMethod)
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }
-
-  return rows;
-}
-
-function includesText(value, keyword) {
-  if (!keyword) {
-    return true;
-  }
-  return String(value || "").includes(String(keyword).trim());
-}
-
-function filterWorkshopDetailRows(rows, query = {}) {
-  return rows.filter((row) => {
-    if (query.materialName && !includesText(row.materialName, query.materialName)) {
-      return false;
-    }
-    if (query.specification && !includesText(row.specification, query.specification)) {
-      return false;
-    }
-    return true;
-  });
-}
-
 function buildLinePayload(line, mode = "pickOrder", parentData = {}) {
   const quantity =
     mode === "returnOrder"
@@ -402,50 +351,35 @@ function buildWorkshopPayload(data, mode = "pickOrder", handlerPersonnelId) {
 
 async function listOrdersInternal(query = {}, mode = "pickOrder") {
   const config = MODE_CONFIG[mode];
-  const { pageNum, pageSize, limit, offset } = buildPageQuery(query);
+  const { limit, offset } = buildPageQuery(query);
   const { bizDateFrom, bizDateTo } = resolveBizDateRange(query, mode);
-  const useClientSideFilter = hasClientSideFilter(query, mode);
+  if (isUnsupportedServerFilter(query, mode)) {
+    return { rows: [], total: 0 };
+  }
   const baseParams = {
     documentNo: query[config.noKey],
     handlerName: query[config.personKey],
     materialId: query.materialId,
+    materialCode: query.materialCode,
     materialName: query.materialName,
+    specification: query.specification,
+    sourceId: query.sourceId,
+    sourceType: query.sourceType,
     workshopId: query.workshopId,
     bizDateFrom,
     bizDateTo,
   };
-  const firstResponse = await request({
+  const response = await request({
     url: config.listUrl,
     method: "get",
     params: {
       ...baseParams,
-      limit: useClientSideFilter ? CLIENT_FILTER_FETCH_LIMIT : limit,
-      offset: useClientSideFilter ? 0 : offset,
+      limit,
+      offset,
     },
   });
 
-  let items = Array.isArray(firstResponse.data?.items)
-    ? [...firstResponse.data.items]
-    : [];
-  if (useClientSideFilter) {
-    const total = Number(firstResponse.data?.total ?? items.length);
-    for (let nextOffset = items.length; nextOffset < total; nextOffset += CLIENT_FILTER_FETCH_LIMIT) {
-      const response = await request({
-        url: config.listUrl,
-        method: "get",
-        params: {
-          ...baseParams,
-          limit: CLIENT_FILTER_FETCH_LIMIT,
-          offset: nextOffset,
-        },
-      });
-      const nextItems = Array.isArray(response.data?.items) ? response.data.items : [];
-      if (!nextItems.length) {
-        break;
-      }
-      items = items.concat(nextItems);
-    }
-  }
+  const items = Array.isArray(response.data?.items) ? response.data.items : [];
   const pickOrderNoMap =
     mode === "returnOrder"
       ? await fetchPickOrderNoMap(
@@ -459,44 +393,11 @@ async function listOrdersInternal(query = {}, mode = "pickOrder") {
   const mappedRows = items.map((item) =>
     mapOrder(item, config, null, pickOrderNoMap),
   );
-  const filteredRows = applyClientSideFilters(mappedRows, query, mode);
-
-  if (!useClientSideFilter) {
-    return {
-      rows: filteredRows,
-      total: Number(firstResponse.data?.total ?? filteredRows.length),
-    };
-  }
 
   return {
-    rows: filteredRows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
-    total: filteredRows.length,
+    rows: mappedRows,
+    total: Number(response.data?.total ?? mappedRows.length),
   };
-}
-
-async function listAllOrdersInternal(query = {}, mode = "pickOrder") {
-  const rows = [];
-  let pageNum = 1;
-  let total = 0;
-
-  do {
-    const response = await listOrdersInternal(
-      {
-        ...query,
-        pageNum,
-        pageSize: CLIENT_FILTER_FETCH_LIMIT,
-      },
-      mode,
-    );
-    rows.push(...response.rows);
-    total = response.total;
-    if (!response.rows.length) {
-      break;
-    }
-    pageNum += 1;
-  } while (rows.length < total);
-
-  return rows;
 }
 
 export function listWorkshopOrders(query = {}, mode = "pickOrder") {
@@ -556,41 +457,80 @@ export function voidWorkshopOrder(data, mode = "pickOrder") {
 
 export async function listWorkshopOrderDetails(query = {}, mode = "pickOrder") {
   const config = MODE_CONFIG[mode];
-  const { pageNum, pageSize } = buildPageQuery(query);
-  const orders = await listAllOrdersInternal(query, mode);
+  const { limit, offset } = buildPageQuery(query);
+  const { bizDateFrom, bizDateTo } = resolveBizDateRange(query, mode);
+  if (isUnsupportedServerFilter(query, mode)) {
+    return { rows: [], total: 0 };
+  }
 
-  const rows = orders.flatMap((row) =>
-    row.details.map((detail) => ({
+  const response = await request({
+    url: config.detailUrl,
+    method: "get",
+    params: {
+      documentNo: query[config.noKey],
+      detailId: query.detailId,
+      handlerName: query[config.personKey],
+      materialId: query.materialId,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specification: query.specification,
+      sourceId: query.sourceId,
+      sourceType: query.sourceType,
+      workshopId: query.workshopId,
+      bizDateFrom,
+      bizDateTo,
+      limit,
+      offset,
+    },
+  });
+
+  const items = Array.isArray(response.data?.items) ? response.data.items : [];
+  const pickOrderNoMap =
+    mode === "returnOrder"
+      ? await fetchPickOrderNoMap(
+          items.map((item) => item.sourceDocumentId),
+        ).catch(() => new Map())
+      : new Map();
+  const rows = items.map((item) => {
+    const order = item.order ?? {};
+    const detail = mapOrderLine(item, config, order);
+    return {
       ...detail,
-      [config.noKey]: row[config.noKey],
-      [config.dateKey]: row[config.dateKey],
-      workshopName: row.workshopName,
-      [config.personKey]: row[config.personKey],
-      createBy: row.createBy,
-      disposalMethod: row.disposalMethod,
-      pickNo: row.pickNo,
-      sourceId: row.sourceId,
-    })),
-  );
-  const filteredRows = filterWorkshopDetailRows(rows, query);
+      [config.noKey]: order.documentNo,
+      [config.dateKey]: order.bizDate,
+      workshopName: order.workshopNameSnapshot ?? "",
+      [config.personKey]: order.handlerNameSnapshot ?? "",
+      createBy: order.createdBy ?? "",
+      disposalMethod: mode === "scrapOrder" ? order.disposalMethod ?? null : null,
+      pickNo:
+        mode === "returnOrder" && detail.sourceDocumentId
+          ? (pickOrderNoMap.get(detail.sourceDocumentId) ?? String(detail.sourceDocumentId))
+          : "",
+      sourceId: detail.sourceDocumentId ?? null,
+    };
+  });
 
   return {
-    rows: filteredRows.slice((pageNum - 1) * pageSize, pageNum * pageSize),
-    total: filteredRows.length,
+    rows,
+    total: Number(response.data?.total ?? rows.length),
   };
 }
 
 export async function getWorkshopOrderDetail(detailId, mode = "pickOrder") {
   const details = await listWorkshopOrderDetails(
     {
+      detailId,
       pageNum: 1,
-      pageSize: CLIENT_FILTER_FETCH_LIMIT,
+      pageSize: 1,
     },
     mode,
   );
 
   return {
-    data: details.rows.find((item) => item.detailId === detailId) ?? null,
+    data:
+      details.rows.find(
+        (item) => Number(item.detailId) === Number(detailId),
+      ) ?? null,
   };
 }
 

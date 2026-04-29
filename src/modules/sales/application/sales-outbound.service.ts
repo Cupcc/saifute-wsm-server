@@ -50,6 +50,31 @@ export class SalesOutboundService {
       bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,
       customerId: query.customerId,
       workshopId: query.workshopId,
+      materialId: query.materialId,
+      detailId: query.detailId,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specification: query.specification,
+      limit,
+      offset,
+    });
+  }
+
+  async listOrderLines(query: QueryOutboundOrderDto) {
+    const limit = Math.min(query.limit ?? 50, 100);
+    const offset = query.offset ?? 0;
+    return this.repository.findOrderLines({
+      documentNo: query.documentNo,
+      orderType: SalesStockOrderType.OUTBOUND,
+      bizDateFrom: query.bizDateFrom ? new Date(query.bizDateFrom) : undefined,
+      bizDateTo: query.bizDateTo ? new Date(query.bizDateTo) : undefined,
+      customerId: query.customerId,
+      workshopId: query.workshopId,
+      materialId: query.materialId,
+      detailId: query.detailId,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specification: query.specification,
       limit,
       offset,
     });

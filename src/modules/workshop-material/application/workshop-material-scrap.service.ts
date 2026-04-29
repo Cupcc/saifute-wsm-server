@@ -51,6 +51,12 @@ export class WorkshopMaterialScrapService {
     return this.shared.listOrders({ ...query, orderType: this.orderType });
   }
 
+  async listScrapOrderLines(
+    query: QueryWorkshopMaterialOrderDto & { stockScope?: StockScopeCode },
+  ) {
+    return this.shared.listOrderLines({ ...query, orderType: this.orderType });
+  }
+
   async getScrapOrderById(id: number) {
     return this.shared.getOrderById(id, this.orderType);
   }

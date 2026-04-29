@@ -8,7 +8,7 @@ import {
   StreamableFile,
   UnauthorizedException,
 } from "@nestjs/common";
-import { SkipResponseEnvelope } from "../../../shared/common/interceptors/skip-response-envelope.decorator";
+import { ApiFileResponse } from "../../../shared/api-docs";
 import { CurrentUser } from "../../../shared/decorators/current-user.decorator";
 import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import { AuditLog } from "../../audit-log/decorators/audit-log.decorator";
@@ -151,7 +151,7 @@ export class ReportingController {
 
   @Permissions("reporting:export")
   @AuditLog({ title: "导出月度对账报表", action: "EXPORT_MONTHLY_REPORTING" })
-  @SkipResponseEnvelope()
+  @ApiFileResponse({ description: "导出月度对账报表文件" })
   @Post("monthly-reporting/export")
   async exportMonthlyReporting(
     @Body() query: ExportMonthlyReportingDto,
@@ -168,11 +168,13 @@ export class ReportingController {
         user,
         query.workshopId,
       );
-    const exportResult = await this.monthlyReportingService.exportMonthlyReport({
-      ...query,
-      stockScope: inventoryScope?.stockScope,
-      workshopId,
-    });
+    const exportResult = await this.monthlyReportingService.exportMonthlyReport(
+      {
+        ...query,
+        stockScope: inventoryScope?.stockScope,
+        workshopId,
+      },
+    );
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {
       disposition: `attachment; filename="${exportResult.fileName}"`,
       type: exportResult.contentType,
@@ -181,7 +183,7 @@ export class ReportingController {
 
   @Permissions("reporting:export")
   @AuditLog({ title: "导出报表", action: "EXPORT_REPORT" })
-  @SkipResponseEnvelope()
+  @ApiFileResponse({ description: "导出报表文件" })
   @Get("export")
   async exportReport(
     @Query() query: ExportReportDto,

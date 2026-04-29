@@ -6,6 +6,7 @@
     "web"
   ],
   "scripts": {
+    "audit:openapi": "bun ./scripts/openapi-contract-audit.mjs",
     "biome": "biome check .",
     "build": "nest build --path tsconfig.build.json",
     "commitlint": "commitlint --edit",

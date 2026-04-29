@@ -9,16 +9,10 @@ export function listSalesReturnDetail(query) {
 }
 
 export async function listNoPage(query) {
-  const response = await listSalesOrderDetails(
-    {
-      ...query,
-      pageNum: 1,
-      pageSize: 100,
-    },
-    "salesReturn",
-  );
+  const response = await listSalesOrderDetails(query, "salesReturn");
   return {
     data: response.rows,
+    total: response.total,
   };
 }
 
