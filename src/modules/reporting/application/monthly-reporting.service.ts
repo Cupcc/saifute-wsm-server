@@ -10,15 +10,15 @@ import {
 } from "./monthly-report-export.service";
 import {
   type MonthlyReportMaterialCategoryDocumentsResult,
-  type MonthlyReportMaterialCategorySummaryResult,
   MonthlyReportMaterialCategoryService,
+  type MonthlyReportMaterialCategorySummaryResult,
 } from "./monthly-report-material-category.service";
 import type { MonthlyReportQuery } from "./monthly-report-source.service";
 import { MonthlyReportingViewMode } from "./monthly-reporting.shared";
 
 export type {
-  MonthlyReportDomainCatalogItem,
   MonthlyReportDocumentTypeCatalogItem,
+  MonthlyReportDomainCatalogItem,
 } from "./monthly-report-catalog.service";
 export type {
   MonthlyReportRdProjectSummaryItem,
@@ -39,6 +39,7 @@ export type {
   MonthlyReportMaterialCategoryDetailItem,
 } from "./monthly-report-item-mapper.service";
 export type {
+  MonthlyReportMaterialCategoryCatalogItem,
   MonthlyReportMaterialCategoryDocumentsResult,
   MonthlyReportMaterialCategoryFilters,
   MonthlyReportMaterialCategorySummaryItem,

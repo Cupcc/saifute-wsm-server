@@ -16,26 +16,30 @@ import {
   MonthlyReportingDirection,
   MonthlyReportingTopicKey,
 } from "../application/monthly-reporting.shared";
+import { MonthlyReportAdjustmentRepository } from "./monthly-report-adjustment.repository";
+import { MonthlyReportRdRepository } from "./monthly-report-rd.repository";
 import {
   buildAbnormalFlags,
+  buildMonthlyReportStockScopeWhere,
   collectDistinctNumbers,
   collectDistinctStrings,
   loadSalesOrderSourceMap,
   loadWorkshopOrderSourceMap,
+  resolveMonthlyReportStockScopeCode,
+  resolveMonthlyReportStockScopeName,
   resolveSourceReference,
   sumNullableDecimals,
   toDecimal,
-  toStockScopeCode,
   toWorkshopDocumentLabel,
   toWorkshopTopicKey,
 } from "./reporting-repository.helpers";
-import { MonthlyReportRdRepository } from "./monthly-report-rd.repository";
-import { MonthlyReportAdjustmentRepository } from "./monthly-report-adjustment.repository";
 export interface MonthlySalesProjectEntry {
   salesProjectId: number | null;
   salesProjectCode: string | null;
   salesProjectName: string | null;
-  topicKey: MonthlyReportingTopicKey.SALES_OUTBOUND | MonthlyReportingTopicKey.SALES_RETURN;
+  topicKey:
+    | MonthlyReportingTopicKey.SALES_OUTBOUND
+    | MonthlyReportingTopicKey.SALES_RETURN;
   documentTypeLabel: string;
   documentId: number;
   documentNo: string;
@@ -46,20 +50,20 @@ export interface MonthlySalesProjectEntry {
   cost: Prisma.Decimal;
   abnormalFlags: MonthlyReportingAbnormalFlag[];
 }
-
 @Injectable()
 export class MonthlyReportRepository {
   private readonly rdRepo: MonthlyReportRdRepository;
   private readonly adjustmentRepo: MonthlyReportAdjustmentRepository;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly appConfigService: AppConfigService,
   ) {
     this.rdRepo = new MonthlyReportRdRepository(prisma, appConfigService);
-    this.adjustmentRepo = new MonthlyReportAdjustmentRepository(prisma, appConfigService);
+    this.adjustmentRepo = new MonthlyReportAdjustmentRepository(
+      prisma,
+      appConfigService,
+    );
   }
-
   async findMonthlyReportEntries(params: {
     start: Date;
     end: Date;
@@ -106,15 +110,7 @@ export class MonthlyReportRepository {
         order: {
           lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
           bizDate: { gte: params.start, lte: params.end },
-          ...(params.stockScope
-            ? {
-                stockScope: {
-                  is: {
-                    scopeCode: params.stockScope,
-                  },
-                },
-              }
-            : {}),
+          ...buildMonthlyReportStockScopeWhere(params.stockScope),
           ...(params.workshopId ? { workshopId: params.workshopId } : {}),
         },
       },
@@ -143,7 +139,10 @@ export class MonthlyReportRepository {
           .map((line) => line.sourceDocumentId as number),
       ),
     ];
-    const sourceOrderMap = await loadSalesOrderSourceMap(this.prisma, sourceOrderIds);
+    const sourceOrderMap = await loadSalesOrderSourceMap(
+      this.prisma,
+      sourceOrderIds,
+    );
     const sourceRefsByOrder = new Map<
       number,
       Array<{ bizDate: Date; documentNo: string }>
@@ -193,11 +192,14 @@ export class MonthlyReportRepository {
         quantity: line.quantity,
         amount: line.amount,
         cost: toDecimal(line.costAmount),
-        abnormalFlags: buildAbnormalFlags({
-          bizDate: line.order.bizDate,
-          createdAt: line.order.createdAt,
-          sourceBizDate: sourceReference.sourceBizDate,
-        }, this.appConfigService.businessTimezone),
+        abnormalFlags: buildAbnormalFlags(
+          {
+            bizDate: line.order.bizDate,
+            createdAt: line.order.createdAt,
+            sourceBizDate: sourceReference.sourceBizDate,
+          },
+          this.appConfigService.businessTimezone,
+        ),
       };
     });
   }
@@ -212,15 +214,7 @@ export class MonthlyReportRepository {
       where: {
         lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
         bizDate: { gte: params.start, lte: params.end },
-        ...(params.stockScope
-          ? {
-              stockScope: {
-                is: {
-                  scopeCode: params.stockScope,
-                },
-              },
-            }
-          : {}),
+        ...buildMonthlyReportStockScopeWhere(params.stockScope),
         ...(params.workshopId ? { workshopId: params.workshopId } : {}),
       },
       include: {
@@ -238,13 +232,19 @@ export class MonthlyReportRepository {
       direction: MonthlyReportingDirection.IN,
       documentType: BusinessDocumentType.StockInOrder,
       documentTypeLabel:
-        order.orderType === StockInOrderType.ACCEPTANCE ? "验收单" : "生产入库单",
+        order.orderType === StockInOrderType.ACCEPTANCE
+          ? "验收单"
+          : "生产入库单",
       documentId: order.id,
       documentNo: order.documentNo,
       bizDate: order.bizDate,
       createdAt: order.createdAt,
-      stockScope: toStockScopeCode(order.stockScope?.scopeCode),
-      stockScopeName: order.stockScope?.scopeName ?? null,
+      stockScope: resolveMonthlyReportStockScopeCode(
+        order.stockScope?.scopeCode,
+      ),
+      stockScopeName: resolveMonthlyReportStockScopeName(
+        order.stockScope?.scopeName,
+      ),
       workshopId: order.workshopId ?? null,
       workshopName: order.workshop?.workshopName ?? order.workshopNameSnapshot,
       salesProjectIds: [],
@@ -260,10 +260,13 @@ export class MonthlyReportRepository {
       quantity: order.totalQty,
       amount: order.totalAmount,
       cost: order.totalAmount,
-      abnormalFlags: buildAbnormalFlags({
-        bizDate: order.bizDate,
-        createdAt: order.createdAt,
-      }, this.appConfigService.businessTimezone),
+      abnormalFlags: buildAbnormalFlags(
+        {
+          bizDate: order.bizDate,
+          createdAt: order.createdAt,
+        },
+        this.appConfigService.businessTimezone,
+      ),
       sourceBizDate: null,
       sourceDocumentNo: null,
     }));
@@ -279,15 +282,7 @@ export class MonthlyReportRepository {
       where: {
         lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
         bizDate: { gte: params.start, lte: params.end },
-        ...(params.stockScope
-          ? {
-              stockScope: {
-                is: {
-                  scopeCode: params.stockScope,
-                },
-              },
-            }
-          : {}),
+        ...buildMonthlyReportStockScopeWhere(params.stockScope),
         ...(params.workshopId ? { workshopId: params.workshopId } : {}),
       },
       include: {
@@ -317,7 +312,10 @@ export class MonthlyReportRepository {
         ),
       ),
     ];
-    const sourceOrderMap = await loadSalesOrderSourceMap(this.prisma, sourceOrderIds);
+    const sourceOrderMap = await loadSalesOrderSourceMap(
+      this.prisma,
+      sourceOrderIds,
+    );
 
     return orders.map((order) => {
       const sourceReference = resolveSourceReference(
@@ -325,11 +323,12 @@ export class MonthlyReportRepository {
         order.lines
           .map((line) =>
             typeof line.sourceDocumentId === "number"
-              ? sourceOrderMap.get(line.sourceDocumentId) ?? null
+              ? (sourceOrderMap.get(line.sourceDocumentId) ?? null)
               : null,
           )
-          .filter((value): value is { bizDate: Date; documentNo: string } =>
-            value !== null,
+          .filter(
+            (value): value is { bizDate: Date; documentNo: string } =>
+              value !== null,
           ),
         this.appConfigService.businessTimezone,
       );
@@ -352,10 +351,17 @@ export class MonthlyReportRepository {
         documentNo: order.documentNo,
         bizDate: order.bizDate,
         createdAt: order.createdAt,
-        stockScope: toStockScopeCode(order.stockScope?.scopeCode),
-        stockScopeName: order.stockScope?.scopeName ?? null,
+        stockScope: resolveMonthlyReportStockScopeCode(
+          order.stockScope?.scopeCode,
+        ),
+        stockScopeName: resolveMonthlyReportStockScopeName(
+          order.stockScope?.scopeName,
+        ),
         workshopId: order.workshopId,
-        workshopName: order.workshop.workshopName,
+        workshopName:
+          order.workshop?.workshopName?.trim() ||
+          order.workshopNameSnapshot?.trim() ||
+          null,
         salesProjectIds: collectDistinctNumbers(
           order.lines.map((line) => line.salesProjectId),
         ),
@@ -375,11 +381,14 @@ export class MonthlyReportRepository {
         quantity: order.totalQty,
         amount: order.totalAmount,
         cost: sumNullableDecimals(order.lines.map((line) => line.costAmount)),
-        abnormalFlags: buildAbnormalFlags({
-          bizDate: order.bizDate,
-          createdAt: order.createdAt,
-          sourceBizDate: sourceReference.sourceBizDate,
-        }, this.appConfigService.businessTimezone),
+        abnormalFlags: buildAbnormalFlags(
+          {
+            bizDate: order.bizDate,
+            createdAt: order.createdAt,
+            sourceBizDate: sourceReference.sourceBizDate,
+          },
+          this.appConfigService.businessTimezone,
+        ),
         sourceBizDate: sourceReference.sourceBizDate,
         sourceDocumentNo: sourceReference.sourceDocumentNo,
       };
@@ -396,15 +405,7 @@ export class MonthlyReportRepository {
       where: {
         lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
         bizDate: { gte: params.start, lte: params.end },
-        ...(params.stockScope
-          ? {
-              stockScope: {
-                is: {
-                  scopeCode: params.stockScope,
-                },
-              },
-            }
-          : {}),
+        ...buildMonthlyReportStockScopeWhere(params.stockScope),
         ...(params.workshopId ? { workshopId: params.workshopId } : {}),
       },
       include: {
@@ -435,8 +436,10 @@ export class MonthlyReportRepository {
         ),
       ),
     ];
-    const sourceOrderMap =
-      await loadWorkshopOrderSourceMap(this.prisma, sourceOrderIds);
+    const sourceOrderMap = await loadWorkshopOrderSourceMap(
+      this.prisma,
+      sourceOrderIds,
+    );
 
     return orders.map((order) => {
       const sourceReference = resolveSourceReference(
@@ -449,11 +452,12 @@ export class MonthlyReportRepository {
           )
           .map((line) =>
             typeof line.sourceDocumentId === "number"
-              ? sourceOrderMap.get(line.sourceDocumentId) ?? null
+              ? (sourceOrderMap.get(line.sourceDocumentId) ?? null)
               : null,
           )
-          .filter((value): value is { bizDate: Date; documentNo: string } =>
-            value !== null,
+          .filter(
+            (value): value is { bizDate: Date; documentNo: string } =>
+              value !== null,
           ),
         this.appConfigService.businessTimezone,
       );
@@ -470,10 +474,17 @@ export class MonthlyReportRepository {
         documentNo: order.documentNo,
         bizDate: order.bizDate,
         createdAt: order.createdAt,
-        stockScope: toStockScopeCode(order.stockScope?.scopeCode),
-        stockScopeName: order.stockScope?.scopeName ?? null,
+        stockScope: resolveMonthlyReportStockScopeCode(
+          order.stockScope?.scopeCode,
+        ),
+        stockScopeName: resolveMonthlyReportStockScopeName(
+          order.stockScope?.scopeName,
+        ),
         workshopId: order.workshopId,
-        workshopName: order.workshop.workshopName,
+        workshopName:
+          order.workshop?.workshopName?.trim() ||
+          order.workshopNameSnapshot?.trim() ||
+          null,
         salesProjectIds: [],
         salesProjectCodes: [],
         salesProjectNames: [],
@@ -487,11 +498,14 @@ export class MonthlyReportRepository {
         quantity: order.totalQty,
         amount: order.totalAmount,
         cost: sumNullableDecimals(order.lines.map((line) => line.costAmount)),
-        abnormalFlags: buildAbnormalFlags({
-          bizDate: order.bizDate,
-          createdAt: order.createdAt,
-          sourceBizDate: sourceReference.sourceBizDate,
-        }, this.appConfigService.businessTimezone),
+        abnormalFlags: buildAbnormalFlags(
+          {
+            bizDate: order.bizDate,
+            createdAt: order.createdAt,
+            sourceBizDate: sourceReference.sourceBizDate,
+          },
+          this.appConfigService.businessTimezone,
+        ),
         sourceBizDate: sourceReference.sourceBizDate,
         sourceDocumentNo: sourceReference.sourceDocumentNo,
       };

@@ -6,9 +6,9 @@ import {
 import type { PrismaService } from "../../../shared/prisma/prisma.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
 import {
+  isSameYearMonth,
   MonthlyReportingAbnormalFlag,
   MonthlyReportingTopicKey,
-  isSameYearMonth,
 } from "../application/monthly-reporting.shared";
 
 export function resolveSourceReference(
@@ -49,19 +49,13 @@ export function buildAbnormalFlags(
 ) {
   const flags = [...(params.extraFlags ?? [])];
 
-  if (
-    !isSameYearMonth(params.bizDate, params.createdAt, businessTimezone)
-  ) {
+  if (!isSameYearMonth(params.bizDate, params.createdAt, businessTimezone)) {
     flags.push(MonthlyReportingAbnormalFlag.BACKFILL_IMPACT);
   }
 
   if (
     params.sourceBizDate &&
-    !isSameYearMonth(
-      params.bizDate,
-      params.sourceBizDate,
-      businessTimezone,
-    )
+    !isSameYearMonth(params.bizDate, params.sourceBizDate, businessTimezone)
   ) {
     flags.push(MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE);
   }
@@ -77,6 +71,45 @@ export function toStockScopeCode(
   }
 
   return null;
+}
+
+export function buildMonthlyReportStockScopeWhere(stockScope?: StockScopeCode) {
+  if (!stockScope) {
+    return {};
+  }
+
+  if (stockScope === "MAIN") {
+    return {
+      OR: [
+        {
+          stockScope: {
+            is: {
+              scopeCode: "MAIN",
+            },
+          },
+        },
+        { stockScopeId: null },
+      ],
+    };
+  }
+
+  return {
+    stockScope: {
+      is: {
+        scopeCode: stockScope,
+      },
+    },
+  };
+}
+
+export function resolveMonthlyReportStockScopeCode(
+  scopeCode?: string | null,
+): StockScopeCode {
+  return toStockScopeCode(scopeCode) ?? "MAIN";
+}
+
+export function resolveMonthlyReportStockScopeName(scopeName?: string | null) {
+  return scopeName ?? "主仓";
 }
 
 export function toDecimal(
@@ -106,9 +139,7 @@ export function collectDistinctNumbers(
 ): number[] {
   return [
     ...new Set(
-      values.filter(
-        (value): value is number => typeof value === "number",
-      ),
+      values.filter((value): value is number => typeof value === "number"),
     ),
   ];
 }
@@ -126,10 +157,7 @@ export function collectDistinctStrings(
   ];
 }
 
-export function joinArrowLabels(
-  left?: string | null,
-  right?: string | null,
-) {
+export function joinArrowLabels(left?: string | null, right?: string | null) {
   if (left && right) {
     return `${left} -> ${right}`;
   }
@@ -148,9 +176,7 @@ export function toWorkshopTopicKey(orderType: WorkshopMaterialOrderType) {
   }
 }
 
-export function toWorkshopDocumentLabel(
-  orderType: WorkshopMaterialOrderType,
-) {
+export function toWorkshopDocumentLabel(orderType: WorkshopMaterialOrderType) {
   switch (orderType) {
     case WorkshopMaterialOrderType.PICK:
       return "领料单";
@@ -161,9 +187,7 @@ export function toWorkshopDocumentLabel(
   }
 }
 
-export function toRdProjectTopicKey(
-  actionType: RdProjectMaterialActionType,
-) {
+export function toRdProjectTopicKey(actionType: RdProjectMaterialActionType) {
   switch (actionType) {
     case RdProjectMaterialActionType.PICK:
       return MonthlyReportingTopicKey.RD_PROJECT_PICK;

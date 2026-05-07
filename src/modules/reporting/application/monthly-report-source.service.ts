@@ -3,8 +3,8 @@ import { AppConfigService } from "../../../shared/config/app-config.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
 import { MonthlyMaterialCategoryRepository } from "../infrastructure/monthly-material-category.repository";
 import {
-  type MonthlySalesProjectEntry,
   MonthlyReportRepository,
+  type MonthlySalesProjectEntry,
 } from "../infrastructure/monthly-report.repository";
 import {
   formatMonthlyReportSalesProjectLabel,
@@ -371,13 +371,6 @@ export class MonthlyReportSourceService {
       entry.categoryName,
       entry.salesProjectCode,
       entry.salesProjectName,
-      entry.sourceDocumentNo,
-      entry.sourceBizDate
-        ? formatYearMonth(
-            entry.sourceBizDate,
-            this.appConfigService.businessTimezone,
-          )
-        : null,
       ...abnormalLabels,
     ]
       .filter(Boolean)

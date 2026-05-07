@@ -217,6 +217,11 @@ export class QueryMonthlyReportingDto {
   documentTypeLabel?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  keyword?: string;
+
+  @IsOptional()
   @IsEnum(MonthlyReportingTopicKey)
   topicKey?: MonthlyReportingTopicKey;
 
@@ -245,11 +250,6 @@ export class QueryMonthlyReportingDto {
 
 export class QueryMonthlyReportingDetailDto extends QueryMonthlyReportingDto {
   @IsOptional()
-  @IsString()
-  @MaxLength(128)
-  keyword?: string;
-
-  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -262,9 +262,4 @@ export class QueryMonthlyReportingDetailDto extends QueryMonthlyReportingDto {
   offset?: number = 0;
 }
 
-export class ExportMonthlyReportingDto extends QueryMonthlyReportingDto {
-  @IsOptional()
-  @IsString()
-  @MaxLength(128)
-  keyword?: string;
-}
+export class ExportMonthlyReportingDto extends QueryMonthlyReportingDto {}

@@ -13,9 +13,9 @@ import {
 } from "./monthly-report-domain-summary.service";
 import { MonthlyReportItemMapperService } from "./monthly-report-item-mapper.service";
 import {
+  MonthlyReportMaterialCategoryService,
   type MonthlyReportMaterialCategorySummaryItem,
   type MonthlyReportMaterialCategorySummaryTotals,
-  MonthlyReportMaterialCategoryService,
 } from "./monthly-report-material-category.service";
 import {
   type MonthlyReportQuery,
@@ -57,9 +57,8 @@ export class MonthlyReportExportService {
     const filteredSalesProjectEntries =
       this.sourceService.filterSalesProjectEntries(salesProjectEntries, query);
     const totals = this.domainSummaryService.buildTotals(filteredRows);
-    const domainItems = this.domainSummaryService.buildDomainItems(
-      filteredRows,
-    );
+    const domainItems =
+      this.domainSummaryService.buildDomainItems(filteredRows);
     const documentTypeItems =
       this.domainSummaryService.buildDocumentTypeItems(filteredRows);
     const workshopItems =
@@ -104,7 +103,11 @@ export class MonthlyReportExportService {
     return {
       fileName: `monthly-reporting-material-category-${query.yearMonth}.xls`,
       content: buildMonthlyReportExcelXmlWorkbook(
-        this.buildMaterialCategorySheets(totals, categoryItems, filteredEntries),
+        this.buildMaterialCategorySheets(
+          totals,
+          categoryItems,
+          filteredEntries,
+        ),
       ),
       contentType: "application/vnd.ms-excel; charset=utf-8",
     };
@@ -374,11 +377,10 @@ export class MonthlyReportExportService {
           "金额",
           "成本",
           "异常标识",
-          "来源月份",
-          "来源单据",
         ],
         rows: filteredEntries.map((entry) => {
-          const item = this.itemMapperService.toMaterialCategoryDetailItem(entry);
+          const item =
+            this.itemMapperService.toMaterialCategoryDetailItem(entry);
           return [
             item.categoryCode ?? "",
             item.categoryName,
@@ -398,8 +400,6 @@ export class MonthlyReportExportService {
             item.amount,
             item.cost,
             item.abnormalLabels.join("、"),
-            item.sourceBizMonth ?? "",
-            item.sourceDocumentNo ?? "",
           ];
         }) as Array<Array<string | number>>,
       },

@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import type { StockScopeCode } from "../../session/domain/user-session";
 import {
-  type MonthlyReportDocumentTypeCatalogItem,
   MonthlyReportCatalogService,
+  type MonthlyReportDocumentTypeCatalogItem,
 } from "./monthly-report-catalog.service";
 import {
-  type MonthlyReportMaterialCategoryDetailItem,
   MonthlyReportItemMapperService,
+  type MonthlyReportMaterialCategoryDetailItem,
 } from "./monthly-report-item-mapper.service";
 import {
   type MonthlyReportQuery,
@@ -52,6 +52,16 @@ export interface MonthlyReportMaterialCategorySummaryItem {
   totalCost: string;
 }
 
+export type MonthlyReportMaterialCategoryCatalogItem = Pick<
+  MonthlyReportMaterialCategorySummaryItem,
+  "nodeKey" | "categoryId" | "categoryCode" | "categoryName"
+>;
+
+interface MonthlyReportMaterialCategoryGroup
+  extends MonthlyReportMaterialCategoryCatalogItem {
+  entries: MonthlyMaterialCategoryEntry[];
+}
+
 export interface MonthlyReportMaterialCategoryFilters {
   viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY;
   stockScope: StockScopeCode | null;
@@ -68,6 +78,7 @@ export interface MonthlyReportMaterialCategorySummaryResult {
   filters: MonthlyReportMaterialCategoryFilters;
   viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY;
   documentTypeCatalog: MonthlyReportDocumentTypeCatalogItem[];
+  categoryCatalog: MonthlyReportMaterialCategoryCatalogItem[];
   categories: MonthlyReportMaterialCategorySummaryItem[];
   summary: MonthlyReportMaterialCategorySummaryTotals;
 }
@@ -93,12 +104,8 @@ export class MonthlyReportMaterialCategoryService {
   ): Promise<MonthlyReportMaterialCategorySummaryResult> {
     const entries =
       await this.sourceService.loadMaterialCategorySourceData(query);
-    const entriesBeforeDocumentTypeFilter =
-      this.sourceService.filterMaterialCategoryEntries(entries, query, {
-        ignoreDocumentTypeLabel: true,
-      });
     const filteredEntries = this.sourceService.filterMaterialCategoryEntries(
-      entriesBeforeDocumentTypeFilter,
+      entries,
       query,
     );
     const categoryItems = this.buildMaterialCategoryItems(filteredEntries);
@@ -117,9 +124,8 @@ export class MonthlyReportMaterialCategoryService {
         keyword: query.keyword?.trim() || null,
       },
       documentTypeCatalog:
-        this.catalogService.buildMaterialCategoryDocumentTypeCatalog(
-          entriesBeforeDocumentTypeFilter,
-        ),
+        this.catalogService.buildMaterialCategoryDocumentTypeCatalog(entries),
+      categoryCatalog: this.buildMaterialCategoryCatalog(entries),
       categories: categoryItems,
       summary: {
         categoryCount: categoryItems.length,
@@ -153,35 +159,18 @@ export class MonthlyReportMaterialCategoryService {
     };
   }
 
+  buildMaterialCategoryCatalog(
+    entries: MonthlyMaterialCategoryEntry[],
+  ): MonthlyReportMaterialCategoryCatalogItem[] {
+    return this.collectMaterialCategoryGroups(entries)
+      .map(({ entries: _entries, ...category }) => category)
+      .sort((left, right) => this.compareMaterialCategoryItems(left, right));
+  }
+
   buildMaterialCategoryItems(
     entries: MonthlyMaterialCategoryEntry[],
   ): MonthlyReportMaterialCategorySummaryItem[] {
-    const grouped = new Map<
-      string,
-      {
-        nodeKey: string;
-        categoryId: number | null;
-        categoryCode: string | null;
-        categoryName: string;
-        entries: MonthlyMaterialCategoryEntry[];
-      }
-    >();
-
-    for (const entry of entries) {
-      const leafCategory = resolveMonthlyMaterialCategoryLeaf(entry);
-      const nodeKey = buildMonthlyMaterialCategoryNodeKey(leafCategory);
-      const current = grouped.get(nodeKey) ?? {
-        nodeKey,
-        categoryId: leafCategory.id,
-        categoryCode: leafCategory.categoryCode,
-        categoryName: leafCategory.categoryName,
-        entries: [],
-      };
-      current.entries.push(entry);
-      grouped.set(nodeKey, current);
-    }
-
-    return [...grouped.values()]
+    return this.collectMaterialCategoryGroups(entries)
       .map((item) => {
         const acceptanceRows = item.entries.filter(
           (entry) => entry.topicKey === "ACCEPTANCE_INBOUND",
@@ -241,23 +230,7 @@ export class MonthlyReportMaterialCategoryService {
           ),
         };
       })
-      .sort((left, right) => {
-        if (left.categoryName !== right.categoryName) {
-          return left.categoryName.localeCompare(
-            right.categoryName,
-            "zh-Hans-CN",
-          );
-        }
-
-        if ((left.categoryCode ?? "") !== (right.categoryCode ?? "")) {
-          return (left.categoryCode ?? "").localeCompare(
-            right.categoryCode ?? "",
-            "zh-Hans-CN",
-          );
-        }
-
-        return left.nodeKey.localeCompare(right.nodeKey, "zh-Hans-CN");
-      });
+      .sort((left, right) => this.compareMaterialCategoryItems(left, right));
   }
 
   buildMaterialCategoryTotals(
@@ -308,5 +281,45 @@ export class MonthlyReportMaterialCategoryService {
       ),
       totalCost: formatMoney(sumDecimals(entries.map((entry) => entry.cost))),
     };
+  }
+
+  private collectMaterialCategoryGroups(
+    entries: MonthlyMaterialCategoryEntry[],
+  ): MonthlyReportMaterialCategoryGroup[] {
+    const grouped = new Map<string, MonthlyReportMaterialCategoryGroup>();
+
+    for (const entry of entries) {
+      const leafCategory = resolveMonthlyMaterialCategoryLeaf(entry);
+      const nodeKey = buildMonthlyMaterialCategoryNodeKey(leafCategory);
+      const current = grouped.get(nodeKey) ?? {
+        nodeKey,
+        categoryId: leafCategory.id,
+        categoryCode: leafCategory.categoryCode,
+        categoryName: leafCategory.categoryName,
+        entries: [],
+      };
+      current.entries.push(entry);
+      grouped.set(nodeKey, current);
+    }
+
+    return [...grouped.values()];
+  }
+
+  private compareMaterialCategoryItems(
+    left: MonthlyReportMaterialCategoryCatalogItem,
+    right: MonthlyReportMaterialCategoryCatalogItem,
+  ): number {
+    if (left.categoryName !== right.categoryName) {
+      return left.categoryName.localeCompare(right.categoryName, "zh-Hans-CN");
+    }
+
+    if ((left.categoryCode ?? "") !== (right.categoryCode ?? "")) {
+      return (left.categoryCode ?? "").localeCompare(
+        right.categoryCode ?? "",
+        "zh-Hans-CN",
+      );
+    }
+
+    return left.nodeKey.localeCompare(right.nodeKey, "zh-Hans-CN");
   }
 }

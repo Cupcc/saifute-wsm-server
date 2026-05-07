@@ -7,6 +7,7 @@ import {
 } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
+import { buildMonthlyReportStockScopeWhere } from "./reporting-repository.helpers";
 
 @Injectable()
 export class HomeMetricsRepository {
@@ -109,15 +110,7 @@ export class HomeMetricsRepository {
 
     return {
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
-      ...(stockScope
-        ? {
-            stockScope: {
-              is: {
-                scopeCode: stockScope,
-              },
-            },
-          }
-        : {}),
+      ...buildMonthlyReportStockScopeWhere(stockScope),
       ...extra,
     };
   }
@@ -136,15 +129,7 @@ export class HomeMetricsRepository {
     return {
       orderType: SalesStockOrderType.OUTBOUND,
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
-      ...(stockScope
-        ? {
-            stockScope: {
-              is: {
-                scopeCode: stockScope,
-              },
-            },
-          }
-        : {}),
+      ...buildMonthlyReportStockScopeWhere(stockScope),
       ...extra,
     };
   }
@@ -181,35 +166,16 @@ export class HomeMetricsRepository {
               ],
             },
           },
-          {
-            orderType: WorkshopMaterialOrderType.SCRAP,
-            stockScope: {
-              is: {
-                scopeCode: "MAIN",
-              },
-            },
-          },
+          { orderType: WorkshopMaterialOrderType.SCRAP },
         ],
-        stockScope: {
-          is: {
-            scopeCode: "MAIN",
-          },
-        },
+        ...buildMonthlyReportStockScopeWhere("MAIN"),
         ...extra,
       };
     }
 
     return {
       lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
-      ...(stockScope
-        ? {
-            stockScope: {
-              is: {
-                scopeCode: stockScope,
-              },
-            },
-          }
-        : {}),
+      ...buildMonthlyReportStockScopeWhere(stockScope),
       orderType: {
         in: [
           WorkshopMaterialOrderType.PICK,
