@@ -60,6 +60,13 @@ const INVENTORY_VALUE_SOURCE_OPERATION_TYPES = [
   InventoryOperationType.RD_HANDOFF_IN,
 ];
 
+const HISTORICAL_REPLAY_RETURN_SOURCE_NOTE_PREFIXES = [
+  "Standalone sales return source accepted",
+  "Accepted standalone workshop return source",
+  "Historical linked sales return had insufficient releasable source usage",
+  "Historical linked workshop return had insufficient releasable source usage",
+];
+
 @Injectable()
 export class InventoryReportingRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -138,9 +145,25 @@ export class InventoryReportingRepository {
         ${materialFilter}
         AND material.status = ${MasterDataStatus.ACTIVE}
         AND src_log.direction = ${"IN"}
-        AND src_log.operation_type IN (${Prisma.join(
-          INVENTORY_VALUE_SOURCE_OPERATION_TYPES,
-        )})
+        AND (
+          src_log.operation_type IN (${Prisma.join(
+            INVENTORY_VALUE_SOURCE_OPERATION_TYPES,
+          )})
+          OR (
+            src_log.operation_type IN (${Prisma.join([
+              InventoryOperationType.SALES_RETURN_IN,
+              InventoryOperationType.RETURN_IN,
+            ])})
+            AND (
+              ${Prisma.join(
+                HISTORICAL_REPLAY_RETURN_SOURCE_NOTE_PREFIXES.map(
+                  (prefix) => Prisma.sql`src_log.note LIKE ${`${prefix}%`}`,
+                ),
+                " OR ",
+              )}
+            )
+          )
+        )
         AND src_log.unit_cost IS NOT NULL
         AND src_log.reversal_of_log_id IS NULL
         AND NOT EXISTS (

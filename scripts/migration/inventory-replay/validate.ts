@@ -11,6 +11,23 @@ import { buildInventoryReplayPlan } from "./planner";
 import { readInventoryReplayInput } from "./reader";
 import { REPLAY_FIFO_SOURCE_OPERATION_TYPES } from "./types";
 
+const REPLAY_RETURN_SOURCE_NOTE_PREFIXES = [
+  "Standalone sales return source accepted",
+  "Accepted standalone workshop return source",
+  "Historical linked sales return had insufficient releasable source usage",
+  "Historical linked workshop return had insufficient releasable source usage",
+];
+
+function isAcceptedNegativeFinalBalanceForStocktake(params: {
+  balanceQty: string;
+  sourceAvailableQty: string;
+}): boolean {
+  return (
+    normalizeDecimal(params.balanceQty).startsWith("-") &&
+    normalizeDecimal(params.sourceAvailableQty) === "0"
+  );
+}
+
 async function main(): Promise<void> {
   const cliOptions = parseMigrationCliOptions();
   const reportPath = resolveReportPath(
@@ -193,6 +210,10 @@ async function main(): Promise<void> {
         const sourceTypesSql = REPLAY_FIFO_SOURCE_OPERATION_TYPES.map(
           (value) => `'${value}'`,
         ).join(", ");
+        const replayReturnSourceNoteSql =
+          REPLAY_RETURN_SOURCE_NOTE_PREFIXES.map(
+            (prefix) => `l.note LIKE '${prefix}%'`,
+          ).join(" OR ");
         const priceLayerMismatchRows = await targetConnection.query<
           Array<{
             materialId: number;
@@ -224,7 +245,13 @@ async function main(): Promise<void> {
                 GROUP BY source_log_id
               ) usage_totals ON usage_totals.source_log_id = l.id
               WHERE l.direction = 'IN'
-                AND l.operation_type IN (${sourceTypesSql})
+                AND (
+                  l.operation_type IN (${sourceTypesSql})
+                  OR (
+                    l.operation_type IN ('SALES_RETURN_IN', 'RETURN_IN')
+                    AND (${replayReturnSourceNoteSql})
+                  )
+                )
                 AND l.unit_cost IS NOT NULL
               GROUP BY l.material_id, l.stock_scope_id
             ) src
@@ -235,6 +262,25 @@ async function main(): Promise<void> {
         );
 
         for (const row of priceLayerMismatchRows) {
+          if (
+            isAcceptedNegativeFinalBalanceForStocktake({
+              balanceQty: row.balanceQty,
+              sourceAvailableQty: row.sourceAvailableQty,
+            })
+          ) {
+            validationIssues.push({
+              severity: "warning",
+              reason:
+                "negative final balance is accepted for stocktake adjustment.",
+              materialId: row.materialId,
+              stockScopeId: row.stockScopeId,
+              balanceQty: row.balanceQty,
+              sourceAvailableQty: row.sourceAvailableQty,
+              differenceQty: row.differenceQty,
+            });
+            continue;
+          }
+
           validationIssues.push({
             severity: "blocker",
             reason:

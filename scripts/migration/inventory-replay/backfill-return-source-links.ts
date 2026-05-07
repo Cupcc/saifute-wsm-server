@@ -76,6 +76,21 @@ function validateSelectionsCanRelease(params: {
 
     if (!selection) return event;
 
+    if (selection.sourcePieces.length > 1) {
+      return {
+        ...event,
+        sourceDocumentType: null,
+        sourceDocumentId: null,
+        sourceDocumentLineId: null,
+        sourceLinks: selection.sourcePieces.map((piece) => ({
+          sourceDocumentType: piece.sourceDocumentType,
+          sourceDocumentId: piece.sourceDocumentId,
+          sourceDocumentLineId: piece.sourceLineId,
+          linkedQty: piece.linkedQty,
+        })),
+      };
+    }
+
     return {
       ...event,
       sourceDocumentType: selection.sourceDocumentType,
@@ -143,6 +158,139 @@ function getReturnLineTable(documentType: string): string {
   throw new Error(`Unsupported return document type: ${documentType}`);
 }
 
+function getDocumentFamily(documentType: string): string {
+  if (documentType === BusinessDocumentType.SalesStockOrder) {
+    return "SALES_STOCK";
+  }
+  if (documentType === BusinessDocumentType.WorkshopMaterialOrder) {
+    return "WORKSHOP_MATERIAL";
+  }
+  throw new Error(`Unsupported return document type: ${documentType}`);
+}
+
+function getReturnRelationType(documentType: string): string {
+  if (documentType === BusinessDocumentType.SalesStockOrder) {
+    return "SALES_RETURN_FROM_OUTBOUND";
+  }
+  if (documentType === BusinessDocumentType.WorkshopMaterialOrder) {
+    return "WORKSHOP_RETURN_FROM_PICK";
+  }
+  throw new Error(`Unsupported return document type: ${documentType}`);
+}
+
+async function assertReturnLineCanReceiveSourceBackfill(
+  connection: MigrationConnectionLike,
+  selection: SelectedReturnSourceBackfill,
+): Promise<void> {
+  const tableName = getReturnLineTable(selection.returnDocumentType);
+  const rows = await connection.query<Array<{ total: number }>>(
+    `
+      SELECT COUNT(*) AS total
+      FROM ${tableName}
+      WHERE id = ?
+        AND order_id = ?
+        AND material_id = ?
+        AND source_document_type IS NULL
+        AND source_document_id IS NULL
+        AND source_document_line_id IS NULL
+    `,
+    [selection.returnLineId, selection.returnDocumentId, selection.materialId],
+  );
+  const total = Number(rows[0]?.total ?? 0);
+  if (total !== 1) {
+    throw new Error(
+      `Expected one source-empty return line for ${selection.returnDocumentNumber} line ${selection.returnLineId}, found=${total}.`,
+    );
+  }
+}
+
+async function upsertDocumentRelationForSelection(
+  connection: MigrationConnectionLike,
+  selection: SelectedReturnSourceBackfill,
+  piece: SelectedReturnSourceBackfill["sourcePieces"][number],
+): Promise<void> {
+  const relationType = getReturnRelationType(selection.returnDocumentType);
+  const documentFamily = getDocumentFamily(selection.returnDocumentType);
+  await connection.query(
+    `
+      INSERT INTO document_relation (
+        relation_type,
+        upstream_family,
+        upstream_document_type,
+        upstream_document_id,
+        downstream_family,
+        downstream_document_type,
+        downstream_document_id,
+        is_active,
+        created_by,
+        updated_by,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, ?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        is_active = TRUE,
+        updated_by = VALUES(updated_by),
+        updated_at = NOW()
+    `,
+    [
+      relationType,
+      documentFamily,
+      piece.sourceDocumentType,
+      piece.sourceDocumentId,
+      documentFamily,
+      selection.returnDocumentType,
+      selection.returnDocumentId,
+      BACKFILL_UPDATED_BY,
+      BACKFILL_UPDATED_BY,
+    ],
+  );
+}
+
+async function upsertDocumentLineRelationForSelection(
+  connection: MigrationConnectionLike,
+  selection: SelectedReturnSourceBackfill,
+  piece: SelectedReturnSourceBackfill["sourcePieces"][number],
+): Promise<void> {
+  const relationType = getReturnRelationType(selection.returnDocumentType);
+  const documentFamily = getDocumentFamily(selection.returnDocumentType);
+  await connection.query(
+    `
+      INSERT INTO document_line_relation (
+        relation_type,
+        upstream_family,
+        upstream_document_type,
+        upstream_document_id,
+        upstream_line_id,
+        downstream_family,
+        downstream_document_type,
+        downstream_document_id,
+        downstream_line_id,
+        linked_qty,
+        created_by,
+        updated_by,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        linked_qty = VALUES(linked_qty),
+        updated_by = VALUES(updated_by),
+        updated_at = NOW()
+    `,
+    [
+      relationType,
+      documentFamily,
+      piece.sourceDocumentType,
+      piece.sourceDocumentId,
+      piece.sourceLineId,
+      documentFamily,
+      selection.returnDocumentType,
+      selection.returnDocumentId,
+      selection.returnLineId,
+      piece.linkedQty,
+      BACKFILL_UPDATED_BY,
+      BACKFILL_UPDATED_BY,
+    ],
+  );
+}
+
 async function applyBackfillPlan(
   connection: MigrationConnectionLike,
   selections: SelectedReturnSourceBackfill[],
@@ -153,6 +301,29 @@ async function applyBackfillPlan(
     const appliedSelections: SelectedReturnSourceBackfill[] = [];
 
     for (const selection of selections) {
+      if (selection.sourcePieces.length > 1) {
+        await assertReturnLineCanReceiveSourceBackfill(connection, selection);
+
+        for (const piece of selection.sourcePieces) {
+          await upsertDocumentRelationForSelection(
+            connection,
+            selection,
+            piece,
+          );
+          await upsertDocumentLineRelationForSelection(
+            connection,
+            selection,
+            piece,
+          );
+        }
+
+        appliedSelections.push({
+          ...selection,
+          affectedRows: selection.sourcePieces.length,
+        });
+        continue;
+      }
+
       const tableName = getReturnLineTable(selection.returnDocumentType);
       const result = await connection.query<{ affectedRows?: number }>(
         `
@@ -249,7 +420,7 @@ function skippedReasonLabel(reason: SkippedReturnSourceBackfill["reason"]): {
       meaning:
         "存在候选原单，但没有任何一条原单行既有足够可退数量、又有足够可释放来源覆盖整条退回。",
       nextAction:
-        "确认是否多来源退回；需要拆分退回行或让 replay 支持带数量的行级关系，不能硬选一条来源。",
+        "先确认是否缺更多原单、数量迁移错误或原单可释放来源不足；候选合计和可释放量都足够时，脚本会按多来源关系写入。",
     };
   }
 
@@ -257,7 +428,7 @@ function skippedReasonLabel(reason: SkippedReturnSourceBackfill["reason"]): {
     return {
       label: "候选无法释放完整来源",
       meaning:
-        "候选原单数量看起来够，但 replay 模拟后发现原出库/领料行自身没有足够来源占用可释放。",
+        "候选原单数量看起来够，但重算模拟后发现原出库/领料行自身没有足够来源占用可释放。",
       nextAction:
         "先修候选原单自身的 FIFO 来源不足/负库存问题，再重新跑最佳候选回填。",
     };
@@ -367,28 +538,40 @@ function writeMarkdownReport(
     ),
   );
   const selectedSummary =
-    report.selectedRows.length === 0
-      ? "没有可安全自动回填的来源链；剩余问题需要修历史数据或补 replay 表达能力。"
-      : "存在可安全自动回填的来源链；执行前仍要复核候选关系是否符合业务事实。";
+    report.totalMissingLinks === 0
+      ? "退货 / 退料缺来源链已清空；本轮没有需要回填的候选行。"
+      : report.selectedRows.length === 0
+        ? "没有更多可安全自动回填的来源链；剩余问题要么无候选，要么候选合计 / 可释放量不足，需要修历史数据。"
+        : "存在可安全自动回填的来源链；执行前仍要复核候选关系是否符合业务事实。";
+  const multiSourceSelectedCount = report.selectedRows.filter(
+    (row) => row.sourcePieces.length > 1,
+  ).length;
   const releaseInsufficientBlockers = report.blockers.filter(
     (blocker) => blocker.reason === "return-source-release-insufficient",
   );
+  const blockerSummary =
+    report.blockers.length === 0
+      ? "- 当前库存重算计划已无 blocker；下一步是 execute 前确认。"
+      : `- 当前库存重算计划仍有 \`${report.blockers.length}\` 个 blocker；若退货 / 退料缺来源链已清空，下一步应直接复核当前 blocker 统计中的剩余类型。`;
   const lines = [
-    "# 库存重放退货来源最佳候选回填报告",
+    "# 库存重算退货来源最佳候选回填报告",
     "",
     `模式：${report.mode}`,
     `目标库：${report.targetDatabaseName}`,
     `缺来源关联总数：${report.totalMissingLinks}`,
     `有候选行数：${report.rowsWithCandidates}`,
     `选择回填：${report.selectedRows.length}`,
+    `多来源回填：${multiSourceSelectedCount}`,
     `跳过：${report.skippedRows.length}`,
     "",
     "## 结论",
     "",
     `- ${selectedSummary}`,
+    `- 本轮选择中 \`${multiSourceSelectedCount}\` 条需要写入多条 ` +
+      "`document_line_relation.linked_qty` 后按来源分别释放。",
     `- 本轮剩余 \`${report.skippedRows.length}\` 条退货 / 退料缺来源链，其中 \`${skippedCounts.get("no-candidate") ?? 0}\` 条没有任何候选，\`${skippedCounts.get("no-single-candidate-can-cover-return-quantity") ?? 0}\` 条有候选但没有单条能覆盖整条退回数量。`,
-    `- 当前 replay 计划仍有 \`${report.blockers.length}\` 个 blocker；退货来源链只是其中一类，价格层余额差异要等前置来源问题修完后再复核。`,
-    "- 本脚本只做安全单来源回填：必须是一条退回行对应一条原出库/领料行，且数量与可释放来源都能覆盖。剩余行不满足这个条件，不能靠硬填一个 `source_document_*` 解决。",
+    blockerSummary,
+    "- 本脚本只处理可证明覆盖的来源关系：单来源完整覆盖时回填 `source_document_*`；多来源合计覆盖时写入 `document_relation` / `document_line_relation.linked_qty`。候选合计不足的行继续跳过。",
     "",
     "## 当前 blocker 统计",
     "",
@@ -488,17 +671,25 @@ function writeMarkdownReport(
     "",
     "只有进入这一节的行，才满足当前脚本的安全自动回填条件。",
     "",
-    "| 退回单号 | 退回行ID | 物料ID | 退回数量 | 退回备注 | 备注日期 | 原单号 | 原单日期 | 原单ID | 原单行ID | 原单备注 | 候选排名 | 备注日期命中 | 单据剩余量变化 | 可释放量变化 | 信号 |",
-    "| --- | ---: | ---: | ---: | --- | --- | --- | --- | ---: | ---: | --- | ---: | --- | --- | --- | --- |",
+    "| 退回单号 | 退回行ID | 物料ID | 退回数量 | 来源数 | 来源分配 | 退回备注 | 备注日期 | 首个原单号 | 首个原单日期 | 首个原单ID | 首个原单行ID | 首个原单备注 | 候选排名 | 备注日期命中 | 单据剩余量变化 | 可释放量变化 | 信号 |",
+    "| --- | ---: | ---: | ---: | ---: | --- | --- | --- | --- | --- | ---: | ---: | --- | ---: | --- | --- | --- | --- |",
   );
 
   for (const row of report.selectedRows) {
+    const sourceAllocation = row.sourcePieces
+      .map(
+        (piece) =>
+          `${piece.sourceDocumentNumber}/${piece.sourceLineId}:${piece.linkedQty}`,
+      )
+      .join("; ");
     lines.push(
       [
         row.returnDocumentNumber,
         row.returnLineId,
         row.materialId,
         row.returnQty,
+        row.sourcePieces.length,
+        sourceAllocation,
         row.returnRemark,
         row.remarkTargetDates.join(","),
         row.sourceDocumentNumber,
@@ -523,7 +714,7 @@ function writeMarkdownReport(
 
   lines.push("", "## 跳过候选", "");
   lines.push(
-    "这里的“跳过”不是忽略问题，而是脚本拒绝做不安全写入；每一行都需要按处理路径修数据或扩展 replay 表达能力。",
+    "这里的“跳过”不是忽略问题，而是脚本拒绝做不安全写入；每一行都需要按处理路径修数据，或扩展重算脚本对多来源退回的处理。",
     "",
     "| 退回类型 | 退回单号 | 退回行ID | 物料ID | 退回数量 | 退回备注 | 备注日期 | 候选数 | 可覆盖候选数 | 候选合计可退 | 首选候选 | 首选可退 | 原因 | 下一步 |",
     "| --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | --- | ---: | --- | --- |",
@@ -566,7 +757,7 @@ function writeMarkdownReport(
     "## 如何解决",
     "",
     "1. 对 `无候选` 行：按物料、库存范围、备注日期、业务日期回查历史出库 / 领料是否缺迁移、状态被过滤、日期或库存范围迁错；如果业务确认就是无源退回，必须补明确成本来源或调整事实，不能虚构原单关系。",
-    "2. 对 `无单条完整覆盖候选` 行：先看候选合计是否足够。合计不足说明仍缺原单或数量；合计足够但单条不足说明是多来源退回，当前单个 `source_document_*` 字段表达不了，需要拆退回行，或让 replay 读取 `document_line_relation.linkedQty` 后按多来源释放。",
+    "2. 对 `无单条完整覆盖候选` 行：先看候选合计和原单可释放来源是否足够。合计不足说明仍缺原单或数量；合计足够但可释放来源不足说明要先修原消费行的 FIFO 来源链。",
     "3. 对 `已有关联但无法释放来源` 行：不要再改退货链接，先修原出库 / 原领料的 `fifo-source-insufficient`、`negative-balance-during-replay`，让原消费行产生可释放的来源占用。",
     "4. 修完一批后重新运行 `bun run migration:inventory-replay:dry-run`，再运行 `bun run migration:inventory-replay:return-source-links:dry-run`。只有 `blockers=[]` 才能进入 execute。",
   );

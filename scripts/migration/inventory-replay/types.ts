@@ -48,6 +48,13 @@ export interface InventoryReplayCoverageGap {
   reason: string;
 }
 
+export interface InventorySourceLink {
+  sourceDocumentType: string;
+  sourceDocumentId: number;
+  sourceDocumentLineId: number;
+  linkedQty: string;
+}
+
 export interface InventoryEvent {
   bizDate: string;
   direction: StockDirection;
@@ -67,6 +74,7 @@ export interface InventoryEvent {
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
+  sourceLinks?: InventorySourceLink[];
   transferInStockScopeId: number | null;
   transferInWorkshopId: number | null;
   remark?: string | null;

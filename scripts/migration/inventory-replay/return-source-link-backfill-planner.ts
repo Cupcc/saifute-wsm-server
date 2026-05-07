@@ -7,6 +7,28 @@ const QTY_SCALE = 6;
 
 type ReturnSourceCandidate = ReturnSourceLinkCandidateRow["candidates"][number];
 
+export interface SelectedReturnSourceBackfillPiece {
+  selectedCandidateRank: number;
+  sourceDocumentType: string;
+  sourceDocumentId: number;
+  sourceDocumentNumber: string;
+  sourceLineId: number;
+  sourceOperationType: string;
+  sourceBizDate: string;
+  sourceRemark: string | null;
+  linkedQty: string;
+  sourceRemainingBefore: string;
+  sourceRemainingAfter: string;
+  sourceReleasableBefore: string | null;
+  sourceReleasableAfter: string | null;
+  remarkDateMatches: boolean | null;
+  remarkMatchedDate: string | null;
+  sameWorkshop: boolean | null;
+  unitCostMatches: boolean | null;
+  daysBeforeReturn: number;
+  warnings: string[];
+}
+
 export interface SelectedReturnSourceBackfill {
   returnDocumentType: string;
   returnDocumentId: number;
@@ -37,6 +59,7 @@ export interface SelectedReturnSourceBackfill {
   unitCostMatches: boolean | null;
   daysBeforeReturn: number;
   warnings: string[];
+  sourcePieces: SelectedReturnSourceBackfillPiece[];
   affectedRows?: number;
 }
 
@@ -175,6 +198,10 @@ function buildSelectionWarnings(candidate: ReturnSourceCandidate): string[] {
   ].filter((warning): warning is string => warning !== null);
 }
 
+function minQty(left: bigint, right: bigint): bigint {
+  return left < right ? left : right;
+}
+
 function compareReturnRows(
   left: ReturnSourceLinkCandidateRow,
   right: ReturnSourceLinkCandidateRow,
@@ -246,14 +273,14 @@ export function buildBestReturnSourceLinkBackfillPlan(
       continue;
     }
 
-    const selectedCandidate = row.candidates
-      .map((candidate, index) => ({
-        candidate,
-        index,
-        key: sourceCandidateKey(row, candidate),
-        sourceLineKey: sourceLineKeyForCandidate(row, candidate),
-      }))
-      .find(({ key, sourceLineKey: candidateSourceLineKey }) => {
+    const candidateOptions = row.candidates.map((candidate, index) => ({
+      candidate,
+      index,
+      key: sourceCandidateKey(row, candidate),
+      sourceLineKey: sourceLineKeyForCandidate(row, candidate),
+    }));
+    const selectedCandidate = candidateOptions.find(
+      ({ key, sourceLineKey: candidateSourceLineKey }) => {
         const sourceRemainingQty = remainingBySourceKey.get(key) ?? 0n;
         const sourceReleasableQty = releasableBySourceLine?.get(
           candidateSourceLineKey,
@@ -264,9 +291,136 @@ export function buildBestReturnSourceLinkBackfillPlan(
           (releasableBySourceLine === null ||
             (sourceReleasableQty ?? 0n) >= returnQty)
         );
-      });
+      },
+    );
 
-    if (!selectedCandidate) {
+    const sourcePieces: SelectedReturnSourceBackfillPiece[] = [];
+
+    if (selectedCandidate) {
+      const remainingBefore =
+        remainingBySourceKey.get(selectedCandidate.key) ?? 0n;
+      const remainingAfter = remainingBefore - returnQty;
+      remainingBySourceKey.set(selectedCandidate.key, remainingAfter);
+      const releasableBefore =
+        releasableBySourceLine?.get(selectedCandidate.sourceLineKey) ?? null;
+      const releasableAfter =
+        releasableBefore === null ? null : releasableBefore - returnQty;
+      if (releasableAfter !== null) {
+        releasableBySourceLine?.set(
+          selectedCandidate.sourceLineKey,
+          releasableAfter,
+        );
+      }
+
+      sourcePieces.push({
+        selectedCandidateRank: selectedCandidate.index + 1,
+        sourceDocumentType: selectedCandidate.candidate.sourceDocumentType,
+        sourceDocumentId: selectedCandidate.candidate.sourceDocumentId,
+        sourceDocumentNumber: selectedCandidate.candidate.sourceDocumentNumber,
+        sourceLineId: selectedCandidate.candidate.sourceLineId,
+        sourceOperationType: selectedCandidate.candidate.sourceOperationType,
+        sourceBizDate: selectedCandidate.candidate.sourceBizDate,
+        sourceRemark: selectedCandidate.candidate.sourceRemark ?? null,
+        linkedQty: formatQty(returnQty),
+        sourceRemainingBefore: formatQty(remainingBefore),
+        sourceRemainingAfter: formatQty(remainingAfter),
+        sourceReleasableBefore:
+          releasableBefore !== null ? formatQty(releasableBefore) : null,
+        sourceReleasableAfter:
+          releasableAfter !== null ? formatQty(releasableAfter) : null,
+        remarkDateMatches:
+          selectedCandidate.candidate.remarkDateMatches ?? null,
+        remarkMatchedDate:
+          selectedCandidate.candidate.remarkMatchedDate ?? null,
+        sameWorkshop: selectedCandidate.candidate.sameWorkshop,
+        unitCostMatches: selectedCandidate.candidate.unitCostMatches,
+        daysBeforeReturn: selectedCandidate.candidate.daysBeforeReturn,
+        warnings: buildSelectionWarnings(selectedCandidate.candidate),
+      });
+    } else {
+      let remainingToCover = returnQty;
+      const plannedPieces: Array<{
+        option: (typeof candidateOptions)[number];
+        linkedQty: bigint;
+        remainingBefore: bigint;
+        remainingAfter: bigint;
+        releasableBefore: bigint | null;
+        releasableAfter: bigint | null;
+      }> = [];
+
+      for (const option of candidateOptions) {
+        if (option.candidate.sameWorkshop === false) continue;
+
+        const sourceRemainingQty = remainingBySourceKey.get(option.key) ?? 0n;
+        const sourceReleasableQty =
+          releasableBySourceLine === null
+            ? null
+            : (releasableBySourceLine.get(option.sourceLineKey) ?? 0n);
+        const availableQty =
+          sourceReleasableQty === null
+            ? sourceRemainingQty
+            : minQty(sourceRemainingQty, sourceReleasableQty);
+        if (availableQty <= 0n) continue;
+
+        const linkedQty = minQty(availableQty, remainingToCover);
+        plannedPieces.push({
+          option,
+          linkedQty,
+          remainingBefore: sourceRemainingQty,
+          remainingAfter: sourceRemainingQty - linkedQty,
+          releasableBefore: sourceReleasableQty,
+          releasableAfter:
+            sourceReleasableQty === null
+              ? null
+              : sourceReleasableQty - linkedQty,
+        });
+
+        remainingToCover -= linkedQty;
+        if (remainingToCover <= 0n) break;
+      }
+
+      if (remainingToCover === 0n && plannedPieces.length > 1) {
+        for (const piece of plannedPieces) {
+          remainingBySourceKey.set(piece.option.key, piece.remainingAfter);
+          if (piece.releasableAfter !== null) {
+            releasableBySourceLine?.set(
+              piece.option.sourceLineKey,
+              piece.releasableAfter,
+            );
+          }
+
+          sourcePieces.push({
+            selectedCandidateRank: piece.option.index + 1,
+            sourceDocumentType: piece.option.candidate.sourceDocumentType,
+            sourceDocumentId: piece.option.candidate.sourceDocumentId,
+            sourceDocumentNumber: piece.option.candidate.sourceDocumentNumber,
+            sourceLineId: piece.option.candidate.sourceLineId,
+            sourceOperationType: piece.option.candidate.sourceOperationType,
+            sourceBizDate: piece.option.candidate.sourceBizDate,
+            sourceRemark: piece.option.candidate.sourceRemark ?? null,
+            linkedQty: formatQty(piece.linkedQty),
+            sourceRemainingBefore: formatQty(piece.remainingBefore),
+            sourceRemainingAfter: formatQty(piece.remainingAfter),
+            sourceReleasableBefore:
+              piece.releasableBefore !== null
+                ? formatQty(piece.releasableBefore)
+                : null,
+            sourceReleasableAfter:
+              piece.releasableAfter !== null
+                ? formatQty(piece.releasableAfter)
+                : null,
+            remarkDateMatches: piece.option.candidate.remarkDateMatches ?? null,
+            remarkMatchedDate: piece.option.candidate.remarkMatchedDate ?? null,
+            sameWorkshop: piece.option.candidate.sameWorkshop,
+            unitCostMatches: piece.option.candidate.unitCostMatches,
+            daysBeforeReturn: piece.option.candidate.daysBeforeReturn,
+            warnings: buildSelectionWarnings(piece.option.candidate),
+          });
+        }
+      }
+    }
+
+    if (sourcePieces.length === 0) {
       skippedRows.push({
         returnDocumentType: row.returnDocumentType,
         returnDocumentId: row.returnDocumentId,
@@ -281,20 +435,7 @@ export function buildBestReturnSourceLinkBackfillPlan(
       continue;
     }
 
-    const remainingBefore =
-      remainingBySourceKey.get(selectedCandidate.key) ?? 0n;
-    const remainingAfter = remainingBefore - returnQty;
-    remainingBySourceKey.set(selectedCandidate.key, remainingAfter);
-    const releasableBefore =
-      releasableBySourceLine?.get(selectedCandidate.sourceLineKey) ?? null;
-    const releasableAfter =
-      releasableBefore === null ? null : releasableBefore - returnQty;
-    if (releasableAfter !== null) {
-      releasableBySourceLine?.set(
-        selectedCandidate.sourceLineKey,
-        releasableAfter,
-      );
-    }
+    const primaryPiece = sourcePieces[0];
 
     selectedRows.push({
       returnDocumentType: row.returnDocumentType,
@@ -308,26 +449,25 @@ export function buildBestReturnSourceLinkBackfillPlan(
       returnRemark: row.returnRemark,
       remarkTargetDates: row.remarkTargetDates,
       candidateCount: row.candidateCount,
-      selectedCandidateRank: selectedCandidate.index + 1,
-      sourceDocumentType: selectedCandidate.candidate.sourceDocumentType,
-      sourceDocumentId: selectedCandidate.candidate.sourceDocumentId,
-      sourceDocumentNumber: selectedCandidate.candidate.sourceDocumentNumber,
-      sourceLineId: selectedCandidate.candidate.sourceLineId,
-      sourceOperationType: selectedCandidate.candidate.sourceOperationType,
-      sourceBizDate: selectedCandidate.candidate.sourceBizDate,
-      sourceRemark: selectedCandidate.candidate.sourceRemark ?? null,
-      sourceRemainingBefore: formatQty(remainingBefore),
-      sourceRemainingAfter: formatQty(remainingAfter),
-      sourceReleasableBefore:
-        releasableBefore !== null ? formatQty(releasableBefore) : null,
-      sourceReleasableAfter:
-        releasableAfter !== null ? formatQty(releasableAfter) : null,
-      remarkDateMatches: selectedCandidate.candidate.remarkDateMatches ?? null,
-      remarkMatchedDate: selectedCandidate.candidate.remarkMatchedDate ?? null,
-      sameWorkshop: selectedCandidate.candidate.sameWorkshop,
-      unitCostMatches: selectedCandidate.candidate.unitCostMatches,
-      daysBeforeReturn: selectedCandidate.candidate.daysBeforeReturn,
-      warnings: buildSelectionWarnings(selectedCandidate.candidate),
+      selectedCandidateRank: primaryPiece.selectedCandidateRank,
+      sourceDocumentType: primaryPiece.sourceDocumentType,
+      sourceDocumentId: primaryPiece.sourceDocumentId,
+      sourceDocumentNumber: primaryPiece.sourceDocumentNumber,
+      sourceLineId: primaryPiece.sourceLineId,
+      sourceOperationType: primaryPiece.sourceOperationType,
+      sourceBizDate: primaryPiece.sourceBizDate,
+      sourceRemark: primaryPiece.sourceRemark,
+      sourceRemainingBefore: primaryPiece.sourceRemainingBefore,
+      sourceRemainingAfter: primaryPiece.sourceRemainingAfter,
+      sourceReleasableBefore: primaryPiece.sourceReleasableBefore,
+      sourceReleasableAfter: primaryPiece.sourceReleasableAfter,
+      remarkDateMatches: primaryPiece.remarkDateMatches,
+      remarkMatchedDate: primaryPiece.remarkMatchedDate,
+      sameWorkshop: primaryPiece.sameWorkshop,
+      unitCostMatches: primaryPiece.unitCostMatches,
+      daysBeforeReturn: primaryPiece.daysBeforeReturn,
+      warnings: [...new Set(sourcePieces.flatMap((piece) => piece.warnings))],
+      sourcePieces,
     });
   }
 

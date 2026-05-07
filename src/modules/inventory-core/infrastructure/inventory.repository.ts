@@ -8,6 +8,27 @@ import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type InventoryDbClient = Prisma.TransactionClient | PrismaService;
 
+const HISTORICAL_REPLAY_RETURN_SOURCE_NOTE_PREFIXES = [
+  "Standalone sales return source accepted",
+  "Accepted standalone workshop return source",
+  "Historical linked sales return had insufficient releasable source usage",
+  "Historical linked workshop return had insufficient releasable source usage",
+];
+
+function historicalReplayReturnSourceWhere(): Prisma.InventoryLogWhereInput {
+  return {
+    operationType: {
+      in: [
+        InventoryOperationType.SALES_RETURN_IN,
+        InventoryOperationType.RETURN_IN,
+      ],
+    },
+    OR: HISTORICAL_REPLAY_RETURN_SOURCE_NOTE_PREFIXES.map((prefix) => ({
+      note: { startsWith: prefix },
+    })),
+  };
+}
+
 @Injectable()
 export class InventoryRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -390,7 +411,10 @@ export class InventoryRepository {
         materialId: params.materialId,
         stockScopeId: params.stockScopeId,
         direction: StockDirection.IN,
-        operationType: { in: params.sourceOperationTypes },
+        OR: [
+          { operationType: { in: params.sourceOperationTypes } },
+          historicalReplayReturnSourceWhere(),
+        ],
         ...(typeof params.projectTargetId === "number"
           ? { projectTargetId: params.projectTargetId }
           : {}),
