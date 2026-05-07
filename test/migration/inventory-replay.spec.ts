@@ -112,7 +112,16 @@ describe("inventory replay planner", () => {
       }),
     ]);
 
-    expect(plan.blockers).toHaveLength(0);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "return-source-release-insufficient",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "fifo-source-insufficient",
+      ),
+    ).toBe(false);
     expect(plan.plannedSourceUsages).toHaveLength(1);
     expect(plan.plannedSourceUsages[0]).toMatchObject({
       sourceLogIdempotencyKey: "StockInOrder:1:line:1",
@@ -432,6 +441,215 @@ describe("inventory replay planner", () => {
     expect(plan.plannedSourceUsages).toHaveLength(0);
   });
 
+  it("does not add a new negative-balance blocker for later inbound rows that reduce an existing deficit", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "OUTBOUND_OUT",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "SO-001",
+        businessDocumentLineId: 10,
+        changeQty: "100.000000",
+        unitCost: null,
+        idempotencyKey: "SalesStockOrder:1:line:10",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        businessDocumentId: 2,
+        businessDocumentLineId: 20,
+        changeQty: "30.000000",
+        unitCost: "12.00",
+        idempotencyKey: "StockInOrder:2:line:20",
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "negative-balance-during-replay",
+      ),
+    ).toBe(false);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("UNFUNDED_HISTORICAL_OUT SO-001"),
+        expect.stringContaining(
+          "temporarily makes material=100, stockScope=1 negative due to accepted historical source-less stock movement",
+        ),
+      ]),
+    );
+  });
+
+  it("accepts final negative balances without available price layers for stocktake adjustment", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "OUTBOUND_OUT",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "SO-NEG",
+        businessDocumentLineId: 10,
+        changeQty: "78.000000",
+        unitCost: null,
+        idempotencyKey: "SalesStockOrder:1:line:10",
+        sortPriority: 1,
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "price-layer-balance-mismatch",
+      ),
+    ).toBe(false);
+    expect(plan.plannedBalances).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        quantityOnHand: "-78.000000",
+      },
+    ]);
+    expect(plan.plannedPriceLayers).toHaveLength(0);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("UNFUNDED_HISTORICAL_OUT SO-NEG"),
+        expect.stringContaining(
+          "NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE material=100",
+        ),
+      ]),
+    );
+  });
+
+  it("uses matching returns to offset historical source-less consumer deficits", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "LL-UNFUNDED",
+        businessDocumentLineId: 10,
+        changeQty: "1.000000",
+        unitCost: "8.50",
+        costAmount: "8.50",
+        idempotencyKey: "WorkshopMaterialOrder:1:line:10",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "IN",
+        operationType: "RETURN_IN",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "TL-SURPLUS",
+        businessDocumentLineId: 20,
+        changeQty: "1.000000",
+        unitCost: "8.50",
+        costAmount: null,
+        idempotencyKey: "WorkshopMaterialOrder:2:line:20",
+        sortPriority: 0,
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "price-layer-balance-mismatch",
+      ),
+    ).toBe(false);
+    expect(plan.plannedBalances).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        quantityOnHand: "0.000000",
+      },
+    ]);
+    expect(plan.plannedPriceLayers).toHaveLength(0);
+    expect(plan.plannedSourceUsages).toEqual([
+      expect.objectContaining({
+        sourceLogIdempotencyKey: "WorkshopMaterialOrder:2:line:20",
+        consumerDocumentType: "WorkshopMaterialOrder",
+        consumerDocumentId: 1,
+        consumerLineId: 10,
+        allocatedQty: "1.000000",
+        releasedQty: "0.000000",
+        status: "ALLOCATED",
+      }),
+    ]);
+    expect(plan.plannedLogs[0]).toMatchObject({
+      unitCost: "8.50",
+      costAmount: "8.50",
+      note: expect.stringContaining("Later return/recovery source offset"),
+    });
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("UNFUNDED_HISTORICAL_OUT LL-UNFUNDED"),
+        expect.stringContaining("UNFUNDED_HISTORICAL_OUT_OFFSET TL-SURPLUS"),
+      ]),
+    );
+  });
+
+  it("keeps unmatched-cost return layers blocked after historical source-less movement", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "LL-UNFUNDED",
+        businessDocumentLineId: 10,
+        changeQty: "1.000000",
+        unitCost: "8.50",
+        costAmount: "8.50",
+        idempotencyKey: "WorkshopMaterialOrder:1:line:10",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "IN",
+        operationType: "RETURN_IN",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "TL-MISMATCH",
+        businessDocumentLineId: 20,
+        changeQty: "1.000000",
+        unitCost: "9.50",
+        costAmount: null,
+        idempotencyKey: "WorkshopMaterialOrder:2:line:20",
+        sortPriority: 0,
+      }),
+    ]);
+
+    expect(plan.blockers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          reason: "price-layer-balance-mismatch",
+          details: expect.objectContaining({
+            balanceQty: "0.000000",
+            sourceAvailableQty: "1.000000",
+          }),
+        }),
+      ]),
+    );
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        unitCost: "9.50",
+        availableQty: "1.000000",
+        sourceLogCount: 1,
+      },
+    ]);
+  });
+
   it("marks fully unmatched inbound reversal rows as deferred blockers without stock facts", () => {
     const plan = buildInventoryReplayPlan([
       event({
@@ -545,6 +763,107 @@ describe("inventory replay planner", () => {
     ]);
   });
 
+  it("releases multiple original source usages for one relation-based return", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        changeQty: "100.000000",
+        unitCost: "10.00",
+        idempotencyKey: "StockInOrder:1:line:1",
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "LL-001",
+        businessDocumentLineId: 20,
+        changeQty: "40.000000",
+        unitCost: null,
+        idempotencyKey: "WorkshopMaterialOrder:2:line:20",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-03",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 3,
+        businessDocumentNumber: "LL-002",
+        businessDocumentLineId: 30,
+        changeQty: "60.000000",
+        unitCost: null,
+        idempotencyKey: "WorkshopMaterialOrder:3:line:30",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-04",
+        direction: "IN",
+        operationType: "RETURN_IN",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 4,
+        businessDocumentNumber: "TL-001",
+        businessDocumentLineId: 40,
+        changeQty: "70.000000",
+        unitCost: null,
+        sourceLinks: [
+          {
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 2,
+            sourceDocumentLineId: 20,
+            linkedQty: "30.000000",
+          },
+          {
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 3,
+            sourceDocumentLineId: 30,
+            linkedQty: "40.000000",
+          },
+        ],
+        idempotencyKey: "WorkshopMaterialOrder:4:line:40",
+      }),
+    ]);
+
+    expect(plan.blockers).toHaveLength(0);
+    expect(plan.plannedSourceUsages).toEqual([
+      expect.objectContaining({
+        consumerDocumentId: 2,
+        consumerLineId: 20,
+        allocatedQty: "40.000000",
+        releasedQty: "30.000000",
+        status: "PARTIALLY_RELEASED",
+      }),
+      expect.objectContaining({
+        consumerDocumentId: 3,
+        consumerLineId: 30,
+        allocatedQty: "60.000000",
+        releasedQty: "40.000000",
+        status: "PARTIALLY_RELEASED",
+      }),
+    ]);
+    expect(plan.plannedLogs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          idempotencyKey: "WorkshopMaterialOrder:4:line:40",
+          unitCost: "10.00",
+          costAmount: "700.00",
+        }),
+      ]),
+    );
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        unitCost: "10.00",
+        availableQty: "70.000000",
+        sourceLogCount: 1,
+      },
+    ]);
+  });
+
   it("accepts no-candidate workshop returns with positive cost as standalone sources", () => {
     const plan = buildInventoryReplayPlan([
       event({
@@ -564,7 +883,11 @@ describe("inventory replay planner", () => {
       }),
     ]);
 
-    expect(plan.blockers).toHaveLength(0);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "return-source-link-missing",
+      ),
+    ).toBe(false);
     expect(plan.returnSourceLinkCandidates).toHaveLength(0);
     expect(plan.plannedLogs).toEqual([
       expect.objectContaining({
@@ -590,6 +913,151 @@ describe("inventory replay planner", () => {
     expect(plan.warnings).toEqual(
       expect.arrayContaining([
         expect.stringContaining("STANDALONE_RETURN_SOURCE TL-001"),
+      ]),
+    );
+  });
+
+  it("accepts workshop returns as standalone sources when candidates cannot cover the quantity", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "LL-001",
+        businessDocumentLineId: 20,
+        workshopId: 10,
+        changeQty: "5.000000",
+        unitCost: null,
+        idempotencyKey: "WorkshopMaterialOrder:2:line:20",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "IN",
+        operationType: "RETURN_IN",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 3,
+        businessDocumentNumber: "TL-PARTIAL",
+        businessDocumentLineId: 30,
+        workshopId: 10,
+        changeQty: "8.000000",
+        unitCost: "8.50",
+        costAmount: null,
+        idempotencyKey: "WorkshopMaterialOrder:3:line:30",
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "return-source-link-missing",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "fifo-source-insufficient",
+      ),
+    ).toBe(false);
+    expect(plan.returnSourceLinkCandidates).toHaveLength(0);
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        unitCost: "8.50",
+        availableQty: "8.000000",
+        sourceLogCount: 1,
+      },
+    ]);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("STANDALONE_RETURN_SOURCE TL-PARTIAL"),
+        expect.stringContaining("cover only 5.000000 of 8.000000"),
+      ]),
+    );
+  });
+
+  it("accepts unlinked sales returns as standalone sources with existing remark semantics", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-02",
+        direction: "IN",
+        operationType: "SALES_RETURN_IN",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 3,
+        businessDocumentNumber: "TH-001",
+        businessDocumentLineId: 30,
+        changeQty: "500.000000",
+        unitCost: "180.00",
+        costAmount: null,
+        idempotencyKey: "SalesStockOrder:3:line:30",
+        sortPriority: 0,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "OUT",
+        operationType: "OUTBOUND_OUT",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 20,
+        businessDocumentNumber: "CK-001",
+        businessDocumentLineId: 200,
+        changeQty: "300.000000",
+        unitCost: null,
+        idempotencyKey: "SalesStockOrder:20:line:200",
+        sortPriority: 1,
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "return-source-release-insufficient",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "fifo-source-insufficient",
+      ),
+    ).toBe(false);
+    expect(plan.returnSourceLinkCandidates).toHaveLength(0);
+    expect(plan.plannedLogs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          idempotencyKey: "SalesStockOrder:3:line:30",
+          operationType: "SALES_RETURN_IN",
+          direction: "IN",
+          unitCost: "180.00",
+          costAmount: "90000.00",
+          note: expect.stringContaining("Standalone sales return source"),
+        }),
+      ]),
+    );
+    expect(plan.plannedSourceUsages).toEqual([
+      expect.objectContaining({
+        consumerDocumentType: "SalesStockOrder",
+        consumerDocumentId: 20,
+        consumerLineId: 200,
+        allocatedQty: "300.000000",
+        releasedQty: "0.000000",
+        status: "ALLOCATED",
+      }),
+    ]);
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        unitCost: "180.00",
+        availableQty: "200.000000",
+        sourceLogCount: 1,
+      },
+    ]);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("STANDALONE_SALES_RETURN_SOURCE TH-001"),
+        expect.stringContaining("candidateCount=1"),
       ]),
     );
   });
@@ -821,7 +1289,7 @@ describe("inventory replay planner", () => {
     );
   });
 
-  it("keeps partially returned unfunded outbound rows blocked", () => {
+  it("accepts the unfunded outbound part but keeps costless linked return recovery blocked", () => {
     const plan = buildInventoryReplayPlan([
       event({
         bizDate: "2026-01-02",
@@ -861,19 +1329,88 @@ describe("inventory replay planner", () => {
       plan.blockers.some(
         (blocker) => blocker.reason === "fifo-source-insufficient",
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       plan.blockers.some(
         (blocker) => blocker.reason === "return-source-release-insufficient",
       ),
     ).toBe(true);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("UNFUNDED_HISTORICAL_OUT CK-PARTIAL"),
+      ]),
+    );
     expect(plan.plannedLogs.map((log) => log.idempotencyKey)).toEqual([
       "SalesStockOrder:505:line:623",
       "SalesStockOrder:42:line:58",
     ]);
   });
 
-  it("reports candidate source lines for unlinked returns without auto-linking", () => {
+  it("turns linked return release shortfall into a costed recovery source", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-02",
+        direction: "OUT",
+        operationType: "OUTBOUND_OUT",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 505,
+        businessDocumentNumber: "CK-PARTIAL",
+        businessDocumentLineId: 623,
+        materialId: 284,
+        changeQty: "10.000000",
+        unitCost: null,
+        idempotencyKey: "SalesStockOrder:505:line:623",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-03",
+        direction: "IN",
+        operationType: "SALES_RETURN_IN",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 42,
+        businessDocumentNumber: "TH-PARTIAL",
+        businessDocumentLineId: 58,
+        materialId: 284,
+        changeQty: "5.000000",
+        unitCost: "117.70",
+        costAmount: null,
+        sourceDocumentType: "SalesStockOrder",
+        sourceDocumentId: 505,
+        sourceDocumentLineId: 623,
+        idempotencyKey: "SalesStockOrder:42:line:58",
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "return-source-release-insufficient",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "fifo-source-insufficient",
+      ),
+    ).toBe(false);
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 284,
+        stockScopeId: 1,
+        unitCost: "117.70",
+        availableQty: "5.000000",
+        sourceLogCount: 1,
+      },
+    ]);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("UNFUNDED_HISTORICAL_OUT CK-PARTIAL"),
+        expect.stringContaining("UNFUNDED_RETURN_RECOVERY_SOURCE TH-PARTIAL"),
+      ]),
+    );
+  });
+
+  it("accepts unlinked sales returns instead of auto-linking candidate rows", () => {
     const plan = buildInventoryReplayPlan([
       event({
         changeQty: "100.000000",
@@ -910,36 +1447,27 @@ describe("inventory replay planner", () => {
       }),
     ]);
 
-    expect(
-      plan.blockers.some(
-        (blocker) => blocker.reason === "return-source-link-missing",
-      ),
-    ).toBe(true);
-    expect(plan.returnSourceLinkCandidates).toEqual([
-      expect.objectContaining({
-        returnDocumentNumber: "SR-001",
-        returnLineId: 30,
-        candidateCount: 1,
-        coveringCandidateCount: 1,
-        recommendedAction: "review-and-link-unique-covering-candidate",
-        suggestedSourceDocumentType: "SalesStockOrder",
-        suggestedSourceDocumentId: 2,
-        suggestedSourceDocumentNumber: "SO-001",
-        suggestedSourceLineId: 20,
-        candidates: [
-          expect.objectContaining({
-            sourceDocumentNumber: "SO-001",
-            sourceLineId: 20,
-            remainingReturnableQty: "80.000000",
-            daysBeforeReturn: 1,
-            unitCostMatches: true,
-          }),
-        ],
-      }),
-    ]);
+    expect(plan.blockers).toHaveLength(0);
+    expect(plan.returnSourceLinkCandidates).toHaveLength(0);
+    expect(plan.plannedLogs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          idempotencyKey: "SalesStockOrder:3:line:30",
+          unitCost: "10.00",
+          costAmount: "300.00",
+          note: expect.stringContaining("Standalone sales return source"),
+        }),
+      ]),
+    );
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("STANDALONE_SALES_RETURN_SOURCE SR-001"),
+        expect.stringContaining("candidateCount=1"),
+      ]),
+    );
   });
 
-  it("does not reject return candidates only because document prices differ", () => {
+  it("accepts unlinked sales returns even when candidate document prices differ", () => {
     const plan = buildInventoryReplayPlan([
       event({
         changeQty: "100.000000",
@@ -976,24 +1504,18 @@ describe("inventory replay planner", () => {
       }),
     ]);
 
-    expect(plan.returnSourceLinkCandidates).toEqual([
-      expect.objectContaining({
-        candidateCount: 1,
-        coveringCandidateCount: 1,
-        recommendedAction: "review-and-link-unique-covering-candidate",
-        suggestedSourceDocumentType: "SalesStockOrder",
-        suggestedSourceDocumentId: 2,
-        suggestedSourceDocumentNumber: "SO-001",
-        suggestedSourceLineId: 20,
-        candidates: [
-          expect.objectContaining({
-            sourceDocumentNumber: "SO-001",
-            remainingReturnableQty: "80.000000",
-            unitCostMatches: false,
-          }),
-        ],
-      }),
-    ]);
+    expect(plan.blockers).toHaveLength(0);
+    expect(plan.returnSourceLinkCandidates).toHaveLength(0);
+    expect(plan.plannedLogs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          idempotencyKey: "SalesStockOrder:3:line:30",
+          unitCost: "9.00",
+          costAmount: "270.00",
+          note: expect.stringContaining("Standalone sales return source"),
+        }),
+      ]),
+    );
   });
 
   it("chooses best return-source backfills without overusing a candidate line", () => {
@@ -1049,6 +1571,72 @@ describe("inventory replay planner", () => {
       selectedCandidateRank: 2,
       sourceRemainingAfter: "0.000000",
     });
+  });
+
+  it("chooses multi-source return backfills when candidate quantities cover together", () => {
+    const plan = buildBestReturnSourceLinkBackfillPlan([
+      returnCandidateRow({
+        returnDocumentType: "WorkshopMaterialOrder",
+        returnDocumentId: 20,
+        returnDocumentNumber: "TL-001",
+        returnLineId: 200,
+        returnOperationType: "RETURN_IN",
+        returnQty: "3.000000",
+        candidateCount: 2,
+        coveringCandidateCount: 0,
+        candidates: [
+          {
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 10,
+            sourceDocumentNumber: "LL-001",
+            sourceLineId: 100,
+            sourceOperationType: "PICK_OUT",
+            sourceBizDate: "2026-01-01",
+            sourceQty: "2.000000",
+            alreadyLinkedReturnQty: "0.000000",
+            remainingReturnableQty: "2.000000",
+            sourceUnitCost: "10.00",
+            sourceRemark: null,
+            daysBeforeReturn: 1,
+            sameWorkshop: true,
+            unitCostMatches: true,
+          },
+          {
+            sourceDocumentType: "WorkshopMaterialOrder",
+            sourceDocumentId: 11,
+            sourceDocumentNumber: "LL-002",
+            sourceLineId: 110,
+            sourceOperationType: "PICK_OUT",
+            sourceBizDate: "2026-01-01",
+            sourceQty: "2.000000",
+            alreadyLinkedReturnQty: "0.000000",
+            remainingReturnableQty: "2.000000",
+            sourceUnitCost: "10.00",
+            sourceRemark: null,
+            daysBeforeReturn: 1,
+            sameWorkshop: true,
+            unitCostMatches: true,
+          },
+        ],
+      }),
+    ]);
+
+    expect(plan.skippedRows).toHaveLength(0);
+    expect(plan.selectedRows).toHaveLength(1);
+    expect(plan.selectedRows[0].sourcePieces).toEqual([
+      expect.objectContaining({
+        sourceDocumentNumber: "LL-001",
+        sourceLineId: 100,
+        linkedQty: "2.000000",
+        sourceRemainingAfter: "0.000000",
+      }),
+      expect.objectContaining({
+        sourceDocumentNumber: "LL-002",
+        sourceLineId: 110,
+        linkedQty: "1.000000",
+        sourceRemainingAfter: "1.000000",
+      }),
+    ]);
   });
 
   it("accepts zero-cost source rows with audit markers", () => {

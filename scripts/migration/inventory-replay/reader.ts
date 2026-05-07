@@ -1,6 +1,10 @@
 import type { MigrationConnectionLike } from "../db";
 import { BusinessDocumentType } from "../shared/business-document-type";
-import type { InventoryEvent, InventoryReplayCoverageGap } from "./types";
+import type {
+  InventoryEvent,
+  InventoryReplayCoverageGap,
+  InventorySourceLink,
+} from "./types";
 
 interface StockScopeIds {
   MAIN: number;
@@ -30,6 +34,16 @@ interface DocumentLineRow {
   createdAt: string | null;
 }
 
+interface ReturnSourceRelationRow {
+  sourceDocumentType: string;
+  sourceDocumentId: number;
+  sourceDocumentLineId: number;
+  returnDocumentType: string;
+  returnDocumentId: number;
+  returnLineId: number;
+  linkedQty: string;
+}
+
 const DIRECTION_PRIORITY_IN = 0;
 const DIRECTION_PRIORITY_OUT = 1;
 const STOCK_IN_DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
@@ -43,6 +57,14 @@ const RD_HANDOFF_DOCUMENT_TYPE = BusinessDocumentType.RdHandoffOrder;
 const RD_STOCKTAKE_DOCUMENT_TYPE = BusinessDocumentType.RdStocktakeOrder;
 const PRICE_CORRECTION_DOCUMENT_TYPE =
   BusinessDocumentType.StockInPriceCorrectionOrder;
+
+function eventLineKey(params: {
+  documentType: string;
+  documentId: number;
+  lineId: number;
+}): string {
+  return [params.documentType, params.documentId, params.lineId].join("::");
+}
 
 function toDateString(value: string | null): string {
   if (!value) return "1970-01-01";
@@ -133,7 +155,7 @@ async function readStockInEvents(
       o.order_type AS orderType,
       DATE_FORMAT(o.biz_date, '%Y-%m-%d') AS bizDate,
       o.stock_scope_id AS stockScopeId,
-      o.workshop_id AS workshopId,
+      NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
       l.id AS lineId,
       l.material_id AS materialId,
@@ -148,7 +170,7 @@ async function readStockInEvents(
       o.created_at AS createdAt
     FROM stock_in_order o
     JOIN stock_in_order_line l ON l.order_id = o.id
-    LEFT JOIN workshop w ON w.id = o.workshop_id
+    LEFT JOIN workshop w ON w.id = NULLIF(o.workshop_id, 0)
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
     ORDER BY o.biz_date ASC, o.id ASC, l.id ASC
@@ -201,12 +223,15 @@ async function readCustomerEvents(
       o.order_type AS orderType,
       DATE_FORMAT(o.biz_date, '%Y-%m-%d') AS bizDate,
       o.stock_scope_id AS stockScopeId,
-      o.workshop_id AS workshopId,
+      NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
-      COALESCE(l.cost_unit_price, l.selected_unit_cost) AS unitCost,
+      CASE
+        WHEN o.order_type = 'SALES_RETURN' THEN COALESCE(NULLIF(l.cost_unit_price, 0), NULLIF(l.selected_unit_cost, 0), l.unit_price)
+        ELSE COALESCE(l.cost_unit_price, l.selected_unit_cost)
+      END AS unitCost,
       l.cost_amount AS costAmount,
       l.selected_unit_cost AS selectedUnitCost,
       l.source_document_type AS sourceDocumentType,
@@ -218,7 +243,7 @@ async function readCustomerEvents(
       o.created_at AS createdAt
     FROM sales_stock_order o
     JOIN sales_stock_order_line l ON l.order_id = o.id
-    LEFT JOIN workshop w ON w.id = o.workshop_id
+    LEFT JOIN workshop w ON w.id = NULLIF(o.workshop_id, 0)
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
     ORDER BY o.biz_date ASC, o.id ASC, l.id ASC
@@ -273,7 +298,7 @@ async function readWorkshopEvents(
       o.order_type AS orderType,
       DATE_FORMAT(o.biz_date, '%Y-%m-%d') AS bizDate,
       o.stock_scope_id AS stockScopeId,
-      o.workshop_id AS workshopId,
+      NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
       l.id AS lineId,
       l.material_id AS materialId,
@@ -290,7 +315,7 @@ async function readWorkshopEvents(
       o.created_at AS createdAt
     FROM workshop_material_order o
     JOIN workshop_material_order_line l ON l.order_id = o.id
-    LEFT JOIN workshop w ON w.id = o.workshop_id
+    LEFT JOIN workshop w ON w.id = NULLIF(o.workshop_id, 0)
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
     ORDER BY o.biz_date ASC, o.id ASC, l.id ASC
@@ -346,7 +371,7 @@ async function readProjectEvents(
       'RD_PROJECT' AS orderType,
       DATE_FORMAT(p.biz_date, '%Y-%m-%d') AS bizDate,
       p.stock_scope_id AS stockScopeId,
-      p.workshop_id AS workshopId,
+      NULLIF(p.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
       l.id AS lineId,
       l.material_id AS materialId,
@@ -361,7 +386,7 @@ async function readProjectEvents(
       p.created_at AS createdAt
     FROM rd_project p
     JOIN rd_project_material_line l ON l.project_id = p.id
-    LEFT JOIN workshop w ON w.id = p.workshop_id
+    LEFT JOIN workshop w ON w.id = NULLIF(p.workshop_id, 0)
     WHERE p.lifecycle_status = 'EFFECTIVE'
       AND p.inventory_effect_status = 'POSTED'
     ORDER BY p.biz_date ASC, p.id ASC, l.id ASC
@@ -406,7 +431,7 @@ async function readProjectActionEvents(
       a.action_type AS orderType,
       DATE_FORMAT(a.biz_date, '%Y-%m-%d') AS bizDate,
       a.stock_scope_id AS stockScopeId,
-      a.workshop_id AS workshopId,
+      NULLIF(a.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
       l.id AS lineId,
       l.material_id AS materialId,
@@ -421,7 +446,7 @@ async function readProjectActionEvents(
       a.created_at AS createdAt
     FROM rd_project_material_action a
     JOIN rd_project_material_action_line l ON l.action_id = a.id
-    LEFT JOIN workshop w ON w.id = a.workshop_id
+    LEFT JOIN workshop w ON w.id = NULLIF(a.workshop_id, 0)
     WHERE a.lifecycle_status = 'EFFECTIVE'
       AND a.inventory_effect_status = 'POSTED'
     ORDER BY a.biz_date ASC, a.id ASC, l.id ASC
@@ -483,10 +508,10 @@ async function readRdHandoffEvents(
       'RD_HANDOFF' AS orderType,
       DATE_FORMAT(o.biz_date, '%Y-%m-%d') AS bizDate,
       o.source_stock_scope_id AS stockScopeId,
-      o.source_workshop_id AS workshopId,
+      NULLIF(o.source_workshop_id, 0) AS workshopId,
       source_workshop.workshop_name AS workshopName,
       o.target_stock_scope_id AS transferInStockScopeId,
-      o.target_workshop_id AS transferInWorkshopId,
+      NULLIF(o.target_workshop_id, 0) AS transferInWorkshopId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
@@ -500,7 +525,7 @@ async function readRdHandoffEvents(
       o.created_at AS createdAt
     FROM rd_handoff_order o
     JOIN rd_handoff_order_line l ON l.order_id = o.id
-    LEFT JOIN workshop source_workshop ON source_workshop.id = o.source_workshop_id
+    LEFT JOIN workshop source_workshop ON source_workshop.id = NULLIF(o.source_workshop_id, 0)
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
     ORDER BY o.biz_date ASC, o.id ASC, l.id ASC
@@ -545,7 +570,7 @@ async function readRdStocktakeEvents(
       'RD_STOCKTAKE' AS orderType,
       DATE_FORMAT(o.biz_date, '%Y-%m-%d') AS bizDate,
       o.stock_scope_id AS stockScopeId,
-      o.workshop_id AS workshopId,
+      NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
       l.id AS lineId,
       l.material_id AS materialId,
@@ -560,7 +585,7 @@ async function readRdStocktakeEvents(
       o.created_at AS createdAt
     FROM rd_stocktake_order o
     JOIN rd_stocktake_order_line l ON l.order_id = o.id
-    LEFT JOIN workshop w ON w.id = o.workshop_id
+    LEFT JOIN workshop w ON w.id = NULLIF(o.workshop_id, 0)
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
       AND l.adjustment_qty <> 0
@@ -630,6 +655,65 @@ async function readCoverageGaps(
     }));
 }
 
+async function readReturnSourceRelations(
+  connection: MigrationConnectionLike,
+): Promise<Map<string, InventorySourceLink[]>> {
+  const rows = await connection.query<ReturnSourceRelationRow[]>(`
+    SELECT
+      upstream_document_type AS sourceDocumentType,
+      upstream_document_id AS sourceDocumentId,
+      upstream_line_id AS sourceDocumentLineId,
+      downstream_document_type AS returnDocumentType,
+      downstream_document_id AS returnDocumentId,
+      downstream_line_id AS returnLineId,
+      linked_qty AS linkedQty
+    FROM document_line_relation
+    WHERE relation_type IN (
+      'SALES_RETURN_FROM_OUTBOUND',
+      'WORKSHOP_RETURN_FROM_PICK'
+    )
+    ORDER BY downstream_document_type ASC,
+      downstream_document_id ASC,
+      downstream_line_id ASC,
+      id ASC
+  `);
+
+  const linksByReturnLine = new Map<string, InventorySourceLink[]>();
+  for (const row of rows) {
+    const key = eventLineKey({
+      documentType: row.returnDocumentType,
+      documentId: row.returnDocumentId,
+      lineId: row.returnLineId,
+    });
+    const links = linksByReturnLine.get(key) ?? [];
+    links.push({
+      sourceDocumentType: row.sourceDocumentType,
+      sourceDocumentId: row.sourceDocumentId,
+      sourceDocumentLineId: row.sourceDocumentLineId,
+      linkedQty: String(row.linkedQty),
+    });
+    linksByReturnLine.set(key, links);
+  }
+
+  return linksByReturnLine;
+}
+
+function attachReturnSourceRelations(
+  events: InventoryEvent[],
+  linksByReturnLine: ReadonlyMap<string, InventorySourceLink[]>,
+): InventoryEvent[] {
+  return events.map((event) => {
+    const sourceLinks = linksByReturnLine.get(
+      eventLineKey({
+        documentType: event.businessDocumentType,
+        documentId: event.businessDocumentId,
+        lineId: event.businessDocumentLineId,
+      }),
+    );
+    return sourceLinks ? { ...event, sourceLinks } : event;
+  });
+}
+
 export async function readInventoryReplayInput(
   connection: MigrationConnectionLike,
 ): Promise<{
@@ -645,6 +729,7 @@ export async function readInventoryReplayInput(
     projectAction,
     rdHandoff,
     rdStocktake,
+    sourceLinksByReturnLine,
     coverageGaps,
   ] = await Promise.all([
     readStockInEvents(connection, stockScopeIds),
@@ -654,11 +739,12 @@ export async function readInventoryReplayInput(
     readProjectActionEvents(connection, stockScopeIds),
     readRdHandoffEvents(connection, stockScopeIds),
     readRdStocktakeEvents(connection, stockScopeIds),
+    readReturnSourceRelations(connection),
     readCoverageGaps(connection),
   ]);
 
-  return {
-    events: [
+  const events = attachReturnSourceRelations(
+    [
       ...stockIn,
       ...customer,
       ...workshop,
@@ -667,6 +753,11 @@ export async function readInventoryReplayInput(
       ...rdHandoff,
       ...rdStocktake,
     ],
+    sourceLinksByReturnLine,
+  );
+
+  return {
+    events,
     coverageGaps,
   };
 }

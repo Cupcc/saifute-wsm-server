@@ -1,9 +1,9 @@
-# Construct Correct Price-Layer Replay
+# 重建库存价格层（按历史单据重新计算）
 
 ## Metadata
 
 - Scope:
-  - 构建真正正确的库存价格层：以已填充的历史业务单据为原料，按业务时间顺序重放库存事实，生成带成本价的 `inventory_log` 来源流水，并按 FIFO 重建 `inventory_source_usage` 来源分配。
+  - 构建真正正确的库存价格层：把已填充的历史业务单据当作原始凭证，按业务日期重新算一遍库存，明确哪些单据增加库存、哪些单据消耗库存、消耗的是哪一批成本来源。重算结果要生成带成本价的 `inventory_log` 来源流水，并按 FIFO 重建 `inventory_source_usage` 来源分配。
   - 本 task 不是 UI 展示修复，也不是新增“价格库存余额表”；目标是让现有 `inventory-core.listPriceLayerAvailability()` 能从真实来源层自然聚合出正确价格层。
   - 本 task 必须先 dry-run、对账、阻塞异常，再允许 execute；不能为了让页面有价格而直接按当前余额伪造一层库存。
 - Related requirement:
@@ -22,7 +22,7 @@
 - Coder: `parent-orchestrator`
 - Reviewer: `saifute-code-reviewer`
 - Acceptance QA: `saifute-acceptance-qa`
-- Last updated: `2026-05-04`
+- Last updated: `2026-05-07`
 - Related checklist: `-`
 - Related acceptance spec:
   - `docs/acceptance-tests/specs/inbound.md`
@@ -44,6 +44,15 @@
   - `src/modules/inventory-core/infrastructure/inventory.repository.ts`
   - `scripts/migration/inventory-replay/**`
   - related migration reports under `scripts/migration/reports/**`
+  - `docs/workspace/notes/inventory-replay-wg17-stock-in-offset-source-unresolved.md`
+
+## 人话说明
+
+- 这里的 `replay` 不是一个新的业务功能名字。它的意思就是：把历史单据按业务日期重新过一遍账。
+- 入库、生产入库、退货、退料会形成“库存来源”，写成带成本价的 `inventory_log`。
+- 出库、领料、报废会消耗这些来源，消耗明细写成 `inventory_source_usage`。
+- 剩下还没被消耗的来源，按物料、库存范围、成本价分组后，就是库存页面应该看到的“价格库存明细”。
+- 所以本任务要补的是“历史库存重算和来源分配脚本”，不是补一个前端展示字段，也不是另建一张价格余额表。
 
 ## Requirement Alignment
 
@@ -54,12 +63,12 @@
   - `workshop-material C4`: 领料 / 报废来源不可省略，退料尽量回指原领料行并保持价格可解释。
 - User intent summary:
   - 用户已填充历史业务单据，但价格层仍为空或不可信，需要一份可执行 task 来说明如何基于历史单据构建真正正确的价格层。
-  - 用户明确希望用“人话”理解后落执行计划：历史单据只是原料，正确价格层必须来自“入库来源 - 已消费来源”的重放结果。
+  - 用户明确希望用“人话”理解后落执行计划：历史单据只是原料，正确价格层必须来自“哪些库存进来了、哪些库存被用掉了、还剩哪些成本来源”的重新计算结果。
 - Acceptance criteria carried into this task:
   - `[AC-1]` 重放后每条可作为库存来源的入库事实都有 `inventory_log.unit_cost` / `cost_amount`。
   - `[AC-2]` 每条出库、领料、报废、调价出库等消费事实都能按 FIFO 或显式来源写入 `inventory_source_usage`。
   - `[AC-3]` 每个 `materialId + stockScopeId` 的价格层可用量合计必须等于 `inventory_balance.quantity_on_hand`。
-  - `[AC-4]` replay dry-run 能报告并阻塞负库存、未批准缺单价、孤儿 source usage、重复幂等键、余额不一致等异常；已批准的未知价 / 赠品入库可按 `0.00` 成本留痕进入来源层。
+  - `[AC-4]` 库存重算 dry-run 能报告并阻塞负库存、未批准缺单价、孤儿 source usage、重复幂等键、余额不一致等异常；已批准的未知价 / 赠品入库可按 `0.00` 成本留痕进入来源层。
   - `[AC-5]` execute 必须事务化、可预检、可回滚；禁止在异常未确认时覆盖当前库存事实。
 - Requirement evidence expectations:
   - migration dry-run report 能列出事件数、来源数、消费分配数、余额对账、价格层对账、异常清单。
@@ -76,9 +85,9 @@
 - Current state observed in local target DB:
   - `inventory_balance` 有数据，但 `inventory_log` 为 `0`；价格层查询没有来源层可聚合。
   - `inventory_source_usage` 存在历史残留，但当前全是孤儿占用，不能作为可信追溯链。
-  - 已有 `scripts/migration/inventory-replay` 基础，但当前只适合继续扩展，不能直接视为完整价格层重建工具。
+  - 已有 `scripts/migration/inventory-replay` 基础，但它现在只是脚本雏形，还不能直接当作完整的价格层重建工具。
   - `2026-05-01` implementation pass:
-    - replay dry-run now plans `inventory_log` and `inventory_source_usage` together, maintains an in-memory FIFO source pool, and reports blocker-level reconciliation failures.
+    - dry-run 现在会同时规划 `inventory_log` 和 `inventory_source_usage`，在内存里维护 FIFO 来源池，并按 blocker 类型报告对账失败。
     - linked sales / workshop / RD returns release original consumer source usages instead of creating a duplicate return source layer.
     - RD handoff OUT now creates allocation-piece RD handoff IN source logs in the plan so transferred stock preserves price-layer granularity.
     - `StockInPriceCorrectionOrder` remains an explicit coverage blocker until source-log remapping is implemented.
@@ -166,37 +175,82 @@
     - 该规则只适用于 `RETURN_IN`、无 `source_document_*`、候选数为 `0`、`unitCost > 0` 且 `costAmount` 非负的行；销售退货、无成本退料、有候选但需拆多来源的退料仍然保持 blocker。
     - Configured-target dry-run now correctly blocks execute with `51` blockers: `fifo-source-insufficient=14`, `negative-balance-during-replay=8`, `price-layer-balance-mismatch=13`, `return-source-link-missing=13`, `return-source-release-insufficient=2`, `stock-in-offset-source-unresolved=1`.
     - Best-candidate dry-run now selects `0` rows and skips `13`: `no-candidate=8`, `no-single-candidate-can-cover-return-quantity=5`.
+  - `2026-05-05` negative-balance attribution cleanup:
+    - `negative-balance-during-replay` now only blocks the event that creates or worsens a negative balance. Later inbound / return rows that merely reduce an already-negative bucket are not counted as new negative-balance blockers.
+    - Focused validation passed: `bun run test -- test/migration/inventory-replay.spec.ts --runInBand`; `bunx biome check scripts/migration/inventory-replay/planner.ts test/migration/inventory-replay.spec.ts`.
+    - Configured-target dry-run now correctly blocks execute with `48` blockers: `fifo-source-insufficient=14`, `negative-balance-during-replay=5`, `price-layer-balance-mismatch=13`, `return-source-link-missing=13`, `return-source-release-insufficient=2`, `stock-in-offset-source-unresolved=1`.
+    - `2026-05-06` 已处理可安全覆盖的 2 条多来源退料：`TL20260326002` line 23 / line 24 写入 `document_line_relation.linked_qty` 后由 replay 分别释放原领料来源。最新 configured-target dry-run 降为 `41` blockers: `fifo-source-insufficient=11`, `negative-balance-during-replay=5`, `price-layer-balance-mismatch=11`, `return-source-link-missing=11`, `return-source-release-insufficient=2`, `stock-in-offset-source-unresolved=1`.
+  - `2026-05-06` pending blocker confirmation record:
+    - `wg17` / `RK20260306005` line 1 (`materialId=446`, `lineId=2651`, `-4 @ 397.00`) remains intentionally unresolved and must not be auto-repaired before warehouse confirmation.
+    - All `25` current blocker events are recorded in Chinese in `docs/workspace/notes/inventory-replay-wg17-stock-in-offset-source-unresolved.md`, grouped by confirmation path: stock-in offset, return source chain, release insufficiency, FIFO / negative balance, and derived price-layer reconciliation.
+  - `2026-05-06` standalone no-source sales return pass:
+    - 用户确认销售退货允许无原销售出库来源时作为独立入库来源；审计说明只复用现有备注语义，不新增字段，不能静默伪造 `source_document_*` 或 `document_line_relation`。
+    - replay 现在仅对无 `source_document_*` / 无 `sourceLinks` 且有正成本信号的 `SALES_RETURN_IN` 生成独立来源；成本优先 `cost_unit_price`、非零 `selected_unit_cost`，最后才使用销售退货行 `unit_price` 作为有审计 warning 的兜底成本依据。
+    - `TH20260111001` line 22 (`cp008`) 已按仓库确认处理：退回 500 后同日再发出 300，净回公司 200；`CK20260111011` 是下游再出库，不再作为该退货的上游来源候选。
+    - Configured-target dry-run now correctly blocks execute with `25` blockers: `fifo-source-insufficient=10`, `negative-balance-during-replay=5`, `price-layer-balance-mismatch=5`, `return-source-link-missing=2`, `return-source-release-insufficient=2`, `stock-in-offset-source-unresolved=1`.
+  - `2026-05-06` deferred blocker ordering update:
+    - User requested `stock-in-offset-source-unresolved` be postponed instead of repeatedly taking the first repair slot.
+    - `wg17` / `RK20260306005` remains a blocker, but it is now the final deferred item in the working order; next active repair should start from return-source chain blockers, then FIFO / negative balance blockers.
+  - `2026-05-07` historical source-less stock compatibility pass:
+    - 用户确认历史数据允许负库存、允许单据乱序、允许部分单据没有来源；replay 现在把未显式选择成本层的历史 `OUTBOUND_OUT` / `PICK_OUT` 来源不足降级为 `UNFUNDED_HISTORICAL_OUT` warning，而不是继续阻塞为 `fifo-source-insufficient` / `negative-balance-during-replay`。
+    - 已关联退货 / 退料如果原单没有足够 `inventory_source_usage` 可释放，但退回行有正成本信号，缺口部分会作为 `UNFUNDED_RETURN_RECOVERY_SOURCE` 留痕形成恢复来源；无完整候选覆盖的正成本车间退料也可作为 `STANDALONE_RETURN_SOURCE`。
+    - `dz052` / 氧气探头的相关链路已按该规则处理：`TL20260207001` line 16 作为独立退料来源，`LL20260303002` line 640 的 `300` 无源领料缺口转 warning，`TH20260306001` / `TL20260407001` 不再报退回释放不足。
+    - Configured-target dry-run now correctly blocks execute with `5` blockers: `price-layer-balance-mismatch=4`, `stock-in-offset-source-unresolved=1`; `return-source-link-missing=0`, `return-source-release-insufficient=0`, `fifo-source-insufficient=0`, `negative-balance-during-replay=0`.
+  - `2026-05-07` wg17 erroneous stock-in deletion:
+    - 仓库管理员确认 `RK20260306005` 是错误单据，应从目标库删除。
+    - 删除前已核对目标库中该单只有一条 `wg17` 明细：`stock_in_order.id=1764`、`stock_in_order_line.id=2651`、`materialId=446`、`quantity=-4.000000`、`unit_price=397.00`，且没有 `inventory_log`、`document_line_relation`、`stock_in_price_correction_order_line` 引用。
+    - 已用受保护事务删除 `stock_in_order_line` 与 `stock_in_order` 中的 `RK20260306005` 数据；删除后只读复核该单和 line `2651` 均为 `0`。
+    - Configured-target dry-run now correctly blocks execute with `4` blockers: `price-layer-balance-mismatch=4`; `stock-in-offset-source-unresolved=0`, `return-source-link-missing=0`, `return-source-release-insufficient=0`, `fifo-source-insufficient=0`, `negative-balance-during-replay=0`.
+  - `2026-05-07` negative-final-balance stocktake policy pass:
+    - 用户确认迁移阶段可以先允许历史单据重算出负库存；等全部历史流水构建完成后，再由仓库管理员盘库，并用盘库调整把实际库存和系统库存对齐。
+    - replay 现在只把“最终余额为负且没有可用价格层”的物料降级为 `NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE` warning；该 warning 表示后续盘库调增时，先补掉负库存坑，超过 `0` 的部分才形成真正可用价格层。
+    - 如果来源层可用量仍然大于重算余额，例如余额为 `0` 但还有正数来源层，则继续保持 `price-layer-balance-mismatch` blocker，避免执行后出现“总库存为 0/负数但价格层还有可用库存”的假象。
+    - Configured-target dry-run now correctly blocks execute with `2` blockers: `price-layer-balance-mismatch=2`; `NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE` warnings cover `cp002` (`materialId=6`, `-78`) and `jg36` (`materialId=1011`, `-9`).
+  - `2026-05-07` historical source-less return offset pass:
+    - 用户确认历史顺序允许混乱，`LL20260303002` 与后续退回可以在来源层冲掉；replay 现在把后续同物料、同库存范围、同成本的退货 / 退料 / 释放来源优先用于冲抵已批准的 `UNFUNDED_HISTORICAL_OUT` 缺口，超过负库存坑之后才形成可用价格层。
+    - `cp019` / 本安型矿灯：`TH20260305002` line 48 (`+1 @ 82.70`) 已冲抵 `LL20260303002` line 641 的 `1` 个历史无源领料缺口，写入 `UNFUNDED_HISTORICAL_OUT_OFFSET` warning，余额 `0`、来源层可用量 `0`。
+    - `dz052` / 氧气探头：`TH20260306001` line 44 (`+300 @ 117.70`) 已冲抵 `LL20260303002` line 640 的 `300` 个历史无源领料缺口，写入 `UNFUNDED_HISTORICAL_OUT_OFFSET` warning，余额 `0`、来源层可用量 `0`。
+    - Configured-target dry-run now completes with `blockers=[]`; remaining reconciliation rows are only accepted final negative balances for `cp002` (`materialId=6`, `-78`) and `jg36` (`materialId=1011`, `-9`) as stocktake warnings.
+  - `2026-05-07` execute and validate pass:
+    - Execute first hit a foreign-key error because historical sales rows used `workshop_id=0` to mean “no workshop”; replay now normalizes historical `workshop_id=0` to `NULL` before planning logs, preserving document traceability without inventing a workshop.
+    - Execute then completed on configured target `saifute-wms`: deleted `835` old balances, deleted `1897` orphan source usages, inserted `1230` balances, `4546` inventory logs, and `2637` source usages.
+    - Validate completed with `0` blocker issues. The only remaining validation warnings are accepted final negative balances for `cp002` (`materialId=6`, `-78`) and `jg36` (`materialId=1011`, `-9`), which must be closed by later warehouse stocktake adjustment.
+    - Runtime price-layer / inventory-value source eligibility now includes only replay-marked standalone or recovery return logs via their audit note, so ordinary linked return logs are not double-counted as FIFO source layers.
 - Acceptance state:
-  - `not-assessed`
+  - `executed-validated`
 - Blockers:
-  - 必须先解决历史单据重放后出现的负库存 / 未批准缺价 / 余额差异；不能带异常 execute。最近一次 configured-target dry-run 是 `2026-05-04` 的 `51` 个 blocker。
-  - 必须明确业务退货、车间退料、RD handoff、调价等入库型事实是否作为后续 FIFO 来源，以及对应成本如何继承。
-  - 必须处理剩余 `13` 条退货 / 退料缺来源链、`14` 条消费来源不足、`8` 条重放负余额、`13` 条价格层余额差异、`2` 条已关联但原出库来源不可释放，以及 `1` 条已明确延期的 `stock-in-offset-source-unresolved`；原 `20` 条成本价为 `0.00` 的来源入库已按用户确认标记为零成本来源并转为 warning，`12` 条无候选但有正成本的车间退料已按独立来源留痕处理。负数入库行已按历史对冲语义映射为 `REVERSAL_OUT`，并允许受限匹配未来 stock-in 来源，不再作为 `invalid-event-quantity` 阻塞。
+  - 当前 configured-target execute 已完成，validate 已无 blocker；`inventory_log` 与 `inventory_source_usage` 已按历史单据重建。
+  - 已明确本轮历史退货、车间退料、负数入库、最终负库存等 replay 例外的处理口径；后续若新增 RD handoff、调价等入库型事实，需要继续明确是否作为 FIFO 来源以及对应成本如何继承。
+  - 已处理剩余 `2` 条价格层来源层多余差异；原退货 / 退料来源链、普通消费来源不足和负库存 blocker 已按历史无源 / 乱序规则转为 warning。最终负库存且无可用价格层的 `cp002`、`jg36` 已按盘库收口策略转为 `NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE` warning。原 `20` 条成本价为 `0.00` 的来源入库已按用户确认标记为零成本来源并转为 warning，`12` 条无候选但有正成本的车间退料已按独立来源留痕处理；销售退货无源入库已按用户确认改为复用现有备注语义的独立来源，不新增字段。负数入库行已按历史对冲语义映射为 `REVERSAL_OUT`，并允许受限匹配未来 stock-in 来源，不再作为 `invalid-event-quantity` 阻塞；`wg17` 错误冲红单 `RK20260306005` 已按仓库确认从目标库删除。
 - Next step:
-  - 按 blocker 分类修复历史单据或补显式期初 / 调整事实，然后重新运行 configured-target dry-run；只有报告 `blockers=[]` 时才允许 execute。
+  - 做执行后验收：抽查库存页面价格层、抽查 `cp002` / `jg36` 负库存盘库调整路径，并根据需要归档本 task 或进入 acceptance QA 记录。
 
 ### Blocker Repair Order
 
-按依赖关系处理，不按数量大小处理。直接历史数据问题要先解决，`price-layer-balance-mismatch` 属于派生对账结果，应放在最后复核。
+按依赖关系处理，不按数量大小处理；已清零的 blocker 不再占用下一轮入口。`stock-in-offset-source-unresolved` 已通过仓库确认删除错误单据清零，后续恢复时直接复核价格层余额差异。
 
-1. `stock-in-offset-source-unresolved=1`
-   - 当前只剩 `wg17` / `RK20260306005` line 1 (`materialId=446`, `lineId=2651`, `-4 @ 397.00`) 无法匹配同样价格的正向入库 stock-in 来源。
-   - 处理方式：确认是否缺历史正向来源、单价录错、日期 / 状态错误，或业务上需要形成显式调整事实；不能把该行静默并入普通出库，也不能生成无成本来源。
-2. `source-log-cost-missing=20` — `2026-05-02` 已按用户确认改为零成本留痕来源
-   - 人话解释：这些行只填了数量，没填价格；用户确认先按 `0.00` 处理，因为不知道价格，或属于赠品 / 不关注价格的物料。
-   - 处理方式：replay 不再把这 20 条作为 blocker；对应 `inventory_log.unit_cost = 0.00`、`cost_amount = 0.00`，并写入 note `Accepted zero-cost source: unknown price or gifted item.`。
-   - 后续要求：如果以后查到真实历史价，再通过显式调价 / 估值调整修正，不能静默改掉已执行 replay 的来源事实。
-3. `return-source-link-missing=13` / `return-source-release-insufficient=2`
+- 已完成处理：`source-log-cost-missing=20` — `2026-05-02` 已按用户确认改为零成本留痕来源
+  - 人话解释：这些行只填了数量，没填价格；用户确认先按 `0.00` 处理，因为不知道价格，或属于赠品 / 不关注价格的物料。
+  - 处理方式：replay 不再把这 20 条作为 blocker；对应 `inventory_log.unit_cost = 0.00`、`cost_amount = 0.00`，并写入 note `Accepted zero-cost source: unknown price or gifted item.`。
+  - 后续要求：如果以后查到真实历史价，再通过显式调价 / 估值调整修正，不能静默改掉已执行 replay 的来源事实。
+
+1. `return-source-link-missing=0` / `return-source-release-insufficient=0` — `2026-05-07` 已按历史无源 / 乱序规则转为 warning
    - 退货 / 退料优先回指原销售出库行或原领料行，才能释放原 `inventory_source_usage` 并继承原来源成本。
-   - 处理方式：先看 dry-run report 的 `returnSourceLinkCandidates`；有候选时可运行最佳候选回填脚本，但必须满足单条候选能覆盖退回数量，且模拟 replay 后不会产生 `return-source-release-insufficient`。
+   - 处理方式：先看 dry-run report 的 `returnSourceLinkCandidates`；有候选时可运行最佳候选回填脚本。单来源完整覆盖时回填 `source_document_*`；多来源合计覆盖且可释放量足够时写入 `document_relation` / `document_line_relation.linked_qty`，并由 replay 按数量分别释放来源。
    - 已关联但原出库完全无来源且退货数量精确等于原出库数量的行，已按历史先出后退的零净额对冲规则跳过库存事实并保留 `UNFUNDED_RETURN_OFFSET` warning；部分退回或数量不等仍必须 blocker。
-   - `2026-05-04` 已按“销售价不等于库存成本价”的业务口径执行 `3` 条安全候选回填，并按“无候选但有正成本车间退料可作为独立来源”的口径处理 `12` 条历史退料；当前最佳候选 dry-run 可选择 `0` 条、跳过 `13` 条，跳过原因主要是销售退货无候选或退料需要拆多来源。
-4. `fifo-source-insufficient=14` 与 `negative-balance-during-replay=8`
+   - 销售退货无源入库现已允许作为独立来源，但必须有正成本信号，并复用现有备注语义留痕；不得新增字段，也不得伪造反向原出库关系。`TH20260111001` line 22 已按此规则处理。
+   - `2026-05-04` 已按“销售价不等于库存成本价”的业务口径执行 `3` 条安全候选回填，并按“无候选但有正成本车间退料可作为独立来源”的口径处理 `12` 条历史退料。`2026-05-06` 已执行 `2` 条可覆盖多来源退料关系回填，并按销售退货无源入库确认处理剩余销售退货；`2026-05-07` 历史无源 / 乱序规则后，当前候选报告已无待回填退货 / 退料来源链。
+2. `fifo-source-insufficient=0` 与 `negative-balance-during-replay=0` — `2026-05-07` 已按历史无源出库 / 领料规则转为 warning
    - 这两类通常同源：消费发生时，`materialId + stockScopeId` 没有足够已成本化来源。
    - 处理方式：按物料 / 库存范围拉时间线，检查缺前置入库、`bizDate` 顺序、`stock_scope_id` / workshop 归属、重复过账、错误状态；若历史期初就有库存，应补显式期初成本来源，而不是改当前 `inventory_balance`。
-5. `price-layer-balance-mismatch=13`
-   - 最后处理。它是计划余额与来源层剩余量不一致的结果，不是独立根因。
-   - 处理方式：前四类清理后重新 dry-run；若仍存在，按 `sourceAvailableQty < balanceQty` 查“入库未形成来源”，按 `sourceAvailableQty > balanceQty` 查“出库未成功占用来源”。
+   - `2026-05-05` 已清理负库存误归因：入库 / 退回只是在修复已存在负数时不再重复计入 blocker；剩余 5 条都是 OUT 事件造成或加深负库存。
+3. `price-layer-balance-mismatch=0` — `2026-05-07` 已清零
+   - 后置复核。它是计划余额与来源层剩余量不一致的结果，不是独立根因。
+   - 处理方式：前两类清理后重新 dry-run；若仍存在，按 `sourceAvailableQty < balanceQty` 查“入库未形成来源”，按 `sourceAvailableQty > balanceQty` 查“出库未成功占用来源”。
+   - `cp019` (`TH20260305002` line 48 -> `LL20260303002` line 641) 与 `dz052` (`TH20260306001` line 44 -> `LL20260303002` line 640) 已按同成本历史无源冲抵处理，均为 `balanceQty=0`、`sourceAvailableQty=0`；`cp002`、`jg36` 属于最终负库存且无可用来源层，已转为盘库收口 warning。
+4. `stock-in-offset-source-unresolved=0` — `2026-05-07` 已清零
+   - `wg17` / `RK20260306005` line 1 (`materialId=446`, `lineId=2651`, `-4 @ 397.00`) 经仓库管理员确认是错误单据。
+   - 删除前确认目标库中该单只有 `wg17` 一条明细且无库存流水 / 单据关系引用；已删除 `stock_in_order_line` 与 `stock_in_order` 数据。
 
 每完成一批修复都必须重新运行 configured-target dry-run，并用 blocker 分组结果确认趋势。只有 `blockers=[]` 时才能进入 execute。
 
@@ -209,7 +263,7 @@
   - `[AC-2]` 入库类事件写入 `inventory_log` 时携带稳定成本价；成本来源优先级明确。已批准的未知价 / 赠品来源允许 `0.00` 成本，但必须在 log note 和 dry-run warning 中标记。
   - `[AC-3]` 出库类事件按 FIFO 分配来源并写入 `inventory_source_usage`；若用户选了价格层，则只在该价格层内分配。
   - `[AC-4]` 退货 / 退料 / 回补类事件能保持成本可解释：优先回指原消费来源；无法回指时必须按显式业务单价形成新的可追溯来源层并在报告中标记。
-  - `[AC-5]` replay 结果满足：`sum(priceLayer.availableQty) = inventory_balance.quantityOnHand`，并且每个 source log 的 `allocatedQty - releasedQty <= changeQty`。
+  - `[AC-5]` 库存重算结果满足：`sum(priceLayer.availableQty) = inventory_balance.quantityOnHand`，并且每个 source log 的 `allocatedQty - releasedQty <= changeQty`。
   - `[AC-6]` dry-run 对异常采取 blocker，而不是 warning-only：负库存、未批准缺单价、来源不足、孤儿占用、重复幂等键、不可解释退料都必须阻止 execute；已批准零成本来源只作为 warning。
   - `[AC-7]` execute 必须在单事务或可恢复批次内完成，产出执行报告，并保留执行前 counts / checksum。
   - `[AC-8]` 完成后库存页面“价格库存明细”有数据，且任一物料价格层数量与库存余额一致。
@@ -227,7 +281,7 @@
   - narrowly related DTO / test files if runtime source eligibility must be corrected
 - Frozen or shared paths:
   - `prisma/schema.prisma` is read-only unless implementation proves schema cannot express the required replay facts.
-  - Business modules are read-only by default; replay should consume historical documents, not rewrite business services.
+  - 业务模块默认只读；重建脚本只读取历史单据，不改写业务服务。
   - Frontend files are read-only by default; UI already has a price-layer entry point and should not be used to fake data.
 - Task doc owner:
   - `parent-orchestrator`
@@ -242,7 +296,7 @@
 
 ## Implementation Plan
 
-- [ ] Step 1: Freeze replay authority and inventory event coverage.
+- [ ] Step 1: 确定哪些历史单据参与库存重算，以及谁是库存事实依据。
   - List every effective historical document family that can change stock:
     - `stock_in_order` / `stock_in_order_line`
     - `sales_stock_order` / `sales_stock_order_line`
@@ -268,6 +322,7 @@
 
 - [x] Step 3: Build deterministic event planning and preflight reports.
   - Sort by `bizDate`, then stable business priority, then document id / line id; document any same-day assumptions.
+  - Keep `bizDate` as the business attribution date. Historical out-of-order facts may use explicit source links or guarded future-source matching for replay causality, and negative-balance blockers should attach to events that create / worsen the deficit rather than later events that reduce it.
   - Generate planned `inventory_balance` and planned `inventory_log` without writing DB.
   - Report:
     - event counts by operation type
@@ -290,16 +345,17 @@
 
 - [ ] Step 5: Reconcile returns, releases, and source eligibility.
   - Implemented for linked `SALES_RETURN_IN` / `RETURN_IN` by releasing original consumer source usages.
+  - Implemented relation-based multi-source linked returns by reading `document_line_relation.linked_qty`; one return line can now release multiple original outbound / pick source lines by quantity.
   - Implemented a narrow zero-net historical offset for fully unfunded `OUTBOUND_OUT` / `PICK_OUT` rows whose linked return quantity exactly equals the original outbound quantity; these rows are document-only and do not create price layers.
   - Still blocked for unlinked returns and price correction until explicit valuation / source remapping rules are accepted.
   - Decide runtime source eligibility for `RETURN_IN`, `SALES_RETURN_IN`, `RD_HANDOFF_IN`, `RD_STOCKTAKE_IN`, and `PRICE_CORRECTION_IN`.
-  - Align `FIFO_SOURCE_OPERATION_TYPES` with replay semantics; returned stock that is allowed to be consumed later must be represented as a costed source layer or as a released original source, not both.
+  - 对齐 `FIFO_SOURCE_OPERATION_TYPES` 的含义：以后还能被出库消耗的退回库存，必须只用一种方式表达。要么作为新的带成本来源层，要么释放原出库消耗过的来源，不能两边都算。
   - For linked returns, prefer preserving cost traceability to original source allocation.
   - For unlinked returns, create a new source layer only with explicit trusted cost and report it as no-source return.
 
-- [ ] Step 6: Write execute path with transactional safety.
+- [x] Step 6: Write execute path with transactional safety.
   - Code path now inserts planned `inventory_source_usage` after planned logs and blocks execute when dry-run has blockers.
-  - Live execute not run because the configured `.env.dev` target is unreachable.
+  - Live execute completed on configured target `saifute-wms` after normalizing legacy `workshop_id=0` to `NULL`.
   - Before execute:
     - confirm no blockers
     - record pre-execute counts and checksums for `inventory_balance`, `inventory_log`, `inventory_source_usage`
@@ -314,8 +370,9 @@
     - write execution report with inserted / deleted counts and reconciliation summary
     - fail if post-checks do not match dry-run plan
 
-- [ ] Step 7: Add validation command and standalone audit.
+- [x] Step 7: Add validation command and standalone audit.
   - Validation now checks source-usage count, orphan usages, material mismatch, over-allocation, and price-layer-vs-balance mismatch.
+  - Validation now treats replay-marked standalone / recovery return logs as source layers by audit note and leaves accepted final negative balances as warning-only stocktake items.
   - Extend `migration:inventory-replay:validate` so it checks:
     - planned balance equals DB balance
     - every source usage references existing source log
@@ -342,7 +399,7 @@
   - Test current local data shape:
     - orphan `source_usage` is detected and cannot corrupt new source log ids.
 
-- [ ] Step 9: Perform staged live verification.
+- [x] Step 9: Perform staged live verification.
   - `bun run migration:typecheck`: passed.
   - `bun run test -- test/migration/inventory-replay.spec.ts --runInBand`: passed.
   - `bunx biome check --write scripts/migration/inventory-replay test/migration/inventory-replay.spec.ts`: formatted changed files.
@@ -355,6 +412,10 @@
   - Resolve blocker data by fixing historical documents or adding explicit adjustment / valuation rows.
   - Run execute only after dry-run is clean.
   - Run validate after execute.
+  - `2026-05-07` final configured-target dry-run: passed with `blockers=[]`, `plannedLogs=4546`, `plannedSourceUsages=2637`, `plannedBalances=1230`, `plannedPriceLayers=942`.
+  - `2026-05-07` execute: passed; inserted `4546` `inventory_log`, `2637` `inventory_source_usage`, and `1230` `inventory_balance` rows; orphan source usage count is now `0`.
+  - `2026-05-07` validate: passed with `0` blocker issues and `2` stocktake warnings for accepted final negative balances.
+  - `2026-05-07` repo QA after execute: `bun run verify` passed (`102` suites / `718` tests), `bun run build` passed, `git diff --check` passed.
   - Verify API:
     - `GET /api/inventory/price-layers?materialId=<id>&stockScope=MAIN`
   - Verify UI:
@@ -363,10 +424,10 @@
 ## Coder Handoff
 
 - Execution brief:
-  - Build a historical replay engine, not a UI workaround.
+  - 做的是历史库存重算脚本，不是前端兜底展示。
   - Start with dry-run and reports; do not implement destructive execute until the planned event stream and allocation report are reviewable.
   - The correct price layer is the remaining unconsumed quantity of source logs grouped by `unitCost`, including explicitly marked `0.00` layers for unknown-price / gifted items.
-  - Use existing `inventory-core` semantics where possible, but migration code may need its own deterministic planner because it reconstructs historical facts offline.
+  - 尽量沿用现有 `inventory-core` 的库存规则；迁移脚本可以有自己的稳定排序和分配逻辑，因为它是在离线重算历史事实。
 - Required source docs or files:
   - `docs/requirements/domain/inventory-core-module.md`
   - `docs/requirements/domain/sales-business-module.md`
@@ -407,7 +468,7 @@
 ## Reviewer Handoff
 
 - Review focus:
-  - Does replay construct source truth, not just balances?
+  - 重算结果是否真的生成了库存来源和来源消耗记录，而不是只把余额数字凑平？
   - Are costs inherited from the correct historical document fields?
   - Are all consuming documents represented in `inventory_source_usage`?
   - Are returns / handoff / stocktake semantics explicit and not double-counted?

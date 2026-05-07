@@ -4,6 +4,7 @@ import type {
   InventoryReplayBlocker,
   InventoryReplayCoverageGap,
   InventoryReplayPlan,
+  InventorySourceLink,
   PlannedBalanceRow,
   PlannedLogInsert,
   PlannedPriceLayerRow,
@@ -66,6 +67,38 @@ interface LinkedReturnCoverage {
   returnEvents: InventoryEvent[];
 }
 
+interface ResolvedReturnSourceLink {
+  sourceDocumentType: string;
+  sourceDocumentId: number;
+  sourceDocumentLineId: number;
+  linkedQty: string;
+  quantityScaled: bigint;
+}
+
+interface StandaloneReturnSourceDecision {
+  unitCostScaled: bigint;
+  costAmountScaled: bigint;
+  note: string;
+  warning: string;
+}
+
+interface ReturnRecoverySourceDecision {
+  unitCostScaled: bigint;
+  quantityScaled: bigint;
+  note: string;
+  warning: string;
+}
+
+interface HistoricalUnfundedDeficit {
+  event: InventoryEvent;
+  plannedLog: PlannedLogInsert;
+  totalQty: bigint;
+  fundedQty: bigint;
+  remainingQty: bigint;
+  unitCostScaled: bigint;
+  costAmountScaled: bigint;
+}
+
 function balanceKey(materialId: number, stockScopeId: number): string {
   return `${materialId}::${stockScopeId}`;
 }
@@ -74,12 +107,15 @@ function isSourceEventForReturn(
   sourceEvent: InventoryEvent,
   returnEvent: InventoryEvent,
 ): boolean {
-  return (
-    RETURN_OPERATION_TYPE_SET.has(returnEvent.operationType) &&
-    returnEvent.sourceDocumentType === sourceEvent.businessDocumentType &&
-    returnEvent.sourceDocumentId === sourceEvent.businessDocumentId &&
-    returnEvent.sourceDocumentLineId === sourceEvent.businessDocumentLineId &&
-    returnEvent.materialId === sourceEvent.materialId
+  if (!RETURN_OPERATION_TYPE_SET.has(returnEvent.operationType)) return false;
+
+  const returnQty = parseScaledDecimal(returnEvent.changeQty, QTY_SCALE) ?? 0n;
+  return normalizeEventSourceLinks(returnEvent, returnQty).some(
+    (link) =>
+      link.sourceDocumentType === sourceEvent.businessDocumentType &&
+      link.sourceDocumentId === sourceEvent.businessDocumentId &&
+      link.sourceDocumentLineId === sourceEvent.businessDocumentLineId &&
+      returnEvent.materialId === sourceEvent.materialId,
   );
 }
 
@@ -233,6 +269,23 @@ function isPositiveCost(value: bigint | null): value is bigint {
   return value !== null && value > 0n;
 }
 
+function isHistoricalUnfundedConsumerAllowed(event: InventoryEvent): boolean {
+  return (
+    event.operationType === "OUTBOUND_OUT" || event.operationType === "PICK_OUT"
+  );
+}
+
+function appendLogNote(log: PlannedLogInsert, note: string): void {
+  log.note = log.note ? `${log.note} ${note}` : note;
+}
+
+function isAcceptedNegativeFinalBalanceForStocktake(params: {
+  balanceQty: bigint;
+  sourceAvailableQty: bigint;
+}): boolean {
+  return params.balanceQty < 0n && params.sourceAvailableQty === 0n;
+}
+
 function addBlocker(
   blockers: InventoryReplayBlocker[],
   reason: string,
@@ -292,6 +345,16 @@ function isFullyUnmatchedAllocation(params: {
   );
 }
 
+function candidateRemainingTotalScaled(
+  row: ReturnSourceLinkCandidateRow,
+): bigint {
+  return row.candidates.reduce((total, candidate) => {
+    const remainingQty =
+      parseScaledDecimal(candidate.remainingReturnableQty, QTY_SCALE) ?? 0n;
+    return total + remainingQty;
+  }, 0n);
+}
+
 function addSourcePoolEntry(params: {
   sourcePools: Map<string, SourcePoolEntry[]>;
   sourceByKey: Map<string, SourcePoolEntry>;
@@ -340,6 +403,49 @@ function sourceLinkKey(params: {
     params.lineId,
     params.materialId,
   ].join("::");
+}
+
+function normalizeEventSourceLinks(
+  event: InventoryEvent,
+  fallbackQty: bigint,
+): ResolvedReturnSourceLink[] {
+  const relationLinks = event.sourceLinks ?? [];
+  if (relationLinks.length > 0) {
+    return relationLinks.map((link: InventorySourceLink) => ({
+      sourceDocumentType: link.sourceDocumentType,
+      sourceDocumentId: link.sourceDocumentId,
+      sourceDocumentLineId: link.sourceDocumentLineId,
+      linkedQty: link.linkedQty,
+      quantityScaled: parseScaledDecimal(link.linkedQty, QTY_SCALE) ?? 0n,
+    }));
+  }
+
+  if (
+    event.sourceDocumentType &&
+    event.sourceDocumentId !== null &&
+    event.sourceDocumentLineId !== null
+  ) {
+    return [
+      {
+        sourceDocumentType: event.sourceDocumentType,
+        sourceDocumentId: event.sourceDocumentId,
+        sourceDocumentLineId: event.sourceDocumentLineId,
+        linkedQty: formatQty(fallbackQty),
+        quantityScaled: fallbackQty,
+      },
+    ];
+  }
+
+  return [];
+}
+
+function hasReturnSourceLinks(event: InventoryEvent): boolean {
+  return (
+    (event.sourceLinks?.length ?? 0) > 0 ||
+    (event.sourceDocumentType !== null &&
+      event.sourceDocumentId !== null &&
+      event.sourceDocumentLineId !== null)
+  );
 }
 
 function normalizeKnownUnitCost(value: string | null): string | null {
@@ -429,36 +535,30 @@ function buildReturnSourceLinkCandidates(
 
   for (const event of sortedEvents) {
     if (!RETURN_OPERATION_TYPE_SET.has(event.operationType)) continue;
-    if (
-      !event.sourceDocumentType ||
-      event.sourceDocumentId === null ||
-      event.sourceDocumentLineId === null
-    ) {
-      continue;
-    }
 
     const returnQty = parseScaledDecimal(event.changeQty, QTY_SCALE) ?? 0n;
-    const key = sourceLinkKey({
-      documentType: event.sourceDocumentType,
-      documentId: event.sourceDocumentId,
-      lineId: event.sourceDocumentLineId,
-      materialId: event.materialId,
-    });
-    linkedReturnQtyBySourceLine.set(
-      key,
-      (linkedReturnQtyBySourceLine.get(key) ?? 0n) + returnQty,
-    );
+    for (const sourceLink of normalizeEventSourceLinks(event, returnQty)) {
+      if (sourceLink.quantityScaled <= 0n) continue;
+
+      const key = sourceLinkKey({
+        documentType: sourceLink.sourceDocumentType,
+        documentId: sourceLink.sourceDocumentId,
+        lineId: sourceLink.sourceDocumentLineId,
+        materialId: event.materialId,
+      });
+      linkedReturnQtyBySourceLine.set(
+        key,
+        (linkedReturnQtyBySourceLine.get(key) ?? 0n) +
+          sourceLink.quantityScaled,
+      );
+    }
   }
 
   const rows: ReturnSourceLinkCandidateRow[] = [];
 
   for (const returnEvent of sortedEvents) {
     if (!RETURN_OPERATION_TYPE_SET.has(returnEvent.operationType)) continue;
-    if (
-      returnEvent.sourceDocumentType &&
-      returnEvent.sourceDocumentId !== null &&
-      returnEvent.sourceDocumentLineId !== null
-    ) {
+    if (hasReturnSourceLinks(returnEvent)) {
       continue;
     }
 
@@ -646,31 +746,31 @@ function buildLinkedReturnCoverageBySourceLine(
 
   for (const returnEvent of sortedEvents) {
     if (!RETURN_OPERATION_TYPE_SET.has(returnEvent.operationType)) continue;
-    if (
-      !returnEvent.sourceDocumentType ||
-      returnEvent.sourceDocumentId === null ||
-      returnEvent.sourceDocumentLineId === null
-    ) {
-      continue;
-    }
 
     const returnQty =
       parseScaledDecimal(returnEvent.changeQty, QTY_SCALE) ?? 0n;
     if (returnQty <= 0n) continue;
 
-    const sourceKey = sourceLinkKey({
-      documentType: returnEvent.sourceDocumentType,
-      documentId: returnEvent.sourceDocumentId,
-      lineId: returnEvent.sourceDocumentLineId,
-      materialId: returnEvent.materialId,
-    });
-    const coverage = coverageBySourceLine.get(sourceKey) ?? {
-      quantityScaled: 0n,
-      returnEvents: [],
-    };
-    coverage.quantityScaled += returnQty;
-    coverage.returnEvents.push(returnEvent);
-    coverageBySourceLine.set(sourceKey, coverage);
+    for (const sourceLink of normalizeEventSourceLinks(
+      returnEvent,
+      returnQty,
+    )) {
+      if (sourceLink.quantityScaled <= 0n) continue;
+
+      const sourceKey = sourceLinkKey({
+        documentType: sourceLink.sourceDocumentType,
+        documentId: sourceLink.sourceDocumentId,
+        lineId: sourceLink.sourceDocumentLineId,
+        materialId: returnEvent.materialId,
+      });
+      const coverage = coverageBySourceLine.get(sourceKey) ?? {
+        quantityScaled: 0n,
+        returnEvents: [],
+      };
+      coverage.quantityScaled += sourceLink.quantityScaled;
+      coverage.returnEvents.push(returnEvent);
+      coverageBySourceLine.set(sourceKey, coverage);
+    }
   }
 
   return coverageBySourceLine;
@@ -690,13 +790,20 @@ function findExactLinkedReturnOffset(params: {
   const coverage = params.coverageBySourceLine.get(sourceKey);
   if (!coverage) return null;
 
-  const matchingReturnEvents = coverage.returnEvents.filter(
-    (returnEvent) =>
+  const matchingReturnEvents = coverage.returnEvents.filter((returnEvent) => {
+    const returnQty =
+      parseScaledDecimal(returnEvent.changeQty, QTY_SCALE) ?? 0n;
+    const sourceLinks = normalizeEventSourceLinks(returnEvent, returnQty);
+
+    return (
+      sourceLinks.length === 1 &&
+      sourceLinks[0].quantityScaled === returnQty &&
       getExpectedConsumerOperationType(returnEvent.operationType) ===
         params.sourceEvent.operationType &&
       returnEvent.materialId === params.sourceEvent.materialId &&
-      returnEvent.stockScopeId === params.sourceEvent.stockScopeId,
-  );
+      returnEvent.stockScopeId === params.sourceEvent.stockScopeId
+    );
+  });
   if (matchingReturnEvents.length === 0) return null;
 
   const matchingReturnQty = matchingReturnEvents.reduce(
@@ -726,6 +833,7 @@ export function buildInventoryReplayPlan(
   const nextSourceSequence = { value: 1 };
   const warnings: string[] = [];
   const blockers: InventoryReplayBlocker[] = [];
+  const historicalUnfundedDeficits: HistoricalUnfundedDeficit[] = [];
   const eventCounts: Record<string, number> = {};
   const seenIdempotencyKeys = new Set<string>();
   const linkedReturnCoverageBySourceLine =
@@ -747,7 +855,7 @@ export function buildInventoryReplayPlan(
         ] as const,
     ),
   );
-  const acceptedStandaloneWorkshopReturnKeys = new Set<string>();
+  const acceptedStandaloneReturnKeys = new Set<string>();
 
   for (const coverageGap of options.coverageGaps ?? []) {
     addBlocker(blockers, "historical-document-family-not-covered", {
@@ -769,6 +877,7 @@ export function buildInventoryReplayPlan(
     idempotencyKey: string;
     note?: string | null;
     allowTemporaryNegativeBalance?: boolean;
+    temporaryNegativeBalanceReason?: string;
   }): PlannedLogInsert {
     eventCounts[params.operationType] =
       (eventCounts[params.operationType] ?? 0) + 1;
@@ -790,7 +899,9 @@ export function buildInventoryReplayPlan(
     const newBalance = currentBalance + signedChange;
     balances.set(key, newBalance);
 
-    if (newBalance < 0n && !params.allowTemporaryNegativeBalance) {
+    const worsensNegativeBalance =
+      newBalance < 0n && (currentBalance >= 0n || signedChange < 0n);
+    if (worsensNegativeBalance && !params.allowTemporaryNegativeBalance) {
       addBlocker(blockers, "negative-balance-during-replay", {
         materialId: params.event.materialId,
         stockScopeId: params.stockScopeId,
@@ -803,7 +914,7 @@ export function buildInventoryReplayPlan(
       });
     } else if (newBalance < 0n) {
       warnings.push(
-        `${params.operationType} ${params.event.businessDocumentType}:${params.event.businessDocumentId}:line:${params.event.businessDocumentLineId} temporarily makes material=${params.event.materialId}, stockScope=${params.stockScopeId} negative before matched future stock-in source(s) are replayed.`,
+        `${params.operationType} ${params.event.businessDocumentType}:${params.event.businessDocumentId}:line:${params.event.businessDocumentLineId} temporarily makes material=${params.event.materialId}, stockScope=${params.stockScopeId} negative${params.temporaryNegativeBalanceReason ?? " before matched future stock-in source(s) are replayed"}.`,
       );
     }
 
@@ -882,6 +993,109 @@ export function buildInventoryReplayPlan(
     });
 
     return { allocatedQty, costAmountScaled };
+  }
+
+  function recordHistoricalUnfundedDeficit(params: {
+    event: InventoryEvent;
+    plannedLog: PlannedLogInsert;
+    totalQty: bigint;
+    missingQty: bigint;
+    fundedCostAmountScaled: bigint;
+  }): void {
+    const unitCostScaled = parseScaledDecimal(
+      params.event.unitCost,
+      COST_SCALE,
+    );
+    if (!isPositiveCost(unitCostScaled) || params.missingQty <= 0n) return;
+
+    historicalUnfundedDeficits.push({
+      event: params.event,
+      plannedLog: params.plannedLog,
+      totalQty: params.totalQty,
+      fundedQty: params.totalQty - params.missingQty,
+      remainingQty: params.missingQty,
+      unitCostScaled,
+      costAmountScaled: params.fundedCostAmountScaled,
+    });
+  }
+
+  function settleHistoricalUnfundedDeficitsFromAvailableSources(params: {
+    event: InventoryEvent;
+    unitCostScaled: bigint | null;
+    maxQty: bigint;
+  }): bigint {
+    if (!isPositiveCost(params.unitCostScaled) || params.maxQty <= 0n) {
+      return 0n;
+    }
+
+    const pool = sourcePools.get(
+      balanceKey(params.event.materialId, params.event.stockScopeId),
+    );
+    if (!pool) return 0n;
+
+    let remainingOffsetQty = params.maxQty;
+    let totalOffsetQty = 0n;
+
+    for (const deficit of historicalUnfundedDeficits) {
+      if (remainingOffsetQty <= 0n) break;
+      if (
+        deficit.remainingQty <= 0n ||
+        deficit.event.materialId !== params.event.materialId ||
+        deficit.event.stockScopeId !== params.event.stockScopeId ||
+        deficit.unitCostScaled !== params.unitCostScaled
+      ) {
+        continue;
+      }
+
+      let deficitOffsetQty = 0n;
+      for (const source of pool) {
+        if (remainingOffsetQty <= 0n || deficit.remainingQty <= 0n) break;
+        if (
+          source.availableQty <= 0n ||
+          source.unitCostScaled !== params.unitCostScaled
+        ) {
+          continue;
+        }
+
+        const requestedQty =
+          source.availableQty > deficit.remainingQty
+            ? deficit.remainingQty
+            : source.availableQty;
+        const cappedQty =
+          requestedQty > remainingOffsetQty ? remainingOffsetQty : requestedQty;
+        const allocation = allocateSourceEntry({
+          event: deficit.event,
+          source,
+          remainingQty: cappedQty,
+        });
+        if (allocation.allocatedQty <= 0n) continue;
+
+        deficit.remainingQty -= allocation.allocatedQty;
+        deficit.fundedQty += allocation.allocatedQty;
+        deficit.costAmountScaled += allocation.costAmountScaled;
+        remainingOffsetQty -= allocation.allocatedQty;
+        totalOffsetQty += allocation.allocatedQty;
+        deficitOffsetQty += allocation.allocatedQty;
+      }
+
+      if (deficitOffsetQty <= 0n) continue;
+
+      if (deficit.fundedQty >= deficit.totalQty) {
+        deficit.plannedLog.unitCost = formatCost(
+          divideCostByQtyToUnitCost(deficit.costAmountScaled, deficit.totalQty),
+        );
+        deficit.plannedLog.costAmount = formatCost(deficit.costAmountScaled);
+      }
+      appendLogNote(
+        deficit.plannedLog,
+        `Later return/recovery source offset ${formatQty(deficitOffsetQty)} of this historical source-less movement.`,
+      );
+      warnings.push(
+        `UNFUNDED_HISTORICAL_OUT_OFFSET ${params.event.businessDocumentNumber} (${params.event.businessDocumentType}:${params.event.businessDocumentId}:line:${params.event.businessDocumentLineId}) offset ${formatQty(deficitOffsetQty)} of ${deficit.event.businessDocumentNumber} (${deficit.event.businessDocumentType}:${deficit.event.businessDocumentId}:line:${deficit.event.businessDocumentLineId}) for material=${params.event.materialId}, stockScope=${params.event.stockScopeId}, unitCost=${formatCost(params.unitCostScaled)}.`,
+      );
+    }
+
+    return totalOffsetQty;
   }
 
   function getOrCreateFutureSourceEntry(params: {
@@ -1086,102 +1300,141 @@ export function buildInventoryReplayPlan(
   function releaseLinkedSourceUsage(
     event: InventoryEvent,
     quantityScaled: bigint,
+    options: { deferInsufficientReleaseBlocker?: boolean } = {},
   ): { releasedQty: bigint; costAmountScaled: bigint } {
-    if (
-      !event.sourceDocumentType ||
-      event.sourceDocumentId === null ||
-      event.sourceDocumentLineId === null
-    ) {
+    const sourceLinks = normalizeEventSourceLinks(event, quantityScaled);
+    if (sourceLinks.length === 0) {
       addBlocker(blockers, "return-source-link-missing", {
         operationType: event.operationType,
         documentType: event.businessDocumentType,
         documentId: event.businessDocumentId,
         lineId: event.businessDocumentLineId,
+        materialId: event.materialId,
       });
       return { releasedQty: 0n, costAmountScaled: 0n };
     }
 
-    const matchingUsages = [...plannedSourceUsageByKey.values()]
-      .filter(
-        (usage) =>
-          usage.consumerDocumentType === event.sourceDocumentType &&
-          usage.consumerDocumentId === event.sourceDocumentId &&
-          usage.consumerLineId === event.sourceDocumentLineId &&
-          usage.materialId === event.materialId,
-      )
-      .sort((left, right) => {
-        const leftSource = sourceByKey.get(left.sourceLogIdempotencyKey);
-        const rightSource = sourceByKey.get(right.sourceLogIdempotencyKey);
-        return (leftSource?.sequence ?? 0) - (rightSource?.sequence ?? 0);
-      });
-
-    let remaining = quantityScaled;
-    let releasedQty = 0n;
-    let costAmountScaled = 0n;
-
-    for (const usage of matchingUsages) {
-      if (remaining <= 0n) break;
-
-      const source = sourceByKey.get(usage.sourceLogIdempotencyKey);
-      if (!source) continue;
-
-      const allocatedQty =
-        parseScaledDecimal(usage.allocatedQty, QTY_SCALE) ?? 0n;
-      const releasedBefore =
-        parseScaledDecimal(usage.releasedQty, QTY_SCALE) ?? 0n;
-      const unreleasedQty = allocatedQty - releasedBefore;
-      if (unreleasedQty <= 0n) continue;
-
-      const toRelease = unreleasedQty > remaining ? remaining : unreleasedQty;
-      const releasedAfter = releasedBefore + toRelease;
-      usage.releasedQty = formatQty(releasedAfter);
-      usage.status = toSourceUsageStatus(allocatedQty, releasedAfter);
-
-      source.availableQty += toRelease;
-      remaining -= toRelease;
-      releasedQty += toRelease;
-      costAmountScaled += multiplyQtyByUnitCost(
-        toRelease,
-        source.unitCostScaled,
-      );
-    }
-
-    if (remaining > 0n) {
-      addBlocker(blockers, "return-source-release-insufficient", {
+    if (sourceLinks.some((link) => link.quantityScaled <= 0n)) {
+      addBlocker(blockers, "return-source-link-quantity-invalid", {
         operationType: event.operationType,
         documentType: event.businessDocumentType,
         documentId: event.businessDocumentId,
         lineId: event.businessDocumentLineId,
         materialId: event.materialId,
-        sourceDocumentType: event.sourceDocumentType,
-        sourceDocumentId: event.sourceDocumentId,
-        sourceDocumentLineId: event.sourceDocumentLineId,
-        requestedQty: formatQty(quantityScaled),
-        releasedQty: formatQty(releasedQty),
-        missingQty: formatQty(remaining),
+        linkedQty: sourceLinks.map((link) => link.linkedQty).join(","),
       });
+      return { releasedQty: 0n, costAmountScaled: 0n };
+    }
+
+    const linkedQty = sourceLinks.reduce(
+      (total, link) => total + link.quantityScaled,
+      0n,
+    );
+    if (linkedQty !== quantityScaled) {
+      addBlocker(blockers, "return-source-link-quantity-mismatch", {
+        operationType: event.operationType,
+        documentType: event.businessDocumentType,
+        documentId: event.businessDocumentId,
+        lineId: event.businessDocumentLineId,
+        materialId: event.materialId,
+        returnQty: formatQty(quantityScaled),
+        linkedQty: formatQty(linkedQty),
+      });
+      return { releasedQty: 0n, costAmountScaled: 0n };
+    }
+
+    let releasedQty = 0n;
+    let costAmountScaled = 0n;
+
+    for (const sourceLink of sourceLinks) {
+      const matchingUsages = [...plannedSourceUsageByKey.values()]
+        .filter(
+          (usage) =>
+            usage.consumerDocumentType === sourceLink.sourceDocumentType &&
+            usage.consumerDocumentId === sourceLink.sourceDocumentId &&
+            usage.consumerLineId === sourceLink.sourceDocumentLineId &&
+            usage.materialId === event.materialId,
+        )
+        .sort((left, right) => {
+          const leftSource = sourceByKey.get(left.sourceLogIdempotencyKey);
+          const rightSource = sourceByKey.get(right.sourceLogIdempotencyKey);
+          return (leftSource?.sequence ?? 0) - (rightSource?.sequence ?? 0);
+        });
+
+      let remaining = sourceLink.quantityScaled;
+      let releasedFromLink = 0n;
+
+      for (const usage of matchingUsages) {
+        if (remaining <= 0n) break;
+
+        const source = sourceByKey.get(usage.sourceLogIdempotencyKey);
+        if (!source) continue;
+
+        const allocatedQty =
+          parseScaledDecimal(usage.allocatedQty, QTY_SCALE) ?? 0n;
+        const releasedBefore =
+          parseScaledDecimal(usage.releasedQty, QTY_SCALE) ?? 0n;
+        const unreleasedQty = allocatedQty - releasedBefore;
+        if (unreleasedQty <= 0n) continue;
+
+        const toRelease = unreleasedQty > remaining ? remaining : unreleasedQty;
+        const releasedAfter = releasedBefore + toRelease;
+        usage.releasedQty = formatQty(releasedAfter);
+        usage.status = toSourceUsageStatus(allocatedQty, releasedAfter);
+
+        source.availableQty += toRelease;
+        remaining -= toRelease;
+        releasedQty += toRelease;
+        releasedFromLink += toRelease;
+        costAmountScaled += multiplyQtyByUnitCost(
+          toRelease,
+          source.unitCostScaled,
+        );
+      }
+
+      if (remaining > 0n && !options.deferInsufficientReleaseBlocker) {
+        addBlocker(blockers, "return-source-release-insufficient", {
+          operationType: event.operationType,
+          documentType: event.businessDocumentType,
+          documentId: event.businessDocumentId,
+          lineId: event.businessDocumentLineId,
+          materialId: event.materialId,
+          sourceDocumentType: sourceLink.sourceDocumentType,
+          sourceDocumentId: sourceLink.sourceDocumentId,
+          sourceDocumentLineId: sourceLink.sourceDocumentLineId,
+          requestedQty: formatQty(sourceLink.quantityScaled),
+          releasedQty: formatQty(releasedFromLink),
+          missingQty: formatQty(remaining),
+        });
+      }
     }
 
     return { releasedQty, costAmountScaled };
   }
 
-  function canAcceptStandaloneWorkshopReturnSource(event: InventoryEvent): {
-    unitCostScaled: bigint;
-    costAmountScaled: bigint;
-  } | null {
-    if (event.operationType !== "RETURN_IN") return null;
+  function buildStandaloneReturnSourceDecision(
+    event: InventoryEvent,
+    changeQty: bigint,
+  ): StandaloneReturnSourceDecision | null {
     if (
-      event.sourceDocumentType ||
-      event.sourceDocumentId !== null ||
-      event.sourceDocumentLineId !== null
+      event.operationType !== "RETURN_IN" &&
+      event.operationType !== "SALES_RETURN_IN"
     ) {
+      return null;
+    }
+    if (hasReturnSourceLinks(event)) {
       return null;
     }
 
     const candidateRow = returnSourceLinkCandidateByReturnKey.get(
       returnEventKey(event),
     );
-    if (!candidateRow || candidateRow.candidateCount > 0) return null;
+    if (event.operationType === "RETURN_IN" && candidateRow) {
+      const candidateTotal = candidateRemainingTotalScaled(candidateRow);
+      if (candidateTotal >= changeQty) {
+        return null;
+      }
+    }
 
     const unitCostScaled = parseScaledDecimal(event.unitCost, COST_SCALE);
     if (!isPositiveCost(unitCostScaled)) return null;
@@ -1194,16 +1447,88 @@ export function buildInventoryReplayPlan(
       return null;
     }
 
-    const changeQty = parseScaledDecimal(event.changeQty, QTY_SCALE) ?? 0n;
     const computedCostAmountScaled = multiplyQtyByUnitCost(
       changeQty,
       unitCostScaled,
     );
+    const costAmountScaled = eventCostAmountScaled ?? computedCostAmountScaled;
+
+    if (event.operationType === "SALES_RETURN_IN") {
+      const candidateSummary =
+        candidateRow && candidateRow.candidateCount > 0
+          ? ` return-source candidates were not linked (candidateCount=${candidateRow.candidateCount}) because the row is accepted as a standalone sales return source.`
+          : "";
+
+      return {
+        unitCostScaled,
+        costAmountScaled,
+        note: "Standalone sales return source accepted via existing remark semantics: no source link is written; return line cost basis is used.",
+        warning: `STANDALONE_SALES_RETURN_SOURCE ${event.businessDocumentNumber} (${event.businessDocumentType}:${event.businessDocumentId}:line:${event.businessDocumentLineId}) accepted as a new sales return source for material=${event.materialId}, stockScope=${event.stockScopeId}, qty=${formatQty(changeQty)}, unitCost=${formatCost(unitCostScaled)}; no extra source-link fields are written, and audit context stays in existing remark semantics.${candidateSummary}`,
+      };
+    }
+
+    const candidateSummary =
+      candidateRow && candidateRow.candidateCount > 0
+        ? ` Return-source candidates cover only ${formatQty(candidateRemainingTotalScaled(candidateRow))} of ${formatQty(changeQty)}, so this historical return is accepted as standalone recovery.`
+        : "";
 
     return {
       unitCostScaled,
-      costAmountScaled: eventCostAmountScaled ?? computedCostAmountScaled,
+      costAmountScaled,
+      note: "Accepted standalone workshop return source: no reliable source link; return line cost is used as the source cost.",
+      warning: `STANDALONE_RETURN_SOURCE ${event.businessDocumentNumber} (${event.businessDocumentType}:${event.businessDocumentId}:line:${event.businessDocumentLineId}) accepted as a new workshop return source for material=${event.materialId}, stockScope=${event.stockScopeId}, qty=${formatQty(changeQty)}, unitCost=${formatCost(unitCostScaled)} because no reliable full-quantity source link candidate exists.${candidateSummary}`,
     };
+  }
+
+  function buildUnfundedReturnRecoverySourceDecision(
+    event: InventoryEvent,
+    returnQty: bigint,
+    releasedQty: bigint,
+  ): ReturnRecoverySourceDecision | null {
+    const missingQty = returnQty - releasedQty;
+    if (missingQty <= 0n) return null;
+
+    const unitCostScaled = parseScaledDecimal(event.unitCost, COST_SCALE);
+    if (!isPositiveCost(unitCostScaled)) return null;
+
+    const eventCostAmountScaled = parseScaledDecimal(
+      event.costAmount,
+      COST_SCALE,
+    );
+    if (eventCostAmountScaled !== null && eventCostAmountScaled < 0n) {
+      return null;
+    }
+
+    const returnKind =
+      event.operationType === "SALES_RETURN_IN"
+        ? "sales return"
+        : "workshop return";
+
+    return {
+      unitCostScaled,
+      quantityScaled: missingQty,
+      note: `Historical linked ${returnKind} had insufficient releasable source usage; unreleased quantity is accepted as a recovery source.`,
+      warning: `UNFUNDED_RETURN_RECOVERY_SOURCE ${event.businessDocumentNumber} (${event.businessDocumentType}:${event.businessDocumentId}:line:${event.businessDocumentLineId}) accepted ${formatQty(missingQty)} of ${formatQty(returnQty)} as a new ${returnKind} source for material=${event.materialId}, stockScope=${event.stockScopeId}, unitCost=${formatCost(unitCostScaled)} because linked source usage released only ${formatQty(releasedQty)}.`,
+    };
+  }
+
+  function canRecoverLinkedReturnShortfall(
+    event: InventoryEvent,
+    returnQty: bigint,
+  ): boolean {
+    const sourceLinks = normalizeEventSourceLinks(event, returnQty);
+    if (sourceLinks.length === 0) return false;
+    if (sourceLinks.some((link) => link.quantityScaled <= 0n)) return false;
+
+    const linkedQty = sourceLinks.reduce(
+      (total, link) => total + link.quantityScaled,
+      0n,
+    );
+    if (linkedQty !== returnQty) return false;
+
+    return (
+      buildUnfundedReturnRecoverySourceDecision(event, returnQty, 0n) !== null
+    );
   }
 
   for (const [eventIndex, event] of sortedEvents.entries()) {
@@ -1299,6 +1624,9 @@ export function buildInventoryReplayPlan(
       const canOffsetWithLinkedReturn =
         event.operationType === "OUTBOUND_OUT" ||
         event.operationType === "PICK_OUT";
+      const allowHistoricalUnfundedConsumer =
+        isHistoricalUnfundedConsumerAllowed(event) &&
+        !isPositiveCost(selectedUnitCostScaled);
       const allocation = allocateFromSources(
         event,
         changeQty,
@@ -1334,7 +1662,8 @@ export function buildInventoryReplayPlan(
       }
       if (
         allocation.hasInsufficientSourceBlocker &&
-        canOffsetWithLinkedReturn
+        canOffsetWithLinkedReturn &&
+        !allowHistoricalUnfundedConsumer
       ) {
         addFifoSourceInsufficientBlocker({
           blockers,
@@ -1380,8 +1709,16 @@ export function buildInventoryReplayPlan(
       const settledUnitCostScaled = allocationCostComputed
         ? divideCostByQtyToUnitCost(allocation.costAmountScaled, changeQty)
         : null;
+      const hasHistoricalUnfundedQty =
+        allocation.hasInsufficientSourceBlocker &&
+        allowHistoricalUnfundedConsumer;
+      if (hasHistoricalUnfundedQty) {
+        warnings.push(
+          `UNFUNDED_HISTORICAL_OUT ${event.businessDocumentNumber} (${event.businessDocumentType}:${event.businessDocumentId}:line:${event.businessDocumentLineId}) accepted ${formatQty(allocation.missingQty)} of ${formatQty(changeQty)} without source usage for material=${event.materialId}, stockScope=${event.stockScopeId}; historical data allows negative or source-less stock movement.`,
+        );
+      }
 
-      appendLog({
+      const plannedLog = appendLog({
         event,
         direction: "OUT",
         operationType: event.operationType,
@@ -1394,18 +1731,35 @@ export function buildInventoryReplayPlan(
           : null,
         idempotencyKey: event.idempotencyKey,
         allowTemporaryNegativeBalance:
-          allocation.futureAllocatedQty > 0n && allocation.missingQty === 0n,
-        note:
-          allocation.futureAllocatedSourceRefs.length > 0
+          (allocation.futureAllocatedQty > 0n &&
+            allocation.missingQty === 0n) ||
+          hasHistoricalUnfundedQty,
+        temporaryNegativeBalanceReason: hasHistoricalUnfundedQty
+          ? " due to accepted historical source-less stock movement"
+          : undefined,
+        note: hasHistoricalUnfundedQty
+          ? `Historical source-less stock movement accepted for ${formatQty(allocation.missingQty)} without inventory_source_usage.`
+          : allocation.futureAllocatedSourceRefs.length > 0
             ? `Historical unordered stock movement matched future stock-in source(s): ${allocation.futureAllocatedSourceRefs.join(", ")}.`
             : null,
       });
+      if (hasHistoricalUnfundedQty) {
+        recordHistoricalUnfundedDeficit({
+          event,
+          plannedLog,
+          totalQty: changeQty,
+          missingQty: allocation.missingQty,
+          fundedCostAmountScaled: allocation.costAmountScaled,
+        });
+      }
       continue;
     }
 
     if (RETURN_OPERATION_TYPE_SET.has(event.operationType)) {
-      const standaloneReturnSource =
-        canAcceptStandaloneWorkshopReturnSource(event);
+      const standaloneReturnSource = buildStandaloneReturnSourceDecision(
+        event,
+        changeQty,
+      );
       if (standaloneReturnSource) {
         const plannedLog = appendLog({
           event,
@@ -1417,7 +1771,7 @@ export function buildInventoryReplayPlan(
           unitCostScaled: standaloneReturnSource.unitCostScaled,
           costAmountScaled: standaloneReturnSource.costAmountScaled,
           idempotencyKey: event.idempotencyKey,
-          note: "Accepted standalone workshop return source: no reliable source link; return line cost is used as the source cost.",
+          note: standaloneReturnSource.note,
         });
         addSourcePoolEntry({
           sourcePools,
@@ -1427,23 +1781,46 @@ export function buildInventoryReplayPlan(
           unitCostScaled: standaloneReturnSource.unitCostScaled,
           quantityScaled: changeQty,
         });
-        acceptedStandaloneWorkshopReturnKeys.add(returnEventKey(event));
-        warnings.push(
-          `STANDALONE_RETURN_SOURCE ${event.businessDocumentNumber} (${event.businessDocumentType}:${event.businessDocumentId}:line:${event.businessDocumentLineId}) accepted as a new workshop return source for material=${event.materialId}, stockScope=${event.stockScopeId}, qty=${formatQty(changeQty)}, unitCost=${formatCost(standaloneReturnSource.unitCostScaled)} because no reliable source link candidate exists.`,
-        );
+        settleHistoricalUnfundedDeficitsFromAvailableSources({
+          event,
+          unitCostScaled: standaloneReturnSource.unitCostScaled,
+          maxQty: changeQty,
+        });
+        acceptedStandaloneReturnKeys.add(returnEventKey(event));
+        warnings.push(standaloneReturnSource.warning);
         continue;
       }
 
-      const releaseResult = releaseLinkedSourceUsage(event, changeQty);
+      const releaseResult = releaseLinkedSourceUsage(event, changeQty, {
+        deferInsufficientReleaseBlocker: canRecoverLinkedReturnShortfall(
+          event,
+          changeQty,
+        ),
+      });
+      const recoverySource = buildUnfundedReturnRecoverySourceDecision(
+        event,
+        changeQty,
+        releaseResult.releasedQty,
+      );
       const releaseCostComputed = releaseResult.releasedQty === changeQty;
       const releaseUnitCostScaled = releaseCostComputed
         ? divideCostByQtyToUnitCost(releaseResult.costAmountScaled, changeQty)
-        : parseScaledDecimal(event.unitCost, COST_SCALE);
+        : (recoverySource?.unitCostScaled ??
+          parseScaledDecimal(event.unitCost, COST_SCALE));
+      const recoveryCostAmountScaled = recoverySource
+        ? multiplyQtyByUnitCost(
+            recoverySource.quantityScaled,
+            recoverySource.unitCostScaled,
+          )
+        : null;
       const releaseCostAmountScaled = releaseCostComputed
         ? releaseResult.costAmountScaled
-        : parseScaledDecimal(event.costAmount, COST_SCALE);
+        : (parseScaledDecimal(event.costAmount, COST_SCALE) ??
+          (recoveryCostAmountScaled !== null
+            ? releaseResult.costAmountScaled + recoveryCostAmountScaled
+            : null));
 
-      appendLog({
+      const plannedLog = appendLog({
         event,
         direction: "IN",
         operationType: event.operationType,
@@ -1458,6 +1835,24 @@ export function buildInventoryReplayPlan(
             ? releaseCostAmountScaled
             : null,
         idempotencyKey: event.idempotencyKey,
+        note: recoverySource?.note,
+      });
+      if (recoverySource) {
+        addSourcePoolEntry({
+          sourcePools,
+          sourceByKey,
+          nextSourceSequence,
+          log: plannedLog,
+          unitCostScaled: recoverySource.unitCostScaled,
+          quantityScaled: recoverySource.quantityScaled,
+        });
+        warnings.push(recoverySource.warning);
+      }
+      settleHistoricalUnfundedDeficitsFromAvailableSources({
+        event,
+        unitCostScaled: parseScaledDecimal(event.unitCost, COST_SCALE),
+        maxQty:
+          releaseResult.releasedQty + (recoverySource?.quantityScaled ?? 0n),
       });
       continue;
     }
@@ -1626,6 +2021,18 @@ export function buildInventoryReplayPlan(
     };
     priceLayerReconciliation.push(row);
 
+    if (
+      isAcceptedNegativeFinalBalanceForStocktake({
+        balanceQty,
+        sourceAvailableQty,
+      })
+    ) {
+      warnings.push(
+        `NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE material=${row.materialId}, stockScope=${row.stockScopeId}, balanceQty=${row.balanceQty}; no available price layer is planned. Warehouse stocktake must later adjust physical quantity and cost source explicitly.`,
+      );
+      continue;
+    }
+
     if (differenceQty !== 0n) {
       addBlocker(blockers, "price-layer-balance-mismatch", {
         materialId: row.materialId,
@@ -1647,7 +2054,7 @@ export function buildInventoryReplayPlan(
 
   const returnSourceLinkCandidates = initialReturnSourceLinkCandidates.filter(
     (row) =>
-      !acceptedStandaloneWorkshopReturnKeys.has(
+      !acceptedStandaloneReturnKeys.has(
         sourceLinkKey({
           documentType: row.returnDocumentType,
           documentId: row.returnDocumentId,
