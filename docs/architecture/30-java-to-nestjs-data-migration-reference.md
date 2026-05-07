@@ -454,18 +454,18 @@
 - 历史 `sys_job` / `sys_job_log`：旧平台调度历史不导入，只保留新系统运行期表
 - 历史 `sys_logininfor` / `sys_oper_log`：旧平台日志历史不导入，只保留新系统运行期表
 - 整体平台层账号、角色、菜单、组织、配置数据：按新系统方案重建，不纳入旧历史业务导入
-- `inventory_source_usage`、`document_relation`、`document_line_relation`：当前本地迁移完成口径接受目标表为 `0` 的受控留白，但线上切换前仍需结合追溯诉求重新复核
+- `document_relation`、`document_line_relation`：只保留可证明的退货 / 退料来源关系，不为消除差异伪造链路。`inventory_source_usage` 在 `2026-05-07` configured target `saifute-wms` 价格层重建后已由 replay 生成，不再按 `0` 留白理解。
 
 ## 10. 线上迁移前仍需复核的事项与阅读边界
 
 当前本地数据库迁移已完成，但如果后续要对线上库执行正式 cutover，仍应复核以下事项：
 
-1. `inventory_source_usage`、`document_relation`、`document_line_relation` 当前仍为 `0`。
-  本地迁移已按“业务事实准入 + 库存可重放 + validate 无 blocker”完成；如果线上切换要求完整来源追踪或上下游关系查询，需要先补齐证据恢复策略。
+1. `inventory_source_usage` 已在 `2026-05-07` configured target `saifute-wms` 价格层重建中生成 `2637` 条，并与 `4546` 条 `inventory_log`、`1230` 条 `inventory_balance` 通过 validate 对齐。
+  `document_relation` / `document_line_relation` 仍只写入可证明的退货 / 退料来源关系；线上切换前如果要扩展上下游关系查询，应先补齐证据恢复策略，不能为了报表便利伪造关系。
 2. `excluded_documents` 非空的家族仍要做业务签收。
   本地迁移可以接受“受控排除 + 文档留痕”；线上 cutover 前要明确这些排除项是继续保留、人工补录，还是关账后放弃迁入。
-3. 全局库存重放后存在 `230` 个负余额 bucket warning。
-  当前解释是缺少期初库存或历史先后顺序漂移，local validate 将其视为 accepted warning；线上切换前应明确是否需要补录期初库存，或接受以当前余额起账。
+3. 全局库存重放后仅剩 `2` 个最终负库存 warning：`cp002` (`materialId=6`, `-78`) 和 `jg36` (`materialId=1011`, `-9`)。
+  当前解释是历史数据允许负库存、乱序和部分无来源移动，validate 将其视为 accepted stocktake warning；线上切换前应明确后续盘库调整路径，盘库调增必须先补负库存坑，超过 `0` 的部分才形成新的可用价格层。
 4. 新库中已有 `sys_job`、`sys_job_log`、`sys_logininfor`、`sys_oper_log`，但它们属于 NestJS 新系统运行期表，不等于旧平台历史数据要迁入这些表。
 5. 旧平台账号 / 权限 / 菜单 / 组织 / 配置 / 公告历史不属于本次正式业务导入边界；线上迁移时要单独准备新系统账号、角色、菜单与权限初始化方案。
 
@@ -494,7 +494,7 @@
 | 数据冻结 | 本地库是静态数据，脚本结果稳定 | 线上必须先定义停写时间点，并在停写后做最后一次幂等补跑 |
 | 幂等重跑 | 当前迁移依赖 batch、`map_*`、validate report 保证可复核 | 线上必须保持同样的 batch-owned rows / maps 口径，避免“补跑重复插入” |
 | 库存重放 | 库存副作用必须在全域单据迁完后统一 replay | 线上不能边迁边重放；应在最终数据搬家完成后一次性 replay 并验数 |
-| 负库存 warning | 本地接受了缺少期初库存导致的 `230` 个负余额 warning | 线上要提前决定是补录期初库存，还是接受以切换时余额为起点 |
+| 负库存 warning | 本地接受了 `2` 个最终负库存盘库 warning：`cp002=-78`、`jg36=-9` | 线上要提前决定是补录期初库存，还是接受先形成负库存并由盘库调整收口；盘库调增先补负库存坑，超过 `0` 的部分才形成可用价格层 |
 | 排除项治理 | `excluded_documents` 可以让迁移先完成，再做受控签收 | 线上必须为每类 excluded 指定责任人和处置方式，不能把它们留成模糊尾项 |
 | 平台数据切换 | 账号、角色、菜单、日志、调度不在旧历史业务导入主线 | 线上要把“业务数据迁移”和“新系统初始化”拆成两套 checklist 执行 |
 | 上线信心 | 本地真实库验证能证明脚本逻辑，但不能替代生产演练 | 线上至少要对生产快照做一次全链路 rehearsal，再安排正式 cutover |

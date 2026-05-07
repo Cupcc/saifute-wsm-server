@@ -10,18 +10,23 @@ import { BusinessDocumentType } from "../../../shared/domain/business-document-t
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
 import {
-  type MaterialCategorySnapshotNode,
   type MonthlyMaterialCategoryEntry,
-  MonthlyReportingAbnormalFlag,
   MonthlyReportingDirection,
   MonthlyReportingTopicKey,
 } from "../application/monthly-reporting.shared";
 import {
+  parseMaterialCategoryPathSnapshot,
+  resolveMaterialCategoryLineAmount,
+  resolveMaterialCategorySalesCostAmount,
+} from "./monthly-material-category.helpers";
+import {
   buildAbnormalFlags,
+  buildMonthlyReportStockScopeWhere,
   loadSalesOrderSourceMap,
+  resolveMonthlyReportStockScopeCode,
+  resolveMonthlyReportStockScopeName,
   resolveSourceReference,
   toDecimal,
-  toStockScopeCode,
 } from "./reporting-repository.helpers";
 
 @Injectable()
@@ -43,15 +48,7 @@ export class MonthlyMaterialCategoryRepository {
           order: {
             lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
             bizDate: { gte: params.start, lte: params.end },
-            ...(params.stockScope
-              ? {
-                  stockScope: {
-                    is: {
-                      scopeCode: params.stockScope,
-                    },
-                  },
-                }
-              : {}),
+            ...buildMonthlyReportStockScopeWhere(params.stockScope),
             ...(params.workshopId ? { workshopId: params.workshopId } : {}),
           },
         },
@@ -64,6 +61,7 @@ export class MonthlyMaterialCategoryRepository {
           materialSpecSnapshot: true,
           unitCodeSnapshot: true,
           quantity: true,
+          unitPrice: true,
           amount: true,
           materialCategoryIdSnapshot: true,
           materialCategoryCodeSnapshot: true,
@@ -99,15 +97,7 @@ export class MonthlyMaterialCategoryRepository {
           order: {
             lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
             bizDate: { gte: params.start, lte: params.end },
-            ...(params.stockScope
-              ? {
-                  stockScope: {
-                    is: {
-                      scopeCode: params.stockScope,
-                    },
-                  },
-                }
-              : {}),
+            ...buildMonthlyReportStockScopeWhere(params.stockScope),
             ...(params.workshopId ? { workshopId: params.workshopId } : {}),
           },
         },
@@ -120,7 +110,9 @@ export class MonthlyMaterialCategoryRepository {
           materialSpecSnapshot: true,
           unitCodeSnapshot: true,
           quantity: true,
+          unitPrice: true,
           amount: true,
+          selectedUnitCost: true,
           costAmount: true,
           salesProjectId: true,
           salesProjectCodeSnapshot: true,
@@ -144,6 +136,7 @@ export class MonthlyMaterialCategoryRepository {
                 },
               },
               workshopId: true,
+              workshopNameSnapshot: true,
               workshop: {
                 select: {
                   workshopName: true,
@@ -167,7 +160,13 @@ export class MonthlyMaterialCategoryRepository {
           .map((line) => line.sourceDocumentId as number),
       ),
     ];
-    const sourceOrderMap = await loadSalesOrderSourceMap(this.prisma, sourceOrderIds);
+    const sourceOrderMap = await loadSalesOrderSourceMap(
+      this.prisma,
+      sourceOrderIds,
+    );
+    const salesCostAmountByLineId = await this.loadSalesCostAmountByLineId(
+      salesLines.map((line) => line.id),
+    );
     const sourceRefsByOrder = new Map<
       number,
       Array<{ bizDate: Date; documentNo: string }>
@@ -192,20 +191,23 @@ export class MonthlyMaterialCategoryRepository {
     }
 
     const inboundEntries = inboundLines.map((line) => {
-      const categoryPath = this.parseMaterialCategoryPathSnapshot(
+      const lineAmount = resolveMaterialCategoryLineAmount(
+        line.amount,
+        line.quantity,
+        line.unitPrice,
+      );
+      const categoryPath = parseMaterialCategoryPathSnapshot(
         line.materialCategoryPathSnapshot,
         {
           id: line.materialCategoryIdSnapshot ?? null,
           categoryCode: line.materialCategoryCodeSnapshot ?? null,
-          categoryName:
-            line.materialCategoryNameSnapshot?.trim() || "未分类",
+          categoryName: line.materialCategoryNameSnapshot?.trim() || "未分类",
         },
       );
       const leafCategory = categoryPath.at(-1) ?? {
         id: line.materialCategoryIdSnapshot ?? null,
         categoryCode: line.materialCategoryCodeSnapshot ?? null,
-        categoryName:
-          line.materialCategoryNameSnapshot?.trim() || "未分类",
+        categoryName: line.materialCategoryNameSnapshot?.trim() || "未分类",
       };
 
       return {
@@ -225,8 +227,12 @@ export class MonthlyMaterialCategoryRepository {
         lineNo: line.lineNo,
         bizDate: line.order.bizDate,
         createdAt: line.order.createdAt,
-        stockScope: toStockScopeCode(line.order.stockScope?.scopeCode),
-        stockScopeName: line.order.stockScope?.scopeName ?? null,
+        stockScope: resolveMonthlyReportStockScopeCode(
+          line.order.stockScope?.scopeCode,
+        ),
+        stockScopeName: resolveMonthlyReportStockScopeName(
+          line.order.stockScope?.scopeName,
+        ),
         workshopId: line.order.workshopId ?? null,
         workshopName:
           line.order.workshop?.workshopName ??
@@ -242,40 +248,52 @@ export class MonthlyMaterialCategoryRepository {
         categoryName: leafCategory.categoryName,
         categoryPath,
         quantity: line.quantity,
-        amount: line.amount,
-        cost: line.amount,
+        amount: lineAmount,
+        cost: lineAmount,
         salesProjectId: null,
         salesProjectCode: null,
         salesProjectName: null,
-        abnormalFlags: buildAbnormalFlags({
-          bizDate: line.order.bizDate,
-          createdAt: line.order.createdAt,
-        }, this.appConfigService.businessTimezone),
+        abnormalFlags: buildAbnormalFlags(
+          {
+            bizDate: line.order.bizDate,
+            createdAt: line.order.createdAt,
+          },
+          this.appConfigService.businessTimezone,
+        ),
         sourceBizDate: null,
         sourceDocumentNo: null,
       } satisfies MonthlyMaterialCategoryEntry;
     });
 
     const salesEntries = salesLines.map((line) => {
+      const lineAmount = resolveMaterialCategoryLineAmount(
+        line.amount,
+        line.quantity,
+        line.unitPrice,
+      );
+      const lineCost = resolveMaterialCategorySalesCostAmount({
+        lineCostAmount: line.costAmount,
+        inventoryCostAmount: salesCostAmountByLineId.get(line.id),
+        quantity: line.quantity,
+        selectedUnitCost: line.selectedUnitCost,
+      });
       const sourceReference = resolveSourceReference(
         line.order.bizDate,
         sourceRefsByOrder.get(line.order.id) ?? [],
         this.appConfigService.businessTimezone,
       );
-      const categoryPath = this.parseMaterialCategoryPathSnapshot(
+      const categoryPath = parseMaterialCategoryPathSnapshot(
         line.materialCategoryPathSnapshot,
         {
           id: line.materialCategoryIdSnapshot ?? null,
           categoryCode: line.materialCategoryCodeSnapshot ?? null,
-          categoryName:
-            line.materialCategoryNameSnapshot?.trim() || "未分类",
+          categoryName: line.materialCategoryNameSnapshot?.trim() || "未分类",
         },
       );
       const leafCategory = categoryPath.at(-1) ?? {
         id: line.materialCategoryIdSnapshot ?? null,
         categoryCode: line.materialCategoryCodeSnapshot ?? null,
-        categoryName:
-          line.materialCategoryNameSnapshot?.trim() || "未分类",
+        categoryName: line.materialCategoryNameSnapshot?.trim() || "未分类",
       };
 
       return {
@@ -298,10 +316,17 @@ export class MonthlyMaterialCategoryRepository {
         lineNo: line.lineNo,
         bizDate: line.order.bizDate,
         createdAt: line.order.createdAt,
-        stockScope: toStockScopeCode(line.order.stockScope?.scopeCode),
-        stockScopeName: line.order.stockScope?.scopeName ?? null,
+        stockScope: resolveMonthlyReportStockScopeCode(
+          line.order.stockScope?.scopeCode,
+        ),
+        stockScopeName: resolveMonthlyReportStockScopeName(
+          line.order.stockScope?.scopeName,
+        ),
         workshopId: line.order.workshopId,
-        workshopName: line.order.workshop.workshopName,
+        workshopName:
+          line.order.workshop?.workshopName?.trim() ||
+          line.order.workshopNameSnapshot?.trim() ||
+          null,
         materialId: line.materialId,
         materialCode: line.materialCodeSnapshot,
         materialName: line.materialNameSnapshot,
@@ -312,16 +337,19 @@ export class MonthlyMaterialCategoryRepository {
         categoryName: leafCategory.categoryName,
         categoryPath,
         quantity: line.quantity,
-        amount: line.amount,
-        cost: toDecimal(line.costAmount),
+        amount: lineAmount,
+        cost: lineCost,
         salesProjectId: line.salesProjectId ?? null,
         salesProjectCode: line.salesProjectCodeSnapshot ?? null,
         salesProjectName: line.salesProjectNameSnapshot ?? null,
-        abnormalFlags: buildAbnormalFlags({
-          bizDate: line.order.bizDate,
-          createdAt: line.order.createdAt,
-          sourceBizDate: sourceReference.sourceBizDate,
-        }, this.appConfigService.businessTimezone),
+        abnormalFlags: buildAbnormalFlags(
+          {
+            bizDate: line.order.bizDate,
+            createdAt: line.order.createdAt,
+            sourceBizDate: sourceReference.sourceBizDate,
+          },
+          this.appConfigService.businessTimezone,
+        ),
         sourceBizDate: sourceReference.sourceBizDate,
         sourceDocumentNo: sourceReference.sourceDocumentNo,
       } satisfies MonthlyMaterialCategoryEntry;
@@ -330,108 +358,29 @@ export class MonthlyMaterialCategoryRepository {
     return [...inboundEntries, ...salesEntries];
   }
 
-  private parseMaterialCategoryPathSnapshot(
-    snapshot: Prisma.JsonValue | string | null | undefined,
-    fallbackLeaf: MaterialCategorySnapshotNode,
-  ): MaterialCategorySnapshotNode[] {
-    const fallbackPath = [fallbackLeaf].filter(
-      (node) => node.categoryName.trim().length > 0,
+  private async loadSalesCostAmountByLineId(lineIds: number[]) {
+    if (lineIds.length === 0) {
+      return new Map<number, Prisma.Decimal>();
+    }
+
+    const groups = await this.prisma.inventoryLog.groupBy({
+      by: ["businessDocumentLineId"],
+      where: {
+        businessDocumentType: BusinessDocumentType.SalesStockOrder,
+        businessDocumentLineId: { in: lineIds },
+      },
+      _sum: {
+        costAmount: true,
+      },
+    });
+
+    return new Map(
+      groups
+        .filter((group) => typeof group.businessDocumentLineId === "number")
+        .map((group) => [
+          group.businessDocumentLineId as number,
+          toDecimal(group._sum.costAmount),
+        ]),
     );
-
-    if (!snapshot) {
-      return fallbackPath.length > 0
-        ? fallbackPath
-        : [
-            {
-              id: null,
-              categoryCode: null,
-              categoryName: "未分类",
-            },
-          ];
-    }
-
-    const parsedSnapshot =
-      typeof snapshot === "string"
-        ? this.tryParseJsonSnapshot(snapshot)
-        : snapshot;
-    if (!Array.isArray(parsedSnapshot)) {
-      return fallbackPath.length > 0
-        ? fallbackPath
-        : [
-            {
-              id: null,
-              categoryCode: null,
-              categoryName: "未分类",
-            },
-          ];
-    }
-
-    const nodes = parsedSnapshot
-      .map((value) => this.normalizeMaterialCategoryPathNode(value))
-      .filter(
-        (node): node is MaterialCategorySnapshotNode =>
-          node != null && node.categoryName.trim().length > 0,
-      );
-
-    if (nodes.length > 0) {
-      return nodes;
-    }
-
-    return fallbackPath.length > 0
-      ? fallbackPath
-      : [
-          {
-            id: null,
-            categoryCode: null,
-            categoryName: "未分类",
-          },
-        ];
-  }
-
-  private tryParseJsonSnapshot(value: string) {
-    try {
-      return JSON.parse(value) as unknown;
-    } catch {
-      return null;
-    }
-  }
-
-  private normalizeMaterialCategoryPathNode(value: unknown) {
-    if (!value || typeof value !== "object") {
-      return null;
-    }
-
-    const candidate = value as {
-      id?: unknown;
-      categoryCode?: unknown;
-      categoryName?: unknown;
-      code?: unknown;
-      name?: unknown;
-    };
-    const rawCategoryName =
-      typeof candidate.categoryName === "string"
-        ? candidate.categoryName
-        : typeof candidate.name === "string"
-          ? candidate.name
-          : "";
-    const categoryName =
-      typeof rawCategoryName === "string" ? rawCategoryName.trim() : "";
-
-    if (categoryName.length === 0) {
-      return null;
-    }
-
-    return {
-      id: typeof candidate.id === "number" ? candidate.id : null,
-      categoryCode:
-        typeof candidate.categoryCode === "string" &&
-        candidate.categoryCode.trim().length > 0
-          ? candidate.categoryCode.trim()
-          : typeof candidate.code === "string" &&
-              candidate.code.trim().length > 0
-            ? candidate.code.trim()
-          : null,
-      categoryName,
-    } satisfies MaterialCategorySnapshotNode;
   }
 }

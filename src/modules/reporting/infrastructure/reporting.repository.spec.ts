@@ -16,6 +16,7 @@ describe("ReportingRepository", () => {
     const stockInOrderLine = { findMany: jest.fn().mockResolvedValue([]) };
     const salesStockOrder = { findMany: jest.fn().mockResolvedValue([]) };
     const salesStockOrderLine = { findMany: jest.fn().mockResolvedValue([]) };
+    const inventoryLog = { groupBy: jest.fn().mockResolvedValue([]) };
     const workshopMaterialOrder = { findMany: jest.fn().mockResolvedValue([]) };
     const rdProjectMaterialAction = {
       findMany: jest.fn().mockResolvedValue([]),
@@ -32,6 +33,7 @@ describe("ReportingRepository", () => {
       stockInOrderLine,
       salesStockOrder,
       salesStockOrderLine,
+      inventoryLog,
       workshopMaterialOrder,
       rdProjectMaterialAction,
       rdHandoffOrder,
@@ -269,6 +271,7 @@ describe("ReportingRepository", () => {
         materialSpecSnapshot: "25kg",
         unitCodeSnapshot: "KG",
         quantity: new Prisma.Decimal("3"),
+        unitPrice: new Prisma.Decimal("10"),
         amount: new Prisma.Decimal("30"),
         materialCategoryIdSnapshot: 11,
         materialCategoryCodeSnapshot: "CHEM",
@@ -305,7 +308,9 @@ describe("ReportingRepository", () => {
         materialSpecSnapshot: "10kg",
         unitCodeSnapshot: "KG",
         quantity: new Prisma.Decimal("1"),
+        unitPrice: new Prisma.Decimal("8"),
         amount: new Prisma.Decimal("8"),
+        selectedUnitCost: new Prisma.Decimal("6"),
         costAmount: new Prisma.Decimal("6"),
         salesProjectId: 701,
         salesProjectCodeSnapshot: "SP-701",

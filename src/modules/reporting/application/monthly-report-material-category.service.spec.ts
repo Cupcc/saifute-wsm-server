@@ -18,7 +18,6 @@ import {
 
 describe("MonthlyReportMaterialCategoryService", () => {
   let service: MonthlyReportMaterialCategoryService;
-  let repository: jest.Mocked<MonthlyReportRepository>;
   let materialCategoryRepository: jest.Mocked<MonthlyMaterialCategoryRepository>;
 
   beforeEach(async () => {
@@ -51,8 +50,9 @@ describe("MonthlyReportMaterialCategoryService", () => {
     }).compile();
 
     service = moduleRef.get(MonthlyReportMaterialCategoryService);
-    repository = moduleRef.get(MonthlyReportRepository);
-    materialCategoryRepository = moduleRef.get(MonthlyMaterialCategoryRepository);
+    materialCategoryRepository = moduleRef.get(
+      MonthlyMaterialCategoryRepository,
+    );
   });
 
   function createMaterialCategoryPath(
@@ -119,56 +119,58 @@ describe("MonthlyReportMaterialCategoryService", () => {
   }
 
   it("should summarize material-category view from line facts into leaf-only buckets", async () => {
-    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue([
-      createMaterialCategoryEntry(),
-      createMaterialCategoryEntry({
-        topicKey: MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
-        documentId: 102,
-        documentNo: "RK-001",
-        documentLineId: 1002,
-        lineNo: 1,
-        amount: new Prisma.Decimal("50"),
-        cost: new Prisma.Decimal("50"),
-      }),
-      createMaterialCategoryEntry({
-        topicKey: MonthlyReportingTopicKey.SALES_OUTBOUND,
-        direction: MonthlyReportingDirection.OUT,
-        documentType: "SalesStockOrder",
-        documentTypeLabel: "销售出库单",
-        documentId: 201,
-        documentNo: "CK-001",
-        documentLineId: 2001,
-        lineNo: 1,
-        materialId: 601,
-        materialCode: "M-RAW-002",
-        materialName: "原料 B",
-        amount: new Prisma.Decimal("40"),
-        cost: new Prisma.Decimal("28"),
-        salesProjectId: 701,
-        salesProjectCode: "SP-701",
-        salesProjectName: "销售项目 A",
-      }),
-      createMaterialCategoryEntry({
-        topicKey: MonthlyReportingTopicKey.SALES_RETURN,
-        documentType: "SalesStockOrder",
-        documentTypeLabel: "销售退货单",
-        documentId: 202,
-        documentNo: "XSTH-001",
-        documentLineId: 2002,
-        lineNo: 1,
-        materialId: 601,
-        materialCode: "M-RAW-002",
-        materialName: "原料 B",
-        amount: new Prisma.Decimal("8"),
-        cost: new Prisma.Decimal("6"),
-        salesProjectId: 701,
-        salesProjectCode: "SP-701",
-        salesProjectName: "销售项目 A",
-        abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
-        sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
-        sourceDocumentNo: "CK-0009",
-      }),
-    ]);
+    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue(
+      [
+        createMaterialCategoryEntry(),
+        createMaterialCategoryEntry({
+          topicKey: MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
+          documentId: 102,
+          documentNo: "RK-001",
+          documentLineId: 1002,
+          lineNo: 1,
+          amount: new Prisma.Decimal("50"),
+          cost: new Prisma.Decimal("50"),
+        }),
+        createMaterialCategoryEntry({
+          topicKey: MonthlyReportingTopicKey.SALES_OUTBOUND,
+          direction: MonthlyReportingDirection.OUT,
+          documentType: "SalesStockOrder",
+          documentTypeLabel: "销售出库单",
+          documentId: 201,
+          documentNo: "CK-001",
+          documentLineId: 2001,
+          lineNo: 1,
+          materialId: 601,
+          materialCode: "M-RAW-002",
+          materialName: "原料 B",
+          amount: new Prisma.Decimal("40"),
+          cost: new Prisma.Decimal("28"),
+          salesProjectId: 701,
+          salesProjectCode: "SP-701",
+          salesProjectName: "销售项目 A",
+        }),
+        createMaterialCategoryEntry({
+          topicKey: MonthlyReportingTopicKey.SALES_RETURN,
+          documentType: "SalesStockOrder",
+          documentTypeLabel: "销售退货单",
+          documentId: 202,
+          documentNo: "XSTH-001",
+          documentLineId: 2002,
+          lineNo: 1,
+          materialId: 601,
+          materialCode: "M-RAW-002",
+          materialName: "原料 B",
+          amount: new Prisma.Decimal("8"),
+          cost: new Prisma.Decimal("6"),
+          salesProjectId: 701,
+          salesProjectCode: "SP-701",
+          salesProjectName: "销售项目 A",
+          abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
+          sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
+          sourceDocumentNo: "CK-0009",
+        }),
+      ],
+    );
 
     const result = await service.getMaterialCategorySummary({
       yearMonth: "2026-03",
@@ -176,7 +178,9 @@ describe("MonthlyReportMaterialCategoryService", () => {
       categoryNodeKey: "11:CHEM:化工",
     });
 
-    expect(materialCategoryRepository.findMonthlyMaterialCategoryEntries).toHaveBeenCalledWith({
+    expect(
+      materialCategoryRepository.findMonthlyMaterialCategoryEntries,
+    ).toHaveBeenCalledWith({
       start: new Date("2026-02-28T16:00:00.000Z"),
       end: new Date("2026-03-31T15:59:59.999Z"),
       stockScope: undefined,
@@ -207,26 +211,80 @@ describe("MonthlyReportMaterialCategoryService", () => {
     ]);
   });
 
-  it("should expose material-category line details filtered by keyword", async () => {
-    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue([
-      createMaterialCategoryEntry({
-        topicKey: MonthlyReportingTopicKey.SALES_RETURN,
-        documentType: "SalesStockOrder",
-        documentTypeLabel: "销售退货单",
-        documentId: 202,
-        documentNo: "XSTH-001",
-        documentLineId: 2002,
-        lineNo: 2,
-        amount: new Prisma.Decimal("8"),
-        cost: new Prisma.Decimal("6"),
-        salesProjectId: 701,
-        salesProjectCode: "SP-701",
-        salesProjectName: "销售项目 A",
-        abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
-        sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
-        sourceDocumentNo: "CK-0009",
+  it("should keep the category selector catalog stable when one category is filtered", async () => {
+    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue(
+      [
+        createMaterialCategoryEntry({
+          documentId: 301,
+          documentNo: "YS-301",
+          amount: new Prisma.Decimal("30"),
+          cost: new Prisma.Decimal("30"),
+        }),
+        createMaterialCategoryEntry({
+          documentId: 302,
+          documentNo: "YS-302",
+          documentLineId: 3002,
+          amount: new Prisma.Decimal("45"),
+          cost: new Prisma.Decimal("45"),
+          categoryId: 22,
+          categoryCode: "MET",
+          categoryName: "金属",
+          categoryPath: createMaterialCategoryPath([
+            { id: 22, categoryCode: "MET", categoryName: "金属" },
+          ]),
+        }),
+      ],
+    );
+
+    const result = await service.getMaterialCategorySummary({
+      yearMonth: "2026-03",
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+      categoryNodeKey: "11:CHEM:化工",
+    });
+
+    expect(result.categories).toEqual([
+      expect.objectContaining({
+        nodeKey: "11:CHEM:化工",
+        categoryName: "化工",
       }),
     ]);
+    expect(result.categoryCatalog).toHaveLength(2);
+    expect(result.categoryCatalog).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          nodeKey: "11:CHEM:化工",
+          categoryName: "化工",
+        }),
+        expect.objectContaining({
+          nodeKey: "22:MET:金属",
+          categoryName: "金属",
+        }),
+      ]),
+    );
+  });
+
+  it("should expose material-category line details filtered by keyword", async () => {
+    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue(
+      [
+        createMaterialCategoryEntry({
+          topicKey: MonthlyReportingTopicKey.SALES_RETURN,
+          documentType: "SalesStockOrder",
+          documentTypeLabel: "销售退货单",
+          documentId: 202,
+          documentNo: "XSTH-001",
+          documentLineId: 2002,
+          lineNo: 2,
+          amount: new Prisma.Decimal("8"),
+          cost: new Prisma.Decimal("6"),
+          salesProjectId: 701,
+          salesProjectCode: "SP-701",
+          salesProjectName: "销售项目 A",
+          abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
+          sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
+          sourceDocumentNo: "CK-0009",
+        }),
+      ],
+    );
 
     const details = await service.getMaterialCategoryDocuments({
       yearMonth: "2026-03",
@@ -246,34 +304,44 @@ describe("MonthlyReportMaterialCategoryService", () => {
       sourceBizMonth: "2026-02",
       sourceDocumentNo: "CK-0009",
     });
+
+    const hiddenSourceDetails = await service.getMaterialCategoryDocuments({
+      yearMonth: "2026-03",
+      viewMode: MonthlyReportingViewMode.MATERIAL_CATEGORY,
+      keyword: "CK-0009",
+    });
+
+    expect(hiddenSourceDetails.total).toBe(0);
   });
 
   it("should treat material-category node key and category id as leaf-only filters", async () => {
-    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue([
-      createMaterialCategoryEntry({
-        documentId: 301,
-        documentNo: "YS-301",
-        amount: new Prisma.Decimal("30"),
-        cost: new Prisma.Decimal("30"),
-        categoryId: 11,
-        categoryCode: "CHEM",
-        categoryName: "化工",
-        categoryPath: createMaterialCategoryPath([
-          { id: 10, categoryCode: "RAW", categoryName: "原料" },
-          { id: 11, categoryCode: "CHEM", categoryName: "化工" },
-        ]),
-      }),
-      createMaterialCategoryEntry({
-        documentId: 302,
-        documentNo: "YS-UNCAT-302",
-        amount: new Prisma.Decimal("45"),
-        cost: new Prisma.Decimal("45"),
-        categoryId: null,
-        categoryCode: null,
-        categoryName: "未分类",
-        categoryPath: [],
-      }),
-    ]);
+    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue(
+      [
+        createMaterialCategoryEntry({
+          documentId: 301,
+          documentNo: "YS-301",
+          amount: new Prisma.Decimal("30"),
+          cost: new Prisma.Decimal("30"),
+          categoryId: 11,
+          categoryCode: "CHEM",
+          categoryName: "化工",
+          categoryPath: createMaterialCategoryPath([
+            { id: 10, categoryCode: "RAW", categoryName: "原料" },
+            { id: 11, categoryCode: "CHEM", categoryName: "化工" },
+          ]),
+        }),
+        createMaterialCategoryEntry({
+          documentId: 302,
+          documentNo: "YS-UNCAT-302",
+          amount: new Prisma.Decimal("45"),
+          cost: new Prisma.Decimal("45"),
+          categoryId: null,
+          categoryCode: null,
+          categoryName: "未分类",
+          categoryPath: [],
+        }),
+      ],
+    );
 
     const nodeKeyResult = await service.getMaterialCategorySummary({
       yearMonth: "2026-03",

@@ -1,12 +1,13 @@
-# 库存重放待确认 blocker 事件记录
+# 库存重放 blocker 处理归档记录
 
 ## 状态
 
-- 状态：`wg17 已确认并处理；最终负库存已转盘库收口 warning；来源层多余已按历史无源冲抵清零`
+- 状态：`已归档；blocker 已清零，execute / validate 已完成`
 - 来源报告：`scripts/migration/reports/inventory-replay-dry-run-report.json`
-- 关联任务：`docs/tasks/task-20260501-construct-correct-price-layer-replay.md`
+- 关联任务：`docs/tasks/archive/retained-completed/task-20260501-construct-correct-price-layer-replay.md`
 - 记录日期：`2026-05-07`
 - 当前处理原则：销售退货无源入库已按用户确认允许作为独立来源，只复用现有备注语义留痕，不新增字段；`RK20260306005` 已经仓库管理员确认是错误单据，且数据库中只有 `wg17` 一条明细，已从目标库删除；用户确认迁移阶段允许先按历史单据形成负库存，后续由仓库管理员盘库并通过盘库调整对齐实际库存；用户确认历史顺序允许混乱，后续同物料、同库存范围、同成本的退货 / 退料 / 来源释放可优先冲抵已批准的 `UNFUNDED_HISTORICAL_OUT` 缺口，超过负库存坑之后才形成可用价格层。
+- 归档结论：最终 dry-run `blockers=[]`；execute 已插入 `4546` 条库存流水、`2637` 条来源占用和 `1230` 条库存余额；validate 已无 blocker，仅保留 `cp002` / `jg36` 两条已接受的盘库调整 warning。
 
 ## 当前 blocker 对账
 
@@ -25,10 +26,11 @@
 
 注意：退货 / 退料来源链和普通来源不足已不再是 blocker；它们在报告中以 `UNFUNDED_HISTORICAL_OUT`、`UNFUNDED_RETURN_RECOVERY_SOURCE`、`STANDALONE_RETURN_SOURCE`、`UNFUNDED_HISTORICAL_OUT_OFFSET` 等 warning 留痕。`cp002`、`jg36` 这类最终负库存且没有可用价格层的物料，已按 `NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE` warning 留给后续盘库调整收口。
 
-## 确认优先级
+## 归档结论
 
-1. 当前 blocker 已清零，下一步是 execute 前确认。
+1. 当前 blocker 已清零，且 execute / validate 已完成。
 2. `stock-in-offset-source-unresolved` 已清零，不再占用后续处理顺序。
+3. `cp002` / `jg36` 是后续仓库盘库调整事项，不再阻塞本次历史库存重算。
 
 ## A. 负数入库对冲未找到来源
 
@@ -54,7 +56,7 @@
 
 ## B. 退货 / 退料缺原单来源
 
-这些行没有可安全自动回填的来源关系。销售退货无源入库已经按用户确认作为独立来源处理：只复用现有备注语义留痕，不新增字段，不再伪造原销售出库关系。当前本节只保留仍需确认原领料来源的车间退料。
+本节保留历史调查记录。最终处理结果是：销售退货无源入库已经按用户确认作为独立来源处理，只复用现有备注语义留痕，不新增字段，不再伪造原销售出库关系；车间退料缺来源链已按历史无源 / 乱序规则转为 warning，不再是 blocker。
 
 已处理：
 
@@ -70,7 +72,7 @@
 
 ## C. 已关联退回但原单无法释放来源
 
-这些不是“缺链接”。退回行已经指向原单，但原出库 / 原领料本身没有足够 `inventory_source_usage` 可释放。需要先确认原单为什么来源不足。
+本节保留历史调查记录。这些原本不是“缺链接”，而是退回行已经指向原单但原出库 / 原领料没有足够 `inventory_source_usage` 可释放；最终已按退回缺口恢复来源 / 历史无源规则转为 warning，不再是 blocker。
 
 
 | 退回单             | 退回行ID | 物料             | 退回数量       | 已释放        | 缺口         | 已关联原单                    | 需要确认                                          |
@@ -81,7 +83,7 @@
 
 ## D. 消费来源不足 / 负库存事件
 
-这些行在历史单据重算时间线上发生出库或领料时，没有足够已成本化来源。需要确认是否缺历史入库 / 期初库存、业务日期顺序、库存范围、状态过滤、重复过账或数量错误。
+本节保留历史调查记录。这些行在历史单据重算时间线上发生出库或领料时，没有足够已成本化来源；最终已按用户确认的历史无源出库 / 领料和历史允许负库存规则转为 warning，不再是 blocker。
 
 
 | blocker                                                       | 单号              | 业务日期         | 行ID  | 物料                 | 数量          | 缺口          | 负库存变化                     | 需要确认                                        |
@@ -129,9 +131,9 @@
 
 ## 后续验证
 
-确认并修复任一批数据后：
+本轮已完成最终验证：
 
-1. 运行 `bun run migration:inventory-replay:dry-run`。
-2. 检查 blocker 分组数量是否按预期减少。
-3. 若仍有 blocker，继续更新本文档对应条目的确认结论。
-4. 当前 dry-run 报告已经是 `blockers=[]`；execute 前如果目标库数据有变化，必须重新 dry-run 确认仍清零。
+1. `bun run migration:inventory-replay:dry-run`：最终报告 `blockers=[]`。
+2. `bun run migration:inventory-replay:execute`：已完成写入。
+3. `bun run migration:inventory-replay:validate`：已无 blocker issue，仅保留已接受的盘库 warning。
+4. 如果目标库历史单据后续又发生变化，必须重新运行 `dry-run -> execute -> validate`，不能直接复用本轮报告。

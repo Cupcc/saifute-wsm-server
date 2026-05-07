@@ -23,7 +23,6 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
-| `task-20260501-construct-correct-price-layer-replay.md` | `validating` | 价格层重建已在 configured target `saifute-wms` 执行并通过 validate：`inventory_log=4546`、`inventory_source_usage=2637`、`inventory_balance=1230`，孤儿 source usage 已清零。历史允许负库存、乱序和无来源的出库 / 领料已按 `UNFUNDED_HISTORICAL_OUT`、`UNFUNDED_RETURN_RECOVERY_SOURCE`、`STANDALONE_RETURN_SOURCE` warning 留痕处理，退货 / 退料来源链、来源不足和负库存 blocker 已清零。`wg17` 错误冲红单 `RK20260306005` 已经仓库确认后从目标库删除，`stock-in-offset-source-unresolved` 已清零。最终负库存且无可用价格层的 `cp002` / `jg36` 已按后续盘库调整收口策略转为 `NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE` warning；下一步是执行后页面/API 抽查和盘库调整路径确认。 |
 | `task-20260417-1702-material-category-single-level-system-unification.md` | `accepted` | 在 `monthly-reporting F9` 单层分类基线上，把全系统 `material-category` 真源统一为单层分类；`MaterialCategory.parentId` 已从 Prisma schema 与相关合同删除，`master-data` 文档/API/UI、inbound/sales 写侧快照与 focused validation 已完成并收口通过。 |
 | `task-20260417-0930-monthly-reporting-material-category-single-level-alignment.md` | `accepted` | 月度对账 `F9` 物料分类视角 requirement change：取消父级汇总 / 树形路径语义，改为仅按单据行稳定叶子分类快照单层聚合；shared truth、`reporting`、月报前端、导出与 focused validation 已完成，父级手动 review 收口通过。 |
 | `task-20260411-1105-monthly-reporting-domain-first-redesign.md` | `reviewing` | 在 accepted `monthly-reporting Phase 1` 基线上，已完成月度对账领域优先重切实现：先回答仓库总入 / 总出 / 净发生，再按入库、车间、销售、研发项目、RD小仓展开操作、销售项目与主仓到RD交接汇总，当前进入 review / acceptance 收口。 |
@@ -34,6 +33,7 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
+| `archive/retained-completed/task-20260501-construct-correct-price-layer-replay.md` | `accepted` | 价格层重建已在 configured target `saifute-wms` 执行、验证并归档：最终 dry-run `blockers=[]`；execute 删除旧余额 `835`、孤儿来源占用 `1897`，插入 `inventory_log=4546`、`inventory_source_usage=2637`、`inventory_balance=1230`；validate `0` blocker issue。历史允许负库存、乱序和无来源的出库 / 领料均以明确 warning 留痕，`cp002` / `jg36` 最终负库存转为后续盘库调整 warning。 |
 | `archive/retained-completed/task-20260429-1342-openapi-contract-governance.md` | `accepted` | OpenAPI / Swagger 契约治理 Phase 0 + Phase 1 已完成：新增可复用 audit 基线脚本，移除 Swagger 公开接口 / no-envelope 手工 path 表，改由 `@Public()` / `@SkipResponseEnvelope()` metadata 驱动，补齐上传 multipart、下载 / 导出 binary response 和统一错误响应 schema；响应 DTO、summary、query/path 描述与 CI 阈值留到后续阶段。 |
 | `archive/retained-completed/task-20260411-0301-monthly-reporting-phase1-delivery.md` | `accepted` | 月度报表 `Phase 1` 已完成实现、review fix loop、RBAC seed 漂移修复、focused 自动化验证与 live full acceptance；`F1-F5` 现已作为 accepted 基线归档，`F6/F7` 继续保留后续阶段。 |
 | `archive/retained-completed/task-20260416-1017-monthly-reporting-material-category-view.md` | `accepted` | 月度对账 `F9` 物料分类视角已完成实现、review fix loop、migration batching hardening、focused 自动化验证、live API / browser acceptance 与归档收口；当前 accepted baseline 覆盖 `验收入库 / 生产入库 / 销售出库 / 销售退货`。 |

@@ -456,8 +456,6 @@
               <span v-else>-</span>
             </template>
           </el-table-column>
-          <el-table-column prop="sourceBizMonth" label="来源月份" min-width="120" />
-          <el-table-column prop="sourceDocumentNo" label="来源单据" min-width="200" show-overflow-tooltip />
         </el-table>
 
         <div class="pagination-wrap">
@@ -508,6 +506,7 @@ const selectedCategoryNodeKey = ref(undefined);
 const workshopOptions = ref([]);
 const domainCatalog = ref([]);
 const documentTypeCatalog = ref([]);
+const categoryCatalog = ref([]);
 const domainRows = ref([]);
 const documentTypeRows = ref([]);
 const workshopRows = ref([]);
@@ -590,7 +589,7 @@ const filteredDocumentTypeOptions = computed(() => {
   );
 });
 const categoryOptions = computed(() => {
-  return [...categoryRows.value]
+  return [...categoryCatalog.value]
     .map((row) => ({
       nodeKey: row.nodeKey,
       categoryId: row.categoryId,
@@ -628,7 +627,7 @@ const rdSubLegendText = computed(() =>
 );
 const keywordPlaceholder = computed(() =>
   isMaterialCategoryView.value
-    ? "单据号 / 物料 / 分类 / 销售项目 / 来源单据"
+    ? "单据号 / 物料 / 分类 / 销售项目"
     : "单据号 / 单据类型 / 销售项目 / 来源单据",
 );
 const activeDocumentTypeLabel = computed(() => {
@@ -859,12 +858,14 @@ async function loadSummary() {
       workshopRows.value = [];
       salesProjectRows.value = [];
       rdProjectRows.value = [];
+      categoryCatalog.value = data.categoryCatalog || data.categories || [];
       categoryRows.value = data.categories || [];
       activeBusinessSummaryTab.value = "";
       return;
     }
 
     domainCatalog.value = data.domainCatalog || [];
+    categoryCatalog.value = [];
     categoryRows.value = [];
     domainRows.value = data.domains || [];
     documentTypeRows.value = data.documentTypes || [];

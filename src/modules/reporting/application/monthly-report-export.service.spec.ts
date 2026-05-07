@@ -59,7 +59,9 @@ describe("MonthlyReportExportService", () => {
 
     service = moduleRef.get(MonthlyReportExportService);
     repository = moduleRef.get(MonthlyReportRepository);
-    materialCategoryRepository = moduleRef.get(MonthlyMaterialCategoryRepository);
+    materialCategoryRepository = moduleRef.get(
+      MonthlyMaterialCategoryRepository,
+    );
   });
 
   function createEntry(
@@ -162,25 +164,27 @@ describe("MonthlyReportExportService", () => {
   }
 
   it("should export the material-category workbook", async () => {
-    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue([
-      createMaterialCategoryEntry({
-        topicKey: MonthlyReportingTopicKey.SALES_RETURN,
-        documentType: "SalesStockOrder",
-        documentTypeLabel: "销售退货单",
-        documentId: 202,
-        documentNo: "XSTH-001",
-        documentLineId: 2002,
-        lineNo: 2,
-        amount: new Prisma.Decimal("8"),
-        cost: new Prisma.Decimal("6"),
-        salesProjectId: 701,
-        salesProjectCode: "SP-701",
-        salesProjectName: "销售项目 A",
-        abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
-        sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
-        sourceDocumentNo: "CK-0009",
-      }),
-    ]);
+    materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue(
+      [
+        createMaterialCategoryEntry({
+          topicKey: MonthlyReportingTopicKey.SALES_RETURN,
+          documentType: "SalesStockOrder",
+          documentTypeLabel: "销售退货单",
+          documentId: 202,
+          documentNo: "XSTH-001",
+          documentLineId: 2002,
+          lineNo: 2,
+          amount: new Prisma.Decimal("8"),
+          cost: new Prisma.Decimal("6"),
+          salesProjectId: 701,
+          salesProjectCode: "SP-701",
+          salesProjectName: "销售项目 A",
+          abnormalFlags: [MonthlyReportingAbnormalFlag.CROSS_MONTH_REFERENCE],
+          sourceBizDate: new Date("2026-02-27T02:00:00.000Z"),
+          sourceDocumentNo: "CK-0009",
+        }),
+      ],
+    );
 
     const exportResult = await service.exportMonthlyReport({
       yearMonth: "2026-03",
@@ -195,6 +199,8 @@ describe("MonthlyReportExportService", () => {
     expect(exportResult.content).toContain("化工");
     expect(exportResult.content).not.toContain("分类路径");
     expect(exportResult.content).not.toContain("层级");
+    expect(exportResult.content).not.toContain("来源月份");
+    expect(exportResult.content).not.toContain("来源单据");
     expect(exportResult.content).toContain("XSTH-001");
   });
 
