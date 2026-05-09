@@ -202,6 +202,7 @@ export class InventoryReportingRepository {
       InventoryOperationType.ACCEPTANCE_IN,
       InventoryOperationType.PRODUCTION_RECEIPT_IN,
     ];
+    const inboundReturnTypes = [InventoryOperationType.SUPPLIER_RETURN_OUT];
     const salesTypes = [InventoryOperationType.OUTBOUND_OUT];
     const workshopMaterialTypes = [
       InventoryOperationType.PICK_OUT,
@@ -223,12 +224,17 @@ export class InventoryReportingRepository {
         _sum: { changeQty: true, costAmount: true },
       });
 
-    const [inbound, sales, workshopMaterial, rdProject, rd] = await Promise.all(
-      [
+    const [inbound, inboundReturns, sales, workshopMaterial, rdProject, rd] =
+      await Promise.all([
         groupByBizDate({
           ...baseWhere,
           businessDocumentType: BusinessDocumentType.StockInOrder,
           operationType: { in: inboundTypes },
+        }),
+        groupByBizDate({
+          ...baseWhere,
+          businessDocumentType: BusinessDocumentType.StockInOrder,
+          operationType: { in: inboundReturnTypes },
         }),
         groupByBizDate({
           ...baseWhere,
@@ -249,11 +255,13 @@ export class InventoryReportingRepository {
           ...baseWhere,
           operationType: { in: rdTypes },
         }),
-      ],
-    );
+      ]);
 
     return [
       ...inbound.map((item) => this.mapLogGroupToSnapshot(item, "INBOUND")),
+      ...inboundReturns.map((item) =>
+        this.mapLogGroupToSnapshot(item, "INBOUND", -1),
+      ),
       ...sales.map((item) => this.mapLogGroupToSnapshot(item, "SALES")),
       ...workshopMaterial.map((item) =>
         this.mapLogGroupToSnapshot(item, "WORKSHOP_MATERIAL"),
@@ -268,12 +276,15 @@ export class InventoryReportingRepository {
   private mapLogGroupToSnapshot(
     group: InventoryLogTrendGroup,
     sourceType: TrendDocumentSnapshot["sourceType"],
+    sign = 1,
   ): TrendDocumentSnapshot {
+    const totalQty = group._sum?.changeQty ?? new Prisma.Decimal(0);
+    const totalAmount = group._sum?.costAmount ?? new Prisma.Decimal(0);
     return {
       sourceType,
       bizDate: group.bizDate,
-      totalQty: group._sum?.changeQty ?? new Prisma.Decimal(0),
-      totalAmount: group._sum?.costAmount ?? new Prisma.Decimal(0),
+      totalQty: sign < 0 ? totalQty.neg() : totalQty,
+      totalAmount: sign < 0 ? totalAmount.neg() : totalAmount,
     };
   }
 

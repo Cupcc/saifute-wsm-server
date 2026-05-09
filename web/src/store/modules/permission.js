@@ -236,6 +236,20 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     title: "验收明细",
     icon: "list",
   },
+  EntryReturnOrder: {
+    group: "entry",
+    path: "returnOrder",
+    component: "entry/returnOrder/index",
+    title: "退货单",
+    icon: "refresh",
+  },
+  EntryReturnDetail: {
+    group: "entry",
+    path: "returnDetail",
+    component: "entry/returnDetail/index",
+    title: "退货单明细",
+    icon: "list",
+  },
   EntryIntoOrder: {
     group: "entry",
     path: "intoOrder",
@@ -464,6 +478,8 @@ const SUPPORTED_BACKEND_ROUTE_META = {
 
 const FRONTEND_ROUTE_PERMISSION_FALLBACK = {
   BaseMaterialCategory: ["master:material-category:list"],
+  EntryReturnOrder: ["inbound:order:list"],
+  EntryReturnDetail: ["inbound:order:list"],
   SalesOrder: ["sales:order:list"],
   SalesDetail: ["sales:order:list"],
   SalesReturnOrder: ["sales:return:list"],
@@ -472,22 +488,27 @@ const FRONTEND_ROUTE_PERMISSION_FALLBACK = {
   RdMonthlyReportingMaterialCategory: ["reporting:monthly-reporting:view"],
 };
 
-function collectBackendRouteNames(routes, routeNames = new Set()) {
+function collectBackendRoutes(routes, routeMap = new Map()) {
   routes.forEach((route) => {
     if (!route || typeof route !== "object") {
       return;
     }
 
     if (route.name) {
-      routeNames.add(route.name);
+      routeMap.set(route.name, route);
     }
 
     if (Array.isArray(route.children) && route.children.length > 0) {
-      collectBackendRouteNames(route.children, routeNames);
+      collectBackendRoutes(route.children, routeMap);
     }
   });
 
-  return routeNames;
+  return routeMap;
+}
+
+function resolveBackendRouteOrder(backendRoute, declarationIndex) {
+  const orderNum = backendRoute?.meta?.orderNum;
+  return typeof orderNum === "number" ? orderNum : 100000 + declarationIndex;
 }
 
 function resolveGroupTitle(groupMeta, currentConsoleMode) {
@@ -546,10 +567,16 @@ function buildFrontendRoutes(
   currentConsoleMode = CONSOLE_MODES.DEFAULT,
   currentIsAdminUser = false,
 ) {
-  const routeNames = collectBackendRouteNames(backendRoutes);
+  const backendRoutesByName = collectBackendRoutes(backendRoutes);
   return SUPPORTED_BACKEND_ROUTE_GROUPS.map((groupMeta) => {
     const children = Object.entries(SUPPORTED_BACKEND_ROUTE_META)
-      .filter(([routeName, routeMeta]) => {
+      .map(([routeName, routeMeta], declarationIndex) => ({
+        routeName,
+        routeMeta,
+        backendRoute: backendRoutesByName.get(routeName),
+        declarationIndex,
+      }))
+      .filter(({ routeName, routeMeta, backendRoute }) => {
         if (routeMeta.group !== groupMeta.key) {
           return false;
         }
@@ -565,22 +592,35 @@ function buildFrontendRoutes(
         }
 
         return (
-          routeNames.has(routeName) ||
+          backendRoute ||
           auth.hasPermiOr(FRONTEND_ROUTE_PERMISSION_FALLBACK[routeName] || [])
         );
       })
-      .map(([routeName, routeMeta]) => ({
-        path: routeMeta.path,
-        component: routeMeta.component,
-        name: routeName,
-        meta: {
-          title: routeMeta.title,
-          icon: routeMeta.icon,
-          ...(hasAffixInConsoleMode(routeMeta, currentConsoleMode)
-            ? { affix: true }
-            : {}),
-        },
-      }));
+      .sort(
+        (left, right) =>
+          resolveBackendRouteOrder(left.backendRoute, left.declarationIndex) -
+          resolveBackendRouteOrder(right.backendRoute, right.declarationIndex),
+      )
+      .map(({ routeName, routeMeta, backendRoute }) => {
+        const backendMeta = backendRoute?.meta ?? {};
+        return {
+          path: routeMeta.path,
+          component: routeMeta.component,
+          name: routeName,
+          ...(backendRoute?.hidden ? { hidden: true } : {}),
+          ...(backendRoute?.query ? { query: backendRoute.query } : {}),
+          meta: {
+            title: backendMeta.title || routeMeta.title,
+            icon: backendMeta.icon || routeMeta.icon,
+            ...(typeof backendMeta.orderNum === "number"
+              ? { orderNum: backendMeta.orderNum }
+              : {}),
+            ...(hasAffixInConsoleMode(routeMeta, currentConsoleMode)
+              ? { affix: true }
+              : {}),
+          },
+        };
+      });
 
     if (children.length === 0) {
       return null;

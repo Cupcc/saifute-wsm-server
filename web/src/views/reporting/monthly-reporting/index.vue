@@ -188,6 +188,12 @@
         </el-col>
         <el-col :xs="24" :sm="12" :lg="4">
           <div class="stat-box">
+            <div class="stat-label">退给厂家金额</div>
+            <div class="stat-value">{{ summary.supplierReturnAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
             <div class="stat-label">销售退货金额</div>
             <div class="stat-value">{{ summary.salesReturnAmount }}</div>
           </div>
@@ -370,6 +376,7 @@
           <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
           <el-table-column prop="acceptanceInboundAmount" label="验收入库金额" min-width="140" />
           <el-table-column prop="productionReceiptAmount" label="生产入库金额" min-width="140" />
+          <el-table-column prop="supplierReturnAmount" label="退给厂家金额" min-width="140" />
           <el-table-column prop="salesOutboundAmount" label="销售出库金额" min-width="140" />
           <el-table-column prop="salesReturnAmount" label="销售退货金额" min-width="140" />
           <el-table-column prop="netAmount" label="净发生金额" min-width="140" />
@@ -736,6 +743,7 @@ function createEmptyMaterialCategorySummary() {
     abnormalDocumentCount: 0,
     acceptanceInboundAmount: "0.00",
     productionReceiptAmount: "0.00",
+    supplierReturnAmount: "0.00",
     salesOutboundAmount: "0.00",
     salesReturnAmount: "0.00",
     netAmount: "0.00",

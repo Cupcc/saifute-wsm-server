@@ -1,5 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { DocumentFamily, Prisma } from "../../../../generated/prisma/client";
+import {
+  DocumentFamily,
+  DocumentLifecycleStatus,
+  DocumentRelationType,
+  Prisma,
+} from "../../../../generated/prisma/client";
+import { BusinessDocumentType } from "../../../shared/domain/business-document-type";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type DbClient = Prisma.TransactionClient | PrismaService;
@@ -28,10 +34,13 @@ export class InboundRepository {
     materialName?: string;
     stockScopeId?: number;
     workshopId?: number;
+    includeVoided?: boolean;
   }): Prisma.StockInOrderWhereInput {
-    const where: Prisma.StockInOrderWhereInput = {
-      lifecycleStatus: "EFFECTIVE",
-    };
+    const where: Prisma.StockInOrderWhereInput = params.includeVoided
+      ? {}
+      : {
+          lifecycleStatus: "EFFECTIVE",
+        };
     if (params.documentNo) {
       where.documentNo = { contains: params.documentNo };
     }
@@ -93,6 +102,7 @@ export class InboundRepository {
       materialName?: string;
       stockScopeId?: number;
       workshopId?: number;
+      includeVoided?: boolean;
       limit: number;
       offset: number;
     },
@@ -131,6 +141,7 @@ export class InboundRepository {
       specification?: string;
       stockScopeId?: number;
       workshopId?: number;
+      includeVoided?: boolean;
       limit: number;
       offset: number;
     },
@@ -187,6 +198,54 @@ export class InboundRepository {
       where: { documentNo },
       include: { lines: true },
     });
+  }
+
+  async findEffectivePriceCorrectionLineBySourceLogId(
+    sourceInventoryLogId: number,
+    db?: DbClient,
+  ) {
+    return this.db(db).stockInPriceCorrectionOrderLine.findFirst({
+      where: {
+        sourceInventoryLogId,
+        order: {
+          lifecycleStatus: { not: DocumentLifecycleStatus.VOIDED },
+        },
+      },
+      include: {
+        generatedInLog: true,
+        order: true,
+      },
+    });
+  }
+
+  async getInventorySourceAvailability(sourceLogId: number, db?: DbClient) {
+    const log = await this.db(db).inventoryLog.findUnique({
+      where: { id: sourceLogId },
+      include: {
+        allocatedSourceUsages: {
+          select: {
+            allocatedQty: true,
+            releasedQty: true,
+          },
+        },
+      },
+    });
+    if (!log) return null;
+
+    const netAllocated = log.allocatedSourceUsages.reduce(
+      (sum, usage) =>
+        sum
+          .add(new Prisma.Decimal(usage.allocatedQty))
+          .sub(new Prisma.Decimal(usage.releasedQty)),
+      new Prisma.Decimal(0),
+    );
+
+    return {
+      id: log.id,
+      unitCost: log.unitCost,
+      changeQty: log.changeQty,
+      availableQty: new Prisma.Decimal(log.changeQty).sub(netAllocated),
+    };
   }
 
   async createOrder(
@@ -269,7 +328,7 @@ export class InboundRepository {
 
   async hasActiveDownstreamDependencies(orderId: number, db?: DbClient) {
     const client = this.db(db);
-    const [documentCount, lineCount] = await Promise.all([
+    const [documentCount, lineRelations] = await Promise.all([
       client.documentRelation.count({
         where: {
           upstreamFamily: DocumentFamily.STOCK_IN,
@@ -277,15 +336,131 @@ export class InboundRepository {
           isActive: true,
         },
       }),
-      client.documentLineRelation.count({
+      client.documentLineRelation.findMany({
         where: {
           upstreamFamily: DocumentFamily.STOCK_IN,
           upstreamDocumentId: orderId,
         },
+        select: {
+          downstreamFamily: true,
+          downstreamDocumentType: true,
+          downstreamDocumentId: true,
+        },
       }),
     ]);
 
-    return documentCount > 0 || lineCount > 0;
+    if (documentCount > 0) return true;
+    if (lineRelations.length === 0) return false;
+
+    const downstreamStockInIds = [
+      ...new Set(
+        lineRelations
+          .filter(
+            (relation) =>
+              relation.downstreamFamily === DocumentFamily.STOCK_IN &&
+              relation.downstreamDocumentType ===
+                BusinessDocumentType.StockInOrder,
+          )
+          .map((relation) => relation.downstreamDocumentId),
+      ),
+    ];
+    const voidedStockInOrders =
+      downstreamStockInIds.length === 0
+        ? []
+        : await client.stockInOrder.findMany({
+            where: {
+              id: { in: downstreamStockInIds },
+              lifecycleStatus: DocumentLifecycleStatus.VOIDED,
+            },
+            select: { id: true },
+          });
+    const voidedStockInIds = new Set(
+      voidedStockInOrders.map((order) => order.id),
+    );
+
+    return lineRelations.some(
+      (relation) =>
+        !(
+          relation.downstreamFamily === DocumentFamily.STOCK_IN &&
+          relation.downstreamDocumentType ===
+            BusinessDocumentType.StockInOrder &&
+          voidedStockInIds.has(relation.downstreamDocumentId)
+        ),
+    );
+  }
+
+  async createDocumentRelation(
+    data: Prisma.DocumentRelationUncheckedCreateInput,
+    db?: DbClient,
+  ) {
+    return this.db(db).documentRelation.create({ data });
+  }
+
+  async createDocumentLineRelation(
+    data: Prisma.DocumentLineRelationUncheckedCreateInput,
+    db?: DbClient,
+  ) {
+    return this.db(db).documentLineRelation.create({ data });
+  }
+
+  async deactivateDocumentRelationsForOrder(
+    documentId: number,
+    documentType: string,
+    db?: DbClient,
+  ) {
+    return this.db(db).documentRelation.updateMany({
+      where: {
+        downstreamDocumentType: documentType,
+        downstreamDocumentId: documentId,
+        isActive: true,
+      },
+      data: { isActive: false },
+    });
+  }
+
+  async sumActiveSupplierReturnedQtyBySourceLine(
+    sourceOrderId: number,
+    db?: DbClient,
+  ): Promise<Map<number, Prisma.Decimal>> {
+    const client = this.db(db);
+    const lineRelations = await client.documentLineRelation.findMany({
+      where: {
+        relationType: DocumentRelationType.STOCK_IN_RETURN_TO_SUPPLIER,
+        upstreamFamily: DocumentFamily.STOCK_IN,
+        upstreamDocumentType: BusinessDocumentType.StockInOrder,
+        upstreamDocumentId: sourceOrderId,
+      },
+      select: {
+        upstreamLineId: true,
+        downstreamDocumentId: true,
+        linkedQty: true,
+      },
+    });
+
+    if (lineRelations.length === 0) return new Map();
+
+    const downstreamIds = [
+      ...new Set(
+        lineRelations.map((relation) => relation.downstreamDocumentId),
+      ),
+    ];
+    const voidedReturns = await client.stockInOrder.findMany({
+      where: { id: { in: downstreamIds }, lifecycleStatus: "VOIDED" },
+      select: { id: true },
+    });
+    const voidedIds = new Set(voidedReturns.map((order) => order.id));
+
+    const result = new Map<number, Prisma.Decimal>();
+    for (const relation of lineRelations) {
+      if (voidedIds.has(relation.downstreamDocumentId)) continue;
+      const previous =
+        result.get(relation.upstreamLineId) ?? new Prisma.Decimal(0);
+      result.set(
+        relation.upstreamLineId,
+        previous.add(new Prisma.Decimal(relation.linkedQty)),
+      );
+    }
+    return result;
   }
 
   async sumEffectiveAcceptedQtyByRdProcurementLineIds(

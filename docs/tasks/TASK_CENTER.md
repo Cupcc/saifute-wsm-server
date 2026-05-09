@@ -23,6 +23,7 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
+| `task-20260508-inbound-supplier-return.md` | `implemented` | 入库管理新增“退给厂家 / 供应商退货”切片：复用 `stock_in_order` 家族承载退货单，新增来源绑定的 `SUPPLIER_RETURN_OUT` 库存扣减与作废释放回滚；验收单页保留退厂发起和可退来源预览，入库管理二级页面新增 `退货单` / `退货单明细` 用于列表、明细和作废；报表已按入库域 OUT 纳入；自动化验证已通过，目标库 enum SQL 已应用，受控 live API / DB trace 已通过，待补新页面 browser acceptance。 |
 | `task-20260417-1702-material-category-single-level-system-unification.md` | `accepted` | 在 `monthly-reporting F9` 单层分类基线上，把全系统 `material-category` 真源统一为单层分类；`MaterialCategory.parentId` 已从 Prisma schema 与相关合同删除，`master-data` 文档/API/UI、inbound/sales 写侧快照与 focused validation 已完成并收口通过。 |
 | `task-20260417-0930-monthly-reporting-material-category-single-level-alignment.md` | `accepted` | 月度对账 `F9` 物料分类视角 requirement change：取消父级汇总 / 树形路径语义，改为仅按单据行稳定叶子分类快照单层聚合；shared truth、`reporting`、月报前端、导出与 focused validation 已完成，父级手动 review 收口通过。 |
 | `task-20260411-1105-monthly-reporting-domain-first-redesign.md` | `reviewing` | 在 accepted `monthly-reporting Phase 1` 基线上，已完成月度对账领域优先重切实现：先回答仓库总入 / 总出 / 净发生，再按入库、车间、销售、研发项目、RD小仓展开操作、销售项目与主仓到RD交接汇总，当前进入 review / acceptance 收口。 |

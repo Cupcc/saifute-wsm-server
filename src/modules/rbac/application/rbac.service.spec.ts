@@ -1,5 +1,6 @@
 import { Test } from "@nestjs/testing";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import type { RouteNode } from "../domain/rbac.types";
 import { InMemoryRbacRepository } from "../infrastructure/in-memory-rbac.repository";
 import { RbacDictConfigRepository } from "../infrastructure/rbac-dict-config.repository";
 import { RbacPersistenceRepository } from "../infrastructure/rbac-persistence.repository";
@@ -12,6 +13,7 @@ import { RbacService } from "./rbac.service";
 
 describe("RbacService", () => {
   let rbacService: RbacService;
+  let repository: InMemoryRbacRepository;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -49,6 +51,7 @@ describe("RbacService", () => {
     }).compile();
 
     rbacService = moduleRef.get(RbacService);
+    repository = moduleRef.get(InMemoryRbacRepository);
   });
 
   it("should return designed routes for warehouse manager", async () => {
@@ -118,6 +121,39 @@ describe("RbacService", () => {
     expect(routeNames).toContain("RdWorkbench");
   });
 
+  it("should expose menu-managed route title, icon, and order", async () => {
+    repository.updateMenu({
+      menuId: 3310,
+      menuName: "实时库存",
+      orderNum: 9,
+      icon: "search",
+    });
+    repository.updateMenu({
+      menuId: 3430,
+      menuName: "项目台账",
+      orderNum: 0,
+      icon: "education",
+    });
+
+    const routes = await rbacService.getRoutesForUser(1);
+    const stockInventory = findRouteByName(routes, "StockInventory");
+    const salesBusiness = findRouteByName(routes, "SalesBusiness");
+
+    expect(stockInventory?.meta).toMatchObject({
+      title: "实时库存",
+      icon: "search",
+      orderNum: 9,
+    });
+    expect(salesBusiness?.children?.[0]).toMatchObject({
+      name: "SalesProjectLedger",
+      meta: {
+        title: "项目台账",
+        icon: "education",
+        orderNum: 0,
+      },
+    });
+  });
+
   it("should avoid binding rd users to a pseudo workshop scope", async () => {
     const user = await rbacService.getCurrentUser(5);
     expect(user.consoleMode).toBe("rd-subwarehouse");
@@ -155,3 +191,21 @@ describe("RbacService", () => {
     );
   });
 });
+
+function findRouteByName(
+  routes: RouteNode[],
+  routeName: string,
+): RouteNode | undefined {
+  for (const route of routes) {
+    if (route.name === routeName) {
+      return route;
+    }
+    const child = route.children
+      ? findRouteByName(route.children, routeName)
+      : undefined;
+    if (child) {
+      return child;
+    }
+  }
+  return undefined;
+}
