@@ -339,6 +339,7 @@ const data = reactive({
 });
 
 const { queryParams, form, rules } = toRefs(data);
+const ALL_DEPT_TREE_NODE_ID = "__all__";
 
 /** 通过条件过滤节点  */
 const filterNode = (value, data) => {
@@ -366,10 +367,20 @@ function getList() {
 /** 查询部门下拉树结构 */
 function getDeptTree() {
   deptTreeSelect().then((response) => {
-    deptOptions.value = response.data;
+    const deptTree = response.data || [];
+    deptOptions.value = [
+      {
+        id: ALL_DEPT_TREE_NODE_ID,
+        label: "山东赛福特公司",
+        children: deptTree,
+      },
+    ];
     enabledDeptOptions.value = filterDisabledDept(
-      JSON.parse(JSON.stringify(response.data)),
+      JSON.parse(JSON.stringify(deptTree)),
     );
+    nextTick(() => {
+      proxy.$refs.deptTreeRef?.setCurrentKey(ALL_DEPT_TREE_NODE_ID);
+    });
   });
 }
 
@@ -388,7 +399,8 @@ function filterDisabledDept(deptList) {
 
 /** 节点单击事件 */
 function handleNodeClick(data) {
-  queryParams.value.deptId = data.id;
+  queryParams.value.deptId =
+    data.id === ALL_DEPT_TREE_NODE_ID ? undefined : data.id;
   handleQuery();
 }
 
@@ -403,7 +415,7 @@ function resetQuery() {
   dateRange.value = [];
   proxy.resetForm("queryRef");
   queryParams.value.deptId = undefined;
-  proxy.$refs.deptTreeRef.setCurrentKey(null);
+  proxy.$refs.deptTreeRef.setCurrentKey(ALL_DEPT_TREE_NODE_ID);
   handleQuery();
 }
 
