@@ -47,6 +47,13 @@ export class MonthlyMaterialCategoryRepository {
         where: {
           order: {
             lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+            orderType: {
+              in: [
+                StockInOrderType.ACCEPTANCE,
+                StockInOrderType.PRODUCTION_RECEIPT,
+                StockInOrderType.SUPPLIER_RETURN,
+              ],
+            },
             bizDate: { gte: params.start, lte: params.end },
             ...buildMonthlyReportStockScopeWhere(params.stockScope),
             ...(params.workshopId ? { workshopId: params.workshopId } : {}),
@@ -211,16 +218,15 @@ export class MonthlyMaterialCategoryRepository {
       };
 
       return {
-        topicKey:
-          line.order.orderType === StockInOrderType.ACCEPTANCE
-            ? MonthlyReportingTopicKey.ACCEPTANCE_INBOUND
-            : MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
-        direction: MonthlyReportingDirection.IN,
+        topicKey: this.resolveStockInTopicKey(line.order.orderType),
+        direction:
+          line.order.orderType === StockInOrderType.SUPPLIER_RETURN
+            ? MonthlyReportingDirection.OUT
+            : MonthlyReportingDirection.IN,
         documentType: BusinessDocumentType.StockInOrder,
-        documentTypeLabel:
-          line.order.orderType === StockInOrderType.ACCEPTANCE
-            ? "验收单"
-            : "生产入库单",
+        documentTypeLabel: this.resolveStockInDocumentTypeLabel(
+          line.order.orderType,
+        ),
         documentId: line.order.id,
         documentNo: line.order.documentNo,
         documentLineId: line.id,
@@ -356,6 +362,28 @@ export class MonthlyMaterialCategoryRepository {
     });
 
     return [...inboundEntries, ...salesEntries];
+  }
+
+  private resolveStockInTopicKey(orderType: StockInOrderType) {
+    switch (orderType) {
+      case StockInOrderType.ACCEPTANCE:
+        return MonthlyReportingTopicKey.ACCEPTANCE_INBOUND;
+      case StockInOrderType.PRODUCTION_RECEIPT:
+        return MonthlyReportingTopicKey.PRODUCTION_RECEIPT;
+      case StockInOrderType.SUPPLIER_RETURN:
+        return MonthlyReportingTopicKey.SUPPLIER_RETURN;
+    }
+  }
+
+  private resolveStockInDocumentTypeLabel(orderType: StockInOrderType) {
+    switch (orderType) {
+      case StockInOrderType.ACCEPTANCE:
+        return "验收单";
+      case StockInOrderType.PRODUCTION_RECEIPT:
+        return "生产入库单";
+      case StockInOrderType.SUPPLIER_RETURN:
+        return "退厂单";
+    }
   }
 
   private async loadSalesCostAmountByLineId(lineIds: number[]) {

@@ -35,6 +35,7 @@ describe("InboundController", () => {
     controller = new InboundController(
       inboundService as never,
       {} as never,
+      {} as never,
       workshopScopeService as never,
     );
   });

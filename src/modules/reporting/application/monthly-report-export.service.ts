@@ -318,6 +318,7 @@ export class MonthlyReportExportService {
         rows: [
           ["验收入库金额", totals.acceptanceInboundAmount],
           ["生产入库金额", totals.productionReceiptAmount],
+          ["退给厂家金额", totals.supplierReturnAmount],
           ["销售出库金额", totals.salesOutboundAmount],
           ["销售退货金额", totals.salesReturnAmount],
           ["净发生金额", totals.netAmount],
@@ -337,6 +338,7 @@ export class MonthlyReportExportService {
           "异常单据数",
           "验收入库金额",
           "生产入库金额",
+          "退给厂家金额",
           "销售出库金额",
           "销售退货金额",
           "净发生金额",
@@ -350,6 +352,7 @@ export class MonthlyReportExportService {
           item.abnormalDocumentCount,
           item.acceptanceInboundAmount,
           item.productionReceiptAmount,
+          item.supplierReturnAmount,
           item.salesOutboundAmount,
           item.salesReturnAmount,
           item.netAmount,

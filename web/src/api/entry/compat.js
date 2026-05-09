@@ -147,6 +147,8 @@ function mapInboundOrder(order, config, audit = null) {
     updateBy: order.updatedBy ?? "",
     updatedAt: order.updatedAt ?? null,
     auditStatus: toAuditStatus(order.auditStatusSnapshot),
+    lifecycleStatus: order.lifecycleStatus ?? "",
+    inventoryEffectStatus: order.inventoryEffectStatus ?? "",
     auditor: audit?.decidedBy ?? null,
     auditTime: audit?.decidedAt ?? null,
     details: Array.isArray(order.lines)
@@ -268,6 +270,94 @@ export async function getInboundOrder(id, mode = "order") {
   };
 }
 
+export async function getSupplierReturnPreview(sourceOrderId) {
+  const response = await request({
+    url: `${MODE_CONFIG.order.itemUrl}/${sourceOrderId}/supplier-return-preview`,
+    method: "get",
+  });
+  return response.data;
+}
+
+export async function listSupplierReturnOrders(query = {}) {
+  const { limit, offset } = buildPageQuery(query);
+  const { bizDateFrom, bizDateTo } = resolveBizDateRange(query);
+  const response = await request({
+    url: "/api/inbound/supplier-returns",
+    method: "get",
+    params: {
+      documentNo: query.inboundNo,
+      supplierId: query.supplierId,
+      supplierName: query.supplierName,
+      handlerName: query.attn,
+      materialId: query.materialId,
+      materialName: query.materialName,
+      workshopId: query.workshopId,
+      bizDateFrom,
+      bizDateTo,
+      limit,
+      offset,
+    },
+  });
+  const items = Array.isArray(response.data?.items) ? response.data.items : [];
+  const rows = items.map((item) => mapInboundOrder(item, MODE_CONFIG.order));
+  return {
+    rows,
+    total: Number(response.data?.total ?? rows.length),
+  };
+}
+
+export async function listSupplierReturnDetails(query = {}) {
+  const { limit, offset } = buildPageQuery(query);
+  const { bizDateFrom, bizDateTo } = resolveBizDateRange(query);
+  const response = await request({
+    url: "/api/inbound/supplier-returns/details",
+    method: "get",
+    params: {
+      documentNo: query.inboundNo,
+      detailId: query.detailId,
+      supplierId: query.supplierId,
+      supplierName: query.supplierName,
+      handlerName: query.attn,
+      materialId: query.materialId,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specification: query.specification,
+      workshopId: query.workshopId,
+      bizDateFrom,
+      bizDateTo,
+      limit,
+      offset,
+    },
+  });
+
+  const items = Array.isArray(response.data?.items) ? response.data.items : [];
+  const rows = items.map((item) =>
+    mapInboundLine(item, MODE_CONFIG.order, item.order ?? {}),
+  );
+  return {
+    rows,
+    total: Number(response.data?.total ?? rows.length),
+  };
+}
+
+export async function getSupplierReturnOrder(id) {
+  const response = await request({
+    url: `/api/inbound/supplier-returns/${id}`,
+    method: "get",
+  });
+  return {
+    data: mapInboundOrder(response.data, MODE_CONFIG.order),
+  };
+}
+
+export function voidSupplierReturnOrder(id, voidReason) {
+  return request({
+    url: `/api/inbound/supplier-returns/${id}/void`,
+    method: "post",
+    data: { voidReason },
+  });
+}
+
 export async function submitInboundOrder(data, mode = "order") {
   const config = MODE_CONFIG[mode];
   const orderId = data[config.idKey];
@@ -302,6 +392,26 @@ export function voidInboundOrder(data, mode = "order") {
     method: "post",
     data: {
       voidReason: data.voidDescription,
+    },
+  });
+}
+
+export function createSupplierReturnFromInboundOrder(sourceOrderId, data = {}) {
+  const lines = Array.isArray(data.lines) ? data.lines : [];
+
+  return request({
+    url: `${MODE_CONFIG.order.itemUrl}/${sourceOrderId}/supplier-return`,
+    method: "post",
+    data: {
+      bizDate: data.bizDate,
+      handlerPersonnelId: data.handlerPersonnelId,
+      handlerName: data.handlerName,
+      remark: data.remark,
+      lines: lines.map((line) => ({
+        sourceStockInOrderLineId: line.sourceStockInOrderLineId,
+        quantity: toDecimalString(line.quantity),
+        remark: line.remark,
+      })),
     },
   });
 }

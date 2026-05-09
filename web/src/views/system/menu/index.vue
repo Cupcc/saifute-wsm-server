@@ -306,8 +306,10 @@ import {
 } from "@/api/system/menu";
 import IconSelect from "@/components/IconSelect";
 import SvgIcon from "@/components/SvgIcon";
+import usePermissionStore from "@/store/modules/permission";
 
 const { proxy } = getCurrentInstance();
+const permissionStore = usePermissionStore();
 const { sys_show_hide, sys_normal_disable } = proxy.useDict(
   "sys_show_hide",
   "sys_normal_disable",
@@ -455,13 +457,15 @@ function submitForm() {
   proxy.$refs["menuRef"].validate((valid) => {
     if (valid) {
       if (form.value.menuId != null) {
-        updateMenu(form.value).then((response) => {
+        updateMenu(form.value).then(async () => {
+          await refreshPermissionRoutes();
           proxy.$modal.msgSuccess("修改成功");
           open.value = false;
           getList();
         });
       } else {
-        addMenu(form.value).then((response) => {
+        addMenu(form.value).then(async () => {
+          await refreshPermissionRoutes();
           proxy.$modal.msgSuccess("新增成功");
           open.value = false;
           getList();
@@ -471,12 +475,17 @@ function submitForm() {
   });
 }
 
+async function refreshPermissionRoutes() {
+  await permissionStore.generateRoutes();
+}
+
 /** 删除按钮操作 */
 function handleDelete(row) {
   proxy.$modal
     .confirm('是否确认删除名称为"' + row.menuName + '"的数据项?')
     .then(() => delMenu(row.menuId))
-    .then(() => {
+    .then(async () => {
+      await refreshPermissionRoutes();
       getList();
       proxy.$modal.msgSuccess("删除成功");
     })

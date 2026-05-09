@@ -1,8 +1,13 @@
 import {
+  createSupplierReturnFromInboundOrder,
+  getSupplierReturnOrder,
+  getSupplierReturnPreview,
   getInboundOrder,
+  listSupplierReturnOrders,
   listInboundOrders,
   submitInboundOrder,
   voidInboundOrder,
+  voidSupplierReturnOrder,
 } from "./compat";
 
 // 查询入库单列表
@@ -28,6 +33,27 @@ export function updateOrder(data) {
 // 作废入库单
 export function abandonOrder(data) {
   return voidInboundOrder(data, "order");
+}
+
+// 退给厂家
+export function returnOrderToSupplier(inboundId, data) {
+  return createSupplierReturnFromInboundOrder(inboundId, data);
+}
+
+export function getReturnToSupplierPreview(inboundId) {
+  return getSupplierReturnPreview(inboundId);
+}
+
+export function listReturnToSupplierOrders(query) {
+  return listSupplierReturnOrders(query);
+}
+
+export function getReturnToSupplierOrder(id) {
+  return getSupplierReturnOrder(id);
+}
+
+export function voidReturnToSupplierOrder(id, voidReason) {
+  return voidSupplierReturnOrder(id, voidReason);
 }
 
 // 删除入库单

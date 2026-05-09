@@ -140,6 +140,44 @@ describe("ReportingRepository", () => {
     );
   });
 
+  it("maps supplier returns as inbound-domain outbound rows instead of production receipts", async () => {
+    const { repository, stockInOrder } = createMonthlyReportRepository();
+    stockInOrder.findMany.mockResolvedValue([
+      {
+        id: 88,
+        documentNo: "TGC20260508001",
+        bizDate: new Date("2026-05-08T00:00:00.000Z"),
+        createdAt: new Date("2026-05-08T09:00:00.000Z"),
+        orderType: "SUPPLIER_RETURN",
+        totalQty: new Prisma.Decimal(3),
+        totalAmount: new Prisma.Decimal(36),
+        stockScope: { scopeCode: "MAIN", scopeName: "主仓" },
+        workshopId: 192,
+        workshopNameSnapshot: "装备车间",
+        workshop: null,
+      },
+    ] as never);
+
+    const result = await repository.findMonthlyReportEntries({
+      start: new Date("2026-05-01T00:00:00.000Z"),
+      end: new Date("2026-05-31T23:59:59.999Z"),
+      stockScope: "MAIN",
+      workshopId: 192,
+    });
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          topicKey: MonthlyReportingTopicKey.SUPPLIER_RETURN,
+          direction: MonthlyReportingDirection.OUT,
+          documentTypeLabel: "退厂单",
+          documentNo: "TGC20260508001",
+          amount: new Prisma.Decimal(36),
+        }),
+      ]),
+    );
+  });
+
   it("filters rd handoff rows by line project workshop when one order spans multiple workshops", async () => {
     const { repository, rdHandoffOrder } = createMonthlyReportRepository();
     rdHandoffOrder.findMany.mockResolvedValue([
@@ -385,6 +423,92 @@ describe("ReportingRepository", () => {
         }),
       ]),
     );
+  });
+
+  it("maps supplier-return material-category rows as outbound deductions", async () => {
+    const { repository, stockInOrderLine } = createMaterialCategoryRepository();
+    stockInOrderLine.findMany.mockResolvedValue([
+      {
+        id: 990,
+        lineNo: 1,
+        materialId: 100,
+        materialCodeSnapshot: "MAT-RET",
+        materialNameSnapshot: "退厂物料",
+        materialSpecSnapshot: "A",
+        unitCodeSnapshot: "PCS",
+        quantity: new Prisma.Decimal(2),
+        unitPrice: new Prisma.Decimal(12),
+        amount: new Prisma.Decimal(24),
+        materialCategoryIdSnapshot: 11,
+        materialCategoryCodeSnapshot: "CHEM",
+        materialCategoryNameSnapshot: "化工",
+        materialCategoryPathSnapshot: [
+          { id: 11, categoryCode: "CHEM", categoryName: "化工" },
+        ],
+        order: {
+          id: 88,
+          documentNo: "TGC20260508001",
+          bizDate: new Date("2026-05-08T00:00:00.000Z"),
+          createdAt: new Date("2026-05-08T09:00:00.000Z"),
+          orderType: "SUPPLIER_RETURN",
+          stockScope: { scopeCode: "MAIN", scopeName: "主仓" },
+          workshopId: 192,
+          workshopNameSnapshot: "装备车间",
+          workshop: null,
+        },
+      },
+    ] as never);
+
+    const result = await repository.findMonthlyMaterialCategoryEntries({
+      start: new Date("2026-05-01T00:00:00.000Z"),
+      end: new Date("2026-05-31T23:59:59.999Z"),
+      stockScope: "MAIN",
+      workshopId: 192,
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        topicKey: MonthlyReportingTopicKey.SUPPLIER_RETURN,
+        direction: MonthlyReportingDirection.OUT,
+        documentTypeLabel: "退厂单",
+        documentNo: "TGC20260508001",
+        amount: new Prisma.Decimal(24),
+      }),
+    ]);
+  });
+
+  it("nets supplier-return out logs into inbound inventory trends", async () => {
+    const { repository, inventoryLog } = createInventoryReportingRepository();
+    inventoryLog.groupBy
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          bizDate: new Date("2026-05-08T00:00:00.000Z"),
+          _sum: {
+            changeQty: new Prisma.Decimal(2),
+            costAmount: new Prisma.Decimal(24),
+          },
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const result = await repository.findTrendDocuments({
+      dateFrom: new Date("2026-05-01T00:00:00.000Z"),
+      dateTo: new Date("2026-05-31T23:59:59.999Z"),
+      inventoryStockScopeIds: [1],
+      workshopId: 192,
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        sourceType: "INBOUND",
+        totalQty: new Prisma.Decimal(-2),
+        totalAmount: new Prisma.Decimal(-24),
+      }),
+    ]);
   });
 
   it("marks abnormal flags with the configured business timezone", () => {

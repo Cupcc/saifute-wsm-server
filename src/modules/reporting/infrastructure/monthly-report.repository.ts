@@ -213,6 +213,13 @@ export class MonthlyReportRepository {
     const orders = await this.prisma.stockInOrder.findMany({
       where: {
         lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
+        orderType: {
+          in: [
+            StockInOrderType.ACCEPTANCE,
+            StockInOrderType.PRODUCTION_RECEIPT,
+            StockInOrderType.SUPPLIER_RETURN,
+          ],
+        },
         bizDate: { gte: params.start, lte: params.end },
         ...buildMonthlyReportStockScopeWhere(params.stockScope),
         ...(params.workshopId ? { workshopId: params.workshopId } : {}),
@@ -225,16 +232,13 @@ export class MonthlyReportRepository {
     });
 
     return orders.map((order) => ({
-      topicKey:
-        order.orderType === StockInOrderType.ACCEPTANCE
-          ? MonthlyReportingTopicKey.ACCEPTANCE_INBOUND
-          : MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
-      direction: MonthlyReportingDirection.IN,
+      topicKey: this.resolveStockInTopicKey(order.orderType),
+      direction:
+        order.orderType === StockInOrderType.SUPPLIER_RETURN
+          ? MonthlyReportingDirection.OUT
+          : MonthlyReportingDirection.IN,
       documentType: BusinessDocumentType.StockInOrder,
-      documentTypeLabel:
-        order.orderType === StockInOrderType.ACCEPTANCE
-          ? "验收单"
-          : "生产入库单",
+      documentTypeLabel: this.resolveStockInDocumentTypeLabel(order.orderType),
       documentId: order.id,
       documentNo: order.documentNo,
       bizDate: order.bizDate,
@@ -270,6 +274,28 @@ export class MonthlyReportRepository {
       sourceBizDate: null,
       sourceDocumentNo: null,
     }));
+  }
+
+  private resolveStockInTopicKey(orderType: StockInOrderType) {
+    switch (orderType) {
+      case StockInOrderType.ACCEPTANCE:
+        return MonthlyReportingTopicKey.ACCEPTANCE_INBOUND;
+      case StockInOrderType.PRODUCTION_RECEIPT:
+        return MonthlyReportingTopicKey.PRODUCTION_RECEIPT;
+      case StockInOrderType.SUPPLIER_RETURN:
+        return MonthlyReportingTopicKey.SUPPLIER_RETURN;
+    }
+  }
+
+  private resolveStockInDocumentTypeLabel(orderType: StockInOrderType) {
+    switch (orderType) {
+      case StockInOrderType.ACCEPTANCE:
+        return "验收单";
+      case StockInOrderType.PRODUCTION_RECEIPT:
+        return "生产入库单";
+      case StockInOrderType.SUPPLIER_RETURN:
+        return "退厂单";
+    }
   }
 
   private async findSalesMonthlyEntries(params: {

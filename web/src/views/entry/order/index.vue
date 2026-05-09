@@ -170,6 +170,7 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
 	        <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['inbound:order:update']" v-if="scope.row.auditStatus !== '1' && (username === scope.row.createBy || username === 'admin')">修改</el-button>
+	        <el-button link type="warning" icon="RefreshLeft" @click.stop="handleSupplierReturn(scope.row)" v-hasPermi="['inbound:order:create']">退给厂家</el-button>
 	        <el-button link type="primary" icon="Delete" @click.stop="handleDelete(scope.row)" v-hasPermi="['inbound:order:void']" v-if="username === scope.row.createBy || username === 'admin'">作废</el-button>
         </template>
       </el-table-column>
@@ -426,6 +427,86 @@
       </template>
     </el-dialog>
     
+    <!-- 退给厂家对话框 -->
+    <el-dialog title="退给厂家" v-model="supplierReturnOpen" width="980px" append-to-body draggable>
+      <el-form ref="supplierReturnRef" :model="supplierReturnForm" :rules="supplierReturnRules" label-width="90px" v-loading="supplierReturnLoading">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="来源单号">
+              <el-input v-model="supplierReturnForm.sourceInboundNo" disabled />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="供应商">
+              <el-input v-model="supplierReturnForm.supplierName" disabled />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="退货日期" prop="bizDate">
+              <el-date-picker
+                v-model="supplierReturnForm.bizDate"
+                type="date"
+                value-format="YYYY-MM-DD"
+                placeholder="请选择退货日期"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="经办人" prop="handlerName">
+              <combo-input v-model="supplierReturnForm.handlerName" scope="personnel" field="personnelName" placeholder="请选择或输入经办人" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="supplierReturnForm.remark" type="textarea" placeholder="请输入退货原因" />
+        </el-form-item>
+      </el-form>
+
+      <el-table :data="supplierReturnLines" border stripe v-loading="supplierReturnLoading">
+        <el-table-column type="index" width="50" align="center" />
+        <el-table-column label="物料编码" prop="materialCode" min-width="120" show-overflow-tooltip />
+        <el-table-column label="物料名称" prop="materialName" min-width="150" show-overflow-tooltip />
+        <el-table-column label="规格型号" prop="specification" min-width="130" show-overflow-tooltip />
+        <el-table-column label="验收数量" prop="sourceQuantity" width="110" align="right">
+          <template #default="scope">
+            {{ formatQuantity(scope.row.sourceQuantity) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="已退数量" prop="activeReturnedQty" width="110" align="right" />
+        <el-table-column label="来源可用" prop="sourceAvailableQty" width="110" align="right" />
+        <el-table-column label="可退数量" prop="availableQty" width="110" align="right" />
+        <el-table-column label="当前来源单价" prop="unitPrice" width="120" align="right" />
+        <el-table-column label="来源流水" prop="sourceLogId" width="100" align="right" />
+        <el-table-column label="本次退货" prop="quantity" width="160">
+          <template #default="scope">
+            <el-input-number
+              v-model="scope.row.quantity"
+              :min="0"
+              :max="Number(scope.row.availableQty || 0)"
+              :precision="6"
+              controls-position="right"
+              style="width: 100%"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="备注" prop="remark" min-width="180">
+          <template #default="scope">
+            <el-input v-model="scope.row.remark" type="textarea" :autosize="{ minRows: 1 }" placeholder="请输入明细备注" />
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitSupplierReturnForm">确 定</el-button>
+          <el-button @click="cancelSupplierReturn">取 消</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
     <!-- 作废对话框 -->
     <el-dialog title="作废验收单" v-model="abandonOpen" width="500px" append-to-body>
       <el-form ref="abandonRef" :model="abandonForm" :rules="abandonRules">
@@ -474,8 +555,10 @@ import { getLatestDetailByMaterialId, listDetail } from "@/api/entry/detail";
 import {
   abandonOrder,
   addOrder,
+  getReturnToSupplierPreview,
   getOrder,
   listOrder,
+  returnOrderToSupplier,
   updateOrder,
 } from "@/api/entry/order";
 import useAiActionStore from "@/store/modules/aiAction";
@@ -524,6 +607,15 @@ const materialLoading = ref(false);
 const supplierDetail = ref({});
 const supplierOpen = ref(false);
 const dialogLoading = ref(false);
+const supplierReturnOpen = ref(false);
+const supplierReturnLoading = ref(false);
+const supplierReturnForm = ref({});
+const supplierReturnLines = ref([]);
+const supplierReturnRules = {
+  bizDate: [
+    { required: true, message: "退货日期不能为空", trigger: "change" },
+  ],
+};
 
 // 详情数据
 const detailData = ref({});
@@ -601,6 +693,16 @@ function formatRecordDateTime(value) {
   const minute = String(date.getMinutes()).padStart(2, "0");
   const second = String(date.getSeconds()).padStart(2, "0");
   return `${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function formatQuantity(value) {
+  const number = Number(value ?? 0);
+  if (!Number.isFinite(number)) {
+    return value ?? "-";
+  }
+  return Number.isInteger(number)
+    ? String(number)
+    : String(Number(number.toFixed(6)));
 }
 
 function toTimestamp(value) {
@@ -787,6 +889,19 @@ function reset() {
   proxy.resetForm("orderRef");
 }
 
+function resetSupplierReturnForm() {
+  supplierReturnForm.value = {
+    sourceInboundId: null,
+    sourceInboundNo: null,
+    supplierName: null,
+    bizDate: formatDateToYYYYMMDD(new Date()),
+    handlerName: operatorNickname.value || null,
+    remark: null,
+  };
+  supplierReturnLines.value = [];
+  proxy.resetForm("supplierReturnRef");
+}
+
 /** 重置查询条件 */
 function resetQuery() {
   dateRange.value = [];
@@ -947,6 +1062,83 @@ function handleUpdate(row) {
     .finally(() => {
       dialogLoading.value = false;
     });
+}
+
+/** 退给厂家 */
+function handleSupplierReturn(row) {
+  resetSupplierReturnForm();
+  supplierReturnOpen.value = true;
+  supplierReturnLoading.value = true;
+  getReturnToSupplierPreview(row.inboundId)
+    .then((preview) => {
+      const orderData = preview.sourceOrder || {};
+      supplierReturnForm.value = {
+        sourceInboundId: orderData.id,
+        sourceInboundNo: orderData.documentNo,
+        supplierName: orderData.supplierName,
+        bizDate: formatDateToYYYYMMDD(new Date()),
+        handlerName: operatorNickname.value || orderData.handlerName || null,
+        remark: "",
+      };
+      supplierReturnLines.value = (preview.lines || []).map((line) => ({
+        sourceStockInOrderLineId: line.sourceStockInOrderLineId,
+        materialCode: line.materialCode,
+        materialName: line.materialName,
+        specification: line.materialSpec || "",
+        sourceQuantity: Number(line.sourceQuantity || 0),
+        activeReturnedQty: Number(line.activeReturnedQty || 0),
+        sourceAvailableQty: Number(line.sourceAvailableQty || 0),
+        availableQty: Number(line.availableQty || 0),
+        unitPrice: line.currentUnitCost,
+        sourceLogId: line.sourceLogId,
+        quantity: 0,
+        remark: "",
+      }));
+    })
+    .finally(() => {
+      supplierReturnLoading.value = false;
+    });
+}
+
+function cancelSupplierReturn() {
+  supplierReturnOpen.value = false;
+  resetSupplierReturnForm();
+}
+
+function submitSupplierReturnForm() {
+  proxy.$refs["supplierReturnRef"].validate((valid) => {
+    if (!valid) {
+      return;
+    }
+
+    const selectedLines = supplierReturnLines.value.filter(
+      (line) => Number(line.quantity || 0) > 0,
+    );
+    if (selectedLines.length === 0) {
+      proxy.$modal.msgError("至少需要填写一条退货数量");
+      return;
+    }
+
+    supplierReturnLoading.value = true;
+    returnOrderToSupplier(supplierReturnForm.value.sourceInboundId, {
+      bizDate: supplierReturnForm.value.bizDate,
+      handlerName: supplierReturnForm.value.handlerName,
+      remark: supplierReturnForm.value.remark,
+      lines: selectedLines.map((line) => ({
+        sourceStockInOrderLineId: line.sourceStockInOrderLineId,
+        quantity: line.quantity,
+        remark: line.remark,
+      })),
+    })
+      .then(() => {
+        supplierReturnOpen.value = false;
+        proxy.$modal.msgSuccess("退货成功");
+        getList();
+      })
+      .finally(() => {
+        supplierReturnLoading.value = false;
+      });
+  });
 }
 
 /** 提交按钮 */

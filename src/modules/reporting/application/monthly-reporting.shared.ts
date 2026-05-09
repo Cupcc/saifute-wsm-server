@@ -22,6 +22,7 @@ export enum MonthlyReportingViewMode {
 export enum MonthlyReportingTopicKey {
   ACCEPTANCE_INBOUND = "ACCEPTANCE_INBOUND",
   PRODUCTION_RECEIPT = "PRODUCTION_RECEIPT",
+  SUPPLIER_RETURN = "SUPPLIER_RETURN",
   SALES_OUTBOUND = "SALES_OUTBOUND",
   SALES_RETURN = "SALES_RETURN",
   WORKSHOP_PICK = "WORKSHOP_PICK",
@@ -105,6 +106,11 @@ export const MONTHLY_REPORTING_TOPIC_META: Record<
     domainKey: MonthlyReportingDomainKey.INBOUND,
     label: "调价转出",
   },
+  [MonthlyReportingTopicKey.SUPPLIER_RETURN]: {
+    order: 45,
+    domainKey: MonthlyReportingDomainKey.INBOUND,
+    label: "退给厂家",
+  },
   [MonthlyReportingTopicKey.WORKSHOP_PICK]: {
     order: 50,
     domainKey: MonthlyReportingDomainKey.WORKSHOP,
@@ -174,6 +180,7 @@ export const MONTHLY_REPORTING_MATERIAL_CATEGORY_TOPIC_OPTIONS: ReadonlyArray<Mo
   [
     MonthlyReportingTopicKey.ACCEPTANCE_INBOUND,
     MonthlyReportingTopicKey.PRODUCTION_RECEIPT,
+    MonthlyReportingTopicKey.SUPPLIER_RETURN,
     MonthlyReportingTopicKey.SALES_OUTBOUND,
     MonthlyReportingTopicKey.SALES_RETURN,
   ];

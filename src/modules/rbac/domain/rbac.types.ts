@@ -16,6 +16,13 @@ export interface RouteNode {
   path: string;
   component: string;
   permissions: string[];
+  hidden?: boolean;
+  query?: string;
+  meta?: {
+    title?: string;
+    icon?: string;
+    orderNum?: number;
+  };
   children?: RouteNode[];
 }
 

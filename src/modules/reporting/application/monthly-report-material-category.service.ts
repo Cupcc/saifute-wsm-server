@@ -30,6 +30,7 @@ export interface MonthlyReportMaterialCategorySummaryTotals {
   abnormalDocumentCount: number;
   acceptanceInboundAmount: string;
   productionReceiptAmount: string;
+  supplierReturnAmount: string;
   salesOutboundAmount: string;
   salesReturnAmount: string;
   netAmount: string;
@@ -46,6 +47,7 @@ export interface MonthlyReportMaterialCategorySummaryItem {
   abnormalDocumentCount: number;
   acceptanceInboundAmount: string;
   productionReceiptAmount: string;
+  supplierReturnAmount: string;
   salesOutboundAmount: string;
   salesReturnAmount: string;
   netAmount: string;
@@ -178,6 +180,9 @@ export class MonthlyReportMaterialCategoryService {
         const productionRows = item.entries.filter(
           (entry) => entry.topicKey === "PRODUCTION_RECEIPT",
         );
+        const supplierReturnRows = item.entries.filter(
+          (entry) => entry.topicKey === "SUPPLIER_RETURN",
+        );
         const outboundRows = item.entries.filter(
           (entry) => entry.topicKey === "SALES_OUTBOUND",
         );
@@ -200,6 +205,9 @@ export class MonthlyReportMaterialCategoryService {
         const productionReceiptAmount = sumDecimals(
           productionRows.map((entry) => entry.amount),
         );
+        const supplierReturnAmount = sumDecimals(
+          supplierReturnRows.map((entry) => entry.amount),
+        );
         const salesOutboundAmount = sumDecimals(
           outboundRows.map((entry) => entry.amount),
         );
@@ -217,12 +225,14 @@ export class MonthlyReportMaterialCategoryService {
           abnormalDocumentCount: abnormalDocumentKeys.size,
           acceptanceInboundAmount: formatMoney(acceptanceInboundAmount),
           productionReceiptAmount: formatMoney(productionReceiptAmount),
+          supplierReturnAmount: formatMoney(supplierReturnAmount),
           salesOutboundAmount: formatMoney(salesOutboundAmount),
           salesReturnAmount: formatMoney(salesReturnAmount),
           netAmount: formatMoney(
             acceptanceInboundAmount
               .add(productionReceiptAmount)
               .add(salesReturnAmount)
+              .sub(supplierReturnAmount)
               .sub(salesOutboundAmount),
           ),
           totalCost: formatMoney(
@@ -259,6 +269,11 @@ export class MonthlyReportMaterialCategoryService {
         .filter((entry) => entry.topicKey === "SALES_OUTBOUND")
         .map((entry) => entry.amount),
     );
+    const supplierReturnAmount = sumDecimals(
+      entries
+        .filter((entry) => entry.topicKey === "SUPPLIER_RETURN")
+        .map((entry) => entry.amount),
+    );
     const salesReturnAmount = sumDecimals(
       entries
         .filter((entry) => entry.topicKey === "SALES_RETURN")
@@ -271,12 +286,14 @@ export class MonthlyReportMaterialCategoryService {
       abnormalDocumentCount: abnormalDocumentKeys.size,
       acceptanceInboundAmount: formatMoney(acceptanceInboundAmount),
       productionReceiptAmount: formatMoney(productionReceiptAmount),
+      supplierReturnAmount: formatMoney(supplierReturnAmount),
       salesOutboundAmount: formatMoney(salesOutboundAmount),
       salesReturnAmount: formatMoney(salesReturnAmount),
       netAmount: formatMoney(
         acceptanceInboundAmount
           .add(productionReceiptAmount)
           .add(salesReturnAmount)
+          .sub(supplierReturnAmount)
           .sub(salesOutboundAmount),
       ),
       totalCost: formatMoney(sumDecimals(entries.map((entry) => entry.cost))),

@@ -13,9 +13,11 @@ import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import { WorkshopScopeService } from "../../rbac/application/workshop-scope.service";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { InboundService } from "../application/inbound.service";
+import { InboundSupplierReturnService } from "../application/inbound-supplier-return.service";
 import { StockInPriceCorrectionService } from "../application/stock-in-price-correction.service";
 import { CreateInboundOrderDto } from "../dto/create-inbound-order.dto";
 import { CreateStockInPriceCorrectionOrderDto } from "../dto/create-stock-in-price-correction-order.dto";
+import { CreateSupplierReturnDto } from "../dto/create-supplier-return.dto";
 import { QueryInboundOrderDto } from "../dto/query-inbound-order.dto";
 import { QueryStockInPriceCorrectionOrderDto } from "../dto/query-stock-in-price-correction-order.dto";
 import { UpdateInboundOrderDto } from "../dto/update-inbound-order.dto";
@@ -25,6 +27,7 @@ import { VoidInboundOrderDto } from "../dto/void-inbound-order.dto";
 export class InboundController {
   constructor(
     private readonly inboundService: InboundService,
+    private readonly inboundSupplierReturnService: InboundSupplierReturnService,
     private readonly stockInPriceCorrectionService: StockInPriceCorrectionService,
     private readonly workshopScopeService: WorkshopScopeService,
   ) {}
@@ -111,6 +114,55 @@ export class InboundController {
   }
 
   @Permissions("inbound:order:list")
+  @Get("supplier-returns")
+  async listSupplierReturns(
+    @Query() query: QueryInboundOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
+    return this.inboundSupplierReturnService.listSupplierReturns({
+      ...query,
+      stockScopeId: inventoryScope?.stockScopeId,
+    });
+  }
+
+  @Permissions("inbound:order:list")
+  @Get("supplier-returns/details")
+  async listSupplierReturnLines(
+    @Query() query: QueryInboundOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const inventoryScope =
+      await this.workshopScopeService.resolveInventoryQueryScope(
+        user,
+        query.workshopId,
+      );
+    return this.inboundSupplierReturnService.listSupplierReturnLines({
+      ...query,
+      stockScopeId: inventoryScope?.stockScopeId,
+    });
+  }
+
+  @Permissions("inbound:order:list")
+  @Get("supplier-returns/:id")
+  async getSupplierReturn(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const order =
+      await this.inboundSupplierReturnService.getSupplierReturnById(id);
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
+      user,
+      order.stockScopeId,
+    );
+    return order;
+  }
+
+  @Permissions("inbound:order:list")
   @Get("orders/:id")
   async getOrder(
     @Param("id", ParseIntPipe) id: number,
@@ -125,6 +177,20 @@ export class InboundController {
   }
 
   @Permissions("inbound:order:create")
+  @Get("orders/:id/supplier-return-preview")
+  async getSupplierReturnPreview(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const sourceOrder = await this.inboundService.getOrderById(id);
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
+      user,
+      sourceOrder.stockScopeId,
+    );
+    return this.inboundSupplierReturnService.getSupplierReturnPreview(id);
+  }
+
+  @Permissions("inbound:order:create")
   @Post("orders")
   async createOrder(
     @Body() dto: CreateInboundOrderDto,
@@ -135,6 +201,25 @@ export class InboundController {
       dto,
     );
     return this.inboundService.createOrder(scopedDto, user?.userId?.toString());
+  }
+
+  @Permissions("inbound:order:create")
+  @Post("orders/:id/supplier-return")
+  async createSupplierReturn(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: CreateSupplierReturnDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const sourceOrder = await this.inboundService.getOrderById(id);
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
+      user,
+      sourceOrder.stockScopeId,
+    );
+    return this.inboundSupplierReturnService.createSupplierReturn(
+      id,
+      dto,
+      user?.userId?.toString(),
+    );
   }
 
   @Permissions("inbound:order:update")
@@ -173,6 +258,26 @@ export class InboundController {
       order.stockScopeId,
     );
     return this.inboundService.voidOrder(
+      id,
+      dto.voidReason,
+      user?.userId?.toString(),
+    );
+  }
+
+  @Permissions("inbound:order:void")
+  @Post("supplier-returns/:id/void")
+  async voidSupplierReturn(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: VoidInboundOrderDto,
+    @CurrentUser() user?: SessionUserSnapshot,
+  ) {
+    const order =
+      await this.inboundSupplierReturnService.getSupplierReturnById(id);
+    await this.workshopScopeService.assertInventoryStockScopeAccess(
+      user,
+      order.stockScopeId,
+    );
+    return this.inboundSupplierReturnService.voidSupplierReturn(
       id,
       dto.voidReason,
       user?.userId?.toString(),
