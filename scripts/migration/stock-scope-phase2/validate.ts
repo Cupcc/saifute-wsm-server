@@ -25,7 +25,7 @@ async function getScopeTypeColumnPresence(connection: Queryable) {
       FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
         AND TABLE_NAME = 'stock_scope'
-        AND COLUMN_NAME = 'scopeType'
+        AND COLUMN_NAME = 'scope_type'
     `,
   );
 }
@@ -33,11 +33,11 @@ async function getScopeTypeColumnPresence(connection: Queryable) {
 async function getScopePresence(connection: Queryable) {
   return connection.query<Array<{ scopeCode: string; total: number }>>(
     `
-      SELECT scopeCode, COUNT(*) AS total
+      SELECT scope_code AS scopeCode, COUNT(*) AS total
       FROM stock_scope
-      WHERE scopeCode IN ('MAIN', 'RD_SUB')
-      GROUP BY scopeCode
-      ORDER BY scopeCode ASC
+      WHERE scope_code IN ('MAIN', 'RD_SUB')
+      GROUP BY scope_code
+      ORDER BY scope_code ASC
     `,
   );
 }
@@ -47,34 +47,34 @@ async function getNullCounts(connection: Queryable) {
     Array<{ tableName: string; totalRows: number; nullRows: number }>
   >(
     `
-      SELECT 'inventory_balance' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'inventory_balance' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM inventory_balance
       UNION ALL
-      SELECT 'inventory_log' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'inventory_log' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM inventory_log
       UNION ALL
-      SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM factory_number_reservation
       UNION ALL
-      SELECT 'stock_in_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'stock_in_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM stock_in_order
       UNION ALL
-      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM sales_stock_order
       UNION ALL
-      SELECT 'workshop_material_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'workshop_material_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM workshop_material_order
       UNION ALL
-      SELECT 'rd_project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_project
       UNION ALL
-      SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN sourceStockScopeId IS NULL OR targetStockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN source_stock_scope_id IS NULL OR target_stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_handoff_order
       UNION ALL
-      SELECT 'rd_procurement_request' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_procurement_request' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_procurement_request
       UNION ALL
-      SELECT 'rd_stocktake_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_stocktake_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_stocktake_order
     `,
   );
@@ -85,12 +85,12 @@ async function getBalanceConflicts(connection: Queryable) {
     Array<{ materialId: number; stockScopeId: number; duplicateCount: number }>
   >(
     `
-      SELECT materialId, stockScopeId, COUNT(*) AS duplicateCount
+      SELECT material_id AS materialId, stock_scope_id AS stockScopeId, COUNT(*) AS duplicateCount
       FROM inventory_balance
-      WHERE stockScopeId IS NOT NULL
-      GROUP BY materialId, stockScopeId
+      WHERE stock_scope_id IS NOT NULL
+      GROUP BY material_id, stock_scope_id
       HAVING COUNT(*) > 1
-      ORDER BY duplicateCount DESC, materialId ASC
+      ORDER BY duplicateCount DESC, material_id ASC
     `,
   );
 }
@@ -100,13 +100,13 @@ async function getMainOrderDrift(connection: Queryable) {
     `
       SELECT 'stock_in_order' AS tableName, COUNT(*) AS unexpectedRows
       FROM stock_in_order sio
-      JOIN stock_scope ss ON ss.id = sio.stockScopeId
-      WHERE ss.scopeCode <> 'MAIN'
+      JOIN stock_scope ss ON ss.id = sio.stock_scope_id
+      WHERE ss.scope_code <> 'MAIN'
       UNION ALL
       SELECT 'sales_stock_order' AS tableName, COUNT(*) AS unexpectedRows
       FROM sales_stock_order cso
-      JOIN stock_scope ss ON ss.id = cso.stockScopeId
-      WHERE ss.scopeCode <> 'MAIN'
+      JOIN stock_scope ss ON ss.id = cso.stock_scope_id
+      WHERE ss.scope_code <> 'MAIN'
     `,
   );
 }
@@ -122,20 +122,20 @@ async function getWorkshopMaterialDrift(connection: Queryable) {
   >(
     `
       SELECT
-        wmo.orderType AS orderType,
-        w.workshopName AS workshopName,
-        ss.scopeCode AS scopeCode,
+        wmo.order_type AS orderType,
+        w.workshop_name AS workshopName,
+        ss.scope_code AS scopeCode,
         COUNT(*) AS totalRows
       FROM workshop_material_order wmo
-      JOIN workshop w ON w.id = wmo.workshopId
-      JOIN stock_scope ss ON ss.id = wmo.stockScopeId
+      JOIN workshop w ON w.id = wmo.workshop_id
+      JOIN stock_scope ss ON ss.id = wmo.stock_scope_id
       WHERE
-        (wmo.orderType IN ('PICK', 'RETURN') AND ss.scopeCode <> 'MAIN')
+        (wmo.order_type IN ('PICK', 'RETURN') AND ss.scope_code <> 'MAIN')
         OR
-        (wmo.orderType = 'SCRAP' AND w.workshopName = '研发小仓' AND ss.scopeCode <> 'RD_SUB')
+        (wmo.order_type = 'SCRAP' AND w.workshop_name = '研发小仓' AND ss.scope_code <> 'RD_SUB')
         OR
-        (wmo.orderType = 'SCRAP' AND w.workshopName = '主仓' AND ss.scopeCode <> 'MAIN')
-      GROUP BY wmo.orderType, w.workshopName, ss.scopeCode
+        (wmo.order_type = 'SCRAP' AND w.workshop_name = '主仓' AND ss.scope_code <> 'MAIN')
+      GROUP BY wmo.order_type, w.workshop_name, ss.scope_code
     `,
   );
 }
@@ -151,39 +151,39 @@ async function getRdDrift(connection: Queryable) {
     `
       SELECT
         'rd_procurement_request' AS tableName,
-        ss.scopeCode AS detail,
+        ss.scope_code AS detail,
         COUNT(*) AS totalRows
       FROM rd_procurement_request rpr
-      JOIN stock_scope ss ON ss.id = rpr.stockScopeId
-      WHERE ss.scopeCode <> 'RD_SUB'
-      GROUP BY ss.scopeCode
+      JOIN stock_scope ss ON ss.id = rpr.stock_scope_id
+      WHERE ss.scope_code <> 'RD_SUB'
+      GROUP BY ss.scope_code
       UNION ALL
       SELECT
         'rd_stocktake_order' AS tableName,
-        ss.scopeCode AS detail,
+        ss.scope_code AS detail,
         COUNT(*) AS totalRows
       FROM rd_stocktake_order rso
-      JOIN stock_scope ss ON ss.id = rso.stockScopeId
-      WHERE ss.scopeCode <> 'RD_SUB'
-      GROUP BY ss.scopeCode
+      JOIN stock_scope ss ON ss.id = rso.stock_scope_id
+      WHERE ss.scope_code <> 'RD_SUB'
+      GROUP BY ss.scope_code
       UNION ALL
       SELECT
         'rd_handoff_order.source' AS tableName,
-        ss.scopeCode AS detail,
+        ss.scope_code AS detail,
         COUNT(*) AS totalRows
       FROM rd_handoff_order rho
-      JOIN stock_scope ss ON ss.id = rho.sourceStockScopeId
-      WHERE ss.scopeCode <> 'MAIN'
-      GROUP BY ss.scopeCode
+      JOIN stock_scope ss ON ss.id = rho.source_stock_scope_id
+      WHERE ss.scope_code <> 'MAIN'
+      GROUP BY ss.scope_code
       UNION ALL
       SELECT
         'rd_handoff_order.target' AS tableName,
-        ss.scopeCode AS detail,
+        ss.scope_code AS detail,
         COUNT(*) AS totalRows
       FROM rd_handoff_order rho
-      JOIN stock_scope ss ON ss.id = rho.targetStockScopeId
-      WHERE ss.scopeCode <> 'RD_SUB'
-      GROUP BY ss.scopeCode
+      JOIN stock_scope ss ON ss.id = rho.target_stock_scope_id
+      WHERE ss.scope_code <> 'RD_SUB'
+      GROUP BY ss.scope_code
     `,
   );
 }
@@ -284,7 +284,7 @@ async function main(): Promise<void> {
         validationIssues.push({
           severity: "blocker",
           reason:
-            "rd-subwarehouse persistence rows contain stockScopeId values that do not match current business rules.",
+            "rd-subwarehouse persistence rows contain stock_scope_id values that do not match current business rules.",
           details: { sample: rdDrift.slice(0, 20) },
         });
       }

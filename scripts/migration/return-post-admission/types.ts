@@ -4,8 +4,7 @@ export const POST_ADMISSION_MIGRATION_BATCH = "batch3f-return-post-admission";
 
 export const SALES_RETURN_ADMISSION_BATCH =
   "batch3c-outbound-sales-return-recoverable";
-export const WORKSHOP_RETURN_ADMISSION_BATCH =
-  "batch3e-workshop-return-recoverable";
+export const WORKSHOP_RETURN_ADMISSION_BATCH = "batch3e-workshop-return-formal";
 
 export type RelationClassification = "proven" | "unresolved" | "ambiguous";
 
@@ -61,6 +60,7 @@ export interface AdmittedLineRow {
   lineNo: number;
   materialId: number;
   quantity: string;
+  stockScopeId?: number | null;
   sourceDocumentType: string | null;
   sourceDocumentId: number | null;
   sourceDocumentLineId: number | null;
@@ -79,6 +79,7 @@ export interface UpstreamOutboundLineRow {
   lineNo: number;
   materialId: number;
   quantity: string;
+  stockScopeId?: number | null;
   documentNo: string;
   bizDate: string;
   workshopId: number;
@@ -93,6 +94,7 @@ export interface UpstreamPickLineRow {
   lineNo: number;
   materialId: number;
   quantity: string;
+  stockScopeId?: number | null;
   documentNo: string;
   bizDate: string;
   workshopId: number;
@@ -106,6 +108,7 @@ export interface AdmittedStockInLineRow {
   lineNo: number;
   materialId: number;
   quantity: string;
+  stockScopeId?: number | null;
   documentNo: string;
   orderType: string;
   bizDate: string;
@@ -188,7 +191,9 @@ export interface InventoryLogInsert {
   idempotencyKey: string;
   balanceKey: string;
   materialId: number;
+  stockScopeId: number;
   workshopId: number;
+  bizDate: string;
   direction: StockDirectionValue;
   operationType: InventoryOperationTypeValue;
   businessModule: string;
@@ -205,6 +210,7 @@ export interface InventoryLogInsert {
 export interface InventoryBalanceRecord {
   balanceKey: string;
   materialId: number;
+  stockScopeId: number;
   workshopId: number;
   quantityOnHand: string;
 }

@@ -187,6 +187,7 @@ export interface SalesStockOrderLineTargetInsert {
   unitCodeSnapshot: string;
   quantity: string;
   unitPrice: string;
+  selectedUnitCost: string;
   amount: string;
   startNumber: null;
   endNumber: null;

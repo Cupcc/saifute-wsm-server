@@ -383,32 +383,32 @@ async function getForbiddenTableCounts(connection: {
     `
       SELECT 'document_relation' AS tableName, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'SALES_STOCK'
-         OR downstreamFamily = 'SALES_STOCK'
-         OR upstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'SALES_STOCK'
+         OR downstream_family = 'SALES_STOCK'
+         OR upstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS tableName, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'SALES_STOCK'
-         OR downstreamFamily = 'SALES_STOCK'
-         OR upstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'SALES_STOCK'
+         OR downstream_family = 'SALES_STOCK'
+         OR upstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'approval_document' AS tableName, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'SALES_STOCK' OR documentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE document_family = 'SALES_STOCK' OR document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_balance' AS tableName, COUNT(*) AS total
       FROM inventory_balance
       UNION ALL
       SELECT 'inventory_log' AS tableName, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS tableName, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
     `,
   );
 
@@ -427,42 +427,42 @@ async function getReservationRowsByTargetCode(
     `
       SELECT
         CASE
-          WHEN order_row.documentNo IS NULL
-            OR line_row.lineNo IS NULL
-            OR reservation_row.startNumber IS NULL
-            OR reservation_row.endNumber IS NULL
+          WHEN order_row.document_no IS NULL
+            OR line_row.line_no IS NULL
+            OR reservation_row.start_number IS NULL
+            OR reservation_row.end_number IS NULL
           THEN NULL
           ELSE CONCAT(
-            order_row.documentNo,
+            order_row.document_no,
             '#',
-            line_row.lineNo,
+            line_row.line_no,
             '@',
-            reservation_row.startNumber,
+            reservation_row.start_number,
             '-',
-            reservation_row.endNumber
+            reservation_row.end_number
           )
         END AS targetCode,
-        reservation_row.materialId AS materialId,
-        reservation_row.workshopId AS workshopId,
-        reservation_row.businessDocumentType AS businessDocumentType,
-        reservation_row.businessDocumentId AS businessDocumentId,
-        reservation_row.businessDocumentLineId AS businessDocumentLineId,
-        reservation_row.startNumber AS startNumber,
-        reservation_row.endNumber AS endNumber,
+        reservation_row.material_id AS materialId,
+        reservation_row.workshop_id AS workshopId,
+        reservation_row.business_document_type AS businessDocumentType,
+        reservation_row.business_document_id AS businessDocumentId,
+        reservation_row.business_document_line_id AS businessDocumentLineId,
+        reservation_row.start_number AS startNumber,
+        reservation_row.end_number AS endNumber,
         reservation_row.status AS status,
-        reservation_row.reservedAt AS reservedAt,
-        reservation_row.releasedAt AS releasedAt,
-        reservation_row.createdBy AS createdBy,
-        reservation_row.createdAt AS createdAt,
-        reservation_row.updatedBy AS updatedBy,
-        reservation_row.updatedAt AS updatedAt
+        reservation_row.reserved_at AS reservedAt,
+        reservation_row.released_at AS releasedAt,
+        reservation_row.created_by AS createdBy,
+        reservation_row.created_at AS createdAt,
+        reservation_row.updated_by AS updatedBy,
+        reservation_row.updated_at AS updatedAt
       FROM ${TARGET_TABLES.reservation} reservation_row
       INNER JOIN migration_staging.${MAP_TABLES.reservation} map_row
         ON map_row.target_id = reservation_row.id
       LEFT JOIN ${TARGET_TABLES.line} line_row
-        ON line_row.id = reservation_row.businessDocumentLineId
+        ON line_row.id = reservation_row.business_document_line_id
       LEFT JOIN sales_stock_order order_row
-        ON order_row.id = line_row.orderId
+        ON order_row.id = line_row.order_id
       WHERE map_row.migration_batch = ?
       ORDER BY reservation_row.id ASC
     `,
@@ -490,17 +490,17 @@ async function getLineRowsById(
       SELECT
         line_row.id AS targetLineId,
         CASE
-          WHEN order_row.documentNo IS NULL OR line_row.lineNo IS NULL THEN NULL
-          ELSE CONCAT(order_row.documentNo, '#', line_row.lineNo)
+          WHEN order_row.document_no IS NULL OR line_row.line_no IS NULL THEN NULL
+          ELSE CONCAT(order_row.document_no, '#', line_row.line_no)
         END AS targetLineCode,
-        line_row.startNumber AS startNumber,
-        line_row.endNumber AS endNumber,
-        line_row.sourceDocumentType AS sourceDocumentType,
-        line_row.sourceDocumentId AS sourceDocumentId,
-        line_row.sourceDocumentLineId AS sourceDocumentLineId
+        line_row.start_number AS startNumber,
+        line_row.end_number AS endNumber,
+        line_row.source_document_type AS sourceDocumentType,
+        line_row.source_document_id AS sourceDocumentId,
+        line_row.source_document_line_id AS sourceDocumentLineId
       FROM ${TARGET_TABLES.line} line_row
       LEFT JOIN sales_stock_order order_row
-        ON order_row.id = line_row.orderId
+        ON order_row.id = line_row.order_id
       WHERE line_row.id IN (${placeholders})
       ORDER BY line_row.id ASC
     `,

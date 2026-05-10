@@ -31,6 +31,9 @@ import type {
 import { STOCK_IN_MIGRATION_BATCH } from "./types";
 
 const DOCUMENT_NO_MAX_LENGTH = 64;
+const CONFIRMED_ERRONEOUS_STOCK_IN_ORDER_KEYS = new Set([
+  buildLegacyKey("saifute_into_order", 306),
+]);
 
 interface ParsedDecimal {
   sign: 1 | -1;
@@ -689,7 +692,7 @@ function resolveDependencies(
           legacyTable: order.legacyTable,
           legacyId: order.legacyId,
           reason:
-            "Handler personnel name is missing from the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId.",
+            "Handler personnel name is missing from the migrated personnel snapshot; preserving handler_name_snapshot without handler_personnel_id.",
           details: {
             handlerName: normalizedHandlerName,
           },
@@ -846,6 +849,12 @@ export function buildStockInMigrationPlan(
     const targetDocumentNoCandidate =
       documentNoByOrderKey.get(orderKey) ?? sourceDocumentNo ?? null;
     const exclusionReasons: string[] = [];
+
+    if (CONFIRMED_ERRONEOUS_STOCK_IN_ORDER_KEYS.has(orderKey)) {
+      exclusionReasons.push(
+        "Warehouse confirmed this legacy stock-in offset document is erroneous; exclude it from migration and inventory replay.",
+      );
+    }
 
     if (!sourceDocumentNo) {
       exclusionReasons.push("Document number is required.");

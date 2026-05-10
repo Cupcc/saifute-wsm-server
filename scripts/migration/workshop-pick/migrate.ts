@@ -27,6 +27,7 @@ import {
 
 const WORKSHOP_MATERIAL_DOCUMENT_TYPE =
   BusinessDocumentType.WorkshopMaterialOrder;
+
 import { executeWorkshopPickPlan, MAP_TABLES, TARGET_TABLES } from "./writer";
 
 interface StoredMapRow {
@@ -134,7 +135,7 @@ async function getOrderMapRows(
         map_row.target_table AS targetTable,
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
-        order_row.documentNo AS actualTargetCode
+        order_row.document_no AS actualTargetCode
       FROM migration_staging.${MAP_TABLES.order} map_row
       LEFT JOIN ${TARGET_TABLES.order} order_row
         ON order_row.id = map_row.target_id
@@ -160,14 +161,14 @@ async function getLineMapRows(
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
         CASE
-          WHEN order_row.documentNo IS NULL OR line_row.lineNo IS NULL THEN NULL
-          ELSE CONCAT(order_row.documentNo, '#', line_row.lineNo)
+          WHEN order_row.document_no IS NULL OR line_row.line_no IS NULL THEN NULL
+          ELSE CONCAT(order_row.document_no, '#', line_row.line_no)
         END AS actualTargetCode
       FROM migration_staging.${MAP_TABLES.line} map_row
       LEFT JOIN ${TARGET_TABLES.line} line_row
         ON line_row.id = map_row.target_id
       LEFT JOIN ${TARGET_TABLES.order} order_row
-        ON order_row.id = line_row.orderId
+        ON order_row.id = line_row.order_id
       WHERE map_row.migration_batch = ?
       ORDER BY map_row.legacy_table ASC, map_row.legacy_id ASC
     `,
@@ -258,36 +259,36 @@ async function getWorkshopPickDownstreamConsumerCounts(connection: {
     `
       SELECT 'approval_document' AS consumer, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'WORKSHOP_MATERIAL' OR documentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE document_family = 'WORKSHOP_MATERIAL' OR document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_relation' AS consumer, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
-         OR downstreamFamily = 'WORKSHOP_MATERIAL'
-         OR upstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'WORKSHOP_MATERIAL'
+         OR downstream_family = 'WORKSHOP_MATERIAL'
+         OR upstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS consumer, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
-         OR downstreamFamily = 'WORKSHOP_MATERIAL'
-         OR upstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'WORKSHOP_MATERIAL'
+         OR downstream_family = 'WORKSHOP_MATERIAL'
+         OR upstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'factory_number_reservation' AS consumer, COUNT(*) AS total
       FROM factory_number_reservation
-      WHERE businessDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_balance' AS consumer, COUNT(*) AS total
       FROM inventory_balance
       UNION ALL
       SELECT 'inventory_log' AS consumer, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS consumer, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
     `,
   );
 

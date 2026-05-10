@@ -112,7 +112,7 @@ describe("workshop-return-finalize execute guard", () => {
       const blockers = buildDisallowedReasonBlockers({
         pendingRows: [
           makePendingDbRow(12, 12),
-          makePendingDbRow(13, 14, "multiple-upstream-pick-line-candidates"),
+          makePendingDbRow(13, 14, "upstream-workshop-mismatch"),
         ],
       });
 

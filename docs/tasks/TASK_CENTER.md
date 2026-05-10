@@ -23,6 +23,7 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
+| `task-20260509-full-legacy-import-reset-and-replay.md` | `replay-executed-validated` | `LEGACY_DATABASE_URL` -> `DATABASE_URL` 全量导入已执行到目标库当前 snake_case schema：已 seed `stock_scope`、初始化 staging、导入主数据与业务单据，已补齐月报物料分类快照，并按历史已确认规则清理 replay blocker 后完成 `inventory-replay:dry-run -> execute -> validate`；当前 replay blocker 为 0，validate 仅剩最终负库存盘点调整 warning。 |
 | `task-20260508-inbound-supplier-return.md` | `implemented` | 入库管理新增“退给厂家 / 供应商退货”切片：复用 `stock_in_order` 家族承载退货单，新增来源绑定的 `SUPPLIER_RETURN_OUT` 库存扣减与作废释放回滚；验收单页保留退厂发起和可退来源预览，入库管理二级页面新增 `退货单` / `退货单明细` 用于列表、明细和作废；报表已按入库域 OUT 纳入；自动化验证已通过，目标库 enum SQL 已应用，受控 live API / DB trace 已通过，待补新页面 browser acceptance。 |
 | `task-20260417-1702-material-category-single-level-system-unification.md` | `accepted` | 在 `monthly-reporting F9` 单层分类基线上，把全系统 `material-category` 真源统一为单层分类；`MaterialCategory.parentId` 已从 Prisma schema 与相关合同删除，`master-data` 文档/API/UI、inbound/sales 写侧快照与 focused validation 已完成并收口通过。 |
 | `task-20260417-0930-monthly-reporting-material-category-single-level-alignment.md` | `accepted` | 月度对账 `F9` 物料分类视角 requirement change：取消父级汇总 / 树形路径语义，改为仅按单据行稳定叶子分类快照单层聚合；shared truth、`reporting`、月报前端、导出与 focused validation 已完成，父级手动 review 收口通过。 |

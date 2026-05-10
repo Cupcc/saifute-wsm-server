@@ -177,16 +177,23 @@ async function readStockInEvents(
   `);
 
   return rows.map((row) => {
-    const isReversal = isNegativeDecimal(row.quantity);
+    const isSupplierReturn = row.orderType === "SUPPLIER_RETURN";
+    const isReversal = !isSupplierReturn && isNegativeDecimal(row.quantity);
+    const idempotencyKey = isSupplierReturn
+      ? `StockInSupplierReturn:${row.orderId}:line:${row.lineId}`
+      : `${STOCK_IN_DOCUMENT_TYPE}:${row.orderId}:line:${row.lineId}`;
 
     return {
       bizDate: toDateString(row.bizDate),
-      direction: isReversal ? ("OUT" as const) : ("IN" as const),
-      operationType: isReversal
-        ? ("REVERSAL_OUT" as const)
-        : row.orderType === "PRODUCTION_RECEIPT"
-          ? ("PRODUCTION_RECEIPT_IN" as const)
-          : ("ACCEPTANCE_IN" as const),
+      direction:
+        isReversal || isSupplierReturn ? ("OUT" as const) : ("IN" as const),
+      operationType: isSupplierReturn
+        ? ("SUPPLIER_RETURN_OUT" as const)
+        : isReversal
+          ? ("REVERSAL_OUT" as const)
+          : row.orderType === "PRODUCTION_RECEIPT"
+            ? ("PRODUCTION_RECEIPT_IN" as const)
+            : ("ACCEPTANCE_IN" as const),
       businessModule: "inbound",
       businessDocumentType: STOCK_IN_DOCUMENT_TYPE,
       businessDocumentId: row.orderId,
@@ -198,16 +205,20 @@ async function readStockInEvents(
       changeQty: toPositiveDecimalString(row.quantity),
       unitCost: toNullableString(row.unitCost),
       costAmount: toNullableString(row.costAmount),
-      selectedUnitCost: isReversal ? toNullableString(row.unitCost) : null,
+      selectedUnitCost:
+        isReversal || isSupplierReturn ? toNullableString(row.unitCost) : null,
       sourceDocumentType: null,
       sourceDocumentId: null,
       sourceDocumentLineId: null,
       transferInStockScopeId: null,
       transferInWorkshopId: null,
-      idempotencyKey: `${STOCK_IN_DOCUMENT_TYPE}:${row.orderId}:line:${row.lineId}`,
+      idempotencyKey,
       operatorId: row.createdBy,
       occurredAt: toDateTimeString(row.createdAt),
-      sortPriority: isReversal ? DIRECTION_PRIORITY_OUT : DIRECTION_PRIORITY_IN,
+      sortPriority:
+        isReversal || isSupplierReturn
+          ? DIRECTION_PRIORITY_OUT
+          : DIRECTION_PRIORITY_IN,
     };
   });
 }
@@ -670,7 +681,8 @@ async function readReturnSourceRelations(
     FROM document_line_relation
     WHERE relation_type IN (
       'SALES_RETURN_FROM_OUTBOUND',
-      'WORKSHOP_RETURN_FROM_PICK'
+      'WORKSHOP_RETURN_FROM_PICK',
+      'STOCK_IN_RETURN_TO_SUPPLIER'
     )
     ORDER BY downstream_document_type ASC,
       downstream_document_id ASC,

@@ -151,11 +151,7 @@ describe("workshop-return-finalize plan builder", () => {
   describe("buildFinalizationPlan - disallowed reason families", () => {
     it("should block when any DB pending row has a disallowed reason", () => {
       const pending = makePendingRecord(12, 12);
-      const dbRow = makePendingDbRow(
-        12,
-        12,
-        "multiple-upstream-pick-line-candidates",
-      );
+      const dbRow = makePendingDbRow(12, 12, "upstream-workshop-mismatch");
 
       const plan = buildFinalizationPlan([dbRow], [pending]);
 

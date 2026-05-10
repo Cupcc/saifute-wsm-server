@@ -43,12 +43,12 @@ async function clearPriorBatchLineBackfills(
 ): Promise<void> {
   const rows = await connection.query<Array<{ lineId: number }>>(
     `
-      SELECT DISTINCT reservation_row.businessDocumentLineId AS lineId
+      SELECT DISTINCT reservation_row.business_document_line_id AS lineId
       FROM ${TARGET_TABLES.reservation} reservation_row
       INNER JOIN migration_staging.${MAP_TABLES.reservation} map_row
         ON map_row.target_id = reservation_row.id
       WHERE map_row.migration_batch = ?
-      ORDER BY reservation_row.businessDocumentLineId ASC
+      ORDER BY reservation_row.business_document_line_id ASC
     `,
     [migrationBatch],
   );
@@ -63,8 +63,8 @@ async function clearPriorBatchLineBackfills(
   await connection.query(
     `
       UPDATE ${TARGET_TABLES.line}
-      SET startNumber = NULL,
-          endNumber = NULL
+      SET start_number = NULL,
+          end_number = NULL
       WHERE id IN (${buildPlaceholders(lineIds.length)})
     `,
     lineIds,
@@ -112,38 +112,40 @@ async function upsertReservation(
     connection,
     `
       INSERT INTO factory_number_reservation (
-        materialId,
-        workshopId,
-        businessDocumentType,
-        businessDocumentId,
-        businessDocumentLineId,
-        startNumber,
-        endNumber,
+        material_id,
+        workshop_id,
+        stock_scope_id,
+        business_document_type,
+        business_document_id,
+        business_document_line_id,
+        start_number,
+        end_number,
         status,
-        reservedAt,
-        releasedAt,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        reserved_at,
+        released_at,
+        created_by,
+        created_at,
+        updated_by,
+        updated_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
+        ?, ?, (SELECT id FROM stock_scope WHERE scope_code = 'MAIN' LIMIT 1), ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        materialId = VALUES(materialId),
-        workshopId = VALUES(workshopId),
-        businessDocumentType = VALUES(businessDocumentType),
-        businessDocumentId = VALUES(businessDocumentId),
-        businessDocumentLineId = VALUES(businessDocumentLineId),
-        startNumber = VALUES(startNumber),
-        endNumber = VALUES(endNumber),
+        material_id = VALUES(material_id),
+        workshop_id = VALUES(workshop_id),
+        stock_scope_id = VALUES(stock_scope_id),
+        business_document_type = VALUES(business_document_type),
+        business_document_id = VALUES(business_document_id),
+        business_document_line_id = VALUES(business_document_line_id),
+        start_number = VALUES(start_number),
+        end_number = VALUES(end_number),
         status = VALUES(status),
-        reservedAt = VALUES(reservedAt),
-        releasedAt = VALUES(releasedAt),
-        createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy),
-        updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        reserved_at = VALUES(reserved_at),
+        released_at = VALUES(released_at),
+        created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by),
+        updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -230,8 +232,8 @@ async function applyLineBackfill(
   await connection.query(
     `
       UPDATE ${TARGET_TABLES.line}
-      SET startNumber = ?,
-          endNumber = ?
+      SET start_number = ?,
+          end_number = ?
       WHERE id = ?
     `,
     [record.startNumber, record.endNumber, record.targetLineId],

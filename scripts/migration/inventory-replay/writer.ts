@@ -14,12 +14,7 @@ async function cleanupExistingInventoryData(
   deletedBalances: number;
 }> {
   const sourceUsageResult = await connection.query<QueryResultWithInsertId>(
-    `
-      DELETE u
-      FROM inventory_source_usage u
-      LEFT JOIN inventory_log l ON l.id = u.source_log_id
-      WHERE l.id IS NULL
-    `,
+    `DELETE FROM inventory_source_usage`,
   );
   const deletedSourceUsages = Number(
     (sourceUsageResult as { affectedRows?: number }).affectedRows ?? 0,

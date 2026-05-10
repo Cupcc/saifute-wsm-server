@@ -1,73 +1,73 @@
 {
   "counts": {
     "lines": {
-      "excluded": 52,
-      "migrated": 145,
-      "source": 197
+      "excluded": 42,
+      "migrated": 1816,
+      "source": 1858
     },
     "orders": {
-      "excluded": 14,
-      "migrated": 61,
-      "source": 75
+      "excluded": 15,
+      "migrated": 555,
+      "source": 570
     },
     "sourceLineTables": {
-      "saifute_pick_detail": 197
+      "saifute_pick_detail": 1858
     },
     "sourceOrderTables": {
-      "saifute_pick_order": 75
+      "saifute_pick_order": 570
     }
   },
   "dependencyBaseline": {
-    "actualBlockedMaterialCount": 21,
+    "actualBlockedMaterialCount": 0,
     "actualMapCounts": {
-      "sales": 184,
-      "material": 437,
-      "materialCategory": 8,
-      "personnel": 51,
-      "supplier": 93,
-      "workshop": 13
+      "customer": 388,
+      "material": 1092,
+      "materialCategory": 14,
+      "personnel": 76,
+      "supplier": 259,
+      "workshop": 21
     },
-    "expectedBlockedMaterialCount": 21,
+    "expectedBlockedMaterialCount": 0,
     "expectedMapCounts": {
-      "sales": 184,
-      "material": 437,
-      "materialCategory": 8,
-      "personnel": 51,
-      "supplier": 93,
-      "workshop": 13
+      "customer": 388,
+      "material": 1092,
+      "materialCategory": 14,
+      "personnel": 76,
+      "supplier": 259,
+      "workshop": 21
     },
     "issues": []
   },
-  "expectedArchivedPayloadCount": 206,
-  "expectedExcludedDocumentCount": 14,
+  "expectedArchivedPayloadCount": 2371,
+  "expectedExcludedDocumentCount": 15,
   "migrationBatch": "batch3b-workshop-pick-base",
   "mode": "validate",
   "sourceCounts": {
     "audits": 0,
-    "lines": 197,
-    "orders": 75
+    "lines": 1858,
+    "orders": 570
   },
-  "targetDatabaseName": "saifute-wsm",
+  "targetDatabaseName": "saifute-wms",
   "targetSummary": {
-    "archivedPayloadCount": 206,
-    "batchOwnedLineRows": 145,
-    "batchOwnedOrderRows": 61,
-    "excludedDocumentCount": 14,
+    "archivedPayloadCount": 2371,
+    "batchOwnedLineRows": 1816,
+    "batchOwnedOrderRows": 555,
+    "excludedDocumentCount": 15,
     "forbiddenTableCounts": {
+      "approval_document": 0,
       "document_line_relation": 0,
       "document_relation": 0,
       "factory_number_reservation": 0,
       "inventory_balance": 0,
       "inventory_log": 0,
-      "inventory_source_usage": 0,
-      "audit_document": 0
+      "inventory_source_usage": 0
     },
-    "lineBatchMapRows": 145,
-    "lineTargetRows": 145,
+    "lineBatchMapRows": 1816,
+    "lineTargetRows": 1816,
     "missingMappedLines": 0,
     "missingMappedOrders": 0,
-    "orderBatchMapRows": 61,
-    "orderTargetRows": 61
+    "orderBatchMapRows": 555,
+    "orderTargetRows": 555
   },
   "validationIssues": []
 }

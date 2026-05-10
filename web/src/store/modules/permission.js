@@ -228,6 +228,8 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     component: "entry/order/index",
     title: "验收单",
     icon: "form",
+    displayOrder: 1,
+    preferLocalTitle: true,
   },
   EntryDetail: {
     group: "entry",
@@ -235,20 +237,8 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     component: "entry/detail/index",
     title: "验收明细",
     icon: "list",
-  },
-  EntryReturnOrder: {
-    group: "entry",
-    path: "returnOrder",
-    component: "entry/returnOrder/index",
-    title: "退货单",
-    icon: "refresh",
-  },
-  EntryReturnDetail: {
-    group: "entry",
-    path: "returnDetail",
-    component: "entry/returnDetail/index",
-    title: "退货单明细",
-    icon: "list",
+    displayOrder: 2,
+    preferLocalTitle: true,
   },
   EntryIntoOrder: {
     group: "entry",
@@ -256,6 +246,8 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     component: "entry/intoOrder/index",
     title: "入库单",
     icon: "clipboard",
+    displayOrder: 3,
+    preferLocalTitle: true,
   },
   EntryIntoDetail: {
     group: "entry",
@@ -263,6 +255,26 @@ const SUPPORTED_BACKEND_ROUTE_META = {
     component: "entry/intoDetail/index",
     title: "入库明细",
     icon: "list",
+    displayOrder: 4,
+    preferLocalTitle: true,
+  },
+  EntryReturnOrder: {
+    group: "entry",
+    path: "returnOrder",
+    component: "entry/returnOrder/index",
+    title: "退货单",
+    icon: "refresh",
+    displayOrder: 5,
+    preferLocalTitle: true,
+  },
+  EntryReturnDetail: {
+    group: "entry",
+    path: "returnDetail",
+    component: "entry/returnDetail/index",
+    title: "退货明细",
+    icon: "list",
+    displayOrder: 6,
+    preferLocalTitle: true,
   },
   TakePickOrder: {
     group: "workshop",
@@ -506,9 +518,20 @@ function collectBackendRoutes(routes, routeMap = new Map()) {
   return routeMap;
 }
 
-function resolveBackendRouteOrder(backendRoute, declarationIndex) {
+function resolveRouteOrder(routeMeta, backendRoute, declarationIndex) {
+  if (typeof routeMeta.displayOrder === "number") {
+    return routeMeta.displayOrder;
+  }
+
   const orderNum = backendRoute?.meta?.orderNum;
   return typeof orderNum === "number" ? orderNum : 100000 + declarationIndex;
+}
+
+function resolveRouteTitle(routeMeta, backendMeta) {
+  if (routeMeta.preferLocalTitle) {
+    return routeMeta.title;
+  }
+  return backendMeta.title || routeMeta.title;
 }
 
 function resolveGroupTitle(groupMeta, currentConsoleMode) {
@@ -598,11 +621,23 @@ function buildFrontendRoutes(
       })
       .sort(
         (left, right) =>
-          resolveBackendRouteOrder(left.backendRoute, left.declarationIndex) -
-          resolveBackendRouteOrder(right.backendRoute, right.declarationIndex),
+          resolveRouteOrder(
+            left.routeMeta,
+            left.backendRoute,
+            left.declarationIndex,
+          ) -
+          resolveRouteOrder(
+            right.routeMeta,
+            right.backendRoute,
+            right.declarationIndex,
+          ),
       )
       .map(({ routeName, routeMeta, backendRoute }) => {
         const backendMeta = backendRoute?.meta ?? {};
+        const displayOrder =
+          typeof routeMeta.displayOrder === "number"
+            ? routeMeta.displayOrder
+            : backendMeta.orderNum;
         return {
           path: routeMeta.path,
           component: routeMeta.component,
@@ -610,10 +645,10 @@ function buildFrontendRoutes(
           ...(backendRoute?.hidden ? { hidden: true } : {}),
           ...(backendRoute?.query ? { query: backendRoute.query } : {}),
           meta: {
-            title: backendMeta.title || routeMeta.title,
+            title: resolveRouteTitle(routeMeta, backendMeta),
             icon: backendMeta.icon || routeMeta.icon,
-            ...(typeof backendMeta.orderNum === "number"
-              ? { orderNum: backendMeta.orderNum }
+            ...(typeof displayOrder === "number"
+              ? { orderNum: displayOrder }
               : {}),
             ...(hasAffixInConsoleMode(routeMeta, currentConsoleMode)
               ? { affix: true }

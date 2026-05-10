@@ -182,6 +182,7 @@ __pycache__/
 
 # Migration dry-run / execute / validate JSON outputs (regenerated locally)
 scripts/migration/reports/
+scripts/migration/backups/
 .worktrees/
 
 # Generated Prisma client output

@@ -1,64 +1,198 @@
 {
   "counts": {
     "lines": {
-      "excluded": 82,
-      "migrated": 307,
-      "source": 389
+      "excluded": 1,
+      "migrated": 2078,
+      "source": 2079
     },
     "orders": {
-      "excluded": 20,
-      "migrated": 190,
-      "source": 210
+      "excluded": 1,
+      "migrated": 1154,
+      "source": 1155
     },
     "sourceLineTables": {
-      "saifute_inbound_detail": 258,
-      "saifute_into_detail": 131
+      "saifute_inbound_detail": 1333,
+      "saifute_into_detail": 746
     },
     "sourceOrderTables": {
-      "saifute_inbound_order": 138,
-      "saifute_into_order": 72
+      "saifute_inbound_order": 770,
+      "saifute_into_order": 385
     }
   },
   "dependencyBaseline": {
-    "actualBlockedMaterialCount": 21,
+    "actualBlockedMaterialCount": 0,
     "actualMapCounts": {
-      "sales": 184,
-      "material": 437,
-      "materialCategory": 8,
-      "personnel": 51,
-      "supplier": 93,
-      "workshop": 13
+      "customer": 388,
+      "material": 1092,
+      "materialCategory": 14,
+      "personnel": 76,
+      "supplier": 259,
+      "workshop": 21
     },
-    "expectedBlockedMaterialCount": 21,
+    "expectedBlockedMaterialCount": 0,
     "expectedMapCounts": {
-      "sales": 184,
-      "material": 437,
-      "materialCategory": 8,
-      "personnel": 51,
-      "supplier": 93,
-      "workshop": 13
+      "customer": 388,
+      "material": 1092,
+      "materialCategory": 14,
+      "personnel": 76,
+      "supplier": 259,
+      "workshop": 21
     },
     "issues": []
   },
-  "expectedArchivedPayloadCount": 286,
-  "expectedExcludedDocumentCount": 20,
+  "expectedArchivedPayloadCount": 1776,
+  "expectedExcludedDocumentCount": 1,
   "migrationBatch": "batch2a-stock-in",
   "mode": "validate",
   "sourceCounts": {
     "audits": 0,
-    "lines": 389,
-    "orders": 210
+    "lines": 2079,
+    "orders": 1155
   },
-  "targetDatabaseName": "saifute-wsm",
+  "targetDatabaseName": "saifute-wms",
   "targetSummary": {
-    "archivedPayloadCount": 286,
-    "excludedDocumentCount": 20,
-    "lineBatchMapRows": 307,
-    "lineTargetRows": 307,
+    "archivedPayloadCount": 1767,
+    "excludedDocumentCount": 0,
+    "lineBatchMapRows": 2072,
+    "lineTargetRows": 2072,
     "missingMappedLines": 0,
     "missingMappedOrders": 0,
-    "orderBatchMapRows": 190,
-    "orderTargetRows": 190
+    "orderBatchMapRows": 1150,
+    "orderTargetRows": 1150
   },
-  "validationIssues": []
+  "validationIssues": [
+    {
+      "actualOrderMapRows": 1150,
+      "expectedMigratedOrders": 1154,
+      "reason": "stock-in order map row count does not match the deterministic migration plan.",
+      "severity": "blocker"
+    },
+    {
+      "actualLineMapRows": 2072,
+      "expectedMigratedLines": 2078,
+      "reason": "stock-in line map row count does not match the deterministic migration plan.",
+      "severity": "blocker"
+    },
+    {
+      "actualOrderRows": 1150,
+      "expectedMigratedOrders": 1154,
+      "reason": "stock_in_order row count is smaller than the migration plan.",
+      "severity": "blocker"
+    },
+    {
+      "actualLineRows": 2072,
+      "expectedMigratedLines": 2078,
+      "reason": "stock_in_order_line row count is smaller than the migration plan.",
+      "severity": "blocker"
+    },
+    {
+      "actualArchivedPayloadCount": 1767,
+      "expectedArchivedPayloadCount": 1776,
+      "reason": "archived_field_payload row count does not match the deterministic stock-in plan.",
+      "severity": "blocker"
+    },
+    {
+      "actualExcludedDocumentCount": 0,
+      "expectedExcludedDocumentCount": 1,
+      "reason": "excluded_documents row count does not match the deterministic stock-in plan.",
+      "severity": "blocker"
+    },
+    {
+      "legacyId": 1018,
+      "legacyTable": "saifute_into_detail",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order_line"
+    },
+    {
+      "legacyId": 1020,
+      "legacyTable": "saifute_into_detail",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order_line"
+    },
+    {
+      "legacyId": 1021,
+      "legacyTable": "saifute_into_detail",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order_line"
+    },
+    {
+      "legacyId": 1022,
+      "legacyTable": "saifute_into_detail",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order_line"
+    },
+    {
+      "legacyId": 1023,
+      "legacyTable": "saifute_into_detail",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order_line"
+    },
+    {
+      "legacyId": 552,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order"
+    },
+    {
+      "legacyId": 553,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order"
+    },
+    {
+      "legacyId": 554,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order"
+    },
+    {
+      "legacyId": 555,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected archived_field_payload row is missing.",
+      "severity": "blocker",
+      "targetTable": "stock_in_order"
+    },
+    {
+      "legacyId": 306,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected excluded_documents row is missing.",
+      "severity": "blocker"
+    },
+    {
+      "documentNo": "RK20260509003",
+      "legacyId": 552,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected stock_in_order row is missing.",
+      "severity": "blocker"
+    },
+    {
+      "documentNo": "RK20260510001",
+      "legacyId": 553,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected stock_in_order row is missing.",
+      "severity": "blocker"
+    },
+    {
+      "documentNo": "RK20260507003",
+      "legacyId": 554,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected stock_in_order row is missing.",
+      "severity": "blocker"
+    },
+    {
+      "documentNo": "RK20260504002",
+      "legacyId": 555,
+      "legacyTable": "saifute_into_order",
+      "reason": "Expected stock_in_order row is missing.",
+      "severity": "blocker"
+    }
+  ]
 }

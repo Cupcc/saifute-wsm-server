@@ -1,5 +1,5 @@
-import { normalizeOptionalText } from "../shared/deterministic";
 import { BusinessDocumentType } from "../shared/business-document-type";
+import { normalizeOptionalText } from "../shared/deterministic";
 import type {
   ArchivedIntervalPlanRecord,
   FactoryNumberReservationTargetInsert,

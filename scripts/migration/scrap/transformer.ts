@@ -516,7 +516,7 @@ export function buildScrapMigrationPlan(
             legacyTable: order.legacyTable,
             legacyId: order.legacyId,
             reason:
-              "Attn name is missing from the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId.",
+              "Attn name is missing from the migrated personnel snapshot; preserving handler_name_snapshot without handler_personnel_id.",
             details: { attn: normalizedAttn },
           });
         } else {

@@ -65,25 +65,25 @@ async function upsertMaterialCategory(
     connection,
     `
       INSERT INTO material_category (
-        categoryCode,
-        categoryName,
-        sortOrder,
+        category_code,
+        category_name,
+        sort_order,
         status,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        created_by,
+        created_at,
+        updated_by,
+        updated_at
       ) VALUES (
         ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        categoryName = VALUES(categoryName),
-        sortOrder = VALUES(sortOrder),
+        category_name = VALUES(category_name),
+        sort_order = VALUES(sort_order),
         status = VALUES(status),
-        createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy),
-        updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by),
+        updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -107,21 +107,21 @@ async function upsertWorkshop(
     connection,
     `
       INSERT INTO workshop (
-        workshopName,
+        workshop_name,
         status,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        created_by,
+        created_at,
+        updated_by,
+        updated_at
       ) VALUES (
         ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
         status = VALUES(status),
-        createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy),
-        updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by),
+        updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -143,37 +143,37 @@ async function upsertSupplier(
     connection,
     `
       INSERT INTO supplier (
-        supplierCode,
-        supplierName,
-        supplierShortName,
-        contactPerson,
-        contactPhone,
+        supplier_code,
+        supplier_name,
+        supplier_short_name,
+        contact_person,
+        contact_phone,
         address,
         status,
-        creationMode,
-        sourceDocumentType,
-        sourceDocumentId,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        creation_mode,
+        source_document_type,
+        source_document_id,
+        created_by,
+        created_at,
+        updated_by,
+        updated_at
       ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        supplierName = VALUES(supplierName),
-        supplierShortName = VALUES(supplierShortName),
-        contactPerson = VALUES(contactPerson),
-        contactPhone = VALUES(contactPhone),
+        supplier_name = VALUES(supplier_name),
+        supplier_short_name = VALUES(supplier_short_name),
+        contact_person = VALUES(contact_person),
+        contact_phone = VALUES(contact_phone),
         address = VALUES(address),
         status = VALUES(status),
-        creationMode = VALUES(creationMode),
-        sourceDocumentType = VALUES(sourceDocumentType),
-        sourceDocumentId = VALUES(sourceDocumentId),
-        createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy),
-        updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        creation_mode = VALUES(creation_mode),
+        source_document_type = VALUES(source_document_type),
+        source_document_id = VALUES(source_document_id),
+        created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by),
+        updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -203,24 +203,24 @@ async function upsertPersonnel(
     connection,
     `
       INSERT INTO personnel (
-        personnelName,
+        personnel_name,
         contact_phone,
         status,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        created_by,
+        created_at,
+        updated_by,
+        updated_at
       ) VALUES (
         ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        personnelName = VALUES(personnelName),
+        personnel_name = VALUES(personnel_name),
         contact_phone = VALUES(contact_phone),
         status = VALUES(status),
-        createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy),
-        updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by),
+        updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -243,36 +243,36 @@ async function upsertCustomer(
     connection,
     `
       INSERT INTO customer (
-        customerCode,
-        customerName,
-        contactPerson,
-        contactPhone,
+        customer_code,
+        customer_name,
+        contact_person,
+        contact_phone,
         address,
-        parentId,
+        parent_id,
         status,
-        creationMode,
-        sourceDocumentType,
-        sourceDocumentId,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        creation_mode,
+        source_document_type,
+        source_document_id,
+        created_by,
+        created_at,
+        updated_by,
+        updated_at
       ) VALUES (
         ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        customerName = VALUES(customerName),
-        contactPerson = VALUES(contactPerson),
-        contactPhone = VALUES(contactPhone),
+        customer_name = VALUES(customer_name),
+        contact_person = VALUES(contact_person),
+        contact_phone = VALUES(contact_phone),
         address = VALUES(address),
         status = VALUES(status),
-        creationMode = VALUES(creationMode),
-        sourceDocumentType = VALUES(sourceDocumentType),
-        sourceDocumentId = VALUES(sourceDocumentId),
-        createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy),
-        updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        creation_mode = VALUES(creation_mode),
+        source_document_type = VALUES(source_document_type),
+        source_document_id = VALUES(source_document_id),
+        created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by),
+        updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -298,7 +298,7 @@ async function lookupCategoryIdByCode(
   categoryCode: string,
 ): Promise<number | null> {
   const rows = await connection.query<Array<{ id: number }>>(
-    "SELECT id FROM material_category WHERE categoryCode = ? LIMIT 1",
+    "SELECT id FROM material_category WHERE category_code = ? LIMIT 1",
     [categoryCode],
   );
 
@@ -317,39 +317,39 @@ async function upsertMaterial(
     connection,
     `
       INSERT INTO material (
-        materialCode,
-        materialName,
-        specModel,
-        categoryId,
-        unitCode,
-        warningMinQty,
-        warningMaxQty,
+        material_code,
+        material_name,
+        spec_model,
+        category_id,
+        unit_code,
+        warning_min_qty,
+        warning_max_qty,
         status,
-        creationMode,
-        sourceDocumentType,
-        sourceDocumentId,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        creation_mode,
+        source_document_type,
+        source_document_id,
+        created_by,
+        created_at,
+        updated_by,
+        updated_at
       ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        materialName = VALUES(materialName),
-        specModel = VALUES(specModel),
-        categoryId = VALUES(categoryId),
-        unitCode = VALUES(unitCode),
-        warningMinQty = VALUES(warningMinQty),
-        warningMaxQty = VALUES(warningMaxQty),
+        material_name = VALUES(material_name),
+        spec_model = VALUES(spec_model),
+        category_id = VALUES(category_id),
+        unit_code = VALUES(unit_code),
+        warning_min_qty = VALUES(warning_min_qty),
+        warning_max_qty = VALUES(warning_max_qty),
         status = VALUES(status),
-        creationMode = VALUES(creationMode),
-        sourceDocumentType = VALUES(sourceDocumentType),
-        sourceDocumentId = VALUES(sourceDocumentId),
-        createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy),
-        updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        creation_mode = VALUES(creation_mode),
+        source_document_type = VALUES(source_document_type),
+        source_document_id = VALUES(source_document_id),
+        created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by),
+        updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -501,7 +501,7 @@ async function resolveCustomerParents(
       continue;
     }
 
-    await connection.query("UPDATE customer SET parentId = ? WHERE id = ?", [
+    await connection.query("UPDATE customer SET parent_id = ? WHERE id = ?", [
       parentTargetId,
       targetId,
     ]);

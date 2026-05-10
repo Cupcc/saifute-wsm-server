@@ -1,61 +1,61 @@
 {
   "counts": {
-    "archivedIntervalCount": 81,
-    "archivedOrderType2Count": 74,
-    "archivedOrderType4Count": 2,
-    "archivedOrderType7Count": 5,
-    "liveOrderType4Count": 80,
-    "liveReservationCount": 80,
-    "multiIntervalLiveLineCount": 9,
-    "singleIntervalLineBackfillCount": 60,
+    "archivedIntervalCount": 378,
+    "archivedOrderType2Count": 368,
+    "archivedOrderType4Count": 0,
+    "archivedOrderType7Count": 10,
+    "liveOrderType4Count": 426,
+    "liveReservationCount": 426,
+    "multiIntervalLiveLineCount": 53,
+    "singleIntervalLineBackfillCount": 302,
     "sourceByOrderType": {
-      "orderType2": 74,
-      "orderType4": 82,
-      "orderType7": 5,
+      "orderType2": 368,
+      "orderType4": 426,
+      "orderType7": 10,
       "unexpected": 0
     },
-    "sourceIntervalCount": 161
+    "sourceIntervalCount": 804
   },
   "dependencyBaseline": {
-    "actualExcludedDocumentCount": 4,
-    "actualLineMapCount": 137,
-    "actualOrderMapCount": 108,
-    "expectedExcludedDocumentCount": 4,
-    "expectedLineMapCount": 137,
-    "expectedOrderMapCount": 108,
+    "actualExcludedDocumentCount": 0,
+    "actualLineMapCount": 638,
+    "actualOrderMapCount": 497,
+    "expectedExcludedDocumentCount": 0,
+    "expectedLineMapCount": 638,
+    "expectedOrderMapCount": 497,
     "issues": []
   },
-  "expectedArchivedIntervalCount": 81,
+  "expectedArchivedIntervalCount": 378,
   "migrationBatch": "batch3a-outbound-order-type4-reservation",
   "mode": "validate",
   "sourceCounts": {
-    "intervals": 161,
-    "outboundDetailReferences": 141
+    "intervals": 804,
+    "outboundDetailReferences": 638
   },
-  "targetDatabaseName": "saifute-wsm",
+  "targetDatabaseName": "saifute-wms",
   "targetSummary": {
-    "archivedIntervalCount": 81,
-    "batchOwnedReservationRows": 80,
+    "archivedIntervalCount": 378,
+    "batchOwnedReservationRows": 426,
     "forbiddenBaselineCounts": {
+      "approval_document": 0,
       "document_line_relation": 0,
       "document_relation": 0,
       "inventory_balance": 0,
       "inventory_log": 0,
-      "inventory_source_usage": 0,
-      "audit_document": 0
+      "inventory_source_usage": 0
     },
     "forbiddenTableCounts": {
+      "approval_document": 0,
       "document_line_relation": 0,
       "document_relation": 0,
       "inventory_balance": 0,
       "inventory_log": 0,
-      "inventory_source_usage": 0,
-      "audit_document": 0
+      "inventory_source_usage": 0
     },
     "missingMappedReservations": 0,
-    "reservationBatchMapRows": 80,
-    "reservationTargetRows": 80,
-    "touchedLineCount": 69
+    "reservationBatchMapRows": 426,
+    "reservationTargetRows": 426,
+    "touchedLineCount": 355
   },
   "validationIssues": []
 }

@@ -442,7 +442,7 @@ describe("rd-project migration transformer — three-state model", () => {
       plan.warnings.some(
         (warning) =>
           warning.legacyId === 12 &&
-          warning.reason.includes("managerNameSnapshot"),
+          warning.reason.includes("manager_name_snapshot"),
       ),
     ).toBe(true);
     expect(

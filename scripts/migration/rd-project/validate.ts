@@ -22,6 +22,7 @@ import type {
 } from "./types";
 
 const RD_PROJECT_DOCUMENT_TYPE = BusinessDocumentType.RdProject;
+
 import {
   PENDING_RELATION_TYPE_RD_PROJECT_LINE_MATERIAL,
   RD_PROJECT_AUTO_CREATED_MATERIAL_SOURCE_DOCUMENT_TYPE,
@@ -500,35 +501,35 @@ async function getProjectRowsByProjectCode(connection: {
     `
       SELECT
         id,
-        projectCode,
-        projectName,
-        bizDate,
-        customerId,
-        supplierId,
-        managerPersonnelId,
-        workshopId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus,
-        revisionNo,
-        customerCodeSnapshot,
-        customerNameSnapshot,
-        supplierCodeSnapshot,
-        supplierNameSnapshot,
-        managerNameSnapshot,
-        workshopNameSnapshot,
-        totalQty,
-        totalAmount,
+        project_code AS projectCode,
+        project_name AS projectName,
+        biz_date AS bizDate,
+        customer_id AS customerId,
+        supplier_id AS supplierId,
+        manager_personnel_id AS managerPersonnelId,
+        workshop_id AS workshopId,
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus,
+        revision_no AS revisionNo,
+        customer_code_snapshot AS customerCodeSnapshot,
+        customer_name_snapshot AS customerNameSnapshot,
+        supplier_code_snapshot AS supplierCodeSnapshot,
+        supplier_name_snapshot AS supplierNameSnapshot,
+        manager_name_snapshot AS managerNameSnapshot,
+        workshop_name_snapshot AS workshopNameSnapshot,
+        total_qty AS totalQty,
+        total_amount AS totalAmount,
         remark,
-        voidReason,
-        voidedBy,
-        voidedAt,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        void_reason AS voidReason,
+        voided_by AS voidedBy,
+        voided_at AS voidedAt,
+        created_by AS createdBy,
+        created_at AS createdAt,
+        updated_by AS updatedBy,
+        updated_at AS updatedAt
       FROM rd_project
-      ORDER BY projectCode ASC
+      ORDER BY project_code ASC
     `,
   );
 
@@ -587,25 +588,25 @@ async function getLineRowsByIdentity(connection: {
     `
       SELECT
         line_row.id AS id,
-        project_row.projectCode AS projectCode,
-        line_row.lineNo AS lineNo,
-        line_row.materialId AS materialId,
-        line_row.materialCodeSnapshot AS materialCodeSnapshot,
-        line_row.materialNameSnapshot AS materialNameSnapshot,
-        line_row.materialSpecSnapshot AS materialSpecSnapshot,
-        line_row.unitCodeSnapshot AS unitCodeSnapshot,
+        project_row.project_code AS projectCode,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
+        line_row.material_code_snapshot AS materialCodeSnapshot,
+        line_row.material_name_snapshot AS materialNameSnapshot,
+        line_row.material_spec_snapshot AS materialSpecSnapshot,
+        line_row.unit_code_snapshot AS unitCodeSnapshot,
         line_row.quantity AS quantity,
-        line_row.unitPrice AS unitPrice,
+        line_row.unit_price AS unitPrice,
         line_row.amount AS amount,
         line_row.remark AS remark,
-        line_row.createdBy AS createdBy,
-        line_row.createdAt AS createdAt,
-        line_row.updatedBy AS updatedBy,
-        line_row.updatedAt AS updatedAt
+        line_row.created_by AS createdBy,
+        line_row.created_at AS createdAt,
+        line_row.updated_by AS updatedBy,
+        line_row.updated_at AS updatedAt
       FROM rd_project_material_line line_row
       INNER JOIN rd_project project_row
-        ON project_row.id = line_row.projectId
-      ORDER BY project_row.projectCode ASC, line_row.lineNo ASC
+        ON project_row.id = line_row.project_id
+      ORDER BY project_row.project_code ASC, line_row.line_no ASC
     `,
   );
 
@@ -658,22 +659,22 @@ async function getAutoCreatedMaterialRowsByCode(connection: {
     `
       SELECT
         id,
-        materialCode,
-        materialName,
-        specModel,
-        unitCode,
-        warningMinQty,
-        warningMaxQty,
+        material_code AS materialCode,
+        material_name AS materialName,
+        spec_model AS specModel,
+        unit_code AS unitCode,
+        warning_min_qty AS warningMinQty,
+        warning_max_qty AS warningMaxQty,
         status,
-        creationMode,
-        sourceDocumentType,
-        sourceDocumentId,
-        createdBy,
-        updatedBy
+        creation_mode AS creationMode,
+        source_document_type AS sourceDocumentType,
+        source_document_id AS sourceDocumentId,
+        created_by AS createdBy,
+        updated_by AS updatedBy
       FROM material
-      WHERE creationMode = 'AUTO_CREATED'
-        AND sourceDocumentType = ?
-      ORDER BY materialCode ASC
+      WHERE creation_mode = 'AUTO_CREATED'
+        AND source_document_type = ?
+      ORDER BY material_code ASC
     `,
     [RD_PROJECT_AUTO_CREATED_MATERIAL_SOURCE_DOCUMENT_TYPE],
   );
@@ -690,33 +691,33 @@ async function getRdProjectDownstreamConsumerCounts(connection: {
     `
       SELECT 'approval_document' AS consumer, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'RD_PROJECT' OR documentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE document_family = 'RD_PROJECT' OR document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_relation' AS consumer, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'PROJECT'
-         OR downstreamFamily = 'PROJECT'
-         OR upstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'PROJECT'
+         OR downstream_family = 'PROJECT'
+         OR upstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS consumer, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'PROJECT'
-         OR downstreamFamily = 'PROJECT'
-         OR upstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'PROJECT'
+         OR downstream_family = 'PROJECT'
+         OR upstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_log' AS consumer, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS consumer, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'factory_number_reservation' AS consumer, COUNT(*) AS total
       FROM factory_number_reservation
-      WHERE businessDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
     `,
   );
 
@@ -1332,7 +1333,7 @@ async function main(): Promise<void> {
               validationIssues,
               context,
               "map_project.targetTable",
-              "project",
+              project.targetTable,
               projectMapRow.targetTable,
             );
             pushValueMismatch(

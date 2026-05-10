@@ -30,11 +30,11 @@ async function applySourceBackfill(
     `
       UPDATE ${targetTable}
       SET
-        sourceDocumentType = ?,
-        sourceDocumentId = ?,
-        sourceDocumentLineId = ?
+        source_document_type = ?,
+        source_document_id = ?,
+        source_document_line_id = ?
       WHERE id = ?
-        AND sourceDocumentId IS NULL
+        AND source_document_id IS NULL
     `,
     [
       record.sourceDocumentType,
@@ -52,19 +52,19 @@ async function upsertDocumentRelation(
   await connection.query(
     `
       INSERT INTO document_relation (
-        relationType,
-        upstreamFamily,
-        upstreamDocumentType,
-        upstreamDocumentId,
-        downstreamFamily,
-        downstreamDocumentType,
-        downstreamDocumentId,
-        isActive,
-        updatedAt
+        relation_type,
+        upstream_family,
+        upstream_document_type,
+        upstream_document_id,
+        downstream_family,
+        downstream_document_type,
+        downstream_document_id,
+        is_active,
+        updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON DUPLICATE KEY UPDATE
-        isActive = VALUES(isActive),
-        updatedAt = CURRENT_TIMESTAMP
+        is_active = VALUES(is_active),
+        updated_at = CURRENT_TIMESTAMP
     `,
     [
       record.relationType,
@@ -86,21 +86,21 @@ async function upsertDocumentLineRelation(
   await connection.query(
     `
       INSERT INTO document_line_relation (
-        relationType,
-        upstreamFamily,
-        upstreamDocumentType,
-        upstreamDocumentId,
-        upstreamLineId,
-        downstreamFamily,
-        downstreamDocumentType,
-        downstreamDocumentId,
-        downstreamLineId,
-        linkedQty,
-        updatedAt
+        relation_type,
+        upstream_family,
+        upstream_document_type,
+        upstream_document_id,
+        upstream_line_id,
+        downstream_family,
+        downstream_document_type,
+        downstream_document_id,
+        downstream_line_id,
+        linked_qty,
+        updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON DUPLICATE KEY UPDATE
-        linkedQty = VALUES(linkedQty),
-        updatedAt = CURRENT_TIMESTAMP
+        linked_qty = VALUES(linked_qty),
+        updated_at = CURRENT_TIMESTAMP
     `,
     [
       record.relationType,
@@ -147,7 +147,7 @@ async function clearStaleReturnLineSourceFields(
   for (const record of records) {
     await connection.query(
       `UPDATE ${record.documentTable}
-       SET sourceDocumentType = NULL, sourceDocumentId = NULL, sourceDocumentLineId = NULL
+       SET source_document_type = NULL, source_document_id = NULL, source_document_line_id = NULL
        WHERE id = ?`,
       [record.lineId],
     );
@@ -160,22 +160,22 @@ async function clearStaleReturnLineSourceFields(
 async function upsertInventoryBalance(
   connection: MigrationConnectionLike,
   materialId: number,
-  workshopId: number,
+  stockScopeId: number,
 ): Promise<number> {
   const result =
     (await connection.query<QueryResultWithInsertId>(
       `
         INSERT INTO inventory_balance (
-          materialId,
-          workshopId,
-          quantityOnHand,
-          rowVersion,
-          updatedAt
+          material_id,
+          stock_scope_id,
+          quantity_on_hand,
+          row_version,
+          updated_at
         ) VALUES (?, ?, 0, 0, CURRENT_TIMESTAMP)
         ON DUPLICATE KEY UPDATE
           id = LAST_INSERT_ID(id)
       `,
-      [materialId, workshopId],
+      [materialId, stockScopeId],
     )) ?? {};
 
   return Number(result.insertId ?? 0);
@@ -187,7 +187,7 @@ async function updateInventoryBalance(
   quantityOnHand: string,
 ): Promise<void> {
   await connection.query(
-    `UPDATE inventory_balance SET quantityOnHand = ?, rowVersion = rowVersion + 1, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+    `UPDATE inventory_balance SET quantity_on_hand = ?, row_version = row_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
     [quantityOnHand, balanceId],
   );
 }
@@ -204,32 +204,36 @@ async function insertInventoryLog(
     (await connection.query<QueryResultWithInsertId>(
       `
         INSERT INTO inventory_log (
-          balanceId,
-          materialId,
-          workshopId,
+          balance_id,
+          material_id,
+          stock_scope_id,
+          workshop_id,
+          biz_date,
           direction,
-          operationType,
-          businessModule,
-          businessDocumentType,
-          businessDocumentId,
-          businessDocumentNumber,
-          businessDocumentLineId,
-          changeQty,
-          beforeQty,
-          afterQty,
-          operatorId,
-          occurredAt,
-          reversalOfLogId,
-          idempotencyKey,
+          operation_type,
+          business_module,
+          business_document_type,
+          business_document_id,
+          business_document_number,
+          business_document_line_id,
+          change_qty,
+          before_qty,
+          after_qty,
+          operator_id,
+          occurred_at,
+          reversal_of_log_id,
+          idempotency_key,
           note
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NOW(), ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           id = LAST_INSERT_ID(id)
       `,
       [
         balanceId,
         log.materialId,
+        log.stockScopeId,
         log.workshopId,
+        log.bizDate,
         log.direction,
         log.operationType,
         log.businessModule,
@@ -240,6 +244,7 @@ async function insertInventoryLog(
         log.changeQty,
         beforeQty,
         afterQty,
+        log.bizDate,
         reversalOfLogId,
         log.idempotencyKey,
         log.note,
@@ -257,21 +262,21 @@ async function upsertInventorySourceUsage(
   await connection.query(
     `
       INSERT INTO inventory_source_usage (
-        materialId,
-        sourceLogId,
-        consumerDocumentType,
-        consumerDocumentId,
-        consumerLineId,
-        allocatedQty,
-        releasedQty,
+        material_id,
+        source_log_id,
+        consumer_document_type,
+        consumer_document_id,
+        consumer_line_id,
+        allocated_qty,
+        released_qty,
         status,
-        updatedAt
+        updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON DUPLICATE KEY UPDATE
-        allocatedQty = VALUES(allocatedQty),
-        releasedQty = VALUES(releasedQty),
+        allocated_qty = VALUES(allocated_qty),
+        released_qty = VALUES(released_qty),
         status = VALUES(status),
-        updatedAt = CURRENT_TIMESTAMP
+        updated_at = CURRENT_TIMESTAMP
     `,
     [
       usage.materialId,
@@ -293,18 +298,18 @@ async function upsertAuditDocument(
   await connection.query(
     `
       INSERT INTO approval_document (
-        documentFamily,
-        documentType,
-        documentId,
-        documentNumber,
-        auditStatus,
-        updatedAt
+        document_family,
+        document_type,
+        document_id,
+        document_number,
+        audit_status,
+        updated_at
       ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON DUPLICATE KEY UPDATE
-        documentFamily = VALUES(documentFamily),
-        documentNumber = VALUES(documentNumber),
-        auditStatus = VALUES(auditStatus),
-        updatedAt = CURRENT_TIMESTAMP
+        document_family = VALUES(document_family),
+        document_number = VALUES(document_number),
+        audit_status = VALUES(audit_status),
+        updated_at = CURRENT_TIMESTAMP
     `,
     [
       doc.documentFamily,
@@ -321,7 +326,7 @@ async function getInventoryLogIdByIdempotencyKey(
   idempotencyKey: string,
 ): Promise<number | null> {
   const rows = await connection.query<Array<{ id: number }>>(
-    `SELECT id FROM inventory_log WHERE idempotencyKey = ?`,
+    `SELECT id FROM inventory_log WHERE idempotency_key = ?`,
     [idempotencyKey],
   );
 
@@ -331,13 +336,13 @@ async function getInventoryLogIdByIdempotencyKey(
 async function getInventoryBalanceId(
   connection: MigrationConnectionLike,
   materialId: number,
-  workshopId: number,
+  stockScopeId: number,
 ): Promise<number | null> {
   const rows = await connection.query<
     Array<{ id: number; quantityOnHand: string }>
   >(
-    `SELECT id, quantityOnHand FROM inventory_balance WHERE materialId = ? AND workshopId = ?`,
-    [materialId, workshopId],
+    `SELECT id, quantity_on_hand AS quantityOnHand FROM inventory_balance WHERE material_id = ? AND stock_scope_id = ?`,
+    [materialId, stockScopeId],
   );
 
   return rows[0]?.id ?? null;
@@ -348,7 +353,7 @@ async function getInventoryBalanceQty(
   balanceId: number,
 ): Promise<string> {
   const rows = await connection.query<Array<{ quantityOnHand: string }>>(
-    `SELECT quantityOnHand FROM inventory_balance WHERE id = ?`,
+    `SELECT quantity_on_hand AS quantityOnHand FROM inventory_balance WHERE id = ?`,
     [balanceId],
   );
 
@@ -440,22 +445,28 @@ export async function executePostAdmissionPlan(
       let balanceId = balanceIdByKey.get(log.balanceKey);
 
       if (balanceId === undefined) {
+        if (log.stockScopeId <= 0) {
+          throw new Error(
+            `Cannot create inventory_balance without stockScopeId for materialId=${log.materialId}`,
+          );
+        }
+
         balanceId = await upsertInventoryBalance(
           connection,
           log.materialId,
-          log.workshopId,
+          log.stockScopeId,
         );
 
         if (!balanceId || balanceId <= 0) {
           const existingId = await getInventoryBalanceId(
             connection,
             log.materialId,
-            log.workshopId,
+            log.stockScopeId,
           );
 
           if (!existingId) {
             throw new Error(
-              `Failed to create or find inventory_balance for materialId=${log.materialId} workshopId=${log.workshopId}`,
+              `Failed to create or find inventory_balance for materialId=${log.materialId} stockScopeId=${log.stockScopeId}`,
             );
           }
 
@@ -506,22 +517,28 @@ export async function executePostAdmissionPlan(
       let balanceId = balanceIdByKey.get(log.balanceKey);
 
       if (balanceId === undefined) {
+        if (log.stockScopeId <= 0) {
+          throw new Error(
+            `Cannot create inventory_balance without stockScopeId for materialId=${log.materialId}`,
+          );
+        }
+
         balanceId = await upsertInventoryBalance(
           connection,
           log.materialId,
-          log.workshopId,
+          log.stockScopeId,
         );
 
         if (!balanceId || balanceId <= 0) {
           const existingId = await getInventoryBalanceId(
             connection,
             log.materialId,
-            log.workshopId,
+            log.stockScopeId,
           );
 
           if (!existingId) {
             throw new Error(
-              `Failed to create or find inventory_balance for materialId=${log.materialId} workshopId=${log.workshopId}`,
+              `Failed to create or find inventory_balance for materialId=${log.materialId} stockScopeId=${log.stockScopeId}`,
             );
           }
 
@@ -554,7 +571,7 @@ export async function executePostAdmissionPlan(
       }
 
       await connection.query(
-        `UPDATE inventory_log SET beforeQty = ?, afterQty = ? WHERE id = ?`,
+        `UPDATE inventory_log SET before_qty = ?, after_qty = ? WHERE id = ?`,
         [beforeQty, afterQtyPrimary, primaryLogId],
       );
 

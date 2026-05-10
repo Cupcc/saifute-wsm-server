@@ -9,7 +9,7 @@ import type {
   FinalizationPlan,
   PendingRelationDbRow,
 } from "./types";
-import { ALLOWED_FINALIZE_REASON, FINALIZE_ORIGINATING_BATCH } from "./types";
+import { ALLOWED_FINALIZE_REASONS, FINALIZE_ORIGINATING_BATCH } from "./types";
 
 export function buildExpectedRelationsFromPlan(
   pendingRelations: PendingRelationRecord[],
@@ -89,8 +89,10 @@ export function buildFinalizationPlan(
     })),
   );
 
-  const eligibleRows = currentPendingRows.filter(
-    (row) => row.pendingReason === ALLOWED_FINALIZE_REASON,
+  const eligibleRows = currentPendingRows.filter((row) =>
+    ALLOWED_FINALIZE_REASONS.includes(
+      row.pendingReason as (typeof ALLOWED_FINALIZE_REASONS)[number],
+    ),
   );
 
   const archiveCandidates: FinalizationArchiveCandidate[] =

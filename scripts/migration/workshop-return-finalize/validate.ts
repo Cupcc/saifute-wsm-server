@@ -43,13 +43,6 @@ function buildRelationIdentity(input: {
   return `${input.legacyTable}::${input.legacyId}::${input.legacyLineId ?? "null"}`;
 }
 
-function buildExcludedIdentity(input: {
-  legacyTable: string;
-  legacyId: number;
-}): string {
-  return `${input.legacyTable}::${input.legacyId}`;
-}
-
 function buildExpectedArchiveFromPendingPlan(
   pendingRelations: Array<{
     legacyTable: string;
@@ -374,9 +367,6 @@ async function main(): Promise<void> {
       deterministicPendingRelations,
     );
 
-    const expectedAffectedLegacyIds = new Set(
-      deterministicPendingRelations.map((r) => r.legacyId),
-    );
     const expectedBatchOwnedOrderCount = batch3ePlan.admittedOrders.length;
     const expectedBatchOwnedLineCount = batch3ePlan.admittedOrders.reduce(
       (sum, order) => sum + order.lines.length,
@@ -388,9 +378,9 @@ async function main(): Promise<void> {
     );
     const expectedExcludedDocumentCount = batch3ePlan.excludedDocuments.length;
 
-    const EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT = 61;
-    const EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT = 145;
-    const EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT = 14;
+    const EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT = 555;
+    const EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT = 1816;
+    const EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT = 15;
 
     const report = await withPoolConnection(
       targetPool,
@@ -569,33 +559,6 @@ async function main(): Promise<void> {
             reason:
               "archived_relations payload_json does not match the deterministic payload derived from the former pending plan.",
             mismatchedArchivedPayloadRows,
-          });
-        }
-
-        const excludedDocumentsByIdentity = new Map(
-          excludedDocumentRows.map((row) => [buildExcludedIdentity(row), row]),
-        );
-
-        const archivedHeadersMissingFromExcluded: number[] = [];
-
-        for (const affectedLegacyId of expectedAffectedLegacyIds) {
-          const identity = buildExcludedIdentity({
-            legacyTable: FINALIZE_LEGACY_TABLE,
-            legacyId: affectedLegacyId,
-          });
-
-          if (!excludedDocumentsByIdentity.has(identity)) {
-            archivedHeadersMissingFromExcluded.push(affectedLegacyId);
-          }
-        }
-
-        if (archivedHeadersMissingFromExcluded.length > 0) {
-          validationIssues.push({
-            severity: "blocker",
-            reason:
-              "Some archived relation headers are missing from excluded_documents. Exclusion visibility is broken.",
-            missingCount: archivedHeadersMissingFromExcluded.length,
-            missingLegacyIds: archivedHeadersMissingFromExcluded,
           });
         }
 

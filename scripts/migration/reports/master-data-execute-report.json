@@ -1,247 +1,68 @@
 {
-  "allowBlockers": true,
-  "blockers": [
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq009",
-      "legacyId": 28,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq011",
-      "legacyId": 30,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq012",
-      "legacyId": 31,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq013",
-      "legacyId": 32,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": false,
-      "legacyCode": "cp013",
-      "legacyId": 35,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq025",
-      "legacyId": 106,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq039",
-      "legacyId": 136,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq043",
-      "legacyId": 145,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": false,
-      "legacyCode": "zjq045",
-      "legacyId": 156,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": false,
-      "legacyCode": "z h",
-      "legacyId": 159,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq047",
-      "legacyId": 198,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq048",
-      "legacyId": 199,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq050",
-      "legacyId": 201,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "dz053",
-      "legacyId": 205,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "dz54",
-      "legacyId": 206,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": false,
-      "legacyCode": "zjq60",
-      "legacyId": 234,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "yf10",
-      "legacyId": 235,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "yf 05",
-      "legacyId": 246,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "CP050",
-      "legacyId": 247,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "dz020",
-      "legacyId": 248,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    },
-    {
-      "entity": "material",
-      "fields": ["unit"],
-      "isActive": true,
-      "legacyCode": "zjq68",
-      "legacyId": 273,
-      "legacyTable": "saifute_material",
-      "reason": "Material unit is required for migration."
-    }
-  ],
+  "allowBlockers": false,
+  "blockers": [],
   "context": {
-    "activeMissingMaterialUnitCount": 17,
-    "missingMaterialUnitCount": 21
+    "activeMissingMaterialUnitCount": 0,
+    "missingMaterialUnitCount": 0
   },
   "counts": {
-    "sales": {
-      "archivedPayloads": 52,
+    "customer": {
+      "archivedPayloads": 2,
       "blocked": 0,
-      "planned": 184,
-      "source": 184
+      "planned": 388,
+      "source": 388
     },
     "material": {
-      "archivedPayloads": 320,
-      "blocked": 21,
-      "planned": 458,
-      "source": 458
+      "archivedPayloads": 337,
+      "blocked": 0,
+      "planned": 1092,
+      "source": 1092
     },
     "materialCategory": {
-      "archivedPayloads": 8,
+      "archivedPayloads": 14,
       "blocked": 0,
-      "planned": 8,
-      "source": 8
+      "planned": 14,
+      "source": 14
     },
     "personnel": {
-      "archivedPayloads": 51,
+      "archivedPayloads": 76,
       "blocked": 0,
-      "planned": 51,
-      "source": 51
+      "planned": 76,
+      "source": 76
     },
     "supplier": {
-      "archivedPayloads": 11,
+      "archivedPayloads": 3,
       "blocked": 0,
-      "planned": 93,
-      "source": 93
+      "planned": 259,
+      "source": 259
     },
     "workshop": {
-      "archivedPayloads": 12,
+      "archivedPayloads": 20,
       "blocked": 0,
-      "planned": 13,
-      "source": 13
+      "planned": 21,
+      "source": 21
     }
   },
   "duplicateRewrites": [
     {
-      "entity": "sales",
+      "entity": "customer",
       "keptLegacyId": 14,
       "originalCode": "2",
       "rewritten": [
         {
           "legacyId": 12,
           "rewrittenCode": "2-LEGACY-12"
+        }
+      ]
+    },
+    {
+      "entity": "customer",
+      "keptLegacyId": 254,
+      "originalCode": "239",
+      "rewritten": [
+        {
+          "legacyId": 253,
+          "rewrittenCode": "239-LEGACY-253"
         }
       ]
     },
@@ -284,12 +105,34 @@
     },
     {
       "entity": "material",
-      "keptLegacyId": 378,
-      "originalCode": "cp37",
+      "keptLegacyId": 726,
+      "originalCode": "cp022",
       "rewritten": [
         {
-          "legacyId": 371,
-          "rewrittenCode": "cp37-LEGACY-371"
+          "legacyId": 142,
+          "rewrittenCode": "cp022-LEGACY-142"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 442,
+      "originalCode": "cp039",
+      "rewritten": [
+        {
+          "legacyId": 396,
+          "rewrittenCode": "cp039-LEGACY-396"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 946,
+      "originalCode": "cp51",
+      "rewritten": [
+        {
+          "legacyId": 491,
+          "rewrittenCode": "cp51-LEGACY-491"
         }
       ]
     },
@@ -306,12 +149,56 @@
     },
     {
       "entity": "material",
+      "keptLegacyId": 676,
+      "originalCode": "dz18",
+      "rewritten": [
+        {
+          "legacyId": 405,
+          "rewrittenCode": "dz18-LEGACY-405"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 707,
+      "originalCode": "dz19",
+      "rewritten": [
+        {
+          "legacyId": 406,
+          "rewrittenCode": "dz19-LEGACY-406"
+        }
+      ]
+    },
+    {
+      "entity": "material",
       "keptLegacyId": 249,
       "originalCode": "gc1",
       "rewritten": [
         {
           "legacyId": 222,
           "rewrittenCode": "gc1-LEGACY-222"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 515,
+      "originalCode": "lb010",
+      "rewritten": [
+        {
+          "legacyId": 49,
+          "rewrittenCode": "lb010-LEGACY-49"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 956,
+      "originalCode": "lb033",
+      "rewritten": [
+        {
+          "legacyId": 792,
+          "rewrittenCode": "lb033-LEGACY-792"
         }
       ]
     },
@@ -350,6 +237,17 @@
     },
     {
       "entity": "material",
+      "keptLegacyId": 675,
+      "originalCode": "yf1",
+      "rewritten": [
+        {
+          "legacyId": 112,
+          "rewrittenCode": "yf1-LEGACY-112"
+        }
+      ]
+    },
+    {
+      "entity": "material",
       "keptLegacyId": 306,
       "originalCode": "yf11",
       "rewritten": [
@@ -378,6 +276,50 @@
         {
           "legacyId": 345,
           "rewrittenCode": "yf23-LEGACY-345"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 547,
+      "originalCode": "yf52",
+      "rewritten": [
+        {
+          "legacyId": 548,
+          "rewrittenCode": "yf52-LEGACY-548"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 936,
+      "originalCode": "yf60",
+      "rewritten": [
+        {
+          "legacyId": 803,
+          "rewrittenCode": "yf60-LEGACY-803"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 1072,
+      "originalCode": "yh29",
+      "rewritten": [
+        {
+          "legacyId": 1059,
+          "rewrittenCode": "yh29-LEGACY-1059"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 1063,
+      "originalCode": "zh50",
+      "rewritten": [
+        {
+          "legacyId": 1013,
+          "rewrittenCode": "zh50-LEGACY-1013"
         }
       ]
     },
@@ -438,6 +380,17 @@
     },
     {
       "entity": "material",
+      "keptLegacyId": 99,
+      "originalCode": "zjq064",
+      "rewritten": [
+        {
+          "legacyId": 219,
+          "rewrittenCode": "zjq064-LEGACY-219"
+        }
+      ]
+    },
+    {
+      "entity": "material",
       "keptLegacyId": 319,
       "originalCode": "zjq065",
       "rewritten": [
@@ -479,6 +432,94 @@
           "rewrittenCode": "zjq111-LEGACY-374"
         }
       ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 654,
+      "originalCode": "zjq149",
+      "rewritten": [
+        {
+          "legacyId": 527,
+          "rewrittenCode": "zjq149-LEGACY-527"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 614,
+      "originalCode": "zjq152",
+      "rewritten": [
+        {
+          "legacyId": 535,
+          "rewrittenCode": "zjq152-LEGACY-535"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 706,
+      "originalCode": "zjq153",
+      "rewritten": [
+        {
+          "legacyId": 536,
+          "rewrittenCode": "zjq153-LEGACY-536"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 744,
+      "originalCode": "zjq154",
+      "rewritten": [
+        {
+          "legacyId": 537,
+          "rewrittenCode": "zjq154-LEGACY-537"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 749,
+      "originalCode": "zjq155",
+      "rewritten": [
+        {
+          "legacyId": 538,
+          "rewrittenCode": "zjq155-LEGACY-538"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 751,
+      "originalCode": "zjq156",
+      "rewritten": [
+        {
+          "legacyId": 539,
+          "rewrittenCode": "zjq156-LEGACY-539"
+        }
+      ]
+    },
+    {
+      "entity": "material",
+      "keptLegacyId": 401,
+      "originalCode": "zjq157",
+      "rewritten": [
+        {
+          "legacyId": 540,
+          "rewrittenCode": "zjq157-LEGACY-540"
+        }
+      ]
+    },
+    {
+      "entity": "supplier",
+      "keptLegacyId": 74,
+      "originalCode": "zoucheng",
+      "rewritten": [
+        {
+          "legacyId": 102,
+          "rewrittenCode": "zoucheng-LEGACY-102"
+        }
+      ]
     }
   ],
   "entityOrder": [
@@ -486,23 +527,23 @@
     "workshop",
     "supplier",
     "personnel",
-    "sales",
+    "customer",
     "material"
   ],
   "executionRequested": true,
   "executionResult": {
-    "archivedPayloadCount": 454,
+    "archivedPayloadCount": 452,
     "insertedOrUpdatedCounts": {
-      "sales": 184,
-      "material": 437,
-      "materialCategory": 8,
-      "personnel": 51,
-      "supplier": 93,
-      "workshop": 13
+      "customer": 388,
+      "material": 1092,
+      "materialCategory": 14,
+      "personnel": 76,
+      "supplier": 259,
+      "workshop": 21
     },
     "skippedBlockedCounts": {
-      "sales": 0,
-      "material": 21,
+      "customer": 0,
+      "material": 0,
       "materialCategory": 0,
       "personnel": 0,
       "supplier": 0,
@@ -513,31 +554,93 @@
   "mode": "execute",
   "stagingReady": true,
   "targetCounts": {
-    "sales": {
-      "mapRows": 0,
-      "targetRows": 0
+    "customer": {
+      "mapRows": 388,
+      "targetRows": 388
     },
     "material": {
-      "mapRows": 0,
-      "targetRows": 0
+      "mapRows": 1092,
+      "targetRows": 1092
     },
     "materialCategory": {
-      "mapRows": 0,
-      "targetRows": 0
+      "mapRows": 14,
+      "targetRows": 14
     },
     "personnel": {
-      "mapRows": 0,
-      "targetRows": 0
+      "mapRows": 76,
+      "targetRows": 76
     },
     "supplier": {
-      "mapRows": 0,
-      "targetRows": 0
+      "mapRows": 259,
+      "targetRows": 259
     },
     "workshop": {
-      "mapRows": 0,
-      "targetRows": 0
+      "mapRows": 18,
+      "targetRows": 18
     }
   },
-  "targetDatabaseName": "saifute-wsm",
-  "warnings": []
+  "targetDatabaseName": "saifute-wms",
+  "warnings": [
+    {
+      "details": {
+        "evidence": "Active corrected duplicate material_id=36 keeps code cp013 for the same product family and uses this unit.",
+        "legacyUnitWasNull": true,
+        "referenceLegacyIds": [
+          36
+        ],
+        "status": "DISABLED",
+        "unitCode": "台"
+      },
+      "entity": "material",
+      "legacyId": 35,
+      "legacyTable": "saifute_material",
+      "reason": "Material unit filled by migration override."
+    },
+    {
+      "details": {
+        "evidence": "Active same-name material_id=331 and active same-code material_id=336 both use this unit.",
+        "legacyUnitWasNull": true,
+        "referenceLegacyIds": [
+          331,
+          336
+        ],
+        "status": "DISABLED",
+        "unitCode": "个"
+      },
+      "entity": "material",
+      "legacyId": 156,
+      "legacyTable": "saifute_material",
+      "reason": "Material unit filled by migration override."
+    },
+    {
+      "details": {
+        "evidence": "Active material_id=161 has the same material name, specification, and category.",
+        "legacyUnitWasNull": true,
+        "referenceLegacyIds": [
+          161
+        ],
+        "status": "DISABLED",
+        "unitCode": "支"
+      },
+      "entity": "material",
+      "legacyId": 159,
+      "legacyTable": "saifute_material",
+      "reason": "Material unit filled by migration override."
+    },
+    {
+      "details": {
+        "evidence": "Inactive duplicate has no exact active twin; active M19 training connector material_id=147 and comparable fitting rows use this unit.",
+        "legacyUnitWasNull": true,
+        "referenceLegacyIds": [
+          147
+        ],
+        "status": "DISABLED",
+        "unitCode": "个"
+      },
+      "entity": "material",
+      "legacyId": 234,
+      "legacyTable": "saifute_material",
+      "reason": "Material unit filled by migration override."
+    }
+  ]
 }

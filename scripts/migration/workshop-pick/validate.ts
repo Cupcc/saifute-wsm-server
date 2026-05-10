@@ -348,36 +348,36 @@ async function getForbiddenTableCounts(connection: {
     `
       SELECT 'approval_document' AS tableName, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'WORKSHOP_MATERIAL' OR documentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE document_family = 'WORKSHOP_MATERIAL' OR document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_relation' AS tableName, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
-         OR downstreamFamily = 'WORKSHOP_MATERIAL'
-         OR upstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'WORKSHOP_MATERIAL'
+         OR downstream_family = 'WORKSHOP_MATERIAL'
+         OR upstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS tableName, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
-         OR downstreamFamily = 'WORKSHOP_MATERIAL'
-         OR upstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'WORKSHOP_MATERIAL'
+         OR downstream_family = 'WORKSHOP_MATERIAL'
+         OR upstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS total
       FROM factory_number_reservation
-      WHERE businessDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_balance' AS tableName, COUNT(*) AS total
       FROM inventory_balance
       UNION ALL
       SELECT 'inventory_log' AS tableName, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS tableName, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
     `,
   );
 
@@ -446,29 +446,29 @@ async function getOrderRowsByDocumentNo(connection: {
     `
       SELECT
         id,
-        documentNo,
-        orderType,
-        bizDate,
-        handlerPersonnelId,
-        workshopId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus,
-        revisionNo,
-        handlerNameSnapshot,
-        workshopNameSnapshot,
-        totalQty,
-        totalAmount,
+        document_no AS documentNo,
+        order_type AS orderType,
+        biz_date AS bizDate,
+        handler_personnel_id AS handlerPersonnelId,
+        workshop_id AS workshopId,
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus,
+        revision_no AS revisionNo,
+        handler_name_snapshot AS handlerNameSnapshot,
+        workshop_name_snapshot AS workshopNameSnapshot,
+        total_qty AS totalQty,
+        total_amount AS totalAmount,
         remark,
-        voidReason,
-        voidedBy,
-        voidedAt,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        void_reason AS voidReason,
+        voided_by AS voidedBy,
+        voided_at AS voidedAt,
+        created_by AS createdBy,
+        created_at AS createdAt,
+        updated_by AS updatedBy,
+        updated_at AS updatedAt
       FROM workshop_material_order
-      ORDER BY documentNo ASC
+      ORDER BY document_no ASC
     `,
   );
 
@@ -530,28 +530,28 @@ async function getLineRowsByIdentity(connection: {
   >(
     `
       SELECT
-        order_row.documentNo AS documentNo,
-        line_row.lineNo AS lineNo,
-        line_row.materialId AS materialId,
-        line_row.materialCodeSnapshot AS materialCodeSnapshot,
-        line_row.materialNameSnapshot AS materialNameSnapshot,
-        line_row.materialSpecSnapshot AS materialSpecSnapshot,
-        line_row.unitCodeSnapshot AS unitCodeSnapshot,
+        order_row.document_no AS documentNo,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
+        line_row.material_code_snapshot AS materialCodeSnapshot,
+        line_row.material_name_snapshot AS materialNameSnapshot,
+        line_row.material_spec_snapshot AS materialSpecSnapshot,
+        line_row.unit_code_snapshot AS unitCodeSnapshot,
         line_row.quantity AS quantity,
-        line_row.unitPrice AS unitPrice,
+        line_row.unit_price AS unitPrice,
         line_row.amount AS amount,
-        line_row.sourceDocumentType AS sourceDocumentType,
-        line_row.sourceDocumentId AS sourceDocumentId,
-        line_row.sourceDocumentLineId AS sourceDocumentLineId,
+        line_row.source_document_type AS sourceDocumentType,
+        line_row.source_document_id AS sourceDocumentId,
+        line_row.source_document_line_id AS sourceDocumentLineId,
         line_row.remark AS remark,
-        line_row.createdBy AS createdBy,
-        line_row.createdAt AS createdAt,
-        line_row.updatedBy AS updatedBy,
-        line_row.updatedAt AS updatedAt
+        line_row.created_by AS createdBy,
+        line_row.created_at AS createdAt,
+        line_row.updated_by AS updatedBy,
+        line_row.updated_at AS updatedAt
       FROM workshop_material_order_line line_row
       INNER JOIN workshop_material_order order_row
-        ON order_row.id = line_row.orderId
-      ORDER BY order_row.documentNo ASC, line_row.lineNo ASC
+        ON order_row.id = line_row.order_id
+      ORDER BY order_row.document_no ASC, line_row.line_no ASC
     `,
   );
 

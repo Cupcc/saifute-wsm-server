@@ -28,6 +28,56 @@ import type {
 
 const BATCH_NAME = "batch1-master-data";
 
+type MaterialUnitOverride = {
+  unitCode: string;
+  evidence: string;
+  referenceLegacyIds: number[];
+};
+
+// These inactive legacy rows are unreferenced by business detail tables.
+// Keep the correction in migration code so the legacy source stays untouched.
+const MATERIAL_UNIT_OVERRIDES_BY_LEGACY_ID = new Map<
+  number,
+  MaterialUnitOverride
+>([
+  [
+    35,
+    {
+      unitCode: "\u53f0",
+      evidence:
+        "Active corrected duplicate material_id=36 keeps code cp013 for the same product family and uses this unit.",
+      referenceLegacyIds: [36],
+    },
+  ],
+  [
+    156,
+    {
+      unitCode: "\u4e2a",
+      evidence:
+        "Active same-name material_id=331 and active same-code material_id=336 both use this unit.",
+      referenceLegacyIds: [331, 336],
+    },
+  ],
+  [
+    159,
+    {
+      unitCode: "\u652f",
+      evidence:
+        "Active material_id=161 has the same material name, specification, and category.",
+      referenceLegacyIds: [161],
+    },
+  ],
+  [
+    234,
+    {
+      unitCode: "\u4e2a",
+      evidence:
+        "Inactive duplicate has no exact active twin; active M19 training connector material_id=147 and comparable fitting rows use this unit.",
+      referenceLegacyIds: [147],
+    },
+  ],
+]);
+
 const ENTITY_ORDER: MasterDataEntity[] = [
   "materialCategory",
   "workshop",
@@ -763,7 +813,12 @@ function transformMaterials(
     .sort((left, right) => left.materialId - right.materialId)
     .map((row) => {
       const materialName = normalizeOptionalText(row.materialName);
-      const unitCode = normalizeOptionalText(row.unit);
+      const sourceUnitCode = normalizeOptionalText(row.unit);
+      const unitOverride =
+        sourceUnitCode === null
+          ? (MATERIAL_UNIT_OVERRIDES_BY_LEGACY_ID.get(row.materialId) ?? null)
+          : null;
+      const unitCode = sourceUnitCode ?? unitOverride?.unitCode ?? null;
       const targetCode =
         codeByLegacyId.get(row.materialId) ??
         buildFallbackCode("MAT-LEGACY", row.materialId);
@@ -793,6 +848,22 @@ function transformMaterials(
             ["unit"],
             normalizeOptionalText(row.materialCode),
             toStatus(row.delFlag) === "ACTIVE",
+          ),
+        );
+      } else if (unitOverride) {
+        warnings.push(
+          createWarning(
+            "material",
+            "saifute_material",
+            row.materialId,
+            "Material unit filled by migration override.",
+            {
+              unitCode,
+              evidence: unitOverride.evidence,
+              referenceLegacyIds: unitOverride.referenceLegacyIds,
+              legacyUnitWasNull: row.unit === null,
+              status: toStatus(row.delFlag),
+            },
           ),
         );
       }
@@ -867,6 +938,13 @@ function transformMaterials(
               {
                 isAttachment: row.isAttachment,
                 isHidden: row.isHidden,
+                materialUnitOverride: unitOverride
+                  ? {
+                      unitCode,
+                      evidence: unitOverride.evidence,
+                      referenceLegacyIds: unitOverride.referenceLegacyIds,
+                    }
+                  : null,
                 voidDescription: normalizeOptionalText(row.voidDescription),
                 unmatchedCategoryCode:
                   sourceCategoryCode && sourceCategoryRecord === null

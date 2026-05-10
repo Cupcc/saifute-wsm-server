@@ -1065,7 +1065,7 @@ function resolveHeaderDependencies(
         legacyTable: project.legacyTable,
         legacyId: project.legacyId,
         reason:
-          "Customer dependency is missing from the batch1 customer map; preserving customer snapshot without customerId.",
+          "Customer dependency is missing from the batch1 customer map; preserving customer snapshot without customer_id.",
         details: {
           customerLegacyId,
           customerName: legacyCustomerName,
@@ -1102,7 +1102,7 @@ function resolveHeaderDependencies(
           legacyTable: project.legacyTable,
           legacyId: project.legacyId,
           reason:
-            "Manager personnel name is missing from the migrated personnel snapshot; preserving managerNameSnapshot without managerPersonnelId.",
+            "Manager personnel name is missing from the migrated personnel snapshot; preserving manager_name_snapshot without manager_personnel_id.",
           details: {
             salesman: normalizedSalesman,
           },

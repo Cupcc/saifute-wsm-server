@@ -621,7 +621,7 @@ function resolveHeaderDependencies(
           legacyTable: order.legacyTable,
           legacyId: order.legacyId,
           reason:
-            "Picker name is missing from the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId.",
+            "Picker name is missing from the migrated personnel snapshot; preserving handler_name_snapshot without handler_personnel_id.",
           details: {
             picker: normalizedPicker,
           },
@@ -704,7 +704,7 @@ function prepareLines(
     if (!unitPrice) {
       priceDerivationFailureCount += 1;
       exclusionReasons.push(
-        `Line ${line.legacyTable}#${line.legacyId} amount ${amount} cannot derive a deterministic unitPrice from quantity ${quantity}.`,
+        `Line ${line.legacyTable}#${line.legacyId} amount ${amount} cannot derive a deterministic unit_price from quantity ${quantity}.`,
       );
       continue;
     }
