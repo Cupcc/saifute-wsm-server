@@ -627,7 +627,7 @@ function resolveHeaderDependencies(
         legacyTable: order.legacyTable,
         legacyId: order.legacyId,
         reason:
-          "Customer dependency is missing from the batch1 customer map; preserving customer snapshot without customerId.",
+          "Customer dependency is missing from the batch1 customer map; preserving customer snapshot without customer_id.",
         details: {
           customerLegacyId,
           customerName: legacyCustomerName,
@@ -664,7 +664,7 @@ function resolveHeaderDependencies(
           legacyTable: order.legacyTable,
           legacyId: order.legacyId,
           reason:
-            "Handler personnel name is missing from the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId.",
+            "Handler personnel name is missing from the migrated personnel snapshot; preserving handler_name_snapshot without handler_personnel_id.",
           details: {
             chargeBy: normalizedChargeBy,
           },
@@ -917,6 +917,7 @@ export function buildOutboundMigrationPlan(
             unitCodeSnapshot: preparedLine.material.unitCode,
             quantity: preparedLine.quantity,
             unitPrice: preparedLine.unitPrice,
+            selectedUnitCost: "0.00",
             amount: preparedLine.amount,
             startNumber: null,
             endNumber: null,

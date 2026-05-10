@@ -33,8 +33,16 @@ const SALES_STOCK_DOCUMENT_TYPE = BusinessDocumentType.SalesStockOrder;
 const WORKSHOP_MATERIAL_DOCUMENT_TYPE =
   BusinessDocumentType.WorkshopMaterialOrder;
 
-function buildBalanceKey(materialId: number, workshopId: number): string {
-  return `${materialId}::${workshopId}`;
+function buildBalanceKey(materialId: number, stockScopeId: number): string {
+  return `${materialId}::${stockScopeId}`;
+}
+
+function normalizeStockScopeId(
+  stockScopeId: number | null | undefined,
+): number {
+  return typeof stockScopeId === "number" && stockScopeId > 0
+    ? stockScopeId
+    : 0;
 }
 
 function buildIdempotencyKey(
@@ -519,6 +527,7 @@ interface ReplayLineInput {
   orderId: number;
   lineNo: number;
   materialId: number;
+  stockScopeId: number;
   workshopId: number;
   quantity: string;
   documentType: BusinessDocumentTypeValue;
@@ -554,6 +563,7 @@ function buildInventoryReplayPlan(
       orderId: line.orderId,
       lineNo: line.lineNo,
       materialId: line.materialId,
+      stockScopeId: normalizeStockScopeId(line.stockScopeId),
       workshopId: line.workshopId,
       quantity: line.quantity,
       documentType: STOCK_IN_DOCUMENT_TYPE,
@@ -574,6 +584,7 @@ function buildInventoryReplayPlan(
       orderId: line.orderId,
       lineNo: line.lineNo,
       materialId: line.materialId,
+      stockScopeId: normalizeStockScopeId(line.stockScopeId),
       workshopId: line.workshopId,
       quantity: line.quantity,
       documentType: SALES_STOCK_DOCUMENT_TYPE,
@@ -591,6 +602,7 @@ function buildInventoryReplayPlan(
       orderId: line.orderId,
       lineNo: line.lineNo,
       materialId: line.materialId,
+      stockScopeId: normalizeStockScopeId(line.stockScopeId),
       workshopId: line.workshopId,
       quantity: line.quantity,
       documentType: SALES_STOCK_DOCUMENT_TYPE,
@@ -608,6 +620,7 @@ function buildInventoryReplayPlan(
       orderId: line.orderId,
       lineNo: line.lineNo,
       materialId: line.materialId,
+      stockScopeId: normalizeStockScopeId(line.stockScopeId),
       workshopId: line.workshopId,
       quantity: line.quantity,
       documentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
@@ -625,6 +638,7 @@ function buildInventoryReplayPlan(
       orderId: line.orderId,
       lineNo: line.lineNo,
       materialId: line.materialId,
+      stockScopeId: normalizeStockScopeId(line.stockScopeId),
       workshopId: line.workshopId,
       quantity: line.quantity,
       documentType: WORKSHOP_MATERIAL_DOCUMENT_TYPE,
@@ -656,7 +670,7 @@ function buildInventoryReplayPlan(
   });
 
   for (const line of allLines) {
-    const balanceKey = buildBalanceKey(line.materialId, line.workshopId);
+    const balanceKey = buildBalanceKey(line.materialId, line.stockScopeId);
     const currentBalance = balanceMap.get(balanceKey) ?? "0.000000";
 
     const primaryKey = buildIdempotencyKey(
@@ -679,7 +693,9 @@ function buildInventoryReplayPlan(
         idempotencyKey: primaryKey,
         balanceKey,
         materialId: line.materialId,
+        stockScopeId: line.stockScopeId,
         workshopId: line.workshopId,
+        bizDate: line.bizDate,
         direction: line.direction,
         operationType:
           line.operationType as InventoryLogInsert["operationType"],
@@ -702,7 +718,9 @@ function buildInventoryReplayPlan(
         idempotencyKey: primaryKey,
         balanceKey,
         materialId: line.materialId,
+        stockScopeId: line.stockScopeId,
         workshopId: line.workshopId,
+        bizDate: line.bizDate,
         direction: line.direction,
         operationType:
           line.operationType as InventoryLogInsert["operationType"],
@@ -732,7 +750,9 @@ function buildInventoryReplayPlan(
         idempotencyKey: reversalKey,
         balanceKey,
         materialId: line.materialId,
+        stockScopeId: line.stockScopeId,
         workshopId: line.workshopId,
+        bizDate: line.bizDate,
         direction: reversalDirection,
         operationType: reversalOperation,
         businessModule: line.businessModule,
@@ -1031,17 +1051,20 @@ export function buildPostAdmissionMigrationPlan(
   };
 
   const globalBlockers: PostAdmissionMigrationPlan["globalBlockers"] = [];
+  const missingStockScopeLogCount = replay.logInserts.filter(
+    (log) => log.stockScopeId <= 0,
+  ).length;
 
   if (
-    counts.admittedSalesReturnOrders !== 9 ||
-    counts.admittedSalesReturnLines !== 13
+    counts.admittedSalesReturnOrders !== 37 ||
+    counts.admittedSalesReturnLines !== 46
   ) {
     globalBlockers.push({
       reason:
-        "Admitted sales-return baseline does not match the reviewed-no-findings expectation of 9 orders and 13 lines.",
+        "Admitted sales-return baseline does not match the reviewed-no-findings full-import expectation of 37 orders and 46 lines.",
       details: {
-        expectedOrders: 9,
-        expectedLines: 13,
+        expectedOrders: 37,
+        expectedLines: 46,
         actualOrders: counts.admittedSalesReturnOrders,
         actualLines: counts.admittedSalesReturnLines,
       },
@@ -1049,17 +1072,27 @@ export function buildPostAdmissionMigrationPlan(
   }
 
   if (
-    counts.admittedWorkshopReturnOrders !== 3 ||
-    counts.admittedWorkshopReturnLines !== 4
+    counts.admittedWorkshopReturnOrders !== 23 ||
+    counts.admittedWorkshopReturnLines !== 32
   ) {
     globalBlockers.push({
       reason:
-        "Admitted workshop-return baseline does not match the reviewed-no-findings expectation of 3 orders and 4 lines.",
+        "Admitted workshop-return baseline does not match the reviewed-no-findings full-import expectation of 23 orders and 32 lines.",
       details: {
-        expectedOrders: 3,
-        expectedLines: 4,
+        expectedOrders: 23,
+        expectedLines: 32,
         actualOrders: counts.admittedWorkshopReturnOrders,
         actualLines: counts.admittedWorkshopReturnLines,
+      },
+    });
+  }
+
+  if (missingStockScopeLogCount > 0) {
+    globalBlockers.push({
+      reason:
+        "Post-admission inventory replay contains rows without stock_scope_id; run stock-scope seeding/backfill before this phase.",
+      details: {
+        missingStockScopeLogCount,
       },
     });
   }

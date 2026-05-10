@@ -94,26 +94,32 @@ async function upsertWorkshopMaterialOrder(
     connection,
     `
       INSERT INTO workshop_material_order (
-        documentNo, orderType, bizDate, handlerPersonnelId, workshopId,
-        lifecycleStatus, auditStatusSnapshot, inventoryEffectStatus, revisionNo,
-        handlerNameSnapshot, workshopNameSnapshot, totalQty, totalAmount,
-        remark, voidReason, voidedBy, voidedAt,
-        createdBy, createdAt, updatedBy, updatedAt
+        document_no, order_type, biz_date, handler_personnel_id, workshop_id, stock_scope_id,
+        lifecycle_status, audit_status_snapshot, inventory_effect_status, revision_no,
+        handler_name_snapshot, workshop_name_snapshot, total_qty, total_amount,
+        remark, void_reason, voided_by, voided_at,
+        created_by, created_at, updated_by, updated_at
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
+        CASE
+          WHEN ? = '研发小仓' THEN (SELECT id FROM stock_scope WHERE scope_code = 'RD_SUB' LIMIT 1)
+          ELSE (SELECT id FROM stock_scope WHERE scope_code = 'MAIN' LIMIT 1)
+        END,
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
         ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        orderType = VALUES(orderType), bizDate = VALUES(bizDate),
-        handlerPersonnelId = VALUES(handlerPersonnelId), workshopId = VALUES(workshopId),
-        lifecycleStatus = VALUES(lifecycleStatus), auditStatusSnapshot = VALUES(auditStatusSnapshot),
-        inventoryEffectStatus = VALUES(inventoryEffectStatus), revisionNo = VALUES(revisionNo),
-        handlerNameSnapshot = VALUES(handlerNameSnapshot), workshopNameSnapshot = VALUES(workshopNameSnapshot),
-        totalQty = VALUES(totalQty), totalAmount = VALUES(totalAmount),
-        remark = VALUES(remark), voidReason = VALUES(voidReason),
-        voidedBy = VALUES(voidedBy), voidedAt = VALUES(voidedAt),
-        createdBy = VALUES(createdBy), createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy), updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        order_type = VALUES(order_type), biz_date = VALUES(biz_date),
+        handler_personnel_id = VALUES(handler_personnel_id), workshop_id = VALUES(workshop_id),
+        stock_scope_id = VALUES(stock_scope_id),
+        lifecycle_status = VALUES(lifecycle_status), audit_status_snapshot = VALUES(audit_status_snapshot),
+        inventory_effect_status = VALUES(inventory_effect_status), revision_no = VALUES(revision_no),
+        handler_name_snapshot = VALUES(handler_name_snapshot), workshop_name_snapshot = VALUES(workshop_name_snapshot),
+        total_qty = VALUES(total_qty), total_amount = VALUES(total_amount),
+        remark = VALUES(remark), void_reason = VALUES(void_reason),
+        voided_by = VALUES(voided_by), voided_at = VALUES(voided_at),
+        created_by = VALUES(created_by), created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by), updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [
@@ -122,6 +128,7 @@ async function upsertWorkshopMaterialOrder(
       record.target.bizDate,
       record.target.handlerPersonnelId,
       record.target.workshopId,
+      record.target.workshopNameSnapshot,
       record.target.lifecycleStatus,
       record.target.auditStatusSnapshot,
       record.target.inventoryEffectStatus,
@@ -151,24 +158,24 @@ async function upsertWorkshopMaterialOrderLine(
     connection,
     `
       INSERT INTO workshop_material_order_line (
-        orderId, lineNo, materialId, materialCodeSnapshot, materialNameSnapshot,
-        materialSpecSnapshot, unitCodeSnapshot, quantity, unitPrice, amount,
-        sourceDocumentType, sourceDocumentId, sourceDocumentLineId,
-        remark, createdBy, createdAt, updatedBy, updatedAt
+        order_id, line_no, material_id, material_code_snapshot, material_name_snapshot,
+        material_spec_snapshot, unit_code_snapshot, quantity, unit_price, amount,
+        source_document_type, source_document_id, source_document_line_id,
+        remark, created_by, created_at, updated_by, updated_at
       ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
         ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, COALESCE(?, CURRENT_TIMESTAMP)
       )
       ON DUPLICATE KEY UPDATE
-        materialId = VALUES(materialId), materialCodeSnapshot = VALUES(materialCodeSnapshot),
-        materialNameSnapshot = VALUES(materialNameSnapshot), materialSpecSnapshot = VALUES(materialSpecSnapshot),
-        unitCodeSnapshot = VALUES(unitCodeSnapshot), quantity = VALUES(quantity),
-        unitPrice = VALUES(unitPrice), amount = VALUES(amount),
-        sourceDocumentType = VALUES(sourceDocumentType), sourceDocumentId = VALUES(sourceDocumentId),
-        sourceDocumentLineId = VALUES(sourceDocumentLineId),
-        remark = VALUES(remark), createdBy = VALUES(createdBy),
-        createdAt = COALESCE(VALUES(createdAt), createdAt),
-        updatedBy = VALUES(updatedBy), updatedAt = COALESCE(VALUES(updatedAt), updatedAt),
+        material_id = VALUES(material_id), material_code_snapshot = VALUES(material_code_snapshot),
+        material_name_snapshot = VALUES(material_name_snapshot), material_spec_snapshot = VALUES(material_spec_snapshot),
+        unit_code_snapshot = VALUES(unit_code_snapshot), quantity = VALUES(quantity),
+        unit_price = VALUES(unit_price), amount = VALUES(amount),
+        source_document_type = VALUES(source_document_type), source_document_id = VALUES(source_document_id),
+        source_document_line_id = VALUES(source_document_line_id),
+        remark = VALUES(remark), created_by = VALUES(created_by),
+        created_at = COALESCE(VALUES(created_at), created_at),
+        updated_by = VALUES(updated_by), updated_at = COALESCE(VALUES(updated_at), updated_at),
         id = LAST_INSERT_ID(id)
     `,
     [

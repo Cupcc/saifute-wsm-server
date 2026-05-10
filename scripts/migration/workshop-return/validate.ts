@@ -137,15 +137,15 @@ async function getOrderMapTargetRows(
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
-        order_row.documentNo AS foundDocumentNo,
-        order_row.orderType AS foundOrderType,
-        order_row.lifecycleStatus AS foundLifecycleStatus,
-        order_row.auditStatusSnapshot AS foundAuditStatusSnapshot,
-        order_row.inventoryEffectStatus AS foundInventoryEffectStatus,
-        order_row.workshopId AS foundWorkshopId,
-        order_row.bizDate AS foundBizDate,
-        order_row.totalQty AS foundTotalQty,
-        order_row.totalAmount AS foundTotalAmount
+        order_row.document_no AS foundDocumentNo,
+        order_row.order_type AS foundOrderType,
+        order_row.lifecycle_status AS foundLifecycleStatus,
+        order_row.audit_status_snapshot AS foundAuditStatusSnapshot,
+        order_row.inventory_effect_status AS foundInventoryEffectStatus,
+        order_row.workshop_id AS foundWorkshopId,
+        order_row.biz_date AS foundBizDate,
+        order_row.total_qty AS foundTotalQty,
+        order_row.total_amount AS foundTotalAmount
       FROM migration_staging.${MAP_TABLES.order} map_row
       LEFT JOIN ${TARGET_TABLES.order} order_row
         ON order_row.id = map_row.target_id
@@ -170,13 +170,13 @@ async function getLineMapTargetRows(
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
-        line_row.orderId AS foundOrderId,
-        line_row.lineNo AS foundLineNo,
-        line_row.materialId AS foundMaterialId,
+        line_row.order_id AS foundOrderId,
+        line_row.line_no AS foundLineNo,
+        line_row.material_id AS foundMaterialId,
         line_row.quantity AS foundQuantity,
-        line_row.sourceDocumentType AS foundSourceDocumentType,
-        line_row.sourceDocumentId AS foundSourceDocumentId,
-        line_row.sourceDocumentLineId AS foundSourceDocumentLineId
+        line_row.source_document_type AS foundSourceDocumentType,
+        line_row.source_document_id AS foundSourceDocumentId,
+        line_row.source_document_line_id AS foundSourceDocumentLineId
       FROM migration_staging.${MAP_TABLES.line} map_row
       LEFT JOIN ${TARGET_TABLES.line} line_row
         ON line_row.id = map_row.target_id
@@ -290,7 +290,7 @@ async function getMapCounts(
         FROM migration_staging.${MAP_TABLES.line} map_row
         INNER JOIN ${TARGET_TABLES.line} line_row ON line_row.id = map_row.target_id
         WHERE map_row.migration_batch = ?
-          AND line_row.sourceDocumentType IS NULL
+          AND line_row.source_document_type IS NULL
       `,
         [migrationBatch],
       ),
@@ -303,9 +303,9 @@ async function getMapCounts(
   };
 }
 
-const EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT = 61;
-const EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT = 145;
-const EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT = 14;
+const EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT = 555;
+const EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT = 1816;
+const EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT = 15;
 const BATCH3B_MIGRATION_BATCH = "batch3b-workshop-pick-base";
 
 function readForbiddenTableBaseline(
@@ -390,10 +390,10 @@ async function getBatch3bPickBaselinePreservation(connection: {
           WHERE migration_batch = ?
             AND legacy_table = 'saifute_pick_order')        AS pickExcludedCount,
         (SELECT COUNT(*) FROM workshop_material_order
-          WHERE orderType = 'PICK')                         AS pickOrderCount,
+          WHERE order_type = 'PICK')                         AS pickOrderCount,
         (SELECT COUNT(*) FROM workshop_material_order_line wol
-          INNER JOIN workshop_material_order wo ON wo.id = wol.orderId
-          WHERE wo.orderType = 'PICK')                      AS pickLineCount
+          INNER JOIN workshop_material_order wo ON wo.id = wol.order_id
+          WHERE wo.order_type = 'PICK')                      AS pickLineCount
     `,
     [BATCH3B_MIGRATION_BATCH, BATCH3B_MIGRATION_BATCH, BATCH3B_MIGRATION_BATCH],
   );
@@ -608,7 +608,7 @@ function buildIntegrityIssues(
       issues.push({
         scope: "workshop_material_order_line",
         issue:
-          "Target line row sourceDocumentType is set but is not WorkshopMaterialOrder",
+          "Target line row source_document_type is set but is not WorkshopMaterialOrder",
         details: {
           legacyId: row.legacyId,
           targetId: row.targetId,
@@ -628,7 +628,7 @@ function buildIntegrityIssues(
       issues.push({
         scope: "workshop_material_order_line",
         issue:
-          "Target line row has sourceDocumentType set but sourceDocumentId or sourceDocumentLineId is missing — inconsistent source triple",
+          "Target line row has source_document_type set but source_document_id or source_document_line_id is missing — inconsistent source triple",
         details: {
           legacyId: row.legacyId,
           targetId: row.targetId,

@@ -27,6 +27,7 @@ import {
 
 const WORKSHOP_MATERIAL_DOCUMENT_TYPE =
   BusinessDocumentType.WorkshopMaterialOrder;
+
 import { executeWorkshopReturnPlan, MAP_TABLES, TARGET_TABLES } from "./writer";
 
 interface StoredMapRow {
@@ -168,19 +169,19 @@ async function getOrderMapRows(
         map_row.target_table AS targetTable,
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
-        order_row.documentNo AS actualTargetCode,
+        order_row.document_no AS actualTargetCode,
         CASE
           WHEN order_row.id IS NULL THEN NULL
           ELSE CONCAT_WS(
             '|',
-            COALESCE(order_row.orderType, ''),
-            COALESCE(CAST(order_row.workshopId AS CHAR), ''),
-            COALESCE(order_row.lifecycleStatus, ''),
-            COALESCE(order_row.auditStatusSnapshot, ''),
-            COALESCE(order_row.inventoryEffectStatus, ''),
-            COALESCE(CAST(order_row.bizDate AS CHAR), ''),
-            COALESCE(CAST(order_row.totalQty AS CHAR), ''),
-            COALESCE(CAST(order_row.totalAmount AS CHAR), '')
+            COALESCE(order_row.order_type, ''),
+            COALESCE(CAST(order_row.workshop_id AS CHAR), ''),
+            COALESCE(order_row.lifecycle_status, ''),
+            COALESCE(order_row.audit_status_snapshot, ''),
+            COALESCE(order_row.inventory_effect_status, ''),
+            COALESCE(CAST(order_row.biz_date AS CHAR), ''),
+            COALESCE(CAST(order_row.total_qty AS CHAR), ''),
+            COALESCE(CAST(order_row.total_amount AS CHAR), '')
           )
         END AS actualFingerprint
       FROM migration_staging.${MAP_TABLES.order} map_row
@@ -208,25 +209,25 @@ async function getLineMapRows(
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
         CASE
-          WHEN order_row.documentNo IS NULL OR line_row.lineNo IS NULL THEN NULL
-          ELSE CONCAT(order_row.documentNo, '#', line_row.lineNo)
+          WHEN order_row.document_no IS NULL OR line_row.line_no IS NULL THEN NULL
+          ELSE CONCAT(order_row.document_no, '#', line_row.line_no)
         END AS actualTargetCode,
         CASE
           WHEN line_row.id IS NULL THEN NULL
           ELSE CONCAT_WS(
             '|',
-            COALESCE(CAST(line_row.materialId AS CHAR), ''),
+            COALESCE(CAST(line_row.material_id AS CHAR), ''),
             COALESCE(CAST(line_row.quantity AS CHAR), ''),
-            COALESCE(line_row.sourceDocumentType, ''),
-            COALESCE(CAST(line_row.sourceDocumentId AS CHAR), ''),
-            COALESCE(CAST(line_row.sourceDocumentLineId AS CHAR), '')
+            COALESCE(line_row.source_document_type, ''),
+            COALESCE(CAST(line_row.source_document_id AS CHAR), ''),
+            COALESCE(CAST(line_row.source_document_line_id AS CHAR), '')
           )
         END AS actualFingerprint
       FROM migration_staging.${MAP_TABLES.line} map_row
       LEFT JOIN ${TARGET_TABLES.line} line_row
         ON line_row.id = map_row.target_id
       LEFT JOIN ${TARGET_TABLES.order} order_row
-        ON order_row.id = line_row.orderId
+        ON order_row.id = line_row.order_id
       WHERE map_row.migration_batch = ?
       ORDER BY map_row.legacy_table ASC, map_row.legacy_id ASC
     `,
@@ -333,12 +334,12 @@ async function getExistingUnownedDocumentNos(
   const placeholders = plannedDocumentNos.map(() => "?").join(", ");
   const rows = await connection.query<Array<{ documentNo: string }>>(
     `
-      SELECT order_row.documentNo
+      SELECT order_row.document_no AS documentNo
       FROM ${TARGET_TABLES.order} order_row
       LEFT JOIN migration_staging.${MAP_TABLES.order} map_row
         ON map_row.target_id = order_row.id
         AND map_row.migration_batch = ?
-      WHERE order_row.documentNo IN (${placeholders})
+      WHERE order_row.document_no IN (${placeholders})
         AND map_row.target_id IS NULL
     `,
     [migrationBatch, ...plannedDocumentNos],
@@ -356,29 +357,29 @@ async function getDownstreamConsumerCounts(connection: {
     `
       SELECT 'approval_document' AS consumer, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'WORKSHOP_MATERIAL' OR documentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE document_family = 'WORKSHOP_MATERIAL' OR document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_relation' AS consumer, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
-         OR downstreamFamily = 'WORKSHOP_MATERIAL'
-         OR upstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'WORKSHOP_MATERIAL'
+         OR downstream_family = 'WORKSHOP_MATERIAL'
+         OR upstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS consumer, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'WORKSHOP_MATERIAL'
-         OR downstreamFamily = 'WORKSHOP_MATERIAL'
-         OR upstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'WORKSHOP_MATERIAL'
+         OR downstream_family = 'WORKSHOP_MATERIAL'
+         OR upstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_log' AS consumer, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS consumer, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${WORKSHOP_MATERIAL_DOCUMENT_TYPE}'
     `,
   );
 
@@ -456,10 +457,10 @@ async function getBatch3bPickBaselinePreservation(connection: {
           WHERE migration_batch = ?
             AND legacy_table = 'saifute_pick_order')        AS pickExcludedCount,
         (SELECT COUNT(*) FROM workshop_material_order
-          WHERE orderType = 'PICK')                         AS pickOrderCount,
+          WHERE order_type = 'PICK')                         AS pickOrderCount,
         (SELECT COUNT(*) FROM workshop_material_order_line wol
-          INNER JOIN workshop_material_order wo ON wo.id = wol.orderId
-          WHERE wo.orderType = 'PICK')                      AS pickLineCount
+          INNER JOIN workshop_material_order wo ON wo.id = wol.order_id
+          WHERE wo.order_type = 'PICK')                      AS pickLineCount
     `,
     [BATCH3B_MIGRATION_BATCH, BATCH3B_MIGRATION_BATCH, BATCH3B_MIGRATION_BATCH],
   );

@@ -43,29 +43,29 @@ const STOCK_IN_TABLE = "stock_in_order_line";
 const SALES_TABLE = "sales_stock_order_line";
 const SNAPSHOT_COLUMNS = [
   {
-    name: "materialCategoryIdSnapshot",
-    sql: "ADD COLUMN `materialCategoryIdSnapshot` INT NULL",
+    name: "material_category_id_snapshot",
+    sql: "ADD COLUMN `material_category_id_snapshot` INT NULL",
   },
   {
-    name: "materialCategoryCodeSnapshot",
-    sql: "ADD COLUMN `materialCategoryCodeSnapshot` VARCHAR(64) NULL",
+    name: "material_category_code_snapshot",
+    sql: "ADD COLUMN `material_category_code_snapshot` VARCHAR(64) NULL",
   },
   {
-    name: "materialCategoryNameSnapshot",
-    sql: "ADD COLUMN `materialCategoryNameSnapshot` VARCHAR(128) NULL",
+    name: "material_category_name_snapshot",
+    sql: "ADD COLUMN `material_category_name_snapshot` VARCHAR(128) NULL",
   },
   {
-    name: "materialCategoryPathSnapshot",
-    sql: "ADD COLUMN `materialCategoryPathSnapshot` JSON NULL",
+    name: "material_category_path_snapshot",
+    sql: "ADD COLUMN `material_category_path_snapshot` JSON NULL",
   },
 ] as const;
 
 function buildMissingSnapshotWhereClause() {
   return `(
-    materialCategoryIdSnapshot IS NULL
-    OR materialCategoryCodeSnapshot IS NULL
-    OR materialCategoryNameSnapshot IS NULL
-    OR materialCategoryPathSnapshot IS NULL
+    material_category_id_snapshot IS NULL
+    OR material_category_code_snapshot IS NULL
+    OR material_category_name_snapshot IS NULL
+    OR material_category_path_snapshot IS NULL
   )`;
 }
 
@@ -155,10 +155,31 @@ async function countMissingMaterialRows(
     `
       SELECT COUNT(*) AS total
       FROM \`${tableName}\` line
-      LEFT JOIN material material ON material.id = line.materialId
+      LEFT JOIN material material ON material.id = line.material_id
       WHERE ${
         snapshotColumnsReady ? `${buildMissingSnapshotWhereClause()} AND ` : ""
       } material.id IS NULL
+    `,
+  );
+
+  return Number(rows[0]?.total ?? 0);
+}
+
+async function countFallbackRequiredRows(
+  connection: MigrationConnection,
+  tableName: string,
+  snapshotColumnsReady: boolean,
+): Promise<number> {
+  const rows = await connection.query<Array<{ total: number }>>(
+    `
+      SELECT COUNT(*) AS total
+      FROM \`${tableName}\` line
+      LEFT JOIN material material ON material.id = line.material_id
+      LEFT JOIN material_category category
+        ON category.id = material.category_id
+      WHERE ${
+        snapshotColumnsReady ? `${buildMissingSnapshotWhereClause()} AND ` : ""
+      } (material.id IS NULL OR material.category_id IS NULL OR category.id IS NULL)
     `,
   );
 
@@ -175,7 +196,7 @@ async function readPendingLineBatch(
   if (!snapshotColumnsReady) {
     return connection.query<PendingLineRow[]>(
       `
-        SELECT id, materialId
+        SELECT id, material_id AS materialId
         FROM \`${tableName}\`
         WHERE id > ?
         ORDER BY id ASC
@@ -187,7 +208,7 @@ async function readPendingLineBatch(
 
   return connection.query<PendingLineRow[]>(
     `
-      SELECT id, materialId
+      SELECT id, material_id AS materialId
       FROM \`${tableName}\`
       WHERE ${buildMissingSnapshotWhereClause()}
         AND id > ?
@@ -209,7 +230,7 @@ async function readMaterials(
   const placeholders = materialIds.map(() => "?").join(", ");
   const rows = await connection.query<MaterialRow[]>(
     `
-      SELECT id, categoryId
+      SELECT id, category_id AS categoryId
       FROM material
       WHERE id IN (${placeholders})
     `,
@@ -226,8 +247,8 @@ async function readCategories(
     `
       SELECT
         id,
-        categoryCode,
-        categoryName
+        category_code AS categoryCode,
+        category_name AS categoryName
       FROM material_category
     `,
   );
@@ -315,10 +336,10 @@ async function applyBackfillBatch(
         `
           UPDATE \`${tableName}\`
           SET
-            materialCategoryIdSnapshot = ?,
-            materialCategoryCodeSnapshot = ?,
-            materialCategoryNameSnapshot = ?,
-            materialCategoryPathSnapshot = ?
+            material_category_id_snapshot = ?,
+            material_category_code_snapshot = ?,
+            material_category_name_snapshot = ?,
+            material_category_path_snapshot = ?
           WHERE id = ?
         `,
         [
@@ -452,13 +473,6 @@ async function main() {
         salesSnapshotColumnsReady,
       );
 
-      const blockers: string[] = [];
-      if (!defaultCategory) {
-        blockers.push(
-          `Default material category ${DEFAULT_CATEGORY_CODE} is missing.`,
-        );
-      }
-
       const stockInMissingMaterials = await countMissingMaterialRows(
         connection,
         STOCK_IN_TABLE,
@@ -469,6 +483,25 @@ async function main() {
         SALES_TABLE,
         salesSnapshotColumnsReady,
       );
+      const stockInFallbackRequiredRows = await countFallbackRequiredRows(
+        connection,
+        STOCK_IN_TABLE,
+        stockInSnapshotColumnsReady,
+      );
+      const salesFallbackRequiredRows = await countFallbackRequiredRows(
+        connection,
+        SALES_TABLE,
+        salesSnapshotColumnsReady,
+      );
+      const blockers: string[] = [];
+      if (
+        !defaultCategory &&
+        (stockInFallbackRequiredRows > 0 || salesFallbackRequiredRows > 0)
+      ) {
+        blockers.push(
+          `Default material category ${DEFAULT_CATEGORY_CODE} is missing and ${stockInFallbackRequiredRows + salesFallbackRequiredRows} rows require fallback.`,
+        );
+      }
 
       const dryRunReport = {
         mode: cliOptions.execute ? "execute" : "dry-run",
@@ -484,6 +517,8 @@ async function main() {
           salesMissingSnapshotRows,
           stockInMissingMaterialRows: stockInMissingMaterials,
           salesMissingMaterialRows: salesMissingMaterials,
+          stockInFallbackRequiredRows,
+          salesFallbackRequiredRows,
           stockInCurrentMissingCount: stockInMissingSnapshotRows,
           salesCurrentMissingCount: salesMissingSnapshotRows,
         },

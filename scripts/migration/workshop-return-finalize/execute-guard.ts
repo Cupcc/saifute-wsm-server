@@ -3,7 +3,7 @@ import type {
   FinalizationArchiveCandidate,
   PendingRelationDbRow,
 } from "./types";
-import { ALLOWED_FINALIZE_REASON } from "./types";
+import { ALLOWED_FINALIZE_REASONS } from "./types";
 
 export interface DisallowedReasonState {
   pendingRows: PendingRelationDbRow[];
@@ -37,7 +37,10 @@ export function buildDisallowedReasonBlockers(
   state: DisallowedReasonState,
 ): Array<Record<string, unknown>> {
   const disallowedRows = state.pendingRows.filter(
-    (row) => row.pendingReason !== ALLOWED_FINALIZE_REASON,
+    (row) =>
+      !ALLOWED_FINALIZE_REASONS.includes(
+        row.pendingReason as (typeof ALLOWED_FINALIZE_REASONS)[number],
+      ),
   );
 
   if (disallowedRows.length === 0) {
@@ -47,7 +50,7 @@ export function buildDisallowedReasonBlockers(
   return [
     {
       reason:
-        "batch3e pending_relations contains rows with a disallowed reason family other than 'no-upstream-pick-line-candidate'. This finalization slice only handles that specific reason. A new planning step is required before these rows can be finalized.",
+        "batch3e pending_relations contains rows with a disallowed reason family. This finalization slice only archives accepted unproven workshop-return source gaps.",
       disallowedCount: disallowedRows.length,
       disallowedRows: disallowedRows.map((row) => ({
         legacyTable: row.legacyTable,

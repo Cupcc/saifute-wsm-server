@@ -23,15 +23,15 @@ import {
 } from "./types";
 
 const EXPECTED_BATCH1_MAP_COUNTS: Record<MasterDataBaselineEntity, number> = {
-  materialCategory: 8,
-  workshop: 13,
-  supplier: 93,
-  personnel: 51,
-  customer: 184,
-  material: 437,
+  materialCategory: 14,
+  workshop: 21,
+  supplier: 259,
+  personnel: 76,
+  customer: 388,
+  material: 1092,
 };
 
-const EXPECTED_BLOCKED_MATERIAL_COUNT = 21;
+const EXPECTED_BLOCKED_MATERIAL_COUNT = 0;
 
 function buildLegacyKey(legacyTable: string, legacyId: number): string {
   return `${legacyTable}::${legacyId}`;
@@ -127,10 +127,10 @@ async function readMappedMaterials(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        material.materialCode AS materialCode,
-        material.materialName AS materialName,
-        material.specModel AS specModel,
-        material.unitCode AS unitCode
+        material.material_code AS materialCode,
+        material.material_name AS materialName,
+        material.spec_model AS specModel,
+        material.unit_code AS unitCode
       FROM migration_staging.map_material map_row
       INNER JOIN material
         ON material.id = map_row.target_id
@@ -170,14 +170,14 @@ async function readRdProjectAutoCreatedMaterials(
     `
       SELECT
         material.id AS targetId,
-        material.materialCode AS materialCode,
-        material.materialName AS materialName,
-        material.specModel AS specModel,
-        material.unitCode AS unitCode
+        material.material_code AS materialCode,
+        material.material_name AS materialName,
+        material.spec_model AS specModel,
+        material.unit_code AS unitCode
       FROM material
-      WHERE material.creationMode = 'AUTO_CREATED'
-        AND material.sourceDocumentType = ?
-      ORDER BY material.materialCode ASC
+      WHERE material.creation_mode = 'AUTO_CREATED'
+        AND material.source_document_type = ?
+      ORDER BY material.material_code ASC
     `,
     [RD_PROJECT_AUTO_CREATED_MATERIAL_SOURCE_DOCUMENT_TYPE],
   );
@@ -237,9 +237,9 @@ async function readExistingMaterialCodes(
 ): Promise<Set<string>> {
   const rows = await connection.query<Array<{ materialCode: string }>>(
     `
-      SELECT materialCode
+      SELECT material_code AS materialCode
       FROM material
-      ORDER BY materialCode ASC
+      ORDER BY material_code ASC
     `,
   );
 
@@ -263,8 +263,8 @@ async function readMappedCustomers(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        customer.customerCode AS customerCode,
-        customer.customerName AS customerName
+        customer.customer_code AS customerCode,
+        customer.customer_name AS customerName
       FROM migration_staging.map_customer map_row
       INNER JOIN customer
         ON customer.id = map_row.target_id
@@ -301,8 +301,8 @@ async function readMappedWorkshops(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        workshop.workshopCode AS workshopCode,
-        workshop.workshopName AS workshopName
+        CAST(map_row.legacy_id AS CHAR) AS workshopCode,
+        workshop.workshop_name AS workshopName
       FROM migration_staging.map_workshop map_row
       INNER JOIN workshop
         ON workshop.id = map_row.target_id
@@ -313,12 +313,11 @@ async function readMappedWorkshops(
   for (const row of rows) {
     if (
       row.legacyTable === "migration_default_workshop" &&
-      row.legacyId === 0 &&
-      row.workshopCode === DEFAULT_WORKSHOP_CODE
+      row.legacyId === 0
     ) {
       return {
         targetId: row.targetId,
-        workshopCode: row.workshopCode,
+        workshopCode: DEFAULT_WORKSHOP_CODE,
         workshopName: row.workshopName,
       };
     }
@@ -350,8 +349,8 @@ async function readPersonnelDependencies(
     `
       SELECT
         personnel.id AS targetId,
-        personnel.personnelCode AS personnelCode,
-        personnel.personnelName AS personnelName
+        CAST(map_row.legacy_id AS CHAR) AS personnelCode,
+        personnel.personnel_name AS personnelName
       FROM migration_staging.map_personnel map_row
       INNER JOIN personnel
         ON personnel.id = map_row.target_id

@@ -265,7 +265,7 @@ describe("workshop-return transformer (formal-row-first)", () => {
     expect(line.target.quantity).toBe("3.000000");
   });
 
-  it("should detect non-null source_id as a global blocker", () => {
+  it("should archive non-null source_id as a warning without forging a relation", () => {
     const snapshot = buildSnapshot();
     snapshot.orders[0] = {
       ...requireDefined(snapshot.orders[0]),
@@ -277,16 +277,16 @@ describe("workshop-return transformer (formal-row-first)", () => {
       buildDependencies(),
     );
 
-    expect(plan.globalBlockers.length).toBeGreaterThan(0);
+    expect(plan.globalBlockers).toHaveLength(0);
     expect(plan.context.sourceFieldBlocker).toBe(true);
     expect(
-      plan.globalBlockers.some((b) =>
-        b.reason.includes("non-null source_id or source_type"),
+      plan.warnings.some((w) =>
+        w.reason.includes("non-null source_id or source_type"),
       ),
     ).toBe(true);
   });
 
-  it("should detect non-null source_type as a global blocker", () => {
+  it("should archive non-null source_type as a warning without forging a relation", () => {
     const snapshot = buildSnapshot();
     snapshot.orders[0] = {
       ...requireDefined(snapshot.orders[0]),
@@ -298,7 +298,7 @@ describe("workshop-return transformer (formal-row-first)", () => {
       buildDependencies(),
     );
 
-    expect(plan.globalBlockers.length).toBeGreaterThan(0);
+    expect(plan.globalBlockers).toHaveLength(0);
     expect(plan.context.sourceFieldBlocker).toBe(true);
   });
 

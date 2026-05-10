@@ -1,6 +1,9 @@
-export const FINALIZE_ORIGINATING_BATCH = "batch3e-workshop-return-recoverable";
-export const ALLOWED_FINALIZE_REASON =
-  "no-upstream-pick-line-candidate" as const;
+export const FINALIZE_ORIGINATING_BATCH = "batch3e-workshop-return-formal";
+export const ALLOWED_FINALIZE_REASONS = [
+  "no-upstream-pick-line-candidate",
+  "multiple-upstream-pick-line-candidates",
+] as const;
+export const ALLOWED_FINALIZE_REASON = ALLOWED_FINALIZE_REASONS[0];
 export const FINALIZE_LEGACY_TABLE = "saifute_return_order" as const;
 
 export interface PendingRelationDbRow {

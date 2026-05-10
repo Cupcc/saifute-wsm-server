@@ -50,6 +50,7 @@ function buildOutboundLine(
     lineNo: 1,
     materialId: 701,
     quantity: "10.000000",
+    stockScopeId: 1,
     documentNo: "OUT-001",
     bizDate: "2024-01-10",
     workshopId: 1,
@@ -69,6 +70,7 @@ function buildPickLine(
     lineNo: 1,
     materialId: 701,
     quantity: "5.000000",
+    stockScopeId: 1,
     documentNo: "PICK-001",
     bizDate: "2024-01-10",
     workshopId: 1,
@@ -87,6 +89,7 @@ function buildSalesReturnLine(
     lineNo: 1,
     materialId: 701,
     quantity: "10.000000",
+    stockScopeId: 1,
     sourceDocumentType: null,
     sourceDocumentId: null,
     sourceDocumentLineId: null,
@@ -110,6 +113,7 @@ function buildWorkshopReturnLine(
     lineNo: 1,
     materialId: 701,
     quantity: "5.000000",
+    stockScopeId: 1,
     sourceDocumentType: null,
     sourceDocumentId: null,
     sourceDocumentLineId: null,
@@ -265,12 +269,46 @@ describe("return-post-admission relation classification", () => {
       ).toBe(true);
     });
 
-    it("should pass baseline check for correct counts (9 SR orders, 13 SR lines, 3 WR orders, 4 WR lines)", () => {
-      const salesReturnOrders = build9SalesReturnOrders();
-      const salesReturnLines = build13SalesReturnLines(salesReturnOrders);
-      const workshopReturnOrders = build3WorkshopReturnOrders();
-      const workshopReturnLines =
-        build4WorkshopReturnLines(workshopReturnOrders);
+    it("should pass baseline check for full-import counts (37 SR orders, 46 SR lines, 23 WR orders, 32 WR lines)", () => {
+      const salesReturnOrders = Array.from({ length: 37 }, (_, i) =>
+        buildSalesReturnOrder({
+          id: 1001 + i,
+          documentNo: `SR-${String(i + 1).padStart(3, "0")}`,
+        }),
+      );
+      const salesReturnLines = Array.from({ length: 46 }, (_, i) => {
+        const order =
+          salesReturnOrders[Math.min(i, salesReturnOrders.length - 1)] ??
+          salesReturnOrders[0];
+        if (!order) throw new Error("full-import sales-return orders missing");
+        return buildSalesReturnLine({
+          id: 5001 + i,
+          orderId: order.id,
+          lineNo: i + 1,
+          documentNo: order.documentNo,
+          materialId: 701 + (i % 3),
+        });
+      });
+      const workshopReturnOrders = Array.from({ length: 23 }, (_, i) =>
+        buildWorkshopReturnOrder({
+          id: 2001 + i,
+          documentNo: `WR-${String(i + 1).padStart(3, "0")}`,
+        }),
+      );
+      const workshopReturnLines = Array.from({ length: 32 }, (_, i) => {
+        const order =
+          workshopReturnOrders[Math.min(i, workshopReturnOrders.length - 1)] ??
+          workshopReturnOrders[0];
+        if (!order)
+          throw new Error("full-import workshop-return orders missing");
+        return buildWorkshopReturnLine({
+          id: 6001 + i,
+          orderId: order.id,
+          lineNo: i + 1,
+          documentNo: order.documentNo,
+          materialId: 701 + (i % 2),
+        });
+      });
 
       const baseline = buildMinimalBaseline({
         salesReturnOrders,
@@ -282,10 +320,10 @@ describe("return-post-admission relation classification", () => {
       const plan = buildPostAdmissionMigrationPlan(baseline);
 
       expect(plan.globalBlockers).toHaveLength(0);
-      expect(plan.counts.admittedSalesReturnOrders).toBe(9);
-      expect(plan.counts.admittedSalesReturnLines).toBe(13);
-      expect(plan.counts.admittedWorkshopReturnOrders).toBe(3);
-      expect(plan.counts.admittedWorkshopReturnLines).toBe(4);
+      expect(plan.counts.admittedSalesReturnOrders).toBe(37);
+      expect(plan.counts.admittedSalesReturnLines).toBe(46);
+      expect(plan.counts.admittedWorkshopReturnOrders).toBe(23);
+      expect(plan.counts.admittedWorkshopReturnLines).toBe(32);
     });
   });
 

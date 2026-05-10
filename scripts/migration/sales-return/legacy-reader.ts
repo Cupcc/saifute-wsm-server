@@ -22,17 +22,17 @@ import {
 } from "./types";
 
 const EXPECTED_BATCH1_MAP_COUNTS: Record<MasterDataBaselineEntity, number> = {
-  materialCategory: 8,
-  workshop: 13,
-  supplier: 93,
-  personnel: 51,
-  customer: 184,
-  material: 437,
+  materialCategory: 14,
+  workshop: 21,
+  supplier: 259,
+  personnel: 76,
+  customer: 388,
+  material: 1092,
 };
-const EXPECTED_BLOCKED_MATERIAL_COUNT = 21;
-const EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT = 108;
-const EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT = 137;
-const EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT = 4;
+const EXPECTED_BLOCKED_MATERIAL_COUNT = 0;
+const EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT = 497;
+const EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT = 638;
+const EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT = 0;
 
 function buildLegacyKey(legacyTable: string, legacyId: number): string {
   return `${legacyTable}::${legacyId}`;
@@ -154,10 +154,10 @@ async function readMappedMaterials(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        material.materialCode AS materialCode,
-        material.materialName AS materialName,
-        material.specModel AS specModel,
-        material.unitCode AS unitCode
+        material.material_code AS materialCode,
+        material.material_name AS materialName,
+        material.spec_model AS specModel,
+        material.unit_code AS unitCode
       FROM migration_staging.map_material map_row
       INNER JOIN material
         ON material.id = map_row.target_id
@@ -197,8 +197,8 @@ async function readMappedCustomers(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        customer.customerCode AS customerCode,
-        customer.customerName AS customerName
+        customer.customer_code AS customerCode,
+        customer.customer_name AS customerName
       FROM migration_staging.map_customer map_row
       INNER JOIN customer
         ON customer.id = map_row.target_id
@@ -241,7 +241,7 @@ async function readPersonnelDependencies(
     `
       SELECT
         personnel.id AS targetId,
-        personnel.personnelName AS personnelName
+        personnel.personnel_name AS personnelName
       FROM migration_staging.map_personnel map_row
       INNER JOIN personnel
         ON personnel.id = map_row.target_id
@@ -526,21 +526,21 @@ async function readCurrentOutboundLines(
     `
       SELECT
         line_row.id AS targetLineId,
-        line_row.orderId AS targetOrderId,
-        line_row.lineNo AS lineNo,
-        line_row.materialId AS materialId,
-        order_row.customerId AS customerId,
-        order_row.workshopId AS workshopId,
-        order_row.bizDate AS bizDate,
-        order_row.documentNo AS documentNo,
+        line_row.order_id AS targetOrderId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
+        order_row.customer_id AS customerId,
+        order_row.workshop_id AS workshopId,
+        order_row.biz_date AS bizDate,
+        order_row.document_no AS documentNo,
         line_row.quantity AS quantity,
-        line_row.startNumber AS startNumber,
-        line_row.endNumber AS endNumber
+        line_row.start_number AS startNumber,
+        line_row.end_number AS endNumber
       FROM sales_stock_order_line line_row
       INNER JOIN sales_stock_order order_row
-        ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = 'OUTBOUND'
-        AND order_row.lifecycleStatus = 'EFFECTIVE'
+        ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = 'OUTBOUND'
+        AND order_row.lifecycle_status = 'EFFECTIVE'
       ORDER BY line_row.id ASC
     `,
   );
@@ -581,7 +581,7 @@ async function readOutboundOrderMapByLegacyId(
       SELECT
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        order_row.documentNo AS documentNo
+        order_row.document_no AS documentNo
       FROM migration_staging.map_sales_stock_order map_row
       INNER JOIN sales_stock_order order_row
         ON order_row.id = map_row.target_id
@@ -612,7 +612,7 @@ async function readWorkshopDependencies(
     `
       SELECT
         workshop.id AS targetId,
-        workshop.workshopName AS workshopName
+        workshop.workshop_name AS workshopName
       FROM migration_staging.map_workshop map_row
       INNER JOIN workshop
         ON workshop.id = map_row.target_id
@@ -639,7 +639,7 @@ async function readExistingDocumentNos(
 ): Promise<Set<string>> {
   const rows = await connection.query<Array<{ documentNo: string }>>(
     `
-      SELECT cso.documentNo
+      SELECT cso.document_no AS documentNo
       FROM sales_stock_order cso
       WHERE NOT EXISTS (
         SELECT 1

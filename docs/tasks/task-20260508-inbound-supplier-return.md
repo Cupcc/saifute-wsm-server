@@ -128,6 +128,7 @@
 - Added 入库管理 second-level pages `退货单` and `退货单明细`, wired through supplier-return list/detail/void APIs and frontend route fallback permissions.
 - Removed the supplier-return ledger/detail dialogs from the 验收单 page so list/detail browsing lives under the 入库管理二级页面 instead of inside the source-order page.
 - Added monthly-reporting support for supplier return as an inbound-domain OUT topic, including material-category net amount and inventory trend netting.
+- Added inventory replay support for effective supplier-return documents: replay now reads `SUPPLIER_RETURN` stock-in-family rows as `SUPPLIER_RETURN_OUT`, requires `STOCK_IN_RETURN_TO_SUPPLIER` line relations, consumes the bound source layer through `inventory_source_usage`, and blocks missing / mismatched source links instead of falling back to FIFO.
 - Fixed source acceptance dependency checks so voided supplier-return line relations no longer keep the source acceptance order blocked.
 - Added focused backend tests for create, preview, over-return rejection, price-corrected source selection, void release/reversal and voided downstream dependency filtering.
 
@@ -141,6 +142,9 @@
 - `bun run typecheck` passed.
 - `bun test --runInBand src/modules/inbound/application/inbound-supplier-return.service.spec.ts src/modules/inbound/infrastructure/inbound.repository.spec.ts src/modules/inbound/controllers/inbound.controller.spec.ts` passed: `11` tests.
 - `bun test --runInBand src/modules/reporting/infrastructure/reporting.repository.spec.ts src/modules/reporting/application/monthly-report-material-category.service.spec.ts src/modules/reporting/application/monthly-report-export.service.spec.ts src/modules/reporting/application/monthly-report-domain-summary.service.spec.ts src/modules/reporting/application/reporting.service.spec.ts` passed: `24` tests.
+- `bun run migration:typecheck` passed after adding supplier-return replay support.
+- `bun test --runInBand test/migration/inventory-replay.spec.ts` passed: `31` tests.
+- `bun run migration:inventory-replay:dry-run` passed on configured target `saifute-wms`: `totalEvents=4547`, `plannedLogs=4547`, `plannedSourceUsages=2637`, `blockerCount=0`; accepted stocktake warnings remain for `cp002` and `jg36`.
 - `cd web && bun run build:prod` passed after restructuring supplier-return list/detail into the new `退货单` and `退货单明细` pages.
 - Root Biome config excludes `web` (`!!web`), so the new Vue/API page files are validated by `cd web && bun run build:prod`; earlier focused backend Biome pass had no required formatting changes aside from existing large-file warnings in touched areas.
 - Controlled live API acceptance created and voided supplier return `TGC20260508134533446` from source acceptance order `YS20260508134533804`; DB trace confirmed return line -> `inventory_source_usage.source_log_id` -> `inventory_log.unit_cost` -> original `stock_in_order_line`, and void released the source usage with a reversal inventory log.

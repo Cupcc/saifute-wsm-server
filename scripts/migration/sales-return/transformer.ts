@@ -1,8 +1,8 @@
+import { BusinessDocumentType } from "../shared/business-document-type";
 import {
   DEFAULT_WORKSHOP_NAME,
   normalizeOptionalText,
 } from "../shared/deterministic";
-import { BusinessDocumentType } from "../shared/business-document-type";
 import type {
   ArchivedFieldPayloadRecord,
   AuditStatusSnapshotValue,
@@ -616,7 +616,7 @@ function resolveHandlerDependency(
           legacyTable: order.legacyTable,
           legacyId: order.legacyId,
           reason:
-            "Handler personnel name (attn) is missing from the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId.",
+            "Handler personnel name (attn) is missing from the migrated personnel snapshot; preserving handler_name_snapshot without handler_personnel_id.",
           details: { attn: normalizedAttn },
         });
       } else {
@@ -1213,6 +1213,7 @@ export function buildSalesReturnMigrationPlan(
           unitCodeSnapshot: prepared.material.unitCode,
           quantity: prepared.quantity,
           unitPrice: prepared.unitPrice,
+          selectedUnitCost: prepared.unitPrice,
           amount: prepared.amount,
           startNumber: null,
           endNumber: null,

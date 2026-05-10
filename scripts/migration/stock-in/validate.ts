@@ -378,32 +378,32 @@ async function getOrderRowsByDocumentNo(connection: {
     `
       SELECT
         id,
-        documentNo,
-        orderType,
-        bizDate,
-        supplierId,
-        handlerPersonnelId,
-        workshopId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus,
-        revisionNo,
-        supplierCodeSnapshot,
-        supplierNameSnapshot,
-        handlerNameSnapshot,
-        workshopNameSnapshot,
-        totalQty,
-        totalAmount,
+        document_no AS documentNo,
+        order_type AS orderType,
+        biz_date AS bizDate,
+        supplier_id AS supplierId,
+        handler_personnel_id AS handlerPersonnelId,
+        workshop_id AS workshopId,
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus,
+        revision_no AS revisionNo,
+        supplier_code_snapshot AS supplierCodeSnapshot,
+        supplier_name_snapshot AS supplierNameSnapshot,
+        handler_name_snapshot AS handlerNameSnapshot,
+        workshop_name_snapshot AS workshopNameSnapshot,
+        total_qty AS totalQty,
+        total_amount AS totalAmount,
         remark,
-        voidReason,
-        voidedBy,
-        voidedAt,
-        createdBy,
-        createdAt,
-        updatedBy,
-        updatedAt
+        void_reason AS voidReason,
+        voided_by AS voidedBy,
+        voided_at AS voidedAt,
+        created_by AS createdBy,
+        created_at AS createdAt,
+        updated_by AS updatedBy,
+        updated_at AS updatedAt
       FROM stock_in_order
-      ORDER BY documentNo ASC
+      ORDER BY document_no ASC
     `,
   );
 
@@ -459,25 +459,25 @@ async function getLineRowsByIdentity(connection: {
   >(
     `
       SELECT
-        order_row.documentNo AS documentNo,
-        line_row.lineNo AS lineNo,
-        line_row.materialId AS materialId,
-        line_row.materialCodeSnapshot AS materialCodeSnapshot,
-        line_row.materialNameSnapshot AS materialNameSnapshot,
-        line_row.materialSpecSnapshot AS materialSpecSnapshot,
-        line_row.unitCodeSnapshot AS unitCodeSnapshot,
+        order_row.document_no AS documentNo,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
+        line_row.material_code_snapshot AS materialCodeSnapshot,
+        line_row.material_name_snapshot AS materialNameSnapshot,
+        line_row.material_spec_snapshot AS materialSpecSnapshot,
+        line_row.unit_code_snapshot AS unitCodeSnapshot,
         line_row.quantity AS quantity,
-        line_row.unitPrice AS unitPrice,
+        line_row.unit_price AS unitPrice,
         line_row.amount AS amount,
         line_row.remark AS remark,
-        line_row.createdBy AS createdBy,
-        line_row.createdAt AS createdAt,
-        line_row.updatedBy AS updatedBy,
-        line_row.updatedAt AS updatedAt
+        line_row.created_by AS createdBy,
+        line_row.created_at AS createdAt,
+        line_row.updated_by AS updatedBy,
+        line_row.updated_at AS updatedAt
       FROM stock_in_order_line line_row
       INNER JOIN stock_in_order order_row
-        ON order_row.id = line_row.orderId
-      ORDER BY order_row.documentNo ASC, line_row.lineNo ASC
+        ON order_row.id = line_row.order_id
+      ORDER BY order_row.document_no ASC, line_row.line_no ASC
     `,
   );
 

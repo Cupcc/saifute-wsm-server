@@ -7,12 +7,12 @@ import {
   resolveReportPath,
 } from "../config";
 import { closePools, createMariaDbPool, withPoolConnection } from "../db";
-import { BusinessDocumentType } from "../shared/business-document-type";
 import {
   readLegacySalesReturnSnapshot,
   readSalesReturnDependencySnapshot,
 } from "../sales-return/legacy-reader";
 import { buildSalesReturnMigrationPlan } from "../sales-return/transformer";
+import { BusinessDocumentType } from "../shared/business-document-type";
 import { stableJsonStringify } from "../shared/deterministic";
 import { writeStableReport } from "../shared/report-writer";
 import type { ArchivedRelationDbRow, PendingRelationDbRow } from "./types";
@@ -222,39 +222,39 @@ async function getForbiddenTableCounts(connection: {
     `
       SELECT 'approval_document' AS tableName, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'SALES_STOCK' OR documentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE document_family = 'SALES_STOCK' OR document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_relation' AS tableName, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'SALES_STOCK'
-         OR downstreamFamily = 'SALES_STOCK'
-         OR upstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'SALES_STOCK'
+         OR downstream_family = 'SALES_STOCK'
+         OR upstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS tableName, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'SALES_STOCK'
-         OR downstreamFamily = 'SALES_STOCK'
-         OR upstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'SALES_STOCK'
+         OR downstream_family = 'SALES_STOCK'
+         OR upstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS total
       FROM factory_number_reservation fnr
       INNER JOIN sales_stock_order cso
-        ON cso.id = fnr.businessDocumentId
-      WHERE fnr.businessDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
-        AND cso.orderType = 'SALES_RETURN'
+        ON cso.id = fnr.business_document_id
+      WHERE fnr.business_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
+        AND cso.order_type = 'SALES_RETURN'
       UNION ALL
       SELECT 'inventory_balance' AS tableName, COUNT(*) AS total
       FROM inventory_balance
       UNION ALL
       SELECT 'inventory_log' AS tableName, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS tableName, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
     `,
   );
 

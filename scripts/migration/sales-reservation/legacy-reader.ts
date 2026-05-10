@@ -11,9 +11,9 @@ import type {
 } from "./types";
 import { OUTBOUND_BASE_MIGRATION_BATCH } from "./types";
 
-const EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT = 108;
-const EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT = 137;
-const EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT = 4;
+const EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT = 497;
+const EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT = 638;
+const EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT = 0;
 
 async function readLegacyIntervals(
   connection: MigrationConnectionLike,
@@ -72,13 +72,13 @@ async function readOutboundOrderMaps(
         map_row.target_table AS targetTable,
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
-        order_row.documentNo AS actualTargetCode,
-        order_row.lifecycleStatus AS lifecycleStatus,
-        order_row.workshopId AS workshopId,
-        order_row.bizDate AS bizDate,
-        order_row.createdAt AS createdAt,
-        order_row.updatedAt AS updatedAt,
-        order_row.voidedAt AS voidedAt
+        order_row.document_no AS actualTargetCode,
+        order_row.lifecycle_status AS lifecycleStatus,
+        order_row.workshop_id AS workshopId,
+        order_row.biz_date AS bizDate,
+        order_row.created_at AS createdAt,
+        order_row.updated_at AS updatedAt,
+        order_row.voided_at AS voidedAt
       FROM migration_staging.map_sales_stock_order map_row
       LEFT JOIN sales_stock_order order_row
         ON order_row.id = map_row.target_id
@@ -103,22 +103,22 @@ async function readOutboundLineMaps(
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
         CASE
-          WHEN order_row.documentNo IS NULL OR line_row.lineNo IS NULL THEN NULL
-          ELSE CONCAT(order_row.documentNo, '#', line_row.lineNo)
+          WHEN order_row.document_no IS NULL OR line_row.line_no IS NULL THEN NULL
+          ELSE CONCAT(order_row.document_no, '#', line_row.line_no)
         END AS actualTargetCode,
-        line_row.orderId AS orderTargetId,
-        line_row.lineNo AS lineNo,
-        line_row.materialId AS materialId,
-        line_row.startNumber AS startNumber,
-        line_row.endNumber AS endNumber,
-        line_row.sourceDocumentType AS sourceDocumentType,
-        line_row.sourceDocumentId AS sourceDocumentId,
-        line_row.sourceDocumentLineId AS sourceDocumentLineId
+        line_row.order_id AS orderTargetId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
+        line_row.start_number AS startNumber,
+        line_row.end_number AS endNumber,
+        line_row.source_document_type AS sourceDocumentType,
+        line_row.source_document_id AS sourceDocumentId,
+        line_row.source_document_line_id AS sourceDocumentLineId
       FROM migration_staging.map_sales_stock_order_line map_row
       LEFT JOIN sales_stock_order_line line_row
         ON line_row.id = map_row.target_id
       LEFT JOIN sales_stock_order order_row
-        ON order_row.id = line_row.orderId
+        ON order_row.id = line_row.order_id
       WHERE map_row.migration_batch = ?
       ORDER BY map_row.legacy_id ASC
     `,

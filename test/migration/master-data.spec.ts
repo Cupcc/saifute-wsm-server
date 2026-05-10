@@ -302,4 +302,113 @@ describe("master-data migration transformer", () => {
       ),
     ).toBe(true);
   });
+
+  it("should fill accepted inactive legacy material unit overrides", () => {
+    const snapshot = buildSnapshot();
+    snapshot.materials = [
+      {
+        materialId: 35,
+        materialCode: "cp013",
+        materialName: "legacy inactive corrected duplicate",
+        specification: "ZYJ-M8 8 gas 8 water",
+        category: 3,
+        isAttachment: null,
+        unit: null,
+        isHidden: 0,
+        stockMin: null,
+        delFlag: 2,
+        voidDescription: "wrong model",
+        createBy: "admin",
+        createTime: "2026-03-15 00:00:00",
+        updateBy: null,
+        updateTime: null,
+      },
+      {
+        materialId: 156,
+        materialCode: "zjq045",
+        materialName: "legacy inactive duplicate",
+        specification: "ZYX",
+        category: 1,
+        isAttachment: null,
+        unit: null,
+        isHidden: 0,
+        stockMin: null,
+        delFlag: 2,
+        voidDescription: "duplicate",
+        createBy: "admin",
+        createTime: "2026-03-15 00:00:00",
+        updateBy: null,
+        updateTime: null,
+      },
+      {
+        materialId: 159,
+        materialCode: "z h",
+        materialName: "legacy inactive duplicate",
+        specification: "80/55-940",
+        category: 1,
+        isAttachment: null,
+        unit: null,
+        isHidden: 0,
+        stockMin: null,
+        delFlag: 2,
+        voidDescription: "invalid",
+        createBy: "admin",
+        createTime: "2026-03-15 00:00:00",
+        updateBy: null,
+        updateTime: null,
+      },
+      {
+        materialId: 234,
+        materialCode: "zjq60",
+        materialName: "legacy inactive duplicate",
+        specification: "M19*1.5",
+        category: 1,
+        isAttachment: null,
+        unit: null,
+        isHidden: 0,
+        stockMin: null,
+        delFlag: 2,
+        voidDescription: "duplicate",
+        createBy: "admin",
+        createTime: "2026-03-15 00:00:00",
+        updateBy: null,
+        updateTime: null,
+      },
+    ];
+
+    const plan = buildMasterDataMigrationPlan(snapshot);
+
+    expect(plan.context.missingMaterialUnitCount).toBe(0);
+    expect(plan.blockers).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          entity: "material",
+          reason: "Material unit is required for migration.",
+        }),
+      ]),
+    );
+    expect(
+      plan.records.material.map((record) => [
+        record.legacyId,
+        record.target.unitCode,
+      ]),
+    ).toEqual([
+      [35, "\u53f0"],
+      [156, "\u4e2a"],
+      [159, "\u652f"],
+      [234, "\u4e2a"],
+    ]);
+    expect(
+      plan.warnings.filter(
+        (warning) =>
+          warning.reason === "Material unit filled by migration override.",
+      ),
+    ).toHaveLength(4);
+    expect(
+      plan.records.material.every(
+        (record) =>
+          record.archivedPayload?.payload.materialUnitOverride !== undefined,
+      ),
+    ).toBe(true);
+  });
 });

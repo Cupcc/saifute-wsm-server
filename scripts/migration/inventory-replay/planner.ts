@@ -271,7 +271,9 @@ function isPositiveCost(value: bigint | null): value is bigint {
 
 function isHistoricalUnfundedConsumerAllowed(event: InventoryEvent): boolean {
   return (
-    event.operationType === "OUTBOUND_OUT" || event.operationType === "PICK_OUT"
+    event.operationType === "OUTBOUND_OUT" ||
+    event.operationType === "PICK_OUT" ||
+    event.operationType === "RD_PROJECT_OUT"
   );
 }
 
@@ -453,6 +455,14 @@ function normalizeKnownUnitCost(value: string | null): string | null {
   return scaled !== null && scaled > 0n ? formatCost(scaled) : null;
 }
 
+function stockInLineSourceLogKey(params: {
+  documentType: string;
+  documentId: number;
+  lineId: number;
+}): string {
+  return `${params.documentType}:${params.documentId}:line:${params.lineId}`;
+}
+
 function formatDateParts(
   year: number,
   month: number,
@@ -524,6 +534,7 @@ function canUseFutureStockInSource(
   return (
     operationType === "OUTBOUND_OUT" ||
     operationType === "PICK_OUT" ||
+    operationType === "RD_PROJECT_OUT" ||
     operationType === "REVERSAL_OUT"
   );
 }
@@ -1412,6 +1423,150 @@ export function buildInventoryReplayPlan(
     return { releasedQty, costAmountScaled };
   }
 
+  function allocateSupplierReturnSources(
+    event: InventoryEvent,
+    quantityScaled: bigint,
+  ): { allocatedQty: bigint; costAmountScaled: bigint; sourceRefs: string[] } {
+    const sourceLinks = normalizeEventSourceLinks(event, quantityScaled);
+    if (sourceLinks.length === 0) {
+      addBlocker(blockers, "supplier-return-source-link-missing", {
+        operationType: event.operationType,
+        documentType: event.businessDocumentType,
+        documentId: event.businessDocumentId,
+        lineId: event.businessDocumentLineId,
+        materialId: event.materialId,
+      });
+      return { allocatedQty: 0n, costAmountScaled: 0n, sourceRefs: [] };
+    }
+
+    if (sourceLinks.some((link) => link.quantityScaled <= 0n)) {
+      addBlocker(blockers, "supplier-return-source-link-quantity-invalid", {
+        operationType: event.operationType,
+        documentType: event.businessDocumentType,
+        documentId: event.businessDocumentId,
+        lineId: event.businessDocumentLineId,
+        materialId: event.materialId,
+        linkedQty: sourceLinks.map((link) => link.linkedQty).join(","),
+      });
+      return { allocatedQty: 0n, costAmountScaled: 0n, sourceRefs: [] };
+    }
+
+    const linkedQty = sourceLinks.reduce(
+      (total, link) => total + link.quantityScaled,
+      0n,
+    );
+    if (linkedQty !== quantityScaled) {
+      addBlocker(blockers, "supplier-return-source-link-quantity-mismatch", {
+        operationType: event.operationType,
+        documentType: event.businessDocumentType,
+        documentId: event.businessDocumentId,
+        lineId: event.businessDocumentLineId,
+        materialId: event.materialId,
+        returnQty: formatQty(quantityScaled),
+        linkedQty: formatQty(linkedQty),
+      });
+      return { allocatedQty: 0n, costAmountScaled: 0n, sourceRefs: [] };
+    }
+
+    const selectedUnitCostScaled = parseScaledDecimal(
+      event.selectedUnitCost,
+      COST_SCALE,
+    );
+    let allocatedQty = 0n;
+    let costAmountScaled = 0n;
+    const sourceRefs: string[] = [];
+
+    for (const sourceLink of sourceLinks) {
+      const sourceKey = stockInLineSourceLogKey({
+        documentType: sourceLink.sourceDocumentType,
+        documentId: sourceLink.sourceDocumentId,
+        lineId: sourceLink.sourceDocumentLineId,
+      });
+      const source = sourceByKey.get(sourceKey);
+      if (!source) {
+        addBlocker(blockers, "supplier-return-source-log-missing", {
+          operationType: event.operationType,
+          documentType: event.businessDocumentType,
+          documentId: event.businessDocumentId,
+          lineId: event.businessDocumentLineId,
+          materialId: event.materialId,
+          sourceDocumentType: sourceLink.sourceDocumentType,
+          sourceDocumentId: sourceLink.sourceDocumentId,
+          sourceDocumentLineId: sourceLink.sourceDocumentLineId,
+        });
+        continue;
+      }
+
+      if (
+        source.materialId !== event.materialId ||
+        source.stockScopeId !== event.stockScopeId
+      ) {
+        addBlocker(blockers, "supplier-return-source-mismatch", {
+          operationType: event.operationType,
+          documentType: event.businessDocumentType,
+          documentId: event.businessDocumentId,
+          lineId: event.businessDocumentLineId,
+          materialId: event.materialId,
+          stockScopeId: event.stockScopeId,
+          sourceDocumentType: sourceLink.sourceDocumentType,
+          sourceDocumentId: sourceLink.sourceDocumentId,
+          sourceDocumentLineId: sourceLink.sourceDocumentLineId,
+          sourceMaterialId: source.materialId,
+          sourceStockScopeId: source.stockScopeId,
+        });
+        continue;
+      }
+
+      if (
+        selectedUnitCostScaled !== null &&
+        source.unitCostScaled !== selectedUnitCostScaled
+      ) {
+        addBlocker(blockers, "supplier-return-source-cost-mismatch", {
+          operationType: event.operationType,
+          documentType: event.businessDocumentType,
+          documentId: event.businessDocumentId,
+          lineId: event.businessDocumentLineId,
+          materialId: event.materialId,
+          selectedUnitCost: formatCost(selectedUnitCostScaled),
+          sourceUnitCost: formatCost(source.unitCostScaled),
+          sourceDocumentType: sourceLink.sourceDocumentType,
+          sourceDocumentId: sourceLink.sourceDocumentId,
+          sourceDocumentLineId: sourceLink.sourceDocumentLineId,
+        });
+        continue;
+      }
+
+      const piece = allocateSourceEntry({
+        event,
+        source,
+        remainingQty: sourceLink.quantityScaled,
+      });
+      allocatedQty += piece.allocatedQty;
+      costAmountScaled += piece.costAmountScaled;
+      if (piece.allocatedQty > 0n) {
+        sourceRefs.push(source.sourceLogIdempotencyKey);
+      }
+
+      if (piece.allocatedQty < sourceLink.quantityScaled) {
+        addBlocker(blockers, "supplier-return-source-insufficient", {
+          operationType: event.operationType,
+          documentType: event.businessDocumentType,
+          documentId: event.businessDocumentId,
+          lineId: event.businessDocumentLineId,
+          materialId: event.materialId,
+          sourceDocumentType: sourceLink.sourceDocumentType,
+          sourceDocumentId: sourceLink.sourceDocumentId,
+          sourceDocumentLineId: sourceLink.sourceDocumentLineId,
+          requestedQty: formatQty(sourceLink.quantityScaled),
+          allocatedQty: formatQty(piece.allocatedQty),
+          missingQty: formatQty(sourceLink.quantityScaled - piece.allocatedQty),
+        });
+      }
+    }
+
+    return { allocatedQty, costAmountScaled, sourceRefs };
+  }
+
   function buildStandaloneReturnSourceDecision(
     event: InventoryEvent,
     changeQty: bigint,
@@ -1616,6 +1771,33 @@ export function buildInventoryReplayPlan(
       continue;
     }
 
+    if (event.operationType === "SUPPLIER_RETURN_OUT") {
+      const allocation = allocateSupplierReturnSources(event, changeQty);
+      const allocationCostComputed =
+        allocation.allocatedQty === changeQty && allocation.allocatedQty > 0n;
+      const settledUnitCostScaled = allocationCostComputed
+        ? divideCostByQtyToUnitCost(allocation.costAmountScaled, changeQty)
+        : null;
+
+      appendLog({
+        event,
+        direction: "OUT",
+        operationType: event.operationType,
+        stockScopeId: event.stockScopeId,
+        workshopId: event.workshopId,
+        changeQty,
+        unitCostScaled: settledUnitCostScaled,
+        costAmountScaled: allocationCostComputed
+          ? allocation.costAmountScaled
+          : null,
+        idempotencyKey: event.idempotencyKey,
+        note: allocationCostComputed
+          ? `Supplier return source-bound allocation from ${allocation.sourceRefs.join(", ")}.`
+          : null,
+      });
+      continue;
+    }
+
     if (CONSUMER_OPERATION_TYPE_SET.has(event.operationType)) {
       const selectedUnitCostScaled = parseScaledDecimal(
         event.selectedUnitCost,
@@ -1632,7 +1814,10 @@ export function buildInventoryReplayPlan(
         changeQty,
         isPositiveCost(selectedUnitCostScaled) ? selectedUnitCostScaled : null,
         eventIndex,
-        { deferInsufficientSourceBlocker: canOffsetWithLinkedReturn },
+        {
+          deferInsufficientSourceBlocker:
+            canOffsetWithLinkedReturn || allowHistoricalUnfundedConsumer,
+        },
       );
       const linkedReturnOffset = isFullyUnmatchedAllocation({
         requestedQty: changeQty,
@@ -2006,6 +2191,7 @@ export function buildInventoryReplayPlan(
   );
 
   const priceLayerReconciliation: PriceLayerReconciliationRow[] = [];
+  const acceptedNegativeStocktakeBalanceKeys = new Set<string>();
   for (const balance of plannedBalances) {
     const key = balanceKey(balance.materialId, balance.stockScopeId);
     const balanceQty =
@@ -2027,6 +2213,7 @@ export function buildInventoryReplayPlan(
         sourceAvailableQty,
       })
     ) {
+      acceptedNegativeStocktakeBalanceKeys.add(key);
       warnings.push(
         `NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE material=${row.materialId}, stockScope=${row.stockScopeId}, balanceQty=${row.balanceQty}; no available price layer is planned. Warehouse stocktake must later adjust physical quantity and cost source explicitly.`,
       );
@@ -2043,6 +2230,33 @@ export function buildInventoryReplayPlan(
       });
     }
   }
+
+  const finalBlockers = blockers.filter((blocker) => {
+    if (blocker.reason !== "negative-balance-during-replay") return true;
+
+    const materialId =
+      typeof blocker.details?.materialId === "number"
+        ? blocker.details.materialId
+        : null;
+    const stockScopeId =
+      typeof blocker.details?.stockScopeId === "number"
+        ? blocker.details.stockScopeId
+        : null;
+    if (materialId === null || stockScopeId === null) return true;
+
+    if (
+      !acceptedNegativeStocktakeBalanceKeys.has(
+        balanceKey(materialId, stockScopeId),
+      )
+    ) {
+      return true;
+    }
+
+    warnings.push(
+      `NEGATIVE_BALANCE_EVENT_ACCEPTED_FOR_STOCKTAKE ${String(blocker.details?.documentType ?? "unknown")}:${String(blocker.details?.documentId ?? "unknown")}:line:${String(blocker.details?.lineId ?? "unknown")} material=${materialId}, stockScope=${stockScopeId}; final balance is accepted for warehouse stocktake adjustment.`,
+    );
+    return false;
+  });
 
   const plannedSourceUsages = [...plannedSourceUsageByKey.values()].sort(
     (a, b) =>
@@ -2076,7 +2290,7 @@ export function buildInventoryReplayPlan(
     eventCounts: eventCounts as Record<InventoryOperationType, number>,
     uniqueBalanceBuckets: plannedBalances.length,
     warnings,
-    blockers,
+    blockers: finalBlockers,
     coverageGaps: options.coverageGaps ?? [],
     negativeBalanceMaterials,
   };

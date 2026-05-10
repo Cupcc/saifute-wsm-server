@@ -18,11 +18,11 @@ import {
   stagingSchemaExists,
 } from "./reader";
 
-const EXPECTED_SALES_RETURN_ORDERS = 9;
-const EXPECTED_SALES_RETURN_LINES = 13;
-const EXPECTED_WORKSHOP_RETURN_ORDERS = 3;
-const EXPECTED_WORKSHOP_RETURN_LINES = 4;
-const EXPECTED_FACTORY_NUMBER_RESERVATION_COUNT = 80;
+const EXPECTED_SALES_RETURN_ORDERS = 37;
+const EXPECTED_SALES_RETURN_LINES = 46;
+const EXPECTED_WORKSHOP_RETURN_ORDERS = 23;
+const EXPECTED_WORKSHOP_RETURN_LINES = 32;
+const EXPECTED_FACTORY_NUMBER_RESERVATION_COUNT = 426;
 
 async function getAuditDocumentCount(connection: {
   query<T = unknown>(sql: string, values?: readonly unknown[]): Promise<T>;
@@ -88,7 +88,7 @@ async function getNegativeBalanceCount(connection: {
   query<T = unknown>(sql: string, values?: readonly unknown[]): Promise<T>;
 }): Promise<number> {
   const rows = await connection.query<Array<{ total: number }>>(
-    `SELECT COUNT(*) AS total FROM inventory_balance WHERE quantityOnHand < 0`,
+    `SELECT COUNT(*) AS total FROM inventory_balance WHERE quantity_on_hand < 0`,
   );
 
   return Number(rows[0]?.total ?? 0);
@@ -101,7 +101,7 @@ async function getInventoryLogConsistencyIssues(connection: {
     `
       SELECT COUNT(*) AS total
       FROM inventory_log log_row
-      LEFT JOIN inventory_balance bal_row ON bal_row.id = log_row.balanceId
+      LEFT JOIN inventory_balance bal_row ON bal_row.id = log_row.balance_id
       WHERE bal_row.id IS NULL
     `,
   );
@@ -116,9 +116,9 @@ async function getAuditDocsByFamily(connection: {
     Array<{ documentFamily: string; total: number }>
   >(
     `
-      SELECT documentFamily, COUNT(*) AS total
+      SELECT document_family AS documentFamily, COUNT(*) AS total
       FROM approval_document
-      GROUP BY documentFamily
+      GROUP BY document_family
     `,
   );
 
@@ -134,9 +134,9 @@ async function getRelationsByType(connection: {
     Array<{ relationType: string; total: number }>
   >(
     `
-      SELECT relationType, COUNT(*) AS total
+      SELECT relation_type AS relationType, COUNT(*) AS total
       FROM document_relation
-      GROUP BY relationType
+      GROUP BY relation_type
     `,
   );
 
@@ -153,11 +153,11 @@ async function getChronologicallyInvalidRelationCount(connection: {
       SELECT COUNT(*) AS total
       FROM document_line_relation dlr
       INNER JOIN sales_stock_order upstream_order
-        ON upstream_order.id = dlr.upstreamDocumentId
+        ON upstream_order.id = dlr.upstream_document_id
       INNER JOIN sales_stock_order downstream_order
-        ON downstream_order.id = dlr.downstreamDocumentId
-      WHERE dlr.relationType = 'SALES_RETURN_FROM_OUTBOUND'
-        AND upstream_order.bizDate > downstream_order.bizDate
+        ON downstream_order.id = dlr.downstream_document_id
+      WHERE dlr.relation_type = 'SALES_RETURN_FROM_OUTBOUND'
+        AND upstream_order.biz_date > downstream_order.biz_date
     `,
   );
 
@@ -166,11 +166,11 @@ async function getChronologicallyInvalidRelationCount(connection: {
       SELECT COUNT(*) AS total
       FROM document_line_relation dlr
       INNER JOIN workshop_material_order upstream_order
-        ON upstream_order.id = dlr.upstreamDocumentId
+        ON upstream_order.id = dlr.upstream_document_id
       INNER JOIN workshop_material_order downstream_order
-        ON downstream_order.id = dlr.downstreamDocumentId
-      WHERE dlr.relationType = 'WORKSHOP_RETURN_FROM_PICK'
-        AND upstream_order.bizDate > downstream_order.bizDate
+        ON downstream_order.id = dlr.downstream_document_id
+      WHERE dlr.relation_type = 'WORKSHOP_RETURN_FROM_PICK'
+        AND upstream_order.biz_date > downstream_order.biz_date
     `,
   );
 
@@ -187,9 +187,9 @@ async function getNullSourceReturnLineCounts(connection: {
     `
       SELECT COUNT(*) AS total
       FROM sales_stock_order_line line_row
-      INNER JOIN sales_stock_order order_row ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = 'SALES_RETURN'
-        AND line_row.sourceDocumentId IS NULL
+      INNER JOIN sales_stock_order order_row ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = 'SALES_RETURN'
+        AND line_row.source_document_id IS NULL
     `,
   );
 
@@ -197,9 +197,9 @@ async function getNullSourceReturnLineCounts(connection: {
     `
       SELECT COUNT(*) AS total
       FROM workshop_material_order_line line_row
-      INNER JOIN workshop_material_order order_row ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = 'RETURN'
-        AND line_row.sourceDocumentId IS NULL
+      INNER JOIN workshop_material_order order_row ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = 'RETURN'
+        AND line_row.source_document_id IS NULL
     `,
   );
 
@@ -332,7 +332,7 @@ async function main(): Promise<void> {
           validationIssues.push({
             severity: "blocker",
             reason:
-              "document_line_relation contains links where the upstream bizDate is later than the return bizDate (chronologically impossible).",
+              "document_line_relation contains links where the upstream biz_date is later than the return biz_date (chronologically impossible).",
             chronologicallyInvalidRelationCount,
           });
         }

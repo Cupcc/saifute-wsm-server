@@ -1,8 +1,8 @@
+import { BusinessDocumentType } from "../shared/business-document-type";
 import {
   DEFAULT_WORKSHOP_NAME,
   normalizeOptionalText,
 } from "../shared/deterministic";
-import { BusinessDocumentType } from "../shared/business-document-type";
 import type {
   ArchivedFieldPayloadRecord,
   AuditStatusSnapshotValue,
@@ -568,7 +568,7 @@ function resolveHandlerDependency(
           legacyTable: order.legacyTable,
           legacyId: order.legacyId,
           reason:
-            "Handler personnel name (return_by) is missing from the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId.",
+            "Handler personnel name (return_by) is missing from the migrated personnel snapshot; preserving handler_name_snapshot without handler_personnel_id.",
           details: { returnBy: normalizedReturnBy },
         });
       } else {
@@ -782,7 +782,7 @@ function resolveDetailRow(
       excluded: {
         source: detail,
         exclusionReason:
-          "Detail line amount cannot be computed from returnQty and unitPrice.",
+          "Detail line amount cannot be computed from returnQty and unit_price.",
       },
     };
   }
@@ -851,11 +851,12 @@ export function buildWorkshopReturnMigrationPlan(
 
   for (const order of snapshot.orders) {
     if (order.sourceId !== null || order.sourceType !== null) {
-      globalBlockers.push({
+      warnings.push({
+        legacyTable: order.legacyTable,
+        legacyId: order.legacyId,
         reason:
-          "Legacy saifute_return_order has non-null source_id or source_type. The migration plan freezes these fields as all-null for the workshop-return dataset. Non-null values require re-planning before this slice can execute.",
+          "Legacy saifute_return_order has non-null source_id or source_type, but the migration only creates proven return relations. Source fields are archived without forcing a relation.",
         details: {
-          legacyId: order.legacyId,
           returnNo: normalizeOptionalText(order.returnNo),
           sourceId: order.sourceId,
           sourceType: order.sourceType,

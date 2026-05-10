@@ -19,15 +19,15 @@ import type {
 import { BATCH1_MASTER_DATA_BATCH } from "./types";
 
 const EXPECTED_BATCH1_MAP_COUNTS: Record<MasterDataBaselineEntity, number> = {
-  materialCategory: 8,
-  workshop: 13,
-  supplier: 93,
-  personnel: 51,
-  customer: 184,
-  material: 437,
+  materialCategory: 14,
+  workshop: 21,
+  supplier: 259,
+  personnel: 76,
+  customer: 388,
+  material: 1092,
 };
 
-const EXPECTED_BLOCKED_MATERIAL_COUNT = 21;
+const EXPECTED_BLOCKED_MATERIAL_COUNT = 0;
 
 function buildLegacyKey(legacyTable: string, legacyId: number): string {
   return `${legacyTable}::${legacyId}`;
@@ -174,10 +174,10 @@ async function readMappedMaterials(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        material.materialCode AS materialCode,
-        material.materialName AS materialName,
-        material.specModel AS specModel,
-        material.unitCode AS unitCode
+        material.material_code AS materialCode,
+        material.material_name AS materialName,
+        material.spec_model AS specModel,
+        material.unit_code AS unitCode
       FROM migration_staging.map_material map_row
       INNER JOIN material
         ON material.id = map_row.target_id
@@ -219,8 +219,8 @@ async function readMappedWorkshops(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        workshop.workshopCode AS workshopCode,
-        workshop.workshopName AS workshopName
+        CAST(map_row.legacy_id AS CHAR) AS workshopCode,
+        workshop.workshop_name AS workshopName
       FROM migration_staging.map_workshop map_row
       INNER JOIN workshop
         ON workshop.id = map_row.target_id
@@ -231,9 +231,13 @@ async function readMappedWorkshops(
   let defaultWorkshop: ResolvedWorkshopDependency | null = null;
 
   for (const row of rows) {
+    const isDefaultWorkshop =
+      row.legacyTable === "migration_default_workshop" && row.legacyId === 0;
     const dependency = {
       targetId: row.targetId,
-      workshopCode: row.workshopCode,
+      workshopCode: isDefaultWorkshop
+        ? DEFAULT_WORKSHOP_CODE
+        : row.workshopCode,
       workshopName: row.workshopName,
     };
     workshopByLegacyKey.set(
@@ -241,11 +245,7 @@ async function readMappedWorkshops(
       dependency,
     );
 
-    if (
-      row.legacyTable === "migration_default_workshop" &&
-      row.legacyId === 0 &&
-      row.workshopCode === DEFAULT_WORKSHOP_CODE
-    ) {
+    if (isDefaultWorkshop) {
       defaultWorkshop = dependency;
     }
   }
@@ -273,8 +273,8 @@ async function readMappedSuppliers(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        supplier.supplierCode AS supplierCode,
-        supplier.supplierName AS supplierName
+        supplier.supplier_code AS supplierCode,
+        supplier.supplier_name AS supplierName
       FROM migration_staging.map_supplier map_row
       INNER JOIN supplier
         ON supplier.id = map_row.target_id
@@ -316,7 +316,7 @@ async function readPersonnelDependencies(
     `
       SELECT
         personnel.id AS targetId,
-        personnel.personnelName AS personnelName
+        personnel.personnel_name AS personnelName
       FROM migration_staging.map_personnel map_row
       INNER JOIN personnel
         ON personnel.id = map_row.target_id

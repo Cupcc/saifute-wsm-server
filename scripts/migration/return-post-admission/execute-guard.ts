@@ -68,28 +68,28 @@ export function buildAdmissionBaselineBlockers(options: {
   const blockers: Array<Record<string, unknown>> = [];
 
   if (
-    options.admittedSalesReturnOrders !== 9 ||
-    options.admittedSalesReturnLines !== 13
+    options.admittedSalesReturnOrders !== 37 ||
+    options.admittedSalesReturnLines !== 46
   ) {
     blockers.push({
       reason:
         "Admitted sales-return baseline does not match the reviewed-no-findings expectation.",
-      expectedOrders: 9,
-      expectedLines: 13,
+      expectedOrders: 37,
+      expectedLines: 46,
       actualOrders: options.admittedSalesReturnOrders,
       actualLines: options.admittedSalesReturnLines,
     });
   }
 
   if (
-    options.admittedWorkshopReturnOrders !== 3 ||
-    options.admittedWorkshopReturnLines !== 4
+    options.admittedWorkshopReturnOrders !== 23 ||
+    options.admittedWorkshopReturnLines !== 32
   ) {
     blockers.push({
       reason:
         "Admitted workshop-return baseline does not match the reviewed-no-findings expectation.",
-      expectedOrders: 3,
-      expectedLines: 4,
+      expectedOrders: 23,
+      expectedLines: 32,
       actualOrders: options.admittedWorkshopReturnOrders,
       actualLines: options.admittedWorkshopReturnLines,
     });

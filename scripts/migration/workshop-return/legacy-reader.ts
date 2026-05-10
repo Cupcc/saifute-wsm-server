@@ -22,17 +22,17 @@ import {
 } from "./types";
 
 const EXPECTED_BATCH1_MAP_COUNTS: Record<MasterDataBaselineEntity, number> = {
-  materialCategory: 8,
-  workshop: 13,
-  supplier: 93,
-  personnel: 51,
-  customer: 184,
-  material: 437,
+  materialCategory: 14,
+  workshop: 21,
+  supplier: 259,
+  personnel: 76,
+  customer: 388,
+  material: 1092,
 };
-const EXPECTED_BLOCKED_MATERIAL_COUNT = 21;
-const EXPECTED_WORKSHOP_PICK_ORDER_MAP_COUNT = 61;
-const EXPECTED_WORKSHOP_PICK_LINE_MAP_COUNT = 145;
-const EXPECTED_WORKSHOP_PICK_EXCLUDED_DOCUMENT_COUNT = 14;
+const EXPECTED_BLOCKED_MATERIAL_COUNT = 0;
+const EXPECTED_WORKSHOP_PICK_ORDER_MAP_COUNT = 555;
+const EXPECTED_WORKSHOP_PICK_LINE_MAP_COUNT = 1816;
+const EXPECTED_WORKSHOP_PICK_EXCLUDED_DOCUMENT_COUNT = 15;
 
 function buildLegacyKey(legacyTable: string, legacyId: number): string {
   return `${legacyTable}::${legacyId}`;
@@ -163,10 +163,10 @@ async function readMappedMaterials(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        material.materialCode AS materialCode,
-        material.materialName AS materialName,
-        material.specModel AS specModel,
-        material.unitCode AS unitCode
+        material.material_code AS materialCode,
+        material.material_name AS materialName,
+        material.spec_model AS specModel,
+        material.unit_code AS unitCode
       FROM migration_staging.map_material map_row
       INNER JOIN material
         ON material.id = map_row.target_id
@@ -208,7 +208,7 @@ async function readMappedWorkshops(
         map_row.legacy_table AS legacyTable,
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        workshop.workshopName AS workshopName
+        workshop.workshop_name AS workshopName
       FROM migration_staging.map_workshop map_row
       INNER JOIN workshop
         ON workshop.id = map_row.target_id
@@ -257,7 +257,7 @@ async function readPersonnelDependencies(
     `
       SELECT
         personnel.id AS targetId,
-        personnel.personnelName AS personnelName
+        personnel.personnel_name AS personnelName
       FROM migration_staging.map_personnel map_row
       INNER JOIN personnel
         ON personnel.id = map_row.target_id
@@ -539,18 +539,18 @@ async function readCurrentPickLines(
     `
       SELECT
         line_row.id AS targetLineId,
-        line_row.orderId AS targetOrderId,
-        line_row.lineNo AS lineNo,
-        line_row.materialId AS materialId,
-        order_row.workshopId AS workshopId,
-        order_row.bizDate AS bizDate,
-        order_row.documentNo AS documentNo,
+        line_row.order_id AS targetOrderId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
+        order_row.workshop_id AS workshopId,
+        order_row.biz_date AS bizDate,
+        order_row.document_no AS documentNo,
         line_row.quantity AS quantity
       FROM workshop_material_order_line line_row
       INNER JOIN workshop_material_order order_row
-        ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = 'PICK'
-        AND order_row.lifecycleStatus = 'EFFECTIVE'
+        ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = 'PICK'
+        AND order_row.lifecycle_status = 'EFFECTIVE'
       ORDER BY line_row.id ASC
     `,
   );
@@ -585,7 +585,7 @@ async function readPickOrderMapByLegacyId(
       SELECT
         map_row.legacy_id AS legacyId,
         map_row.target_id AS targetId,
-        order_row.documentNo AS documentNo
+        order_row.document_no AS documentNo
       FROM migration_staging.map_workshop_material_order map_row
       INNER JOIN workshop_material_order order_row
         ON order_row.id = map_row.target_id
@@ -609,7 +609,7 @@ async function readExistingWorkshopMaterialDocumentNos(
 ): Promise<Set<string>> {
   const rows = await connection.query<Array<{ documentNo: string }>>(
     `
-      SELECT wmo.documentNo
+      SELECT wmo.document_no AS documentNo
       FROM workshop_material_order wmo
       WHERE NOT EXISTS (
         SELECT 1

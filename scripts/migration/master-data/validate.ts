@@ -18,14 +18,29 @@ import type {
 } from "./types";
 import { MAP_TABLE_BY_ENTITY, TARGET_TABLE_BY_ENTITY } from "./writer";
 
-const CODE_COLUMN_BY_ENTITY: Record<MasterDataEntity, string> = {
-  materialCategory: "categoryCode",
-  workshop: "workshopName",
-  supplier: "supplierCode",
-  personnel: "personnelName",
-  customer: "customerCode",
-  material: "materialCode",
+const CODE_COLUMN_BY_ENTITY: Record<MasterDataEntity, string | null> = {
+  materialCategory: "category_code",
+  workshop: "workshop_name",
+  supplier: "supplier_code",
+  personnel: null,
+  customer: "customer_code",
+  material: "material_code",
 };
+
+function getExpectedTargetRows(
+  plan: MasterDataMigrationPlan,
+  entity: MasterDataEntity,
+): number {
+  const migratedRecords = plan.records[entity].filter(
+    (record) => record.blockers.length === 0,
+  );
+
+  if (entity === "workshop") {
+    return new Set(migratedRecords.map((record) => record.targetCode)).size;
+  }
+
+  return migratedRecords.length;
+}
 
 interface ArchivedPayloadExpectation {
   entity: MasterDataEntity;
@@ -274,6 +289,10 @@ async function getDuplicateCodes(
   const targetTable = TARGET_TABLE_BY_ENTITY[entity];
   const codeColumn = CODE_COLUMN_BY_ENTITY[entity];
 
+  if (codeColumn === null) {
+    return [];
+  }
+
   return connection.query<Array<{ code: string; total: number }>>(
     `
       SELECT ${codeColumn} AS code, COUNT(*) AS total
@@ -339,6 +358,7 @@ async function main(): Promise<void> {
           MasterDataEntity,
           {
             expectedMigratedRows: number;
+            expectedTargetRows: number;
             targetRows: number;
             mapRows: number;
             missingMappedTargets: number;
@@ -358,6 +378,7 @@ async function main(): Promise<void> {
           const expectedMigratedRows = plan.records[entity].filter(
             (record) => record.blockers.length === 0,
           ).length;
+          const expectedTargetRows = getExpectedTargetRows(plan, entity);
           const targetRows = await getTableCount(
             targetConnection,
             TARGET_TABLE_BY_ENTITY[entity],
@@ -388,22 +409,22 @@ async function main(): Promise<void> {
             });
           }
 
-          if (targetRows < expectedMigratedRows) {
+          if (targetRows < expectedTargetRows) {
             validationIssues.push({
               severity: "blocker",
               entity,
               reason:
                 "Target row count is smaller than the deterministic migration plan.",
-              expectedMigratedRows,
+              expectedTargetRows,
               actualTargetRows: targetRows,
             });
-          } else if (targetRows > expectedMigratedRows) {
+          } else if (targetRows > expectedTargetRows) {
             validationIssues.push({
               severity: "warning",
               entity,
               reason:
                 "Target table contains more rows than this migration slice expects.",
-              expectedMigratedRows,
+              expectedTargetRows,
               actualTargetRows: targetRows,
             });
           }
@@ -428,6 +449,7 @@ async function main(): Promise<void> {
 
           targetSummary[entity] = {
             expectedMigratedRows,
+            expectedTargetRows,
             targetRows,
             mapRows,
             missingMappedTargets,
@@ -573,7 +595,7 @@ async function main(): Promise<void> {
           status: string;
         }>(
           targetConnection,
-          "SELECT id, categoryCode, categoryName, sortOrder, status FROM material_category",
+          "SELECT id, category_code AS categoryCode, category_name AS categoryName, sort_order AS sortOrder, status FROM material_category",
           "categoryCode",
         );
         const workshopRowsByCode = await getTargetRowsByCode<{
@@ -582,7 +604,7 @@ async function main(): Promise<void> {
           status: string;
         }>(
           targetConnection,
-          "SELECT id, workshopName, status FROM workshop",
+          "SELECT id, workshop_name AS workshopName, status FROM workshop",
           "workshopName",
         );
         const supplierRowsByCode = await getTargetRowsByCode<{
@@ -596,7 +618,7 @@ async function main(): Promise<void> {
           status: string;
         }>(
           targetConnection,
-          "SELECT id, supplierCode, supplierName, supplierShortName, contactPerson, contactPhone, address, status FROM supplier",
+          "SELECT id, supplier_code AS supplierCode, supplier_name AS supplierName, supplier_short_name AS supplierShortName, contact_person AS contactPerson, contact_phone AS contactPhone, address, status FROM supplier",
           "supplierCode",
         );
         const personnelRowsByName = await getTargetRowsByCode<{
@@ -606,7 +628,7 @@ async function main(): Promise<void> {
           status: string;
         }>(
           targetConnection,
-          "SELECT id, personnelName, contact_phone AS contactPhone, status FROM personnel",
+          "SELECT id, personnel_name AS personnelName, contact_phone AS contactPhone, status FROM personnel",
           "personnelName",
         );
         const customerRowsByCode = await getTargetRowsByCode<{
@@ -620,7 +642,7 @@ async function main(): Promise<void> {
           status: string;
         }>(
           targetConnection,
-          "SELECT id, customerCode, customerName, contactPerson, contactPhone, address, parentId, status FROM customer",
+          "SELECT id, customer_code AS customerCode, customer_name AS customerName, contact_person AS contactPerson, contact_phone AS contactPhone, address, parent_id AS parentId, status FROM customer",
           "customerCode",
         );
         const materialRowsByCode = await getTargetRowsByCode<{
@@ -635,7 +657,7 @@ async function main(): Promise<void> {
           status: string;
         }>(
           targetConnection,
-          "SELECT id, materialCode, materialName, specModel, categoryId, unitCode, warningMinQty, warningMaxQty, status FROM material",
+          "SELECT id, material_code AS materialCode, material_name AS materialName, spec_model AS specModel, category_id AS categoryId, unit_code AS unitCode, warning_min_qty AS warningMinQty, warning_max_qty AS warningMaxQty, status FROM material",
           "materialCode",
         );
 
@@ -691,11 +713,17 @@ async function main(): Promise<void> {
           );
         }
 
+        const finalWorkshopByCode = new Map<
+          string,
+          (typeof plan.records.workshop)[number]
+        >();
         for (const record of plan.records.workshop) {
-          if (record.blockers.length > 0) {
-            continue;
+          if (record.blockers.length === 0) {
+            finalWorkshopByCode.set(record.target.workshopName, record);
           }
+        }
 
+        for (const record of finalWorkshopByCode.values()) {
           const targetRow = workshopRowsByCode.get(record.target.workshopName);
 
           if (!targetRow) {

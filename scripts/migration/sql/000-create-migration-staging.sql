@@ -10,8 +10,7 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_material_category (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_material_category_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_material_category_target (target_table, target_id)
+  UNIQUE KEY uq_map_material_category_legacy (legacy_table, legacy_id)
 );
 
 CREATE TABLE IF NOT EXISTS migration_staging.map_workshop (
@@ -24,8 +23,7 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_workshop (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_workshop_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_workshop_target (target_table, target_id)
+  UNIQUE KEY uq_map_workshop_legacy (legacy_table, legacy_id)
 );
 
 CREATE TABLE IF NOT EXISTS migration_staging.map_supplier (
@@ -38,8 +36,7 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_supplier (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_supplier_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_supplier_target (target_table, target_id)
+  UNIQUE KEY uq_map_supplier_legacy (legacy_table, legacy_id)
 );
 
 CREATE TABLE IF NOT EXISTS migration_staging.map_personnel (
@@ -52,8 +49,7 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_personnel (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_personnel_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_personnel_target (target_table, target_id)
+  UNIQUE KEY uq_map_personnel_legacy (legacy_table, legacy_id)
 );
 
 CREATE TABLE IF NOT EXISTS migration_staging.map_customer (
@@ -66,8 +62,7 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_customer (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_customer_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_customer_target (target_table, target_id)
+  UNIQUE KEY uq_map_customer_legacy (legacy_table, legacy_id)
 );
 
 CREATE TABLE IF NOT EXISTS migration_staging.map_material (
@@ -80,8 +75,7 @@ CREATE TABLE IF NOT EXISTS migration_staging.map_material (
   migration_batch VARCHAR(64) NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_map_material_legacy (legacy_table, legacy_id),
-  UNIQUE KEY uq_map_material_target (target_table, target_id)
+  UNIQUE KEY uq_map_material_legacy (legacy_table, legacy_id)
 );
 
 CREATE TABLE IF NOT EXISTS migration_staging.map_stock_in_order (

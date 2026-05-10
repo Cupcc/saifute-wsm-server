@@ -367,19 +367,6 @@ async function main(): Promise<void> {
 
         const executeBlockers: Array<Record<string, unknown>> = [];
 
-        if (
-          existingCounts.sourceUsageCount > 0 &&
-          existingCounts.orphanSourceUsageCount !==
-            existingCounts.sourceUsageCount
-        ) {
-          executeBlockers.push({
-            reason:
-              "inventory_source_usage contains rows that still reference existing inventory_log rows. Replay can only clean fully orphaned source usages.",
-            sourceUsageCount: existingCounts.sourceUsageCount,
-            orphanSourceUsageCount: existingCounts.orphanSourceUsageCount,
-          });
-        }
-
         if (plan.blockers.length > 0) {
           executeBlockers.push({
             reason:

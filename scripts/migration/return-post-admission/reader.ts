@@ -14,17 +14,17 @@ export async function readPostAdmissionBaseline(connection: {
     `
       SELECT
         id,
-        documentNo,
-        orderType,
-        DATE_FORMAT(bizDate, '%Y-%m-%d') AS bizDate,
-        workshopId,
-        customerId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus
+        document_no AS documentNo,
+        order_type AS orderType,
+        DATE_FORMAT(biz_date, '%Y-%m-%d') AS bizDate,
+        workshop_id AS workshopId,
+        customer_id AS customerId,
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus
       FROM sales_stock_order
-      WHERE orderType = 'SALES_RETURN'
-      ORDER BY bizDate ASC, documentNo ASC
+      WHERE order_type = 'SALES_RETURN'
+      ORDER BY biz_date ASC, document_no ASC
     `,
   );
 
@@ -32,17 +32,17 @@ export async function readPostAdmissionBaseline(connection: {
     `
       SELECT
         id,
-        documentNo,
-        orderType,
-        DATE_FORMAT(bizDate, '%Y-%m-%d') AS bizDate,
-        workshopId,
-        customerId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus
+        document_no AS documentNo,
+        order_type AS orderType,
+        DATE_FORMAT(biz_date, '%Y-%m-%d') AS bizDate,
+        workshop_id AS workshopId,
+        customer_id AS customerId,
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus
       FROM sales_stock_order
-      WHERE orderType = 'OUTBOUND'
-      ORDER BY bizDate ASC, documentNo ASC
+      WHERE order_type = 'OUTBOUND'
+      ORDER BY biz_date ASC, document_no ASC
     `,
   );
 
@@ -56,17 +56,17 @@ export async function readPostAdmissionBaseline(connection: {
     `
       SELECT
         id,
-        documentNo,
-        orderType,
-        DATE_FORMAT(bizDate, '%Y-%m-%d') AS bizDate,
-        workshopId,
+        document_no AS documentNo,
+        order_type AS orderType,
+        DATE_FORMAT(biz_date, '%Y-%m-%d') AS bizDate,
+        workshop_id AS workshopId,
         NULL AS customerId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus
       FROM workshop_material_order
-      WHERE orderType = 'RETURN'
-      ORDER BY bizDate ASC, documentNo ASC
+      WHERE order_type = 'RETURN'
+      ORDER BY biz_date ASC, document_no ASC
     `,
   );
 
@@ -74,17 +74,17 @@ export async function readPostAdmissionBaseline(connection: {
     `
       SELECT
         id,
-        documentNo,
-        orderType,
-        DATE_FORMAT(bizDate, '%Y-%m-%d') AS bizDate,
-        workshopId,
+        document_no AS documentNo,
+        order_type AS orderType,
+        DATE_FORMAT(biz_date, '%Y-%m-%d') AS bizDate,
+        workshop_id AS workshopId,
         NULL AS customerId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus
       FROM workshop_material_order
-      WHERE orderType = 'PICK'
-      ORDER BY bizDate ASC, documentNo ASC
+      WHERE order_type = 'PICK'
+      ORDER BY biz_date ASC, document_no ASC
     `,
   );
 
@@ -98,16 +98,16 @@ export async function readPostAdmissionBaseline(connection: {
     `
       SELECT
         id,
-        documentNo,
-        orderType,
-        DATE_FORMAT(bizDate, '%Y-%m-%d') AS bizDate,
-        workshopId,
+        document_no AS documentNo,
+        order_type AS orderType,
+        DATE_FORMAT(biz_date, '%Y-%m-%d') AS bizDate,
+        workshop_id AS workshopId,
         NULL AS customerId,
-        lifecycleStatus,
-        auditStatusSnapshot,
-        inventoryEffectStatus
+        lifecycle_status AS lifecycleStatus,
+        audit_status_snapshot AS auditStatusSnapshot,
+        inventory_effect_status AS inventoryEffectStatus
       FROM stock_in_order
-      ORDER BY bizDate ASC, documentNo ASC
+      ORDER BY biz_date ASC, document_no ASC
     `,
   );
 
@@ -137,25 +137,26 @@ async function readSalesStockOrderLines(
     `
       SELECT
         line_row.id,
-        line_row.orderId,
-        line_row.lineNo,
-        line_row.materialId,
+        line_row.order_id AS orderId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
         line_row.quantity,
-        line_row.sourceDocumentType,
-        line_row.sourceDocumentId,
-        line_row.sourceDocumentLineId,
-        order_row.documentNo,
-        order_row.orderType,
-        DATE_FORMAT(order_row.bizDate, '%Y-%m-%d') AS bizDate,
-        order_row.workshopId,
-        order_row.customerId,
-        order_row.lifecycleStatus,
-        order_row.inventoryEffectStatus
+        order_row.stock_scope_id AS stockScopeId,
+        line_row.source_document_type AS sourceDocumentType,
+        line_row.source_document_id AS sourceDocumentId,
+        line_row.source_document_line_id AS sourceDocumentLineId,
+        order_row.document_no AS documentNo,
+        order_row.order_type AS orderType,
+        DATE_FORMAT(order_row.biz_date, '%Y-%m-%d') AS bizDate,
+        order_row.workshop_id AS workshopId,
+        order_row.customer_id AS customerId,
+        order_row.lifecycle_status AS lifecycleStatus,
+        order_row.inventory_effect_status AS inventoryEffectStatus
       FROM sales_stock_order_line line_row
       INNER JOIN sales_stock_order order_row
-        ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = ?
-      ORDER BY order_row.bizDate ASC, order_row.documentNo ASC, line_row.lineNo ASC
+        ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = ?
+      ORDER BY order_row.biz_date ASC, order_row.document_no ASC, line_row.line_no ASC
     `,
     [orderType],
   );
@@ -168,21 +169,22 @@ async function readOutboundLines(connection: {
     `
       SELECT
         line_row.id,
-        line_row.orderId,
-        line_row.lineNo,
-        line_row.materialId,
+        line_row.order_id AS orderId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
         line_row.quantity,
-        order_row.documentNo,
-        DATE_FORMAT(order_row.bizDate, '%Y-%m-%d') AS bizDate,
-        order_row.workshopId,
-        order_row.customerId,
-        order_row.lifecycleStatus,
-        order_row.inventoryEffectStatus
+        order_row.stock_scope_id AS stockScopeId,
+        order_row.document_no AS documentNo,
+        DATE_FORMAT(order_row.biz_date, '%Y-%m-%d') AS bizDate,
+        order_row.workshop_id AS workshopId,
+        order_row.customer_id AS customerId,
+        order_row.lifecycle_status AS lifecycleStatus,
+        order_row.inventory_effect_status AS inventoryEffectStatus
       FROM sales_stock_order_line line_row
       INNER JOIN sales_stock_order order_row
-        ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = 'OUTBOUND'
-      ORDER BY order_row.bizDate ASC, order_row.documentNo ASC, line_row.lineNo ASC
+        ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = 'OUTBOUND'
+      ORDER BY order_row.biz_date ASC, order_row.document_no ASC, line_row.line_no ASC
     `,
   );
 }
@@ -197,25 +199,26 @@ async function readWorkshopMaterialOrderLines(
     `
       SELECT
         line_row.id,
-        line_row.orderId,
-        line_row.lineNo,
-        line_row.materialId,
+        line_row.order_id AS orderId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
         line_row.quantity,
-        line_row.sourceDocumentType,
-        line_row.sourceDocumentId,
-        line_row.sourceDocumentLineId,
-        order_row.documentNo,
-        order_row.orderType,
-        DATE_FORMAT(order_row.bizDate, '%Y-%m-%d') AS bizDate,
-        order_row.workshopId,
+        order_row.stock_scope_id AS stockScopeId,
+        line_row.source_document_type AS sourceDocumentType,
+        line_row.source_document_id AS sourceDocumentId,
+        line_row.source_document_line_id AS sourceDocumentLineId,
+        order_row.document_no AS documentNo,
+        order_row.order_type AS orderType,
+        DATE_FORMAT(order_row.biz_date, '%Y-%m-%d') AS bizDate,
+        order_row.workshop_id AS workshopId,
         NULL AS customerId,
-        order_row.lifecycleStatus,
-        order_row.inventoryEffectStatus
+        order_row.lifecycle_status AS lifecycleStatus,
+        order_row.inventory_effect_status AS inventoryEffectStatus
       FROM workshop_material_order_line line_row
       INNER JOIN workshop_material_order order_row
-        ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = ?
-      ORDER BY order_row.bizDate ASC, order_row.documentNo ASC, line_row.lineNo ASC
+        ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = ?
+      ORDER BY order_row.biz_date ASC, order_row.document_no ASC, line_row.line_no ASC
     `,
     [orderType],
   );
@@ -228,20 +231,21 @@ async function readPickLines(connection: {
     `
       SELECT
         line_row.id,
-        line_row.orderId,
-        line_row.lineNo,
-        line_row.materialId,
+        line_row.order_id AS orderId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
         line_row.quantity,
-        order_row.documentNo,
-        DATE_FORMAT(order_row.bizDate, '%Y-%m-%d') AS bizDate,
-        order_row.workshopId,
-        order_row.lifecycleStatus,
-        order_row.inventoryEffectStatus
+        order_row.stock_scope_id AS stockScopeId,
+        order_row.document_no AS documentNo,
+        DATE_FORMAT(order_row.biz_date, '%Y-%m-%d') AS bizDate,
+        order_row.workshop_id AS workshopId,
+        order_row.lifecycle_status AS lifecycleStatus,
+        order_row.inventory_effect_status AS inventoryEffectStatus
       FROM workshop_material_order_line line_row
       INNER JOIN workshop_material_order order_row
-        ON order_row.id = line_row.orderId
-      WHERE order_row.orderType = 'PICK'
-      ORDER BY order_row.bizDate ASC, order_row.documentNo ASC, line_row.lineNo ASC
+        ON order_row.id = line_row.order_id
+      WHERE order_row.order_type = 'PICK'
+      ORDER BY order_row.biz_date ASC, order_row.document_no ASC, line_row.line_no ASC
     `,
   );
 }
@@ -253,20 +257,21 @@ async function readStockInLines(connection: {
     `
       SELECT
         line_row.id,
-        line_row.orderId,
-        line_row.lineNo,
-        line_row.materialId,
+        line_row.order_id AS orderId,
+        line_row.line_no AS lineNo,
+        line_row.material_id AS materialId,
         line_row.quantity,
-        order_row.documentNo,
-        order_row.orderType,
-        DATE_FORMAT(order_row.bizDate, '%Y-%m-%d') AS bizDate,
-        order_row.workshopId,
-        order_row.lifecycleStatus,
-        order_row.inventoryEffectStatus
+        order_row.stock_scope_id AS stockScopeId,
+        order_row.document_no AS documentNo,
+        order_row.order_type AS orderType,
+        DATE_FORMAT(order_row.biz_date, '%Y-%m-%d') AS bizDate,
+        order_row.workshop_id AS workshopId,
+        order_row.lifecycle_status AS lifecycleStatus,
+        order_row.inventory_effect_status AS inventoryEffectStatus
       FROM stock_in_order_line line_row
       INNER JOIN stock_in_order order_row
-        ON order_row.id = line_row.orderId
-      ORDER BY order_row.bizDate ASC, order_row.documentNo ASC, line_row.lineNo ASC
+        ON order_row.id = line_row.order_id
+      ORDER BY order_row.biz_date ASC, order_row.document_no ASC, line_row.line_no ASC
     `,
   );
 }

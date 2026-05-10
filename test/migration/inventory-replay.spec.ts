@@ -201,6 +201,107 @@ describe("inventory replay planner", () => {
     ]);
   });
 
+  it("replays supplier returns as source-bound outbound usage", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        businessDocumentId: 1,
+        businessDocumentNumber: "YS-001",
+        businessDocumentLineId: 10,
+        changeQty: "100.000000",
+        unitCost: "12.34",
+        idempotencyKey: "StockInOrder:1:line:10",
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "OUT",
+        operationType: "SUPPLIER_RETURN_OUT",
+        businessModule: "inbound",
+        businessDocumentType: "StockInOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "TGC-001",
+        businessDocumentLineId: 20,
+        changeQty: "30.000000",
+        unitCost: "12.34",
+        costAmount: "370.20",
+        selectedUnitCost: "12.34",
+        sourceLinks: [
+          {
+            sourceDocumentType: "StockInOrder",
+            sourceDocumentId: 1,
+            sourceDocumentLineId: 10,
+            linkedQty: "30.000000",
+          },
+        ],
+        idempotencyKey: "StockInSupplierReturn:2:line:20",
+        sortPriority: 1,
+      }),
+    ]);
+
+    expect(plan.blockers).toHaveLength(0);
+    expect(plan.plannedSourceUsages).toEqual([
+      expect.objectContaining({
+        sourceLogIdempotencyKey: "StockInOrder:1:line:10",
+        consumerDocumentType: "StockInOrder",
+        consumerDocumentId: 2,
+        consumerLineId: 20,
+        allocatedQty: "30.000000",
+        releasedQty: "0.000000",
+        status: "ALLOCATED",
+      }),
+    ]);
+    expect(plan.plannedLogs[1]).toMatchObject({
+      idempotencyKey: "StockInSupplierReturn:2:line:20",
+      direction: "OUT",
+      operationType: "SUPPLIER_RETURN_OUT",
+      unitCost: "12.34",
+      costAmount: "370.20",
+      note: "Supplier return source-bound allocation from StockInOrder:1:line:10.",
+    });
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        unitCost: "12.34",
+        availableQty: "70.000000",
+        sourceLogCount: 1,
+      },
+    ]);
+  });
+
+  it("blocks supplier returns without source-line relations instead of falling back to FIFO", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        businessDocumentId: 1,
+        businessDocumentLineId: 10,
+        changeQty: "100.000000",
+        unitCost: "12.34",
+        idempotencyKey: "StockInOrder:1:line:10",
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "OUT",
+        operationType: "SUPPLIER_RETURN_OUT",
+        businessModule: "inbound",
+        businessDocumentType: "StockInOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "TGC-001",
+        businessDocumentLineId: 20,
+        changeQty: "30.000000",
+        unitCost: "12.34",
+        selectedUnitCost: "12.34",
+        idempotencyKey: "StockInSupplierReturn:2:line:20",
+        sortPriority: 1,
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "supplier-return-source-link-missing",
+      ),
+    ).toBe(true);
+    expect(plan.plannedSourceUsages).toHaveLength(0);
+  });
+
   it("blocks when the selected layer is insufficient even if other layers exist", () => {
     const plan = buildInventoryReplayPlan([
       event({
@@ -518,6 +619,167 @@ describe("inventory replay planner", () => {
         expect.stringContaining("UNFUNDED_HISTORICAL_OUT SO-NEG"),
         expect.stringContaining(
           "NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE material=100",
+        ),
+      ]),
+    );
+  });
+
+  it("converts event-level negative blockers to stocktake warnings when final bucket is accepted", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        direction: "OUT",
+        operationType: "RD_PROJECT_OUT",
+        businessModule: "rd-project",
+        businessDocumentType: "RdProject",
+        businessDocumentId: 1,
+        businessDocumentNumber: "RD-SEED-DEFICIT",
+        businessDocumentLineId: 10,
+        changeQty: "1.000000",
+        unitCost: "10.00",
+        costAmount: "10.00",
+        idempotencyKey: "RdProject:1:line:10",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        businessDocumentId: 2,
+        businessDocumentLineId: 20,
+        changeQty: "6.000000",
+        unitCost: "10.00",
+        idempotencyKey: "StockInOrder:2:line:20",
+      }),
+      event({
+        bizDate: "2026-01-03",
+        direction: "OUT",
+        operationType: "SCRAP_OUT",
+        businessModule: "scrap",
+        businessDocumentType: "ScrapOrder",
+        businessDocumentId: 3,
+        businessDocumentNumber: "BF-FINAL-NEG",
+        businessDocumentLineId: 30,
+        changeQty: "6.000000",
+        unitCost: "10.00",
+        costAmount: "60.00",
+        idempotencyKey: "ScrapOrder:3:line:30",
+        sortPriority: 1,
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "negative-balance-during-replay",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "price-layer-balance-mismatch",
+      ),
+    ).toBe(false);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE material=100",
+        ),
+        expect.stringContaining(
+          "NEGATIVE_BALANCE_EVENT_ACCEPTED_FOR_STOCKTAKE ScrapOrder:3:line:30",
+        ),
+      ]),
+    );
+  });
+
+  it("allows RD project historical source-less movement as stocktake warning", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "RD_PROJECT_OUT",
+        businessModule: "rd-project",
+        businessDocumentType: "RdProject",
+        businessDocumentId: 1,
+        businessDocumentNumber: "RD-NEG",
+        businessDocumentLineId: 10,
+        changeQty: "6.000000",
+        unitCost: "8.50",
+        costAmount: "51.00",
+        idempotencyKey: "RdProject:1:line:10",
+        sortPriority: 1,
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "fifo-source-insufficient",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "negative-balance-during-replay",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "price-layer-balance-mismatch",
+      ),
+    ).toBe(false);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("UNFUNDED_HISTORICAL_OUT RD-NEG"),
+        expect.stringContaining(
+          "NEGATIVE_FINAL_BALANCE_ACCEPTED_FOR_STOCKTAKE material=100",
+        ),
+      ]),
+    );
+  });
+
+  it("matches RD project historical movement to later stock-in source", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "RD_PROJECT_OUT",
+        businessModule: "rd-project",
+        businessDocumentType: "RdProject",
+        businessDocumentId: 1,
+        businessDocumentNumber: "RD-FUTURE",
+        businessDocumentLineId: 10,
+        changeQty: "6.000000",
+        unitCost: "8.50",
+        costAmount: "51.00",
+        idempotencyKey: "RdProject:1:line:10",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        businessDocumentId: 2,
+        businessDocumentLineId: 20,
+        changeQty: "6.000000",
+        unitCost: "8.50",
+        idempotencyKey: "StockInOrder:2:line:20",
+      }),
+    ]);
+
+    expect(plan.blockers).toHaveLength(0);
+    expect(plan.plannedBalances).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        quantityOnHand: "0.000000",
+      },
+    ]);
+    expect(plan.plannedPriceLayers).toHaveLength(0);
+    expect(plan.plannedSourceUsages).toEqual([
+      expect.objectContaining({
+        sourceLogIdempotencyKey: "StockInOrder:2:line:20",
+        consumerDocumentType: "RdProject",
+        consumerDocumentId: 1,
+        consumerLineId: 10,
+        allocatedQty: "6.000000",
+      }),
+    ]);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "RD_PROJECT_OUT RdProject:1:line:10 consumed future source",
         ),
       ]),
     );

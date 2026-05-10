@@ -263,6 +263,7 @@ async function fetchApprovalDocument(config, documentId) {
   const response = await request({
     url: "/api/approval/documents/detail",
     method: "get",
+    silentError: true,
     params: {
       documentType: config.documentType,
       documentId,

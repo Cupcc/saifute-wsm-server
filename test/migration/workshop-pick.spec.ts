@@ -484,7 +484,7 @@ describe("workshop-pick migration transformer", () => {
       "references blocked batch1 material 999",
     );
     expect(plan.excludedDocuments[2]?.exclusionReason).toContain(
-      "cannot derive a deterministic unitPrice",
+      "cannot derive a deterministic unit_price",
     );
     expect(plan.excludedDocuments[2]?.payload.lines).toEqual([
       expect.objectContaining({

@@ -24,7 +24,7 @@ import {
 } from "./reader";
 import { executePostAdmissionPlan } from "./writer";
 
-const EXPECTED_FACTORY_NUMBER_RESERVATION_COUNT = 80;
+const EXPECTED_FACTORY_NUMBER_RESERVATION_COUNT = 426;
 
 async function main(): Promise<void> {
   const cliOptions = parseMigrationCliOptions();

@@ -187,7 +187,7 @@ async function main(): Promise<void> {
             FROM (
               SELECT
                 l.id,
-                l.change_qty,
+                l.change_qty AS changeQty,
                 COALESCE(SUM(u.allocated_qty - u.released_qty), 0) AS netAllocated
               FROM inventory_log l
               LEFT JOIN inventory_source_usage u ON u.source_log_id = l.id
@@ -239,11 +239,11 @@ async function main(): Promise<void> {
               FROM inventory_log l
               LEFT JOIN (
                 SELECT
-                  source_log_id,
+                  source_log_id AS sourceLogId,
                   SUM(allocated_qty - released_qty) AS netAllocated
                 FROM inventory_source_usage
                 GROUP BY source_log_id
-              ) usage_totals ON usage_totals.source_log_id = l.id
+              ) usage_totals ON usage_totals.sourceLogId = l.id
               WHERE l.direction = 'IN'
                 AND (
                   l.operation_type IN (${sourceTypesSql})

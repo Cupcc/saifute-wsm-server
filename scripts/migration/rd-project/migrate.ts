@@ -26,6 +26,7 @@ import {
 } from "./transformer";
 
 const RD_PROJECT_DOCUMENT_TYPE = BusinessDocumentType.RdProject;
+
 import { executeRdProjectPlan, MAP_TABLES, TARGET_TABLES } from "./writer";
 
 async function getTableCount(
@@ -104,33 +105,33 @@ async function getRdProjectDownstreamConsumerCounts(connection: {
     `
       SELECT 'approval_document' AS consumer, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'RD_PROJECT' OR documentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE document_family = 'RD_PROJECT' OR document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_relation' AS consumer, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'PROJECT'
-         OR downstreamFamily = 'PROJECT'
-         OR upstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'PROJECT'
+         OR downstream_family = 'PROJECT'
+         OR upstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS consumer, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'PROJECT'
-         OR downstreamFamily = 'PROJECT'
-         OR upstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'PROJECT'
+         OR downstream_family = 'PROJECT'
+         OR upstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_log' AS consumer, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS consumer, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'factory_number_reservation' AS consumer, COUNT(*) AS total
       FROM factory_number_reservation
-      WHERE businessDocumentType = '${RD_PROJECT_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${RD_PROJECT_DOCUMENT_TYPE}'
     `,
   );
 

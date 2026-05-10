@@ -41,6 +41,25 @@ type ColumnPresenceRow = {
 const SCOPE_CODE_MAIN = "MAIN";
 const SCOPE_CODE_RD_SUB = "RD_SUB";
 
+async function hasTableColumn(
+  connection: Queryable,
+  tableName: string,
+  columnName: string,
+): Promise<boolean> {
+  const rows = await connection.query<ColumnPresenceRow[]>(
+    `
+      SELECT COUNT(*) AS total
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = ?
+        AND COLUMN_NAME = ?
+    `,
+    [tableName, columnName],
+  );
+
+  return Number(rows[0]?.total ?? 0) > 0;
+}
+
 async function ensureStockScopeTypeColumn(connection: Queryable): Promise<{
   addedColumn: boolean;
   normalizedRows: number;
@@ -51,7 +70,7 @@ async function ensureStockScopeTypeColumn(connection: Queryable): Promise<{
       FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
         AND TABLE_NAME = 'stock_scope'
-        AND COLUMN_NAME = 'scopeType'
+        AND COLUMN_NAME = 'scope_type'
     `,
   );
   const hasColumn = Number(rows[0]?.total ?? 0) > 0;
@@ -60,8 +79,8 @@ async function ensureStockScopeTypeColumn(connection: Queryable): Promise<{
     await connection.query(
       `
         ALTER TABLE stock_scope
-        ADD COLUMN scopeType ENUM('MAIN', 'RD_SUB') NOT NULL DEFAULT 'MAIN'
-        AFTER scopeName
+        ADD COLUMN scope_type ENUM('MAIN', 'RD_SUB') NOT NULL DEFAULT 'MAIN'
+        AFTER scope_name
       `,
     );
   }
@@ -69,14 +88,14 @@ async function ensureStockScopeTypeColumn(connection: Queryable): Promise<{
   const normalizationResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE stock_scope
-      SET scopeType =
+      SET scope_type =
         CASE
-          WHEN scopeCode = ? THEN 'RD_SUB'
+          WHEN scope_code = ? THEN 'RD_SUB'
           ELSE 'MAIN'
         END
-      WHERE scopeType <>
+      WHERE scope_type <>
         CASE
-          WHEN scopeCode = ? THEN 'RD_SUB'
+          WHEN scope_code = ? THEN 'RD_SUB'
           ELSE 'MAIN'
         END
     `,
@@ -93,19 +112,19 @@ async function ensureStockScopeSeed(connection: Queryable): Promise<void> {
   await connection.query(
     `
       INSERT INTO stock_scope (
-        scopeCode,
-        scopeName,
+        scope_code,
+        scope_name,
         status,
-        createdAt,
-        updatedAt
+        created_at,
+        updated_at
       )
       VALUES
         (?, '主仓', 'ACTIVE', NOW(), NOW()),
         (?, '研发小仓', 'ACTIVE', NOW(), NOW())
       ON DUPLICATE KEY UPDATE
-        scopeName = VALUES(scopeName),
+        scope_name = VALUES(scope_name),
         status = VALUES(status),
-        updatedAt = NOW()
+        updated_at = NOW()
     `,
     [SCOPE_CODE_MAIN, SCOPE_CODE_RD_SUB],
   );
@@ -117,9 +136,9 @@ async function readStockScopeIds(connection: Queryable): Promise<{
 }> {
   const rows = await connection.query<Array<{ scopeCode: string; id: number }>>(
     `
-      SELECT scopeCode, id
+      SELECT scope_code AS scopeCode, id
       FROM stock_scope
-      WHERE scopeCode IN (?, ?)
+      WHERE scope_code IN (?, ?)
     `,
     [SCOPE_CODE_MAIN, SCOPE_CODE_RD_SUB],
   );
@@ -141,34 +160,34 @@ async function readStockScopeIds(connection: Queryable): Promise<{
 async function getNullCounts(connection: Queryable): Promise<NullCountRow[]> {
   return connection.query<NullCountRow[]>(
     `
-      SELECT 'inventory_balance' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'inventory_balance' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM inventory_balance
       UNION ALL
-      SELECT 'inventory_log' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'inventory_log' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM inventory_log
       UNION ALL
-      SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'factory_number_reservation' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM factory_number_reservation
       UNION ALL
-      SELECT 'stock_in_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'stock_in_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM stock_in_order
       UNION ALL
-      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'sales_stock_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM sales_stock_order
       UNION ALL
-      SELECT 'workshop_material_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'workshop_material_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM workshop_material_order
       UNION ALL
-      SELECT 'rd_project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_project' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_project
       UNION ALL
-      SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN sourceStockScopeId IS NULL OR targetStockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_handoff_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN source_stock_scope_id IS NULL OR target_stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_handoff_order
       UNION ALL
-      SELECT 'rd_procurement_request' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_procurement_request' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_procurement_request
       UNION ALL
-      SELECT 'rd_stocktake_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stockScopeId IS NULL THEN 1 ELSE 0 END) AS nullRows
+      SELECT 'rd_stocktake_order' AS tableName, COUNT(*) AS totalRows, SUM(CASE WHEN stock_scope_id IS NULL THEN 1 ELSE 0 END) AS nullRows
       FROM rd_stocktake_order
     `,
   );
@@ -177,27 +196,31 @@ async function getNullCounts(connection: Queryable): Promise<NullCountRow[]> {
 async function getInventoryBalanceConflicts(
   connection: Queryable,
 ): Promise<ConflictRow[]> {
+  if (!(await hasTableColumn(connection, "inventory_balance", "workshop_id"))) {
+    return [];
+  }
+
   return connection.query<ConflictRow[]>(
     `
       SELECT
-        ib.materialId AS materialId,
+        ib.material_id AS materialId,
         CASE
-          WHEN w.workshopName = '主仓' THEN 'MAIN'
-          WHEN w.workshopName = '研发小仓' THEN 'RD_SUB'
+          WHEN w.workshop_name = '主仓' THEN 'MAIN'
+          WHEN w.workshop_name = '研发小仓' THEN 'RD_SUB'
           ELSE '__UNMAPPED__'
         END AS targetScopeCode,
         COUNT(*) AS duplicateCount
       FROM inventory_balance ib
-      JOIN workshop w ON w.id = ib.workshopId
+      JOIN workshop w ON w.id = ib.workshop_id
       GROUP BY
-        ib.materialId,
+        ib.material_id,
         CASE
-          WHEN w.workshopName = '主仓' THEN 'MAIN'
-          WHEN w.workshopName = '研发小仓' THEN 'RD_SUB'
+          WHEN w.workshop_name = '主仓' THEN 'MAIN'
+          WHEN w.workshop_name = '研发小仓' THEN 'RD_SUB'
           ELSE '__UNMAPPED__'
         END
       HAVING targetScopeCode <> '__UNMAPPED__' AND COUNT(*) > 1
-      ORDER BY duplicateCount DESC, materialId ASC
+      ORDER BY duplicateCount DESC, material_id ASC
     `,
   );
 }
@@ -205,31 +228,39 @@ async function getInventoryBalanceConflicts(
 async function getUnmappedWorkshopReferences(
   connection: Queryable,
 ): Promise<WorkshopRefRow[]> {
+  const balanceHasWorkshopId = await hasTableColumn(
+    connection,
+    "inventory_balance",
+    "workshop_id",
+  );
+  const inventoryBalanceBranch = balanceHasWorkshopId
+    ? "SELECT 'inventory_balance' AS tableName, workshop_id AS workshopId FROM inventory_balance WHERE stock_scope_id IS NULL UNION ALL"
+    : "";
+
   return connection.query<WorkshopRefRow[]>(
     `
       SELECT
         refs.tableName AS tableName,
         refs.workshopId AS workshopId,
-        w.workshopName AS workshopName,
+        w.workshop_name AS workshopName,
         COUNT(*) AS totalRows
       FROM (
-        SELECT 'inventory_balance' AS tableName, workshopId FROM inventory_balance WHERE stockScopeId IS NULL
+        ${inventoryBalanceBranch}
+        SELECT 'inventory_log' AS tableName, workshop_id AS workshopId FROM inventory_log WHERE stock_scope_id IS NULL
         UNION ALL
-        SELECT 'inventory_log' AS tableName, workshopId FROM inventory_log WHERE stockScopeId IS NULL
+        SELECT 'factory_number_reservation' AS tableName, workshop_id AS workshopId FROM factory_number_reservation WHERE stock_scope_id IS NULL
         UNION ALL
-        SELECT 'factory_number_reservation' AS tableName, workshopId FROM factory_number_reservation WHERE stockScopeId IS NULL
+        SELECT 'rd_procurement_request' AS tableName, workshop_id AS workshopId FROM rd_procurement_request WHERE stock_scope_id IS NULL
         UNION ALL
-        SELECT 'rd_procurement_request' AS tableName, workshopId FROM rd_procurement_request WHERE stockScopeId IS NULL
+        SELECT 'rd_stocktake_order' AS tableName, workshop_id AS workshopId FROM rd_stocktake_order WHERE stock_scope_id IS NULL
         UNION ALL
-        SELECT 'rd_stocktake_order' AS tableName, workshopId FROM rd_stocktake_order WHERE stockScopeId IS NULL
+        SELECT 'rd_handoff_order.source' AS tableName, source_workshop_id AS workshopId FROM rd_handoff_order WHERE source_stock_scope_id IS NULL
         UNION ALL
-        SELECT 'rd_handoff_order.source' AS tableName, sourceWorkshopId AS workshopId FROM rd_handoff_order WHERE sourceStockScopeId IS NULL
-        UNION ALL
-        SELECT 'rd_handoff_order.target' AS tableName, targetWorkshopId AS workshopId FROM rd_handoff_order WHERE targetStockScopeId IS NULL
+        SELECT 'rd_handoff_order.target' AS tableName, target_workshop_id AS workshopId FROM rd_handoff_order WHERE target_stock_scope_id IS NULL
       ) refs
       JOIN workshop w ON w.id = refs.workshopId
-      WHERE w.workshopName NOT IN ('主仓', '研发小仓')
-      GROUP BY refs.tableName, refs.workshopId, w.workshopName
+      WHERE w.workshop_name NOT IN ('主仓', '研发小仓')
+      GROUP BY refs.tableName, refs.workshopId, w.workshop_name
       ORDER BY refs.tableName ASC, refs.workshopId ASC
     `,
   );
@@ -244,8 +275,8 @@ async function executeBackfill(
   const stockInResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE stock_in_order
-      SET stockScopeId = ?
-      WHERE stockScopeId IS NULL
+      SET stock_scope_id = ?
+      WHERE stock_scope_id IS NULL
     `,
     [stockScopeIds.MAIN],
   );
@@ -254,8 +285,8 @@ async function executeBackfill(
   const customerResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE sales_stock_order
-      SET stockScopeId = ?
-      WHERE stockScopeId IS NULL
+      SET stock_scope_id = ?
+      WHERE stock_scope_id IS NULL
     `,
     [stockScopeIds.MAIN],
   );
@@ -266,13 +297,13 @@ async function executeBackfill(
   }>(
     `
       UPDATE workshop_material_order wmo
-      JOIN workshop w ON w.id = wmo.workshopId
-      SET wmo.stockScopeId =
+      JOIN workshop w ON w.id = wmo.workshop_id
+      SET wmo.stock_scope_id =
         CASE
-          WHEN wmo.orderType = 'SCRAP' AND w.workshopName = '研发小仓' THEN ?
+          WHEN wmo.order_type = 'SCRAP' AND w.workshop_name = '研发小仓' THEN ?
           ELSE ?
         END
-      WHERE wmo.stockScopeId IS NULL
+      WHERE wmo.stock_scope_id IS NULL
     `,
     [stockScopeIds.RD_SUB, stockScopeIds.MAIN],
   );
@@ -282,38 +313,38 @@ async function executeBackfill(
 
   const projectResult = await connection.query<{ affectedRows?: number }>(
     `
-      UPDATE project p
-      JOIN workshop w ON w.id = p.workshopId
-      SET p.stockScopeId =
+      UPDATE rd_project p
+      JOIN workshop w ON w.id = p.workshop_id
+      SET p.stock_scope_id =
         CASE
-          WHEN w.workshopName = '研发小仓' THEN ?
+          WHEN w.workshop_name = '研发小仓' THEN ?
           ELSE ?
         END
-      WHERE p.stockScopeId IS NULL
+      WHERE p.stock_scope_id IS NULL
     `,
     [stockScopeIds.RD_SUB, stockScopeIds.MAIN],
   );
-  updates.project = Number(projectResult.affectedRows ?? 0);
+  updates.rdProject = Number(projectResult.affectedRows ?? 0);
 
   const rdHandoffResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE rd_handoff_order rho
-      JOIN workshop sw ON sw.id = rho.sourceWorkshopId
-      JOIN workshop tw ON tw.id = rho.targetWorkshopId
+      JOIN workshop sw ON sw.id = rho.source_workshop_id
+      JOIN workshop tw ON tw.id = rho.target_workshop_id
       SET
-        rho.sourceStockScopeId =
+        rho.source_stock_scope_id =
           CASE
-            WHEN sw.workshopName = '研发小仓' THEN ?
-            WHEN sw.workshopName = '主仓' THEN ?
-            ELSE rho.sourceStockScopeId
+            WHEN sw.workshop_name = '研发小仓' THEN ?
+            WHEN sw.workshop_name = '主仓' THEN ?
+            ELSE rho.source_stock_scope_id
           END,
-        rho.targetStockScopeId =
+        rho.target_stock_scope_id =
           CASE
-            WHEN tw.workshopName = '研发小仓' THEN ?
-            WHEN tw.workshopName = '主仓' THEN ?
-            ELSE rho.targetStockScopeId
+            WHEN tw.workshop_name = '研发小仓' THEN ?
+            WHEN tw.workshop_name = '主仓' THEN ?
+            ELSE rho.target_stock_scope_id
           END
-      WHERE rho.sourceStockScopeId IS NULL OR rho.targetStockScopeId IS NULL
+      WHERE rho.source_stock_scope_id IS NULL OR rho.target_stock_scope_id IS NULL
     `,
     [
       stockScopeIds.RD_SUB,
@@ -327,8 +358,8 @@ async function executeBackfill(
   const rdProcurementResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE rd_procurement_request
-      SET stockScopeId = ?
-      WHERE stockScopeId IS NULL
+      SET stock_scope_id = ?
+      WHERE stock_scope_id IS NULL
     `,
     [stockScopeIds.RD_SUB],
   );
@@ -337,8 +368,8 @@ async function executeBackfill(
   const rdStocktakeResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE rd_stocktake_order
-      SET stockScopeId = ?
-      WHERE stockScopeId IS NULL
+      SET stock_scope_id = ?
+      WHERE stock_scope_id IS NULL
     `,
     [stockScopeIds.RD_SUB],
   );
@@ -347,14 +378,14 @@ async function executeBackfill(
   const inventoryLogResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE inventory_log il
-      JOIN workshop w ON w.id = il.workshopId
-      SET il.stockScopeId =
+      JOIN workshop w ON w.id = il.workshop_id
+      SET il.stock_scope_id =
         CASE
-          WHEN w.workshopName = '研发小仓' THEN ?
-          WHEN w.workshopName = '主仓' THEN ?
-          ELSE il.stockScopeId
+          WHEN w.workshop_name = '研发小仓' THEN ?
+          WHEN w.workshop_name = '主仓' THEN ?
+          ELSE il.stock_scope_id
         END
-      WHERE il.stockScopeId IS NULL
+      WHERE il.stock_scope_id IS NULL
     `,
     [stockScopeIds.RD_SUB, stockScopeIds.MAIN],
   );
@@ -363,14 +394,14 @@ async function executeBackfill(
   const reservationResult = await connection.query<{ affectedRows?: number }>(
     `
       UPDATE factory_number_reservation fnr
-      JOIN workshop w ON w.id = fnr.workshopId
-      SET fnr.stockScopeId =
+      JOIN workshop w ON w.id = fnr.workshop_id
+      SET fnr.stock_scope_id =
         CASE
-          WHEN w.workshopName = '研发小仓' THEN ?
-          WHEN w.workshopName = '主仓' THEN ?
-          ELSE fnr.stockScopeId
+          WHEN w.workshop_name = '研发小仓' THEN ?
+          WHEN w.workshop_name = '主仓' THEN ?
+          ELSE fnr.stock_scope_id
         END
-      WHERE fnr.stockScopeId IS NULL
+      WHERE fnr.stock_scope_id IS NULL
     `,
     [stockScopeIds.RD_SUB, stockScopeIds.MAIN],
   );
@@ -378,20 +409,34 @@ async function executeBackfill(
     reservationResult.affectedRows ?? 0,
   );
 
-  const balanceResult = await connection.query<{ affectedRows?: number }>(
-    `
-      UPDATE inventory_balance ib
-      JOIN workshop w ON w.id = ib.workshopId
-      SET ib.stockScopeId =
-        CASE
-          WHEN w.workshopName = '研发小仓' THEN ?
-          WHEN w.workshopName = '主仓' THEN ?
-          ELSE ib.stockScopeId
-        END
-      WHERE ib.stockScopeId IS NULL
-    `,
-    [stockScopeIds.RD_SUB, stockScopeIds.MAIN],
+  const balanceHasWorkshopId = await hasTableColumn(
+    connection,
+    "inventory_balance",
+    "workshop_id",
   );
+  const balanceResult = balanceHasWorkshopId
+    ? await connection.query<{ affectedRows?: number }>(
+        `
+          UPDATE inventory_balance ib
+          JOIN workshop w ON w.id = ib.workshop_id
+          SET ib.stock_scope_id =
+            CASE
+              WHEN w.workshop_name = '研发小仓' THEN ?
+              WHEN w.workshop_name = '主仓' THEN ?
+              ELSE ib.stock_scope_id
+            END
+          WHERE ib.stock_scope_id IS NULL
+        `,
+        [stockScopeIds.RD_SUB, stockScopeIds.MAIN],
+      )
+    : await connection.query<{ affectedRows?: number }>(
+        `
+          UPDATE inventory_balance
+          SET stock_scope_id = ?
+          WHERE stock_scope_id IS NULL
+        `,
+        [stockScopeIds.MAIN],
+      );
   updates.inventoryBalance = Number(balanceResult.affectedRows ?? 0);
 
   return updates;

@@ -26,6 +26,7 @@ import {
 } from "./transformer";
 
 const SALES_STOCK_DOCUMENT_TYPE = BusinessDocumentType.SalesStockOrder;
+
 import { executeOutboundPlan, MAP_TABLES, TARGET_TABLES } from "./writer";
 
 interface StoredMapRow {
@@ -111,7 +112,7 @@ async function getOrderMapRows(
         map_row.target_table AS targetTable,
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
-        order_row.documentNo AS actualTargetCode
+        order_row.document_no AS actualTargetCode
       FROM migration_staging.${MAP_TABLES.order} map_row
       LEFT JOIN ${TARGET_TABLES.order} order_row
         ON order_row.id = map_row.target_id
@@ -137,14 +138,14 @@ async function getLineMapRows(
         map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
         CASE
-          WHEN order_row.documentNo IS NULL OR line_row.lineNo IS NULL THEN NULL
-          ELSE CONCAT(order_row.documentNo, '#', line_row.lineNo)
+          WHEN order_row.document_no IS NULL OR line_row.line_no IS NULL THEN NULL
+          ELSE CONCAT(order_row.document_no, '#', line_row.line_no)
         END AS actualTargetCode
       FROM migration_staging.${MAP_TABLES.line} map_row
       LEFT JOIN ${TARGET_TABLES.line} line_row
         ON line_row.id = map_row.target_id
       LEFT JOIN ${TARGET_TABLES.order} order_row
-        ON order_row.id = line_row.orderId
+        ON order_row.id = line_row.order_id
       WHERE map_row.migration_batch = ?
       ORDER BY map_row.legacy_table ASC, map_row.legacy_id ASC
     `,
@@ -235,33 +236,33 @@ async function getOutboundDownstreamConsumerCounts(connection: {
     `
       SELECT 'approval_document' AS consumer, COUNT(*) AS total
       FROM approval_document
-      WHERE documentFamily = 'SALES_STOCK' OR documentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE document_family = 'SALES_STOCK' OR document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_relation' AS consumer, COUNT(*) AS total
       FROM document_relation
-      WHERE upstreamFamily = 'SALES_STOCK'
-         OR downstreamFamily = 'SALES_STOCK'
-         OR upstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'SALES_STOCK'
+         OR downstream_family = 'SALES_STOCK'
+         OR upstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'document_line_relation' AS consumer, COUNT(*) AS total
       FROM document_line_relation
-      WHERE upstreamFamily = 'SALES_STOCK'
-         OR downstreamFamily = 'SALES_STOCK'
-         OR upstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
-         OR downstreamDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE upstream_family = 'SALES_STOCK'
+         OR downstream_family = 'SALES_STOCK'
+         OR upstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
+         OR downstream_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_log' AS consumer, COUNT(*) AS total
       FROM inventory_log
-      WHERE businessDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'inventory_source_usage' AS consumer, COUNT(*) AS total
       FROM inventory_source_usage
-      WHERE consumerDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE consumer_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
       UNION ALL
       SELECT 'factory_number_reservation' AS consumer, COUNT(*) AS total
       FROM factory_number_reservation
-      WHERE businessDocumentType = '${SALES_STOCK_DOCUMENT_TYPE}'
+      WHERE business_document_type = '${SALES_STOCK_DOCUMENT_TYPE}'
     `,
   );
 

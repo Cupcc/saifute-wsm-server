@@ -62,18 +62,18 @@ async function main(): Promise<void> {
         await connection.query(
           `
             INSERT INTO \`${CANONICAL_APPROVAL_DOCUMENT_TABLE}\` (
-              documentFamily,
-              documentType,
-              documentId,
-              documentNumber,
-              auditStatus,
-              resetCount,
-              submittedBy,
-              submittedAt,
-              createdBy,
-              createdAt,
-              updatedBy,
-              updatedAt
+              document_family,
+              document_type,
+              document_id,
+              document_number,
+              audit_status,
+              reset_count,
+              submitted_by,
+              submitted_at,
+              created_by,
+              created_at,
+              updated_by,
+              updated_at
             )
             VALUES (?, ?, ?, ?, 'PENDING', 0, ?, NOW(), ?, NOW(), ?, NOW())
           `,
@@ -92,8 +92,8 @@ async function main(): Promise<void> {
           `
             SELECT COUNT(*) AS total
             FROM \`${CANONICAL_APPROVAL_DOCUMENT_TABLE}\`
-            WHERE documentType = ?
-              AND documentId = ?
+            WHERE document_type = ?
+              AND document_id = ?
           `,
           [rehearsalDocumentType, rehearsalDocumentId],
         );
@@ -102,13 +102,13 @@ async function main(): Promise<void> {
         await connection.query(
           `
             UPDATE \`${CANONICAL_APPROVAL_DOCUMENT_TABLE}\`
-            SET auditStatus = 'APPROVED',
-                decidedBy = ?,
-                decidedAt = NOW(),
-                rejectReason = NULL,
-                updatedBy = ?
-            WHERE documentType = ?
-              AND documentId = ?
+            SET audit_status = 'APPROVED',
+                decided_by = ?,
+                decided_at = NOW(),
+                reject_reason = NULL,
+                updated_by = ?
+            WHERE document_type = ?
+              AND document_id = ?
           `,
           [
             rehearsalCreatedBy,
@@ -120,10 +120,10 @@ async function main(): Promise<void> {
 
         const [approvalRow] = await connection.query<ApprovalProbeRow[]>(
           `
-            SELECT auditStatus, decidedBy, rejectReason
+            SELECT audit_status AS auditStatus, decided_by AS decidedBy, reject_reason AS rejectReason
             FROM \`${CANONICAL_APPROVAL_DOCUMENT_TABLE}\`
-            WHERE documentType = ?
-              AND documentId = ?
+            WHERE document_type = ?
+              AND document_id = ?
           `,
           [rehearsalDocumentType, rehearsalDocumentId],
         );
@@ -133,8 +133,8 @@ async function main(): Promise<void> {
         await connection.query(
           `
             DELETE FROM \`${CANONICAL_APPROVAL_DOCUMENT_TABLE}\`
-            WHERE documentType = ?
-              AND documentId = ?
+            WHERE document_type = ?
+              AND document_id = ?
           `,
           [rehearsalDocumentType, rehearsalDocumentId],
         );
@@ -143,8 +143,8 @@ async function main(): Promise<void> {
           `
             SELECT COUNT(*) AS total
             FROM \`${CANONICAL_APPROVAL_DOCUMENT_TABLE}\`
-            WHERE documentType = ?
-              AND documentId = ?
+            WHERE document_type = ?
+              AND document_id = ?
           `,
           [rehearsalDocumentType, rehearsalDocumentId],
         );

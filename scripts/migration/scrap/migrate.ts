@@ -117,7 +117,7 @@ async function getOrderMapRows(
       SELECT
         map_row.legacy_table AS legacyTable, map_row.legacy_id AS legacyId,
         map_row.target_table AS targetTable, map_row.target_id AS targetId,
-        map_row.target_code AS targetCode, order_row.documentNo AS actualTargetCode
+        map_row.target_code AS targetCode, order_row.document_no AS actualTargetCode
       FROM migration_staging.${MAP_TABLES.order} map_row
       LEFT JOIN ${TARGET_TABLES.order} order_row ON order_row.id = map_row.target_id
       WHERE map_row.migration_batch = ?
@@ -140,12 +140,12 @@ async function getLineMapRows(
         map_row.target_table AS targetTable, map_row.target_id AS targetId,
         map_row.target_code AS targetCode,
         CASE
-          WHEN order_row.documentNo IS NULL OR line_row.lineNo IS NULL THEN NULL
-          ELSE CONCAT(order_row.documentNo, '#', line_row.lineNo)
+          WHEN order_row.document_no IS NULL OR line_row.line_no IS NULL THEN NULL
+          ELSE CONCAT(order_row.document_no, '#', line_row.line_no)
         END AS actualTargetCode
       FROM migration_staging.${MAP_TABLES.line} map_row
       LEFT JOIN ${TARGET_TABLES.line} line_row ON line_row.id = map_row.target_id
-      LEFT JOIN ${TARGET_TABLES.order} order_row ON order_row.id = line_row.orderId
+      LEFT JOIN ${TARGET_TABLES.order} order_row ON order_row.id = line_row.order_id
       WHERE map_row.migration_batch = ?
       ORDER BY map_row.legacy_table ASC, map_row.legacy_id ASC
     `,
