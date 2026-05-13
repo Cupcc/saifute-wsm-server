@@ -55,7 +55,7 @@ export class RdHandoffController {
     @Body() dto: CreateRdHandoffOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.rdHandoffService.createOrder(dto, user?.userId?.toString());
+    return this.rdHandoffService.createOrder(dto, user?.username);
   }
 
   @Permissions("rd:handoff-order:void")
@@ -71,10 +71,6 @@ export class RdHandoffController {
       user,
       order.targetStockScopeId,
     );
-    return this.rdHandoffService.voidOrder(
-      id,
-      dto.voidReason,
-      user?.userId?.toString(),
-    );
+    return this.rdHandoffService.voidOrder(id, dto.voidReason, user?.username);
   }
 }

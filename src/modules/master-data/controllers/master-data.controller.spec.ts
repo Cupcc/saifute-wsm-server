@@ -148,7 +148,7 @@ describe("MasterDataController", () => {
     });
   });
 
-  it("creates suppliers with the current user id", async () => {
+  it("creates suppliers with the current username", async () => {
     await controller.createSupplier(
       {
         supplierCode: "SUP-001",
@@ -168,11 +168,11 @@ describe("MasterDataController", () => {
         contactPhone: "13800000000",
         address: "苏州工业园区",
       },
-      "1",
+      "admin",
     );
   });
 
-  it("updates suppliers with the current user id", async () => {
+  it("updates suppliers with the current username", async () => {
     await controller.updateSupplier(
       9,
       {
@@ -192,19 +192,22 @@ describe("MasterDataController", () => {
         contactPerson: "李四",
         contactPhone: "13900000000",
       },
-      "1",
+      "admin",
     );
   });
 
-  it("deactivates suppliers with the current user id", async () => {
+  it("deactivates suppliers with the current username", async () => {
     await controller.deactivateSupplier(9, adminUser);
 
-    expect(masterDataService.deactivateSupplier).toHaveBeenCalledWith(9, "1");
+    expect(masterDataService.deactivateSupplier).toHaveBeenCalledWith(
+      9,
+      "admin",
+    );
   });
 
   // ─── MaterialCategory (F1) ──────────────────────────────────────────────────
 
-  it("creates material categories with the current user id", async () => {
+  it("creates material categories with the current username", async () => {
     await controller.createMaterialCategory(
       { categoryCode: "ELEC", categoryName: "电子元器件" },
       adminUser,
@@ -212,30 +215,33 @@ describe("MasterDataController", () => {
 
     expect(masterDataService.createMaterialCategory).toHaveBeenCalledWith(
       { categoryCode: "ELEC", categoryName: "电子元器件" },
-      "1",
+      "admin",
     );
   });
 
-  it("deactivates material categories with the current user id", async () => {
+  it("deactivates material categories with the current username", async () => {
     await controller.deactivateMaterialCategory(5, adminUser);
 
     expect(masterDataService.deactivateMaterialCategory).toHaveBeenCalledWith(
       5,
-      "1",
+      "admin",
     );
   });
 
   // ─── Material (F2) ──────────────────────────────────────────────────────────
 
-  it("deactivates materials with the current user id", async () => {
+  it("deactivates materials with the current username", async () => {
     await controller.deactivateMaterial(3, adminUser);
 
-    expect(masterDataService.deactivateMaterial).toHaveBeenCalledWith(3, "1");
+    expect(masterDataService.deactivateMaterial).toHaveBeenCalledWith(
+      3,
+      "admin",
+    );
   });
 
   // ─── Customer (F3) ──────────────────────────────────────────────────────────
 
-  it("creates customers with the current user id", async () => {
+  it("creates customers with the current username", async () => {
     await controller.createCustomer(
       {
         customerCode: "CUS-001",
@@ -255,11 +261,11 @@ describe("MasterDataController", () => {
         contactPhone: "13800000000",
         address: "苏州工业园区",
       },
-      "1",
+      "admin",
     );
   });
 
-  it("updates customers with contact fields and the current user id", async () => {
+  it("updates customers with contact fields and the current username", async () => {
     await controller.updateCustomer(
       7,
       {
@@ -279,19 +285,22 @@ describe("MasterDataController", () => {
         contactPhone: "13900000000",
         address: "上海市",
       },
-      "1",
+      "admin",
     );
   });
 
-  it("deactivates customers with the current user id", async () => {
+  it("deactivates customers with the current username", async () => {
     await controller.deactivateCustomer(7, adminUser);
 
-    expect(masterDataService.deactivateCustomer).toHaveBeenCalledWith(7, "1");
+    expect(masterDataService.deactivateCustomer).toHaveBeenCalledWith(
+      7,
+      "admin",
+    );
   });
 
   // ─── Personnel (F5) ─────────────────────────────────────────────────────────
 
-  it("creates personnel with the current user id", async () => {
+  it("creates personnel with the current username", async () => {
     await controller.createPersonnel(
       { personnelName: "张三", contactPhone: "13800000000" },
       adminUser,
@@ -299,19 +308,22 @@ describe("MasterDataController", () => {
 
     expect(masterDataService.createPersonnel).toHaveBeenCalledWith(
       { personnelName: "张三", contactPhone: "13800000000" },
-      "1",
+      "admin",
     );
   });
 
-  it("deactivates personnel with the current user id", async () => {
+  it("deactivates personnel with the current username", async () => {
     await controller.deactivatePersonnel(4, adminUser);
 
-    expect(masterDataService.deactivatePersonnel).toHaveBeenCalledWith(4, "1");
+    expect(masterDataService.deactivatePersonnel).toHaveBeenCalledWith(
+      4,
+      "admin",
+    );
   });
 
   // ─── Workshop (F6) ──────────────────────────────────────────────────────────
 
-  it("creates workshops with the current user id", async () => {
+  it("creates workshops with the current username", async () => {
     await controller.createWorkshop(
       { workshopName: "装配车间", defaultHandlerPersonnelId: 20 },
       adminUser,
@@ -319,14 +331,17 @@ describe("MasterDataController", () => {
 
     expect(masterDataService.createWorkshop).toHaveBeenCalledWith(
       { workshopName: "装配车间", defaultHandlerPersonnelId: 20 },
-      "1",
+      "admin",
     );
   });
 
-  it("deactivates workshops with the current user id", async () => {
+  it("deactivates workshops with the current username", async () => {
     await controller.deactivateWorkshop(2, adminUser);
 
-    expect(masterDataService.deactivateWorkshop).toHaveBeenCalledWith(2, "1");
+    expect(masterDataService.deactivateWorkshop).toHaveBeenCalledWith(
+      2,
+      "admin",
+    );
   });
 
   // ─── StockScope (F7) ────────────────────────────────────────────────────────
@@ -340,7 +355,7 @@ describe("MasterDataController", () => {
     });
   });
 
-  it("creates stock scopes with the current user id", async () => {
+  it("creates stock scopes with the current username", async () => {
     await controller.createStockScope(
       { scopeCode: "TEST", scopeName: "测试仓" },
       adminUser,
@@ -348,13 +363,16 @@ describe("MasterDataController", () => {
 
     expect(masterDataService.createStockScope).toHaveBeenCalledWith(
       { scopeCode: "TEST", scopeName: "测试仓" },
-      "1",
+      "admin",
     );
   });
 
-  it("deactivates stock scopes with the current user id", async () => {
+  it("deactivates stock scopes with the current username", async () => {
     await controller.deactivateStockScope(8, adminUser);
 
-    expect(masterDataService.deactivateStockScope).toHaveBeenCalledWith(8, "1");
+    expect(masterDataService.deactivateStockScope).toHaveBeenCalledWith(
+      8,
+      "admin",
+    );
   });
 });

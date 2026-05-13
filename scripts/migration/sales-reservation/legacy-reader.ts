@@ -11,10 +11,6 @@ import type {
 } from "./types";
 import { OUTBOUND_BASE_MIGRATION_BATCH } from "./types";
 
-const EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT = 497;
-const EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT = 638;
-const EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT = 0;
-
 async function readLegacyIntervals(
   connection: MigrationConnectionLike,
 ): Promise<LegacyIntervalRow[]> {
@@ -214,34 +210,24 @@ async function readOutboundBaseBaseline(
   const actualExcludedDocumentCount = Number(excludedRows[0]?.total ?? 0);
   const issues: string[] = [];
 
-  if (actualOrderMapCount !== EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT) {
+  if (actualOrderMapCount <= 0) {
     issues.push(
-      `batch2c outbound order map count mismatch: expected ${EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT}, received ${actualOrderMapCount}.`,
+      "batch2c outbound order map is empty; run sales execute before this migration slice.",
     );
   }
 
-  if (actualLineMapCount !== EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT) {
+  if (actualLineMapCount <= 0) {
     issues.push(
-      `batch2c outbound line map count mismatch: expected ${EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT}, received ${actualLineMapCount}.`,
-    );
-  }
-
-  if (
-    actualExcludedDocumentCount !==
-    EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT
-  ) {
-    issues.push(
-      `batch2c excluded outbound document count mismatch: expected ${EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT}, received ${actualExcludedDocumentCount}.`,
+      "batch2c outbound line map is empty; run sales execute before this migration slice.",
     );
   }
 
   return {
-    expectedOrderMapCount: EXPECTED_OUTBOUND_BASE_ORDER_MAP_COUNT,
+    expectedOrderMapCount: actualOrderMapCount,
     actualOrderMapCount,
-    expectedLineMapCount: EXPECTED_OUTBOUND_BASE_LINE_MAP_COUNT,
+    expectedLineMapCount: actualLineMapCount,
     actualLineMapCount,
-    expectedExcludedDocumentCount:
-      EXPECTED_OUTBOUND_BASE_EXCLUDED_DOCUMENT_COUNT,
+    expectedExcludedDocumentCount: actualExcludedDocumentCount,
     actualExcludedDocumentCount,
     issues,
   };

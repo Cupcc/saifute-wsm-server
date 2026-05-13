@@ -81,6 +81,10 @@ function toDecimalString(value) {
   return String(value);
 }
 
+function normalizeText(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
 function toAuditStatus(status) {
   if (status === "APPROVED") {
     return "1";
@@ -185,14 +189,19 @@ async function resolveSupplierId(data) {
     return data.supplierId;
   }
 
-  if (!data.supplierName) {
+  const supplierName = normalizeText(data.supplierName);
+  if (!supplierName) {
     return undefined;
   }
 
   const response = await listSupplierByKeywordIncludingDisabled(
-    data.supplierName,
+    supplierName,
   );
-  return response.rows?.[0]?.supplierId;
+  const exactMatch = response.rows?.find(
+    (item) =>
+      item.supplierCode === supplierName || item.supplierName === supplierName,
+  );
+  return exactMatch?.supplierId;
 }
 
 function buildInboundPayload(
@@ -204,10 +213,15 @@ function buildInboundPayload(
 ) {
   const lines = Array.isArray(data.details) ? data.details : [];
   return {
-    ...(isUpdate ? { documentNo: data[config.noKey] } : {}),
-    orderType: config.orderType,
+    ...(isUpdate ? {} : { orderType: config.orderType }),
     bizDate: data[config.dateKey],
     supplierId,
+    ...(supplierId
+      ? {}
+      : {
+          supplierCode: normalizeText(data.supplierCode),
+          supplierName: normalizeText(data.supplierName),
+        }),
     handlerPersonnelId: handlerPersonnelId ?? null,
     handlerName:
       typeof data.attn === "string" && data.attn.trim() ? data.attn.trim() : undefined,

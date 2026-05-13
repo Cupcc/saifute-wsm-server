@@ -1,7 +1,7 @@
 import { InboundController } from "./inbound.controller";
 
 describe("InboundController", () => {
-  const user = { userId: 7 };
+  const user = { userId: 7, username: "operator" };
   const productionOrder = { id: 3, stockScopeId: 8 };
 
   let controller: InboundController;
@@ -67,7 +67,7 @@ describe("InboundController", () => {
     expect(inboundService.updateIntoOrder).toHaveBeenCalledWith(
       3,
       scopedDto,
-      "7",
+      "operator",
     );
     expect(inboundService.updateOrder).not.toHaveBeenCalled();
   });
@@ -84,7 +84,7 @@ describe("InboundController", () => {
     expect(inboundService.voidIntoOrder).toHaveBeenCalledWith(
       3,
       "录入错误",
-      "7",
+      "operator",
     );
     expect(inboundService.voidOrder).not.toHaveBeenCalled();
   });

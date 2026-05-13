@@ -1,20 +1,25 @@
 import { Injectable, Optional } from "@nestjs/common";
 import type { Prisma } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
+import { RedisStoreService } from "../../../shared/redis/redis-store.service";
 import type {
   SessionConsoleMode,
   SessionStockScopeSnapshot,
   SessionWorkshopScopeSnapshot,
 } from "../../session/domain/user-session";
-import { RbacState } from "./rbac-state";
+import { RbacState, type RbacStateSnapshot } from "./rbac-state";
+
+const RBAC_RUNTIME_STATE_KEY = "rbac:system-management:state";
 
 @Injectable()
 export class RbacPersistenceRepository {
   private persistenceQueue: Promise<void> = Promise.resolve();
+  private lastKnownSourceVersion: string | undefined;
 
   constructor(
     private readonly state: RbacState,
     @Optional() private readonly prisma?: PrismaService,
+    @Optional() private readonly redisStoreService?: RedisStoreService,
   ) {}
 
   hasPersistenceAdapter(): boolean {
@@ -26,7 +31,7 @@ export class RbacPersistenceRepository {
   }
 
   queuePersistence(): void {
-    if (!this.prisma) {
+    if (!this.prisma && !this.redisStoreService) {
       return;
     }
 
@@ -37,6 +42,38 @@ export class RbacPersistenceRepository {
       persistOperation,
       persistOperation,
     );
+  }
+
+  async loadRuntimeState(): Promise<boolean> {
+    if (!this.redisStoreService) {
+      return false;
+    }
+
+    const snapshot = await this.redisStoreService.get<RbacStateSnapshot>(
+      RBAC_RUNTIME_STATE_KEY,
+    );
+    if (!snapshot) {
+      if (!this.prisma) {
+        return false;
+      }
+      await this.loadFromNormalizedTables();
+      return true;
+    }
+    if (snapshot.schemaVersion !== 1) {
+      if (this.prisma) {
+        await this.loadFromNormalizedTables();
+        return true;
+      }
+      return false;
+    }
+    if (await this.isRuntimeStateStale(snapshot)) {
+      await this.loadFromNormalizedTables();
+      return true;
+    }
+
+    this.state.replaceWith(snapshot);
+    this.lastKnownSourceVersion = snapshot.sourceVersion;
+    return true;
   }
 
   async getNormalizedBaseCounts(): Promise<{
@@ -133,6 +170,7 @@ export class RbacPersistenceRepository {
       this.prisma.sysRoleMenu.findMany(),
       this.prisma.sysRoleDept.findMany(),
     ]);
+    this.lastKnownSourceVersion = await this.getNormalizedStateVersion();
 
     this.state.depts = dbDepts.map((d) => ({
       deptId: d.deptId,
@@ -271,10 +309,13 @@ export class RbacPersistenceRepository {
         },
       extraPermissions: (u.extraPermissions as unknown as string[]) ?? [],
     }));
+
+    await this.saveRuntimeState();
   }
 
   async persistState(): Promise<void> {
     if (!this.prisma) {
+      await this.saveRuntimeState();
       return;
     }
 
@@ -485,5 +526,144 @@ export class RbacPersistenceRepository {
         await tx.sysRoleDept.createMany({ data: roleDeptData });
       }
     });
+
+    await this.saveRuntimeState();
+  }
+
+  private async saveRuntimeState(): Promise<void> {
+    if (!this.redisStoreService) {
+      return;
+    }
+
+    await this.redisStoreService.set(
+      RBAC_RUNTIME_STATE_KEY,
+      this.state.toSnapshot(await this.resolveRuntimeStateSourceVersion()),
+    );
+  }
+
+  private async isRuntimeStateStale(
+    snapshot: RbacStateSnapshot,
+  ): Promise<boolean> {
+    if (!this.prisma) {
+      return false;
+    }
+
+    const currentSourceVersion = await this.getNormalizedStateVersion();
+    this.lastKnownSourceVersion = currentSourceVersion;
+    return snapshot.sourceVersion !== currentSourceVersion;
+  }
+
+  private async resolveRuntimeStateSourceVersion(): Promise<
+    string | undefined
+  > {
+    if (!this.prisma) {
+      return this.lastKnownSourceVersion;
+    }
+
+    this.lastKnownSourceVersion = await this.getNormalizedStateVersion();
+    return this.lastKnownSourceVersion;
+  }
+
+  private async getNormalizedStateVersion(): Promise<string> {
+    if (!this.prisma) {
+      return "no-prisma";
+    }
+
+    const [
+      depts,
+      posts,
+      menus,
+      roles,
+      users,
+      dictTypes,
+      dictData,
+      configs,
+      notices,
+      userRoles,
+      userPosts,
+      roleMenus,
+      roleDepts,
+    ] = await Promise.all([
+      this.versionForUpdatedAtModel(this.prisma.sysDept),
+      this.versionForUpdatedAtModel(this.prisma.sysPost),
+      this.versionForUpdatedAtModel(this.prisma.sysMenu),
+      this.versionForUpdatedAtModel(this.prisma.sysRole),
+      this.versionForUpdatedAtModel(this.prisma.sysUser),
+      this.versionForUpdatedAtModel(this.prisma.sysDictType),
+      this.versionForUpdatedAtModel(this.prisma.sysDictData),
+      this.versionForUpdatedAtModel(this.prisma.sysConfig),
+      this.versionForUpdatedAtModel(this.prisma.sysNotice),
+      this.versionForJoinModel(this.prisma.sysUserRole),
+      this.versionForJoinModel(this.prisma.sysUserPost),
+      this.versionForJoinModel(this.prisma.sysRoleMenu),
+      this.versionForJoinModel(this.prisma.sysRoleDept),
+    ]);
+
+    return JSON.stringify({
+      depts,
+      posts,
+      menus,
+      roles,
+      users,
+      dictTypes,
+      dictData,
+      configs,
+      notices,
+      userRoles,
+      userPosts,
+      roleMenus,
+      roleDepts,
+    });
+  }
+
+  private async versionForUpdatedAtModel(model: {
+    count(): Promise<number>;
+    aggregate(args: {
+      _count: { _all: true };
+      _max: { updatedAt: true };
+    }): Promise<{
+      _count: { _all: number };
+      _max: { updatedAt: Date | null };
+    }>;
+  }) {
+    if (typeof model.aggregate !== "function") {
+      return {
+        count: await model.count(),
+        maxUpdatedAt: null,
+      };
+    }
+
+    const result = await model.aggregate({
+      _count: { _all: true },
+      _max: { updatedAt: true },
+    });
+    return {
+      count: result._count._all,
+      maxUpdatedAt: result._max.updatedAt?.toISOString() ?? null,
+    };
+  }
+
+  private async versionForJoinModel(model: {
+    count(): Promise<number>;
+    aggregate(args: { _count: { _all: true }; _max: { id: true } }): Promise<{
+      _count: { _all: number };
+      _max: { id: number | null };
+    }>;
+  }) {
+    if (typeof model.aggregate !== "function") {
+      return {
+        count: await model.count(),
+        maxId: null,
+      };
+    }
+
+    const result = await model.aggregate({
+      _count: { _all: true },
+      _max: { id: true },
+    });
+    return {
+      count: result._count._all,
+      maxId: result._max.id ?? null,
+    };
   }
 }

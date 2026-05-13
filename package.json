@@ -43,6 +43,8 @@
     "migration:sales-return-finalize:execute": "bun --env-file .env.dev scripts/migration/sales-return-finalize/migrate.ts --execute",
     "migration:sales-return-finalize:validate": "bun --env-file .env.dev scripts/migration/sales-return-finalize/validate.ts",
     "migration:preflight": "bun --env-file .env.dev scripts/migration/preflight.ts",
+    "migration:system-users:warehouse-managers:dry-run": "bun --env-file .env.dev scripts/migration/system-users/migrate-warehouse-managers.ts",
+    "migration:system-users:warehouse-managers:execute": "bun --env-file .env.dev scripts/migration/system-users/migrate-warehouse-managers.ts --execute",
     "migration:snake-case-columns:dry-run": "bun --env-file .env.dev scripts/migration/snake-case-columns/rename-columns.ts",
     "migration:snake-case-columns:execute": "bun --env-file .env.dev scripts/migration/snake-case-columns/rename-columns.ts --execute",
     "migration:rd-project:dry-run": "bun --env-file .env.dev scripts/migration/rd-project/migrate.ts",

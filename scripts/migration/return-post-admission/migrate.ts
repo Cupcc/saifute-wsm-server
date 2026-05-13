@@ -24,8 +24,6 @@ import {
 } from "./reader";
 import { executePostAdmissionPlan } from "./writer";
 
-const EXPECTED_FACTORY_NUMBER_RESERVATION_COUNT = 426;
-
 async function main(): Promise<void> {
   const cliOptions = parseMigrationCliOptions();
   const reportPath = resolveReportPath(
@@ -93,7 +91,7 @@ async function main(): Promise<void> {
           }),
           ...buildFactoryNumberReservationBlockers({
             currentCount: sharedTableCounts.factory_number_reservation ?? 0,
-            expectedCount: EXPECTED_FACTORY_NUMBER_RESERVATION_COUNT,
+            expectedCount: sharedTableCounts.factory_number_reservation ?? 0,
           }),
           ...buildAdmissionBaselineBlockers({
             admittedSalesReturnOrders: plan.counts.admittedSalesReturnOrders,

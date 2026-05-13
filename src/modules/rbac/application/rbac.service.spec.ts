@@ -1,11 +1,11 @@
 import { Test } from "@nestjs/testing";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import type { RouteNode } from "../domain/rbac.types";
-import { InMemoryRbacRepository } from "../infrastructure/in-memory-rbac.repository";
 import { RbacDictConfigRepository } from "../infrastructure/rbac-dict-config.repository";
 import { RbacPersistenceRepository } from "../infrastructure/rbac-persistence.repository";
 import { RbacResourceRepository } from "../infrastructure/rbac-resource.repository";
 import { RbacRoutesRepository } from "../infrastructure/rbac-routes.repository";
+import { RbacRuntimeRepository } from "../infrastructure/rbac-runtime.repository";
 import { RbacSeedRepairRepository } from "../infrastructure/rbac-seed-repair.repository";
 import { RbacState } from "../infrastructure/rbac-state";
 import { RbacUserRepository } from "../infrastructure/rbac-user.repository";
@@ -13,7 +13,7 @@ import { RbacService } from "./rbac.service";
 
 describe("RbacService", () => {
   let rbacService: RbacService;
-  let repository: InMemoryRbacRepository;
+  let repository: RbacRuntimeRepository;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -26,7 +26,7 @@ describe("RbacService", () => {
         RbacDictConfigRepository,
         RbacPersistenceRepository,
         RbacSeedRepairRepository,
-        InMemoryRbacRepository,
+        RbacRuntimeRepository,
         {
           provide: MasterDataService,
           useValue: {
@@ -51,7 +51,7 @@ describe("RbacService", () => {
     }).compile();
 
     rbacService = moduleRef.get(RbacService);
-    repository = moduleRef.get(InMemoryRbacRepository);
+    repository = moduleRef.get(RbacRuntimeRepository);
   });
 
   it("should return designed routes for warehouse manager", async () => {
@@ -167,6 +167,16 @@ describe("RbacService", () => {
       stockScope: "RD_SUB",
       stockScopeName: "研发小仓",
     });
+  });
+
+  it("should expose user login identity for auth state cleanup", async () => {
+    await expect(rbacService.getUserLoginIdentity(2)).resolves.toEqual({
+      userId: 2,
+      username: "operator",
+    });
+    await expect(rbacService.getUserLoginIdentity(9999)).rejects.toThrow(
+      "用户不存在",
+    );
   });
 
   it("should keep canonical approval permissions only", async () => {

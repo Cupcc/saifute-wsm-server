@@ -1,6 +1,17 @@
-import { Body, Controller, Get, Headers, Post, Req } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+} from "@nestjs/common";
 import type { Request } from "express";
 import { CurrentUser } from "../../../shared/decorators/current-user.decorator";
+import { Permissions } from "../../../shared/decorators/permissions.decorator";
 import { Public } from "../../../shared/decorators/public.decorator";
 import type { SessionUserSnapshot } from "../../session/domain/user-session";
 import { AuthService } from "../application/auth.service";
@@ -46,5 +57,26 @@ export class AuthController {
   @Get("routes")
   async getRoutes(@CurrentUser() user: SessionUserSnapshot) {
     return this.authService.getRoutes(user);
+  }
+
+  @Get("users/login-lock-status")
+  @Permissions("system:user:list")
+  async listUserLoginLockStatuses(
+    @Query("userIds") userIds: string | undefined,
+  ) {
+    return this.authService.listUserLoginLockStatuses(this.toIdList(userIds));
+  }
+
+  @Put("users/:userId/unlock-login")
+  @Permissions("system:user:resetPwd")
+  async unlockUserLogin(@Param("userId") userId: string) {
+    return this.authService.unlockUserLogin(Number(userId));
+  }
+
+  private toIdList(value: string | undefined) {
+    return (value ?? "")
+      .split(",")
+      .map((item) => Number(item.trim()))
+      .filter((item) => Number.isFinite(item));
   }
 }

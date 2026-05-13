@@ -57,6 +57,25 @@ export function resetUserPwd(userId, password) {
   });
 }
 
+// 解锁用户登录状态
+export function unlockUserLogin(userId) {
+  return request({
+    url: `/api/auth/users/${userId}/unlock-login`,
+    method: "put",
+  });
+}
+
+// 查询用户登录锁定状态
+export function listUserLoginLockStatus(userIds) {
+  return request({
+    url: "/api/auth/users/login-lock-status",
+    method: "get",
+    params: {
+      userIds: Array.isArray(userIds) ? userIds.join(",") : userIds,
+    },
+  });
+}
+
 // 用户状态修改
 export function changeUserStatus(userId, status) {
   const data = {

@@ -320,21 +320,15 @@
 
           <el-table-column
             v-if="!isSalesReturnMode"
-            label="起始编号"
-            min-width="140"
+            label="编号"
+            min-width="220"
           >
             <template #default="{ row }">
-              <el-input v-model="row.startNumber" placeholder="可选" />
-            </template>
-          </el-table-column>
-
-          <el-table-column
-            v-if="!isSalesReturnMode"
-            label="结束编号"
-            min-width="140"
-          >
-            <template #default="{ row }">
-              <el-input v-model="row.endNumber" placeholder="可选" />
+              <el-input
+                v-model="row.factoryNumber"
+                placeholder="如 23676-23696,23776-23990"
+                @input="handleFactoryNumberInput(row)"
+              />
             </template>
           </el-table-column>
 
@@ -502,8 +496,7 @@ function buildEmptyLine() {
     quantity: "",
     selectedUnitCost: "",
     unitPrice: "",
-    startNumber: "",
-    endNumber: "",
+    factoryNumber: "",
     priceLayerOptions: [],
     sourceOutboundLineId: undefined,
     remark: "",
@@ -611,8 +604,7 @@ function mapOrderDetailToLine(detail) {
     quantity: toInputString(detail.quantity),
     selectedUnitCost: toInputString(detail.selectedUnitCost),
     unitPrice: toInputString(detail.unitPrice),
-    startNumber: detail.startNumber || "",
-    endNumber: detail.endNumber || "",
+    factoryNumber: formatFactoryNumber(detail),
     priceLayerOptions: [],
     sourceOutboundLineId: detail.sourceDocumentLineId ?? undefined,
     remark: detail.remark || "",
@@ -857,8 +849,7 @@ async function handleSourceOrderChange(orderId) {
             quantity: toInputString(detail.quantity),
             selectedUnitCost: toInputString(detail.selectedUnitCost),
             unitPrice: toInputString(detail.unitPrice),
-            startNumber: "",
-            endNumber: "",
+            factoryNumber: "",
             priceLayerOptions: [],
             sourceOutboundLineId: detail.detailId,
             remark: "",
@@ -912,6 +903,77 @@ function normalizeDecimalField(row, key, scale) {
       new RegExp(`^(\\d+)(\\.\\d{0,${scale}}).*?$`),
       (_match, integerPart, decimalPart) => `${integerPart}${decimalPart}`,
     );
+}
+
+function splitFactoryNumberSegments(value) {
+  return String(value || "")
+    .split(/[,，/、\\]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseFactoryNumberSegment(segment) {
+  const rangeParts = segment.split("-").map((item) => item.trim());
+  if (rangeParts.length === 1 && /^\d+$/.test(rangeParts[0])) {
+    return {
+      startNumber: rangeParts[0],
+      endNumber: rangeParts[0],
+      count: 1,
+    };
+  }
+
+  if (
+    rangeParts.length === 2 &&
+    /^\d+$/.test(rangeParts[0]) &&
+    /^\d+$/.test(rangeParts[1])
+  ) {
+    const start = Number(rangeParts[0]);
+    const end = Number(rangeParts[1]);
+    if (Number.isSafeInteger(start) && Number.isSafeInteger(end) && start <= end) {
+      return {
+        startNumber: rangeParts[0],
+        endNumber: rangeParts[1],
+        count: end - start + 1,
+      };
+    }
+  }
+
+  return null;
+}
+
+function calculateFactoryNumberCount(value) {
+  return splitFactoryNumberSegments(value).reduce((sum, segment) => {
+    const parsed = parseFactoryNumberSegment(segment);
+    return parsed ? sum + parsed.count : sum;
+  }, 0);
+}
+
+function isValidFactoryNumber(value) {
+  const segments = splitFactoryNumberSegments(value);
+  return segments.every((segment) => parseFactoryNumberSegment(segment));
+}
+
+function normalizeFactoryNumber(value) {
+  return String(value || "")
+    .replace(/[^\d,\-，/、\\\s]/g, "")
+    .replace(/\s+/g, "");
+}
+
+function formatFactoryNumber(row) {
+  const startNumber = row.startNumber || "";
+  const endNumber = row.endNumber || "";
+  if (startNumber && endNumber) {
+    return startNumber === endNumber ? startNumber : `${startNumber}-${endNumber}`;
+  }
+  return startNumber || endNumber || "";
+}
+
+function handleFactoryNumberInput(row) {
+  row.factoryNumber = normalizeFactoryNumber(row.factoryNumber);
+  const count = calculateFactoryNumberCount(row.factoryNumber);
+  if (count > 0) {
+    row.quantity = String(count);
+  }
 }
 
 function computeLineAmount(row) {
@@ -1083,6 +1145,16 @@ async function validateForm() {
       proxy.$modal.msgError(`第 ${index + 1} 行数量不能为空`);
       return false;
     }
+    if (
+      !isSalesReturnMode.value &&
+      line.factoryNumber &&
+      !isValidFactoryNumber(line.factoryNumber)
+    ) {
+      proxy.$modal.msgError(
+        `第 ${index + 1} 行编号格式不正确，请使用 23676-23696,23776-23990 这类格式`,
+      );
+      return false;
+    }
     if (!isSalesReturnMode.value && !line.selectedUnitCost) {
       proxy.$modal.msgError(`第 ${index + 1} 行成本价层不能为空`);
       return false;
@@ -1109,8 +1181,7 @@ function buildSubmitPayload() {
       selectedUnitCost: line.selectedUnitCost,
       unitPrice: line.unitPrice,
       salesProjectId: line.salesProjectId,
-      startNumber: line.startNumber,
-      endNumber: line.endNumber,
+      factoryNumber: line.factoryNumber,
       sourceOutboundLineId: line.sourceOutboundLineId,
       remark: line.remark,
     })),

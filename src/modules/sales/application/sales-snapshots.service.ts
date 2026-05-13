@@ -10,6 +10,7 @@ import {
   SalesProjectService,
 } from "../../sales-project/application/sales-project.service";
 import { SalesRepository } from "../infrastructure/sales.repository";
+import { formatFactoryNumberExpression } from "./factory-number-ranges";
 
 const DEFAULT_MATERIAL_CATEGORY_CODE = "UNCATEGORIZED";
 
@@ -119,6 +120,7 @@ export class SalesSnapshotsService {
       unitPrice?: string;
       startNumber?: string;
       endNumber?: string;
+      factoryNumber?: string;
       remark?: string;
     },
     lineNo: number,
@@ -147,6 +149,7 @@ export class SalesSnapshotsService {
     const unitPrice = new Prisma.Decimal(line.unitPrice ?? "0");
     const amount = quantity.mul(unitPrice);
     const selectedUnitCost = new Prisma.Decimal(line.selectedUnitCost);
+    const factoryNumber = line.factoryNumber?.trim();
 
     return {
       lineNo,
@@ -167,8 +170,11 @@ export class SalesSnapshotsService {
       amount,
       selectedUnitCost,
       projectTargetId: salesProject?.projectTargetId ?? null,
-      startNumber: line.startNumber ?? null,
-      endNumber: line.endNumber ?? null,
+      startNumber:
+        factoryNumber ||
+        formatFactoryNumberExpression(line.startNumber, null) ||
+        null,
+      endNumber: factoryNumber ? null : (line.endNumber ?? null),
       remark: line.remark,
     };
   }

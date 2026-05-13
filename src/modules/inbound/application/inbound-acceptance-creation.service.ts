@@ -25,6 +25,12 @@ import { InboundSharedService } from "./inbound-shared.service";
 
 const DOCUMENT_TYPE = BusinessDocumentType.StockInOrder;
 const BUSINESS_MODULE = "inbound";
+const AUTO_SUPPLIER_CODE_PREFIX = "AUTO-SUP";
+
+type PendingSupplierInput = {
+  supplierCode?: string;
+  supplierName: string;
+};
 
 @Injectable()
 export class InboundAcceptanceCreationService {
@@ -101,7 +107,10 @@ export class InboundAcceptanceCreationService {
     const workshop = dto.workshopId
       ? await this.masterDataService.getWorkshopById(dto.workshopId)
       : null;
-    await this.shared.validateMasterData(dto, dto.supplierId);
+    const pendingSupplier = this.resolvePendingSupplierInput(dto);
+    await this.shared.validateMasterData(dto, dto.supplierId, {
+      hasPendingSupplier: Boolean(pendingSupplier),
+    });
     const { supplierCodeSnapshot, supplierNameSnapshot } =
       await this.shared.resolveSupplierSnapshot(dto.supplierId);
     const { handlerNameSnapshot } = await this.shared.resolveHandlerSnapshot(
@@ -147,12 +156,12 @@ export class InboundAcceptanceCreationService {
     return createWithGeneratedDocumentNo((attempt) => {
       const documentNo = buildCompactDocumentNo(prefix, bizDate, attempt);
       return this.repository.runInTransaction(async (tx) => {
-        const order = await this.repository.createOrder(
+        let order = await this.repository.createOrder(
           {
             documentNo,
             orderType: StockInOrderType.ACCEPTANCE,
             bizDate,
-            supplierId: dto.supplierId,
+            supplierId: dto.supplierId ?? null,
             handlerPersonnelId: dto.handlerPersonnelId ?? null,
             stockScopeId: stockScopeRecord.id,
             workshopId: workshop?.id ?? null,
@@ -176,6 +185,31 @@ export class InboundAcceptanceCreationService {
           })),
           tx,
         );
+
+        if (pendingSupplier) {
+          const supplier = await this.shared.ensureSupplier(
+            {
+              supplierCode:
+                pendingSupplier.supplierCode ??
+                this.buildAutoSupplierCode(order.documentNo),
+              supplierName: pendingSupplier.supplierName,
+              sourceDocumentType: DOCUMENT_TYPE,
+              sourceDocumentId: order.id,
+            },
+            createdBy,
+            tx,
+          );
+          order = await this.repository.updateOrder(
+            order.id,
+            {
+              supplierId: supplier.id,
+              supplierCodeSnapshot: supplier.supplierCode,
+              supplierNameSnapshot: supplier.supplierName,
+              updatedBy: createdBy,
+            },
+            tx,
+          );
+        }
 
         const operationType = InventoryOperationType.ACCEPTANCE_IN;
         const logIdByLineId = new Map<number, number>();
@@ -226,6 +260,32 @@ export class InboundAcceptanceCreationService {
         return order;
       });
     });
+  }
+
+  private resolvePendingSupplierInput(
+    dto: CreateInboundOrderDto,
+  ): PendingSupplierInput | null {
+    if (dto.supplierId) {
+      return null;
+    }
+    const supplierName = this.normalizeOptionalText(dto.supplierName);
+    if (!supplierName) {
+      return null;
+    }
+    const supplierCode = this.normalizeOptionalText(dto.supplierCode);
+    return supplierCode ? { supplierCode, supplierName } : { supplierName };
+  }
+
+  private buildAutoSupplierCode(documentNo: string) {
+    return `${AUTO_SUPPLIER_CODE_PREFIX}-${documentNo}`;
+  }
+
+  private normalizeOptionalText(value?: string | null): string | null {
+    if (typeof value !== "string") {
+      return null;
+    }
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : null;
   }
 
   private toRdProcurementOrderSnapshots(

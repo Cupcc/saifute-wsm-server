@@ -30,8 +30,9 @@ export class SystemDictTypeController {
   @Post("export")
   @Permissions("system:dict:export")
   @ApiFileResponse({ description: "导出字典类型文件" })
-  exportDictTypes(@Body() query: Record<string, string | undefined>) {
-    const exportResult = this.systemManagementService.exportDictTypes(query);
+  async exportDictTypes(@Body() query: Record<string, string | undefined>) {
+    const exportResult =
+      await this.systemManagementService.exportDictTypes(query);
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {
       disposition: `attachment; filename="${exportResult.fileName}"`,
       type: exportResult.contentType,

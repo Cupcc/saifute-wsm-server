@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { RedisModule } from "../../shared/redis/redis.module";
 import { MasterDataModule } from "../master-data/master-data.module";
 import { SessionModule } from "../session/session.module";
 import { RbacService } from "./application/rbac.service";
@@ -18,17 +19,17 @@ import { SystemNoticeController } from "./controllers/system-notice.controller";
 import { SystemPostController } from "./controllers/system-post.controller";
 import { SystemRoleController } from "./controllers/system-role.controller";
 import { SystemUserController } from "./controllers/system-user.controller";
-import { InMemoryRbacRepository } from "./infrastructure/in-memory-rbac.repository";
 import { RbacDictConfigRepository } from "./infrastructure/rbac-dict-config.repository";
 import { RbacPersistenceRepository } from "./infrastructure/rbac-persistence.repository";
 import { RbacResourceRepository } from "./infrastructure/rbac-resource.repository";
 import { RbacRoutesRepository } from "./infrastructure/rbac-routes.repository";
+import { RbacRuntimeRepository } from "./infrastructure/rbac-runtime.repository";
 import { RbacSeedRepairRepository } from "./infrastructure/rbac-seed-repair.repository";
 import { RbacState } from "./infrastructure/rbac-state";
 import { RbacUserRepository } from "./infrastructure/rbac-user.repository";
 
 @Module({
-  imports: [MasterDataModule, SessionModule],
+  imports: [MasterDataModule, RedisModule, SessionModule],
   controllers: [
     RbacController,
     SystemUserController,
@@ -56,7 +57,7 @@ import { RbacUserRepository } from "./infrastructure/rbac-user.repository";
     RbacDictConfigRepository,
     RbacPersistenceRepository,
     RbacSeedRepairRepository,
-    InMemoryRbacRepository,
+    RbacRuntimeRepository,
   ],
   exports: [RbacService, SystemManagementService, WorkshopScopeService],
 })

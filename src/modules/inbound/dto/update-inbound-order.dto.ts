@@ -22,6 +22,16 @@ export class UpdateInboundOrderDto {
   @Min(1)
   supplierId?: number;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  supplierCode?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  supplierName?: string;
+
   @IsInt()
   @IsOptional()
   @Min(1)

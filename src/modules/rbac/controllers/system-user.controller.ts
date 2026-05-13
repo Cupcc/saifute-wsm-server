@@ -32,8 +32,8 @@ export class SystemUserController {
   @Post("export")
   @Permissions("system:user:export")
   @ApiFileResponse({ description: "导出系统用户文件" })
-  exportUsers(@Body() query: Record<string, string | undefined>) {
-    const exportResult = this.systemManagementService.exportUsers(query);
+  async exportUsers(@Body() query: Record<string, string | undefined>) {
+    const exportResult = await this.systemManagementService.exportUsers(query);
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {
       disposition: `attachment; filename="${exportResult.fileName}"`,
       type: exportResult.contentType,

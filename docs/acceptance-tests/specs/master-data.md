@@ -99,7 +99,7 @@
 | unit    | `src/modules/master-data/application/master-data.service.spec.ts`       | pass |
 | unit    | `src/modules/master-data/infrastructure/master-data.repository.spec.ts` | pass |
 | unit    | `src/modules/master-data/controllers/master-data.controller.spec.ts`    | pass |
-| unit    | `src/modules/rbac/infrastructure/in-memory-rbac.repository.spec.ts`     | pass |
+| unit    | `src/modules/rbac/infrastructure/rbac-runtime.repository.spec.ts`       | pass |
 | e2e     | `test/master-data-supplier.e2e-spec.ts`（含 rd-operator 负向 403；CAPTCHA 环境见上）     | pass |
 | e2e     | `pnpm test:e2e`（4 suites / 23 tests）                                        | pass |
 | e2e     | `test/redis-real-integration.e2e-spec.ts`                                     | pass |

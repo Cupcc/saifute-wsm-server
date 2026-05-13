@@ -50,6 +50,11 @@ export class CreateOutboundOrderLineDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(64)
+  factoryNumber?: string;
+
+  @IsString()
+  @IsOptional()
   @MaxLength(500)
   remark?: string;
 }

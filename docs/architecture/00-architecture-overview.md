@@ -86,7 +86,7 @@
 ### 认证、会话与权限
 
 - `JWT`：仅作为会话票据，不承载完整用户状态
-- `Redis`：当前只承接登录会话、验证码、密码失败计数与在线会话扫描所需键空间；不借本轮接入扩展消息队列或通用缓存平台
+- `Redis`：承接登录会话、验证码、密码失败计数、在线会话扫描，以及 `rbac` 系统管理运行态快照；不扩展为消息队列或通用业务缓存平台
 - `NestJS Guards`：承载 `JwtAuthGuard`、`PermissionsGuard`、数据权限入口
 - 自定义装饰器：统一 `@CurrentUser()`、`@Permissions()`、`@DataScope()`
 
@@ -100,7 +100,7 @@
 
 - `shared/config`：集中管理环境变量、模块配置、密钥与开关；除 `shared/config` 外，其他模块不直接读取 `process.env`
 - `shared/prisma`：统一 Prisma Client、事务封装、基础数据库访问入口
-- `shared/redis`：统一 Redis 连接、键空间、JSON 序列化、TTL 与前缀扫描适配；当前只服务 `session` / `auth`
+- `shared/redis`：统一 Redis 连接、键空间、JSON 序列化、TTL 与前缀扫描适配；当前服务 `session` / `auth` / `rbac` 运行态快照
 - `shared/common`：分页、响应模型、异常、常量、时间与精度辅助
 - `shared/events`：模块间事件发布与审计事件桥接
 
@@ -185,7 +185,7 @@ modules/<module>/
 
 - `shared/config`：环境变量、配置注册、模块级配置对象
 - `shared/prisma`：Prisma Client、事务包装、基础 Repository
-- `shared/redis`：会话、验证码、密码失败计数与在线会话扫描的统一 Redis 边界；不在本轮扩展为消息队列或通用缓存平台
+- `shared/redis`：会话、验证码、密码失败计数、在线会话扫描与 `rbac` 运行态快照的统一 Redis 边界；不扩展为消息队列或通用业务缓存平台
 - `shared/common`：响应模型、分页、异常、常量
 - `shared/guards`：`JwtAuthGuard`、`PermissionsGuard`
 - `shared/interceptors`：`AuditLogInterceptor`、响应包装、超时控制
@@ -198,7 +198,7 @@ modules/<module>/
 
 - `AppConfigService`：统一读取并解析 `REDIS_*` 连接参数；除 `shared/config` 外，其他模块不直接读取 `process.env`
 - `RedisModule`：维护唯一 Redis 客户端生命周期；应用启动阶段必须完成连接与探测，失败时记录明确错误并阻止服务继续启动
-- `RedisStoreService`：继续作为 `session` / `auth` 的唯一 Redis 访问入口，负责 JSON 序列化、TTL 兼容与前缀扫描适配，不把客户端特定返回值或异常语义直接泄漏给上层
+- `RedisStoreService`：作为 `session` / `auth` / `rbac` 运行态快照的唯一 Redis 访问入口，负责 JSON 序列化、TTL 兼容与前缀扫描适配，不把客户端特定返回值或异常语义直接泄漏给上层
 
 `REDIS_*` 约定：
 
@@ -214,7 +214,7 @@ modules/<module>/
 
 - 真实 Redis 在应用启动阶段接管；若连接或 `PING` 探测失败，进程必须 fail fast，不允许静默回退到进程内 `Map`
 - `listByPrefix` 的真实实现必须基于增量扫描策略，不允许使用 `KEYS`
-- 当前 Redis 范围只覆盖已经依赖 `RedisStoreService` 的 `session` / `auth` 能力，不新增其他产品语义
+- 当前 Redis 范围只覆盖已经依赖 `RedisStoreService` 的 `session` / `auth` 能力与 `rbac` 系统管理运行态快照，不新增其他产品语义
 
 键空间索引：
 
@@ -223,6 +223,7 @@ modules/<module>/
 | `session` | `login_tokens:{sid}` | `UserSession` | 初始 TTL 使用 `SESSION_TTL_SECONDS`；滑动续期时不得超过 `SESSION_MAX_TTL_SECONDS` |
 | `auth` | `auth:captcha:{captchaId}` | `{ captchaCode }` | 使用 `CAPTCHA_TTL_SECONDS`；校验成功或失败后均视为一次性消费 |
 | `auth` | `auth:password-attempt:{username}` | `{ count, lockedUntil? }` | 按 `PASSWORD_LOCK_MINUTES` 折算秒级 TTL，登录成功后立即清理 |
+| `rbac` | `rbac:system-management:state` | `RbacStateSnapshot` + 规范化表版本摘要 | 无 TTL；MySQL 规范化表仍是持久化真源，运行期发现源版本变化时刷新 Redis 快照 |
 
 ## 6. 数据访问策略
 
@@ -236,7 +237,7 @@ modules/<module>/
 ## 7. 关键语义冻结
 
 - 认证模式保持“JWT 票据 + Redis 会话”，不切纯无状态 JWT
-- Redis 不可用时服务必须启动失败；不允许以内存实现或降级模式继续提供 `session` / `auth`
+- Redis 不可用时服务必须启动失败；不允许以内存实现或降级模式继续提供 `session` / `auth` / `rbac` 运行态
 - 权限模型保持“菜单/按钮权限字符串 + 数据权限”组合
 - `approval` 第一阶段只承接当前 `approval_document` 审核模型，不引入 BPM 引擎
 - `inventory-core` 必须保留库存日志和 `inventory_used` 来源追踪

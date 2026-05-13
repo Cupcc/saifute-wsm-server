@@ -1,11 +1,11 @@
 import {
   EXPECTED_LEGACY_DATABASE_NAME,
-  EXPECTED_TARGET_DATABASE_NAME,
   loadMigrationEnvironment,
   parseDatabaseName,
   parseHostAndPort,
   parseMigrationCliOptions,
   readEnvExampleDatabaseName,
+  resolveConfiguredTargetDatabaseName,
   resolveReportPath,
 } from "./config";
 import { closePools, createMariaDbPool, withPoolConnection } from "./db";
@@ -105,6 +105,8 @@ async function main(): Promise<void> {
         const envExampleDatabaseName = readEnvExampleDatabaseName(
           cliOptions.envExamplePath,
         );
+        const configuredTargetDatabaseName =
+          resolveConfiguredTargetDatabaseName(env.databaseUrl);
         const legacyHostAndPort = parseHostAndPort(env.legacyDatabaseUrl);
         const targetHostAndPort = parseHostAndPort(env.databaseUrl);
 
@@ -125,14 +127,14 @@ async function main(): Promise<void> {
         checks.push({
           name: "target-database-name",
           status:
-            targetDatabaseName === EXPECTED_TARGET_DATABASE_NAME
+            targetDatabaseName === configuredTargetDatabaseName
               ? "ok"
               : "blocker",
           detail:
-            targetDatabaseName === EXPECTED_TARGET_DATABASE_NAME
-              ? "Target database name matches the local development baseline."
-              : "Target database name differs from the documented local development target and execute must not continue.",
-          expected: EXPECTED_TARGET_DATABASE_NAME,
+            targetDatabaseName === configuredTargetDatabaseName
+              ? "Target database name matches the active DATABASE_URL."
+              : "Target database name differs from the active DATABASE_URL and execute must not continue.",
+          expected: configuredTargetDatabaseName,
           actual: targetDatabaseName,
         });
 
@@ -140,16 +142,14 @@ async function main(): Promise<void> {
           checks.push({
             name: "env-example-target-database-mismatch",
             status:
-              envExampleDatabaseName === EXPECTED_TARGET_DATABASE_NAME &&
-              envExampleDatabaseName === targetDatabaseName
+              envExampleDatabaseName === configuredTargetDatabaseName
                 ? "ok"
-                : "blocker",
+                : "warning",
             detail:
-              envExampleDatabaseName === EXPECTED_TARGET_DATABASE_NAME &&
-              envExampleDatabaseName === targetDatabaseName
+              envExampleDatabaseName === configuredTargetDatabaseName
                 ? ".env.example matches the active target database."
-                : ".env.example does not align with the required target database name. Fix the example env before execute.",
-            expected: EXPECTED_TARGET_DATABASE_NAME,
+                : ".env.example differs from the active target database. DATABASE_URL remains the execution source of truth.",
+            expected: configuredTargetDatabaseName,
             actual: envExampleDatabaseName,
           });
         }

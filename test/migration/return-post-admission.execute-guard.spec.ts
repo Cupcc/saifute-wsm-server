@@ -122,10 +122,21 @@ describe("return-post-admission execute guard", () => {
       expect(blockers).toHaveLength(0);
     });
 
-    it("should return a blocker if sales-return order count is wrong", () => {
+    it("should not block when sales-return counts drift but remain non-empty", () => {
       const blockers = buildAdmissionBaselineBlockers({
         admittedSalesReturnOrders: 36,
-        admittedSalesReturnLines: 46,
+        admittedSalesReturnLines: 45,
+        admittedWorkshopReturnOrders: 23,
+        admittedWorkshopReturnLines: 32,
+      });
+
+      expect(blockers).toHaveLength(0);
+    });
+
+    it("should return a blocker if sales-return baseline is empty", () => {
+      const blockers = buildAdmissionBaselineBlockers({
+        admittedSalesReturnOrders: 0,
+        admittedSalesReturnLines: 0,
         admittedWorkshopReturnOrders: 23,
         admittedWorkshopReturnLines: 32,
       });
@@ -139,23 +150,23 @@ describe("return-post-admission execute guard", () => {
       ).toBe(true);
     });
 
-    it("should return a blocker if sales-return line count is wrong", () => {
-      const blockers = buildAdmissionBaselineBlockers({
-        admittedSalesReturnOrders: 37,
-        admittedSalesReturnLines: 45,
-        admittedWorkshopReturnOrders: 23,
-        admittedWorkshopReturnLines: 32,
-      });
-
-      expect(blockers.length).toBeGreaterThan(0);
-    });
-
-    it("should return a blocker if workshop-return order count is wrong", () => {
+    it("should not block when workshop-return counts drift but remain non-empty", () => {
       const blockers = buildAdmissionBaselineBlockers({
         admittedSalesReturnOrders: 37,
         admittedSalesReturnLines: 46,
         admittedWorkshopReturnOrders: 22,
-        admittedWorkshopReturnLines: 32,
+        admittedWorkshopReturnLines: 31,
+      });
+
+      expect(blockers).toHaveLength(0);
+    });
+
+    it("should return a blocker if workshop-return baseline is empty", () => {
+      const blockers = buildAdmissionBaselineBlockers({
+        admittedSalesReturnOrders: 37,
+        admittedSalesReturnLines: 46,
+        admittedWorkshopReturnOrders: 0,
+        admittedWorkshopReturnLines: 0,
       });
 
       expect(blockers.length).toBeGreaterThan(0);
@@ -168,23 +179,12 @@ describe("return-post-admission execute guard", () => {
       ).toBe(true);
     });
 
-    it("should return a blocker if workshop-return line count is wrong", () => {
+    it("should return multiple blockers if both baselines are empty", () => {
       const blockers = buildAdmissionBaselineBlockers({
-        admittedSalesReturnOrders: 37,
-        admittedSalesReturnLines: 46,
-        admittedWorkshopReturnOrders: 23,
-        admittedWorkshopReturnLines: 31,
-      });
-
-      expect(blockers.length).toBeGreaterThan(0);
-    });
-
-    it("should return multiple blockers if both families have wrong counts", () => {
-      const blockers = buildAdmissionBaselineBlockers({
-        admittedSalesReturnOrders: 36,
-        admittedSalesReturnLines: 45,
-        admittedWorkshopReturnOrders: 22,
-        admittedWorkshopReturnLines: 31,
+        admittedSalesReturnOrders: 0,
+        admittedSalesReturnLines: 0,
+        admittedWorkshopReturnOrders: 0,
+        admittedWorkshopReturnLines: 0,
       });
 
       expect(blockers.length).toBeGreaterThanOrEqual(2);

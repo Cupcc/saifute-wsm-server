@@ -3,7 +3,7 @@ import {
   Logger,
   type OnApplicationBootstrap,
 } from "@nestjs/common";
-import { InMemoryRbacRepository } from "../infrastructure/in-memory-rbac.repository";
+import { RbacRuntimeRepository } from "../infrastructure/rbac-runtime.repository";
 
 @Injectable()
 export class SystemManagementBootstrapService
@@ -11,7 +11,7 @@ export class SystemManagementBootstrapService
 {
   private readonly logger = new Logger(SystemManagementBootstrapService.name);
 
-  constructor(private readonly rbacRepository: InMemoryRbacRepository) {}
+  constructor(private readonly rbacRepository: RbacRuntimeRepository) {}
 
   async onApplicationBootstrap(): Promise<void> {
     if (!this.rbacRepository.hasPersistenceAdapter()) {
@@ -26,18 +26,21 @@ export class SystemManagementBootstrapService
 
     if (hasAnyNormalizedData) {
       await this.rbacRepository.loadFromNormalizedTables();
-      const repairedSeedDrift = this.rbacRepository.ensureSeedPermissionMenus(
-        ["rd-operator"],
-        ["reporting:monthly-reporting:view", "reporting:export"],
-      );
-      const syncedSeedRoles = this.rbacRepository.syncSeedRoleMenus([
-        "rd-operator",
-      ]);
-      if (repairedSeedDrift || syncedSeedRoles) {
-        await this.rbacRepository.flushPersistence();
-        this.logger.log(
-          "Repaired seed permission drift for monthly reporting baseline",
-        );
+      if (normalizedBaseCounts.users > 0) {
+        const repairedSeedDrift =
+          await this.rbacRepository.ensureSeedPermissionMenus(
+            ["rd-operator"],
+            ["reporting:monthly-reporting:view", "reporting:export"],
+          );
+        const syncedSeedRoles = await this.rbacRepository.syncSeedRoleMenus([
+          "rd-operator",
+        ]);
+        if (repairedSeedDrift || syncedSeedRoles) {
+          await this.rbacRepository.flushPersistence();
+          this.logger.log(
+            "Repaired seed permission drift for monthly reporting baseline",
+          );
+        }
       }
       if (normalizedBaseCounts.users === 0) {
         this.logger.warn(

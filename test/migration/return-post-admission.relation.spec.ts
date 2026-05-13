@@ -228,10 +228,39 @@ function buildValidBaseline(
 
 describe("return-post-admission relation classification", () => {
   describe("baseline enforcement", () => {
-    it("should fail with a global blocker if sales-return order count is wrong", () => {
+    it("should not fail solely because sales-return counts drift from an old snapshot", () => {
       const baseline = buildMinimalBaseline({
         salesReturnOrders: [buildSalesReturnOrder()],
         salesReturnLines: [buildSalesReturnLine()],
+        workshopReturnOrders: build3WorkshopReturnOrders(),
+        workshopReturnLines: build4WorkshopReturnLines(
+          build3WorkshopReturnOrders(),
+        ),
+      });
+
+      const plan = buildPostAdmissionMigrationPlan(baseline);
+
+      expect(plan.globalBlockers).toHaveLength(0);
+    });
+
+    it("should not fail solely because workshop-return counts drift from an old snapshot", () => {
+      const salesReturnOrders = build9SalesReturnOrders();
+      const salesReturnLines = build13SalesReturnLines(salesReturnOrders);
+
+      const baseline = buildMinimalBaseline({
+        salesReturnOrders,
+        salesReturnLines,
+        workshopReturnOrders: [buildWorkshopReturnOrder()],
+        workshopReturnLines: [buildWorkshopReturnLine()],
+      });
+
+      const plan = buildPostAdmissionMigrationPlan(baseline);
+
+      expect(plan.globalBlockers).toHaveLength(0);
+    });
+
+    it("should fail with a global blocker if sales-return baseline is empty", () => {
+      const baseline = buildMinimalBaseline({
         workshopReturnOrders: build3WorkshopReturnOrders(),
         workshopReturnLines: build4WorkshopReturnLines(
           build3WorkshopReturnOrders(),
@@ -248,15 +277,13 @@ describe("return-post-admission relation classification", () => {
       ).toBe(true);
     });
 
-    it("should fail with a global blocker if workshop-return order count is wrong", () => {
+    it("should fail with a global blocker if workshop-return baseline is empty", () => {
       const salesReturnOrders = build9SalesReturnOrders();
       const salesReturnLines = build13SalesReturnLines(salesReturnOrders);
 
       const baseline = buildMinimalBaseline({
         salesReturnOrders,
         salesReturnLines,
-        workshopReturnOrders: [buildWorkshopReturnOrder()],
-        workshopReturnLines: [buildWorkshopReturnLine()],
       });
 
       const plan = buildPostAdmissionMigrationPlan(baseline);

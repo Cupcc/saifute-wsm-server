@@ -193,7 +193,8 @@ export class InboundAcceptanceUpdateService {
           );
           const inventoryNeedsRepost =
             currentLine.materialId !== lineData.materialId ||
-            !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity);
+            !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity) ||
+            !new Prisma.Decimal(currentLine.unitPrice).eq(lineData.unitPrice);
           if (inventoryNeedsRepost) {
             const currentLog = logByLineId.get(currentLine.id);
             if (!currentLog) {
@@ -402,7 +403,6 @@ export class InboundAcceptanceUpdateService {
       return this.repository.findOrderById(id, tx);
     });
   }
-
   async voidOrder(id: number, voidReason?: string, voidedBy?: string) {
     const order = await this.repository.findOrderById(id);
     if (!order) throw new NotFoundException(`入库单不存在：${id}`);

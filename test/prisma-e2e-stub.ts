@@ -5,6 +5,32 @@
  */
 import { Injectable } from "@nestjs/common";
 
+function buildEmptyAggregateResult(
+  args: {
+    _count?: Record<string, unknown>;
+    _max?: Record<string, unknown>;
+    _sum?: Record<string, unknown>;
+  } = {},
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+
+  if (args._count) {
+    result._count = { _all: 0 };
+  }
+
+  if (args._max) {
+    result._max = Object.fromEntries(
+      Object.keys(args._max).map((field) => [field, null]),
+    );
+  }
+
+  if (args._sum || Object.keys(result).length === 0) {
+    result._sum = {};
+  }
+
+  return result;
+}
+
 function createModelStub() {
   return {
     findMany: () => Promise.resolve([]),
@@ -16,7 +42,8 @@ function createModelStub() {
     upsert: () => Promise.resolve({}),
     delete: () => Promise.resolve({}),
     count: () => Promise.resolve(0),
-    aggregate: () => Promise.resolve({ _sum: {} }),
+    aggregate: (args?: Parameters<typeof buildEmptyAggregateResult>[0]) =>
+      Promise.resolve(buildEmptyAggregateResult(args)),
     createMany: () => Promise.resolve({ count: 0 }),
     updateMany: () => Promise.resolve({ count: 0 }),
     deleteMany: () => Promise.resolve({ count: 0 }),

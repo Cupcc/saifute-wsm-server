@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import {
   createAllSessionStockScope,
@@ -6,7 +10,7 @@ import {
   type SessionUserSnapshot,
 } from "../../session/domain/user-session";
 import type { RbacUserRecord, RouteNode } from "../domain/rbac.types";
-import { InMemoryRbacRepository } from "../infrastructure/in-memory-rbac.repository";
+import { RbacRuntimeRepository } from "../infrastructure/rbac-runtime.repository";
 
 const DOCUMENT_PERMISSION_ACTIONS = [
   "status",
@@ -35,12 +39,12 @@ const PERMISSION_ALIAS_MAP = Object.fromEntries(
 @Injectable()
 export class RbacService {
   constructor(
-    private readonly inMemoryRbacRepository: InMemoryRbacRepository,
+    private readonly rbacRuntimeRepository: RbacRuntimeRepository,
     private readonly masterDataService: MasterDataService,
   ) {}
 
   async findUserForLogin(username: string): Promise<RbacUserRecord> {
-    const user = await this.inMemoryRbacRepository.findUserByUsername(username);
+    const user = await this.rbacRuntimeRepository.findUserByUsername(username);
     if (!user || user.deleted || user.status !== "active") {
       throw new UnauthorizedException("用户名或密码错误");
     }
@@ -48,11 +52,22 @@ export class RbacService {
     return user;
   }
 
+  async getUserLoginIdentity(
+    userId: number,
+  ): Promise<{ userId: number; username: string }> {
+    const user = await this.rbacRuntimeRepository.findUserById(userId);
+    if (!user || user.deleted) {
+      throw new NotFoundException("用户不存在");
+    }
+
+    return {
+      userId: user.userId,
+      username: user.username,
+    };
+  }
+
   verifyPassword(rawPassword: string, passwordHash: string): boolean {
-    return this.inMemoryRbacRepository.verifyPassword(
-      rawPassword,
-      passwordHash,
-    );
+    return this.rbacRuntimeRepository.verifyPassword(rawPassword, passwordHash);
   }
 
   toSessionUser(user: RbacUserRecord): SessionUserSnapshot {
@@ -79,7 +94,7 @@ export class RbacService {
   }
 
   async getCurrentUser(userId: number): Promise<SessionUserSnapshot> {
-    const user = await this.inMemoryRbacRepository.findUserById(userId);
+    const user = await this.rbacRuntimeRepository.findUserById(userId);
     if (!user) {
       throw new UnauthorizedException("当前用户不存在");
     }
@@ -88,12 +103,12 @@ export class RbacService {
   }
 
   async getRoutesForUser(userId: number): Promise<RouteNode[]> {
-    const user = await this.inMemoryRbacRepository.findUserById(userId);
+    const user = await this.rbacRuntimeRepository.findUserById(userId);
     if (!user) {
       throw new UnauthorizedException("当前用户不存在");
     }
 
-    const allRoutes = await this.inMemoryRbacRepository.getRoutes();
+    const allRoutes = await this.rbacRuntimeRepository.getRoutes();
     if (user.userId === 1) {
       return allRoutes;
     }
@@ -116,11 +131,11 @@ export class RbacService {
     currentUser: SessionUserSnapshot;
     previousAvatarUrl: string | null;
   }> {
-    const result = await this.inMemoryRbacRepository.updateUserAvatar(
+    const result = await this.rbacRuntimeRepository.updateUserAvatar(
       userId,
       avatarUrl,
     );
-    await this.inMemoryRbacRepository.flushPersistence();
+    await this.rbacRuntimeRepository.flushPersistence();
 
     return {
       currentUser: await this.enrichSessionUser(

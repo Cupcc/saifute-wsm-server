@@ -79,10 +79,7 @@ export class RdProjectController {
       user,
       dto,
     );
-    return this.rdProjectService.createProject(
-      scopedDto,
-      user?.userId?.toString(),
-    );
+    return this.rdProjectService.createProject(scopedDto, user?.username);
   }
 
   @Permissions("rd:project:update")
@@ -105,11 +102,7 @@ export class RdProjectController {
       user,
       dto,
     );
-    return this.rdProjectService.updateProject(
-      id,
-      scopedDto,
-      user?.userId?.toString(),
-    );
+    return this.rdProjectService.updateProject(id, scopedDto, user?.username);
   }
 
   @Permissions("rd:project:void")
@@ -131,7 +124,7 @@ export class RdProjectController {
     return this.rdProjectService.voidProject(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -209,7 +202,7 @@ export class RdProjectController {
     return this.rdProjectMaterialActionService.createMaterialAction(
       id,
       dto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -233,7 +226,7 @@ export class RdProjectController {
     return this.rdProjectMaterialActionService.voidMaterialAction(
       actionId,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 

@@ -21,7 +21,7 @@
 - Coder: `parent-orchestrator`
 - Reviewer:
 - Acceptance QA:
-- Last updated: `2026-05-10`
+- Last updated: `2026-05-11`
 - Related checklist:
   - `scripts/migration/reports/full-import-replay-dry-run-report.md`
   - `scripts/migration/reports/full-import-reset-execution-plan.md`
@@ -56,7 +56,7 @@
   - 每个 migration slice 的 JSON report。
   - 最终 `inventory-replay-dry-run-report.json`、`inventory-replay-execute-report.json`、`inventory-replay-validate-report.json`。
 - Open questions requiring user confirmation:
-  - 无迁移执行 blocker。后续需要业务确认 390 个最终负库存盘点 warning 的盘点调整安排。
+  - 无迁移执行 blocker。后续需要业务确认 `420` 个最终负库存盘点 warning 的盘点调整安排。
 
 ## Progress Sync
 
@@ -64,7 +64,17 @@
   - `full business import executed; material-category snapshots backfilled; inventory replay executed and validated`
 - Current state:
   - `LEGACY_DATABASE_URL` 可连接到 `120.26.116.249:3306/saifute`。
-  - `DATABASE_URL` 可连接到 `192.168.6.41:3306/saifute-wms`。
+  - `DATABASE_URL` 当前可连接到 `127.0.0.1:3306/saifute-wms`；迁移脚本以 env 实际库名为准，不再硬编码目标库名。
+  - 2026-05-11 已补充系统用户迁移入口 `migration:system-users:warehouse-managers:dry-run/execute`，从旧库 `sys_user` 读取 `田晓晶`、`徐文静`、`王子云`、`aliu`，写入当前 `DATABASE_URL` 的 `sys_user` / `sys_user_role` / `sys_user_post`；本次 execute 报告显示 4 人均已存在且绑定 `warehouse-manager` / `WAREHOUSE_MANAGER`。
+  - 2026-05-11 apply 已按当前 `.env.dev` 重新执行：目标库业务域清理后保留 `sys_*`，`stock_scope` 收敛为 `MAIN/RD_SUB` 两行；`migration_staging` 通过 `bootstrap-staging --reset` 初始化为 20 张表。
+  - 2026-05-11 apply 前已生成目标库备份 `scripts/migration/backups/saifute-wms-before-full-import-20260511-084725.sql`，旧库快照 `scripts/migration/backups/legacy-saifute-full-20260511-084725.sql`。
+  - 2026-05-11 全链路已执行并验证通过：主数据、入库、销售、销售预留、销售退货、销售退货 finalize、车间领料、车间退料、车间退料 finalize、return-post-admission、报废、RD 项目、月报物料分类快照、stock-scope validate、库存 replay。
+  - 2026-05-11 源库实时数据较 2026-05-10 基线继续变化；本轮已调整迁移 guard，使其校验当前批次 staging / map / live 表一致性，而不是固定旧快照总数。
+  - 2026-05-11 `inventory-replay:return-source-links:execute` 已回填 `17` 条可证明来源链；随后 `inventory-replay:dry-run` 为 `blockers=[]`。
+  - 2026-05-11 `inventory-replay:execute` 已完成：计划并写入 `inventory_balance=1262`、`inventory_log=5159`、`inventory_source_usage=3093`、价格层 `468`。
+  - 2026-05-11 `inventory-replay:validate` 已通过：validate blocker 为 `0`，剩余 `420` 个最终负库存盘点 warning，不阻塞迁移 replay。
+  - 2026-05-11 最终目标库关键行数：`stock_in_order=1160`、`stock_in_order_line=2093`、`sales_stock_order=537`、`sales_stock_order_line=687`、`factory_number_reservation=429`、`workshop_material_order=586`、`workshop_material_order_line=1872`、`rd_project=21`、`rd_project_material_line=675`、`approval_document=2187`、`document_relation=21`、`document_line_relation=23`。
+  - 2026-05-11 验证通过：`bun run migration:typecheck`；`bun run test -- test/migration --runInBand` 结果为 24 suites / 347 tests 通过。
   - 2026-05-10 apply 已清理目标库残留迁移域数据，保留 `stock_scope` 与 `sys_*` 系统表。
   - `migration_staging` 已通过 `bootstrap-staging --reset` 初始化，当前 20 张 staging 表。
   - 主数据、入库、销售、销售预留、销售退货、销售退货 finalize、车间领料、车间退料、车间退料 finalize、return-post-admission、报废、RD 项目均已真实 execute 且 validate 通过。
@@ -83,14 +93,14 @@
   - 原“临时 camelCase 迁移中间 schema”方案已废弃；当前方案直接用 `prisma/schema.prisma` 的 snake_case 最终 schema 重建目标库。
   - 4 条 inactive 物料缺单位已按旧库证据在迁移侧补齐，不修改旧库；`migration:master-data:dry-run` 当前 `blockerCount=0`。
   - 业务 writer 已直接写入 `stock_scope_id`：入库 / 销售 / 销售退货 / 领料 / 退料默认 `MAIN`，报废 / RD 按车间映射 `MAIN` 或 `RD_SUB`，销售预留默认 `MAIN`。
-  - `migration:typecheck` 通过；`bun run test -- test/migration --runInBand` 结果为 24 suites / 345 tests 通过。
+  - `migration:typecheck` 通过；`bun run test -- test/migration --runInBand` 结果为 24 suites / 347 tests 通过。
   - 旧库源库已完成本地全量 SQL 备份：`scripts/migration/backups/legacy-saifute-full-20260510-111122.sql`；备份报告见 `scripts/migration/reports/legacy-full-backup-report.md`。
   - 2026-05-10 replay 后复跑 `migration:stock-in:validate` 失败，原因是当前 `LEGACY_DATABASE_URL` 在本次迁移快照后又新增 4 张 2026-05-04 至 2026-05-10 的入库单 / 6 行；该命令重新读取实时旧库，不能代表本次备份快照和已导入目标的一致性。
 - Acceptance state:
   - `not-assessed`
 - Blockers:
   - 无 replay blocker。
-  - 剩余 390 个 validate warning 均为最终负库存盘点调整项，不阻塞迁移 replay。
+  - 剩余 420 个 validate warning 均为最终负库存盘点调整项，不阻塞迁移 replay。
 - Next step:
   - 进入验收 / review；仓库后续通过盘点调整补平最终负库存 warning。
 

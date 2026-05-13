@@ -108,8 +108,11 @@
             {{ formatAmount(scope.row.costAmount) }}
           </template>
         </el-table-column>
-        <el-table-column label="起始编号" prop="startNumber" min-width="120" />
-        <el-table-column label="结束编号" prop="endNumber" min-width="120" />
+        <el-table-column label="编号" min-width="180" show-overflow-tooltip>
+          <template #default="scope">
+            {{ formatFactoryNumber(scope.row) }}
+          </template>
+        </el-table-column>
         <el-table-column label="备注" prop="remark" min-width="160" show-overflow-tooltip />
       </el-table>
     </div>
@@ -212,6 +215,15 @@ function formatAmount(value) {
   return Number.isFinite(parsed) ? parsed.toFixed(2) : "0.00";
 }
 
+function formatFactoryNumber(row) {
+  const startNumber = row.startNumber || "";
+  const endNumber = row.endNumber || "";
+  if (startNumber && endNumber) {
+    return startNumber === endNumber ? startNumber : `${startNumber}-${endNumber}`;
+  }
+  return startNumber || endNumber || "-";
+}
+
 void [
   handleVisibleChange,
   getAuditText,
@@ -220,5 +232,6 @@ void [
   formatDateTime,
   formatNumber,
   formatAmount,
+  formatFactoryNumber,
 ];
 </script>

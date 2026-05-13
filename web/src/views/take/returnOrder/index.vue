@@ -832,6 +832,26 @@ function searchWorkshop(query) {
     });
 }
 
+function mergeWorkshopOption(option) {
+  if (!option?.workshopId) {
+    return;
+  }
+
+  const exists = workshopOptions.value.some(
+    (item) => String(item.workshopId) === String(option.workshopId),
+  );
+  if (!exists) {
+    workshopOptions.value = [option, ...workshopOptions.value];
+  }
+}
+
+function rememberOrderWorkshop(orderData) {
+  mergeWorkshopOption({
+    workshopId: orderData.workshopId,
+    workshopName: orderData.workshopName || String(orderData.workshopId),
+  });
+}
+
 // 取消按钮
 function cancel() {
   open.value = false;
@@ -1058,6 +1078,7 @@ function handleUpdate(row) {
         delFlag: orderData.delFlag,
         voidDescription: orderData.voidDescription,
       };
+      rememberOrderWorkshop(orderData);
       selectedPickOrderNo.value = orderData.pickNo ?? "";
       if (!selectedPickOrderNo.value && form.value.sourceId) {
         getPickOrder(form.value.sourceId).then((res) => {

@@ -12,6 +12,21 @@ import type {
   ManagedUserRecord,
 } from "../domain/rbac.types";
 
+export interface RbacStateSnapshot {
+  schemaVersion: 1;
+  savedAt: string;
+  sourceVersion?: string;
+  depts: ManagedDeptRecord[];
+  posts: ManagedPostRecord[];
+  menus: ManagedMenuRecord[];
+  roles: ManagedRoleRecord[];
+  dictTypes: ManagedDictTypeRecord[];
+  dictData: ManagedDictDataRecord[];
+  configs: ManagedConfigRecord[];
+  notices: ManagedNoticeRecord[];
+  users: ManagedUserRecord[];
+}
+
 @Injectable()
 export class RbacState {
   depts: ManagedDeptRecord[];
@@ -35,6 +50,35 @@ export class RbacState {
     this.configs = seedState.configs;
     this.notices = seedState.notices;
     this.users = seedState.users;
+  }
+
+  replaceWith(snapshot: RbacStateSnapshot): void {
+    this.depts = structuredClone(snapshot.depts);
+    this.posts = structuredClone(snapshot.posts);
+    this.menus = structuredClone(snapshot.menus);
+    this.roles = structuredClone(snapshot.roles);
+    this.dictTypes = structuredClone(snapshot.dictTypes);
+    this.dictData = structuredClone(snapshot.dictData);
+    this.configs = structuredClone(snapshot.configs);
+    this.notices = structuredClone(snapshot.notices);
+    this.users = structuredClone(snapshot.users);
+  }
+
+  toSnapshot(sourceVersion?: string): RbacStateSnapshot {
+    return {
+      schemaVersion: 1,
+      savedAt: new Date().toISOString(),
+      ...(sourceVersion ? { sourceVersion } : {}),
+      depts: structuredClone(this.depts),
+      posts: structuredClone(this.posts),
+      menus: structuredClone(this.menus),
+      roles: structuredClone(this.roles),
+      dictTypes: structuredClone(this.dictTypes),
+      dictData: structuredClone(this.dictData),
+      configs: structuredClone(this.configs),
+      notices: structuredClone(this.notices),
+      users: structuredClone(this.users),
+    };
   }
 
   getDeptAndDescendants(deptId: number) {

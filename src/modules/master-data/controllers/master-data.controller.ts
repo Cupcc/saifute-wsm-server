@@ -83,10 +83,7 @@ export class MasterDataController {
     @Body() dto: CreateMaterialCategoryDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.createMaterialCategory(
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.createMaterialCategory(dto, user?.username);
   }
 
   @Permissions("master:material-category:update")
@@ -99,7 +96,7 @@ export class MasterDataController {
     return this.masterDataService.updateMaterialCategory(
       id,
       dto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -111,7 +108,7 @@ export class MasterDataController {
   ) {
     return this.masterDataService.deactivateMaterialCategory(
       id,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -135,7 +132,7 @@ export class MasterDataController {
     @Body() dto: CreateMaterialDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.createMaterial(dto, user?.userId?.toString());
+    return this.masterDataService.createMaterial(dto, user?.username);
   }
 
   @Permissions("master:material:update")
@@ -145,11 +142,7 @@ export class MasterDataController {
     @Body() dto: UpdateMaterialDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.updateMaterial(
-      id,
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.updateMaterial(id, dto, user?.username);
   }
 
   @Permissions("master:material:deactivate")
@@ -158,10 +151,7 @@ export class MasterDataController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.deactivateMaterial(
-      id,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.deactivateMaterial(id, user?.username);
   }
 
   // ─── Customer (F3) ──────────────────────────────────────────────────────────
@@ -184,7 +174,7 @@ export class MasterDataController {
     @Body() dto: CreateCustomerDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.createCustomer(dto, user?.userId?.toString());
+    return this.masterDataService.createCustomer(dto, user?.username);
   }
 
   @Permissions("master:customer:update")
@@ -194,11 +184,7 @@ export class MasterDataController {
     @Body() dto: UpdateCustomerDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.updateCustomer(
-      id,
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.updateCustomer(id, dto, user?.username);
   }
 
   @Permissions("master:customer:deactivate")
@@ -207,10 +193,7 @@ export class MasterDataController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.deactivateCustomer(
-      id,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.deactivateCustomer(id, user?.username);
   }
 
   // ─── Supplier (F4) ──────────────────────────────────────────────────────────
@@ -233,7 +216,7 @@ export class MasterDataController {
     @Body() dto: CreateSupplierDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.createSupplier(dto, user?.userId?.toString());
+    return this.masterDataService.createSupplier(dto, user?.username);
   }
 
   @Permissions("master:supplier:update")
@@ -243,11 +226,7 @@ export class MasterDataController {
     @Body() dto: UpdateSupplierDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.updateSupplier(
-      id,
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.updateSupplier(id, dto, user?.username);
   }
 
   @Permissions("master:supplier:deactivate")
@@ -256,10 +235,7 @@ export class MasterDataController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.deactivateSupplier(
-      id,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.deactivateSupplier(id, user?.username);
   }
 
   // ─── Personnel (F5) ─────────────────────────────────────────────────────────
@@ -282,10 +258,7 @@ export class MasterDataController {
     @Body() dto: CreatePersonnelDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.createPersonnel(
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.createPersonnel(dto, user?.username);
   }
 
   @Permissions("master:personnel:update")
@@ -295,11 +268,7 @@ export class MasterDataController {
     @Body() dto: UpdatePersonnelDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.updatePersonnel(
-      id,
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.updatePersonnel(id, dto, user?.username);
   }
 
   @Permissions("master:personnel:deactivate")
@@ -308,10 +277,7 @@ export class MasterDataController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.deactivatePersonnel(
-      id,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.deactivatePersonnel(id, user?.username);
   }
 
   // ─── Workshop (F6) ──────────────────────────────────────────────────────────
@@ -334,7 +300,7 @@ export class MasterDataController {
     @Body() dto: CreateWorkshopDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.createWorkshop(dto, user?.userId?.toString());
+    return this.masterDataService.createWorkshop(dto, user?.username);
   }
 
   @Permissions("master:workshop:update")
@@ -344,11 +310,7 @@ export class MasterDataController {
     @Body() dto: UpdateWorkshopDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.updateWorkshop(
-      id,
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.updateWorkshop(id, dto, user?.username);
   }
 
   @Permissions("master:workshop:deactivate")
@@ -357,10 +319,7 @@ export class MasterDataController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.deactivateWorkshop(
-      id,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.deactivateWorkshop(id, user?.username);
   }
 
   // ─── StockScope (F7) ────────────────────────────────────────────────────────
@@ -383,10 +342,7 @@ export class MasterDataController {
     @Body() dto: CreateStockScopeDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.createStockScope(
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.createStockScope(dto, user?.username);
   }
 
   @Permissions("master:stock-scope:update")
@@ -396,11 +352,7 @@ export class MasterDataController {
     @Body() dto: UpdateStockScopeDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.updateStockScope(
-      id,
-      dto,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.updateStockScope(id, dto, user?.username);
   }
 
   @Permissions("master:stock-scope:deactivate")
@@ -409,9 +361,6 @@ export class MasterDataController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.masterDataService.deactivateStockScope(
-      id,
-      user?.userId?.toString(),
-    );
+    return this.masterDataService.deactivateStockScope(id, user?.username);
   }
 }

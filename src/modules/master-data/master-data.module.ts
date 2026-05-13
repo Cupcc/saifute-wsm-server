@@ -27,6 +27,6 @@ import { MasterDataRepository } from "./infrastructure/master-data.repository";
     StockScopeService,
     MasterDataService,
   ],
-  exports: [MasterDataService],
+  exports: [MasterDataService, SupplierService],
 })
 export class MasterDataModule {}

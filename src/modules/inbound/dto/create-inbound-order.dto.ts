@@ -5,7 +5,6 @@ import {
   IsDateString,
   IsEnum,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
@@ -31,6 +30,16 @@ export class CreateInboundOrderDto {
   @IsOptional()
   @Min(1)
   supplierId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  supplierCode?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  supplierName?: string;
 
   @IsInt()
   @IsOptional()

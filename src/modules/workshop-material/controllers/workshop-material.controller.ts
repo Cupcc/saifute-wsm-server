@@ -83,7 +83,7 @@ export class WorkshopMaterialController {
     );
     return this.workshopMaterialService.createPickOrder(
       scopedDto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -106,7 +106,7 @@ export class WorkshopMaterialController {
     return this.workshopMaterialService.updatePickOrder(
       id,
       scopedDto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -125,7 +125,7 @@ export class WorkshopMaterialController {
     return this.workshopMaterialService.voidPickOrder(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -187,7 +187,7 @@ export class WorkshopMaterialController {
     );
     return this.workshopMaterialService.createReturnOrder(
       scopedDto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -210,7 +210,7 @@ export class WorkshopMaterialController {
     return this.workshopMaterialService.updateReturnOrder(
       id,
       scopedDto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -229,7 +229,7 @@ export class WorkshopMaterialController {
     return this.workshopMaterialService.voidReturnOrder(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -312,7 +312,7 @@ export class WorkshopMaterialController {
         ...scopedDto,
         stockScope: inventoryScope?.stockScope,
       },
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -344,7 +344,7 @@ export class WorkshopMaterialController {
         ...scopedDto,
         stockScope: inventoryScope?.stockScope,
       },
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -367,7 +367,7 @@ export class WorkshopMaterialController {
     return this.workshopMaterialService.voidScrapOrder(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 }

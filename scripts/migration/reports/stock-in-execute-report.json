@@ -3,19 +3,19 @@
     "batch1Baseline": {
       "actualBlockedMaterialCount": 0,
       "actualMapCounts": {
-        "customer": 388,
+        "customer": 392,
         "material": 1092,
         "materialCategory": 14,
-        "personnel": 76,
+        "personnel": 77,
         "supplier": 259,
         "workshop": 21
       },
       "expectedBlockedMaterialCount": 0,
       "expectedMapCounts": {
-        "customer": 388,
+        "customer": 392,
         "material": 1092,
         "materialCategory": 14,
-        "personnel": 76,
+        "personnel": 77,
         "supplier": 259,
         "workshop": 21
       },
@@ -27,40 +27,40 @@
   },
   "counts": {
     "lines": {
-      "excluded": 0,
-      "migrated": 2073,
-      "source": 2073
+      "excluded": 1,
+      "migrated": 2093,
+      "source": 2094
     },
     "orders": {
-      "excluded": 0,
-      "migrated": 1151,
-      "source": 1151
+      "excluded": 1,
+      "migrated": 1160,
+      "source": 1161
     },
     "sourceLineTables": {
-      "saifute_inbound_detail": 1333,
-      "saifute_into_detail": 740
+      "saifute_inbound_detail": 1348,
+      "saifute_into_detail": 746
     },
     "sourceOrderTables": {
-      "saifute_inbound_order": 770,
-      "saifute_into_order": 381
+      "saifute_inbound_order": 776,
+      "saifute_into_order": 385
     }
   },
   "dependencyBaseline": {
     "actualBlockedMaterialCount": 0,
     "actualMapCounts": {
-      "customer": 388,
+      "customer": 392,
       "material": 1092,
       "materialCategory": 14,
-      "personnel": 76,
+      "personnel": 77,
       "supplier": 259,
       "workshop": 21
     },
     "expectedBlockedMaterialCount": 0,
     "expectedMapCounts": {
-      "customer": 388,
+      "customer": 392,
       "material": 1092,
       "materialCategory": 14,
-      "personnel": 76,
+      "personnel": 77,
       "supplier": 259,
       "workshop": 21
     },
@@ -320,13 +320,22 @@
       ]
     }
   ],
-  "excludedDocuments": [],
+  "excludedDocuments": [
+    {
+      "excludedLineCount": 1,
+      "exclusionReason": "Warehouse confirmed this legacy stock-in offset document is erroneous; exclude it from migration and inventory replay.",
+      "legacyId": 306,
+      "legacyTable": "saifute_into_order",
+      "sourceDocumentNo": "RK20260306005",
+      "targetDocumentNoCandidate": "RK20260306005"
+    }
+  ],
   "executionRequested": true,
   "executionResult": {
-    "archivedPayloadCount": 1768,
-    "excludedDocumentCount": 0,
-    "insertedOrUpdatedLines": 2073,
-    "insertedOrUpdatedOrders": 1151
+    "archivedPayloadCount": 1784,
+    "excludedDocumentCount": 1,
+    "insertedOrUpdatedLines": 2093,
+    "insertedOrUpdatedOrders": 1160
   },
   "globalBlockers": [],
   "migratedDocuments": [
@@ -8802,6 +8811,72 @@
     },
     {
       "auditStatusSnapshot": "PENDING",
+      "documentNo": "YS20260510004",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 996,
+      "legacyTable": "saifute_inbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "ACCEPTANCE",
+      "sourceDocumentNo": "YS20260510004"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "YS20260510005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 997,
+      "legacyTable": "saifute_inbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "ACCEPTANCE",
+      "sourceDocumentNo": "YS20260510005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "YS20260506006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 998,
+      "legacyTable": "saifute_inbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "ACCEPTANCE",
+      "sourceDocumentNo": "YS20260506006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "YS20260508005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 999,
+      "legacyTable": "saifute_inbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "ACCEPTANCE",
+      "sourceDocumentNo": "YS20260508005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "YS20260509005",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 1000,
+      "legacyTable": "saifute_inbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "ACCEPTANCE",
+      "sourceDocumentNo": "YS20260509005"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "YS20260510006",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 1001,
+      "legacyTable": "saifute_inbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 9,
+      "orderType": "ACCEPTANCE",
+      "sourceDocumentNo": "YS20260510006"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
       "documentNo": "RK20260103001",
       "inventoryEffectStatus": "POSTED",
       "legacyId": 171,
@@ -10284,17 +10359,6 @@
       "lineCount": 1,
       "orderType": "PRODUCTION_RECEIPT",
       "sourceDocumentNo": "RK20260304005"
-    },
-    {
-      "auditStatusSnapshot": "PENDING",
-      "documentNo": "RK20260306005",
-      "inventoryEffectStatus": "POSTED",
-      "legacyId": 306,
-      "legacyTable": "saifute_into_order",
-      "lifecycleStatus": "EFFECTIVE",
-      "lineCount": 1,
-      "orderType": "PRODUCTION_RECEIPT",
-      "sourceDocumentNo": "RK20260306005"
     },
     {
       "auditStatusSnapshot": "PENDING",
@@ -12990,14 +13054,58 @@
       "lineCount": 1,
       "orderType": "PRODUCTION_RECEIPT",
       "sourceDocumentNo": "RK20260509002"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "RK20260509003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 552,
+      "legacyTable": "saifute_into_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "PRODUCTION_RECEIPT",
+      "sourceDocumentNo": "RK20260509003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "RK20260510001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 553,
+      "legacyTable": "saifute_into_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "PRODUCTION_RECEIPT",
+      "sourceDocumentNo": "RK20260510001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "RK20260507003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 554,
+      "legacyTable": "saifute_into_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "PRODUCTION_RECEIPT",
+      "sourceDocumentNo": "RK20260507003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "documentNo": "RK20260504002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 555,
+      "legacyTable": "saifute_into_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 2,
+      "orderType": "PRODUCTION_RECEIPT",
+      "sourceDocumentNo": "RK20260504002"
     }
   ],
   "migrationBatch": "batch2a-stock-in",
   "mode": "execute",
   "sourceCounts": {
     "audits": 0,
-    "lines": 2073,
-    "orders": 1151
+    "lines": 2094,
+    "orders": 1161
   },
   "stagingReady": true,
   "targetDatabaseName": "saifute-wms",
@@ -16391,6 +16499,38 @@
         "handlerName": "贾长秀"
       },
       "legacyId": 551,
+      "legacyTable": "saifute_into_order",
+      "reason": "Handler personnel name is ambiguous in the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "handlerName": "贾长秀"
+      },
+      "legacyId": 552,
+      "legacyTable": "saifute_into_order",
+      "reason": "Handler personnel name is ambiguous in the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "handlerName": "贾长秀"
+      },
+      "legacyId": 553,
+      "legacyTable": "saifute_into_order",
+      "reason": "Handler personnel name is ambiguous in the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "handlerName": "吴庆纷"
+      },
+      "legacyId": 554,
+      "legacyTable": "saifute_into_order",
+      "reason": "Handler personnel name is ambiguous in the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId."
+    },
+    {
+      "details": {
+        "handlerName": "吴庆纷"
+      },
+      "legacyId": 555,
       "legacyTable": "saifute_into_order",
       "reason": "Handler personnel name is ambiguous in the migrated personnel snapshot; preserving handlerNameSnapshot without handlerPersonnelId."
     }

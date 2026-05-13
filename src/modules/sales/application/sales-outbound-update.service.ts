@@ -15,6 +15,10 @@ import {
 import { BusinessDocumentType } from "../../../shared/domain/business-document-type";
 import type { UpdateOutboundOrderDto } from "../dto/update-outbound-order.dto";
 import { SalesRepository } from "../infrastructure/sales.repository";
+import {
+  hasFactoryNumberExpression,
+  resolveFactoryNumberRangesOrThrow,
+} from "./factory-number-ranges";
 import { OUTBOUND_SOURCE_OPERATION_TYPES } from "./sales-outbound.service";
 import { SalesSharedService } from "./sales-shared.service";
 import { type OutboundLineWriteData } from "./sales-snapshots.service";
@@ -49,9 +53,7 @@ export class SalesOutboundUpdateService {
     if (existing.inventoryEffectStatus !== InventoryEffectStatus.POSTED) {
       throw new BadRequestException("库存状态异常，无法修改");
     }
-
     await this.validateMasterDataForUpdate(dto);
-
     const bizDate = dto.bizDate ? new Date(dto.bizDate) : existing.bizDate;
     const nextRevision = existing.revisionNo + 1;
     const finalCustomerId = dto.customerId ?? existing.customerId ?? undefined;
@@ -92,13 +94,11 @@ export class SalesOutboundUpdateService {
       plannedLines.map((line) => [line.lineNo, line.projectTargetId]),
     );
     this.assertNoDuplicateOutboundPriceLayers(plannedLines);
-
     const updatedOrder = await this.repository.runInTransaction(async (tx) => {
       const currentOrder = await this.repository.findOrderById(id, tx);
       if (!currentOrder) {
         throw new NotFoundException(`出库单不存在: ${id}`);
       }
-
       const logs = await this.shared.inventoryService.getLogsForDocument(
         {
           businessDocumentType: DOCUMENT_TYPE,
@@ -157,7 +157,12 @@ export class SalesOutboundUpdateService {
           },
           tx,
         );
-        if (currentLine.startNumber && currentLine.endNumber) {
+        if (
+          hasFactoryNumberExpression(
+            currentLine.startNumber,
+            currentLine.endNumber,
+          )
+        ) {
           await this.shared.inventoryService.releaseFactoryNumberReservations(
             {
               businessDocumentType: DOCUMENT_TYPE,
@@ -224,8 +229,10 @@ export class SalesOutboundUpdateService {
           }
           if (
             reservationChanged &&
-            currentLine.startNumber &&
-            currentLine.endNumber
+            hasFactoryNumberExpression(
+              currentLine.startNumber,
+              currentLine.endNumber,
+            )
           ) {
             await this.shared.inventoryService.releaseFactoryNumberReservations(
               {
@@ -302,24 +309,24 @@ export class SalesOutboundUpdateService {
               tx,
             );
           }
-          if (
-            reservationChanged &&
-            updatedLine.startNumber &&
-            updatedLine.endNumber
-          ) {
-            await this.shared.inventoryService.reserveFactoryNumber(
-              {
-                materialId: updatedLine.materialId,
-                stockScope: "MAIN",
-                businessDocumentType: DOCUMENT_TYPE,
-                businessDocumentId: id,
-                businessDocumentLineId: updatedLine.id,
-                startNumber: updatedLine.startNumber,
-                endNumber: updatedLine.endNumber,
-                operatorId: updatedBy,
-              },
-              tx,
-            );
+          if (reservationChanged) {
+            for (const range of resolveFactoryNumberRangesOrThrow(
+              updatedLine,
+            )) {
+              await this.shared.inventoryService.reserveFactoryNumber(
+                {
+                  materialId: updatedLine.materialId,
+                  stockScope: "MAIN",
+                  businessDocumentType: DOCUMENT_TYPE,
+                  businessDocumentId: id,
+                  businessDocumentLineId: updatedLine.id,
+                  startNumber: range.startNumber,
+                  endNumber: range.endNumber,
+                  operatorId: updatedBy,
+                },
+                tx,
+              );
+            }
           }
 
           finalLines.push(updatedLine);
@@ -387,7 +394,7 @@ export class SalesOutboundUpdateService {
           tx,
         );
 
-        if (createdLine.startNumber && createdLine.endNumber) {
+        for (const range of resolveFactoryNumberRangesOrThrow(createdLine)) {
           await this.shared.inventoryService.reserveFactoryNumber(
             {
               materialId: createdLine.materialId,
@@ -395,8 +402,8 @@ export class SalesOutboundUpdateService {
               businessDocumentType: DOCUMENT_TYPE,
               businessDocumentId: id,
               businessDocumentLineId: createdLine.id,
-              startNumber: createdLine.startNumber,
-              endNumber: createdLine.endNumber,
+              startNumber: range.startNumber,
+              endNumber: range.endNumber,
               operatorId: updatedBy,
             },
             tx,

@@ -48,7 +48,7 @@ export class SalesController {
     @Body() dto: CreateOutboundOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.salesService.createOrder(dto, user?.userId?.toString());
+    return this.salesService.createOrder(dto, user?.username);
   }
 
   @Permissions("sales:order:update")
@@ -58,7 +58,7 @@ export class SalesController {
     @Body() dto: UpdateOutboundOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.salesService.updateOrder(id, dto, user?.userId?.toString());
+    return this.salesService.updateOrder(id, dto, user?.username);
   }
 
   @Permissions("sales:order:void")
@@ -68,11 +68,7 @@ export class SalesController {
     @Body() dto: VoidOutboundOrderDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.salesService.voidOrder(
-      id,
-      dto.voidReason,
-      user?.userId?.toString(),
-    );
+    return this.salesService.voidOrder(id, dto.voidReason, user?.username);
   }
 
   @Permissions("sales:return:list")
@@ -99,7 +95,7 @@ export class SalesController {
     @Body() dto: CreateSalesReturnDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.salesService.createSalesReturn(dto, user?.userId?.toString());
+    return this.salesService.createSalesReturn(dto, user?.username);
   }
 
   @Permissions("sales:return:void")
@@ -112,7 +108,7 @@ export class SalesController {
     return this.salesService.voidSalesReturn(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 }

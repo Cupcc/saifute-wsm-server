@@ -73,10 +73,7 @@ export class SalesProjectController {
       user,
       dto,
     );
-    return this.salesProjectService.createProject(
-      scopedDto,
-      user?.userId?.toString(),
-    );
+    return this.salesProjectService.createProject(scopedDto, user?.username);
   }
 
   @Permissions("sales:project:update")
@@ -102,7 +99,7 @@ export class SalesProjectController {
     return this.salesProjectService.updateProject(
       id,
       scopedDto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -125,7 +122,7 @@ export class SalesProjectController {
     return this.salesProjectService.voidProject(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
