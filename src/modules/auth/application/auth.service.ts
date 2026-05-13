@@ -237,6 +237,72 @@ export class AuthService {
     return this.rbacService.getRoutesForUser(user.userId);
   }
 
+  async listUserLoginLockStatuses(userIds: number[]) {
+    const uniqueUserIds = [...new Set(userIds)].filter((userId) =>
+      Number.isFinite(userId),
+    );
+
+    return Promise.all(
+      uniqueUserIds.map(async (userId) => {
+        const targetUser = await this.rbacService.getUserLoginIdentity(userId);
+        const passwordAttempt =
+          await this.authStateRepository.getPasswordAttempt(
+            targetUser.username,
+          );
+
+        return this.buildUserLoginLockStatus(targetUser, passwordAttempt);
+      }),
+    );
+  }
+
+  async unlockUserLogin(userId: number) {
+    const targetUser = await this.rbacService.getUserLoginIdentity(userId);
+    const passwordAttempt = await this.authStateRepository.getPasswordAttempt(
+      targetUser.username,
+    );
+    await this.authStateRepository.clearPasswordFailures(targetUser.username);
+
+    const previousStatus = this.buildUserLoginLockStatus(
+      targetUser,
+      passwordAttempt,
+    );
+
+    return {
+      msg: previousStatus.locked ? "登录锁定已解除" : "登录失败计数已清理",
+      userId: targetUser.userId,
+      username: targetUser.username,
+      wasLocked: previousStatus.locked,
+      lockedUntil: previousStatus.lockedUntil,
+      failureCount: previousStatus.failureCount,
+    };
+  }
+
+  private buildUserLoginLockStatus(
+    targetUser: { userId: number; username: string },
+    passwordAttempt: { count: number; lockedUntil?: string },
+  ) {
+    const lockedUntilTime = passwordAttempt.lockedUntil
+      ? new Date(passwordAttempt.lockedUntil).getTime()
+      : Number.NaN;
+    const locked =
+      Number.isFinite(lockedUntilTime) && lockedUntilTime > Date.now();
+    const hasFailures = passwordAttempt.count > 0;
+
+    return {
+      userId: targetUser.userId,
+      username: targetUser.username,
+      locked,
+      status: locked ? "locked" : hasFailures ? "warning" : "normal",
+      statusLabel: locked
+        ? "已锁定"
+        : hasFailures
+          ? `失败 ${passwordAttempt.count} 次`
+          : "正常",
+      lockedUntil: locked ? (passwordAttempt.lockedUntil ?? null) : null,
+      failureCount: passwordAttempt.count,
+    };
+  }
+
   private isBlockedIp(ip: string): boolean {
     return this.appConfigService.authIpBlacklist.some(
       (blockedIp) => normalizeIpAddress(blockedIp) === normalizeIpAddress(ip),

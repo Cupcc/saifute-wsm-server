@@ -57,6 +57,20 @@ function toDecimalString(value) {
   return String(value);
 }
 
+function toOptionalString(value) {
+  const normalized = String(value ?? "").trim();
+  return normalized || undefined;
+}
+
+function formatFactoryNumber(startNumber, endNumber) {
+  const start = startNumber ?? "";
+  const end = endNumber ?? "";
+  if (start && end) {
+    return start === end ? start : `${start}-${end}`;
+  }
+  return start || end || "";
+}
+
 function mapOrderLine(line, order, audit = null) {
   const quantity = toNumber(line.quantity);
   const unitPrice = toNumber(line.unitPrice);
@@ -88,6 +102,7 @@ function mapOrderLine(line, order, audit = null) {
     salesProjectName: line.salesProjectNameSnapshot ?? "",
     startNumber: line.startNumber ?? "",
     endNumber: line.endNumber ?? "",
+    factoryNumber: formatFactoryNumber(line.startNumber, line.endNumber),
     sourceDocumentId: line.sourceDocumentId ?? null,
     sourceDocumentLineId: line.sourceDocumentLineId ?? null,
     remark: line.remark ?? "",
@@ -180,7 +195,7 @@ async function resolveHandlerPersonnelId(personnel) {
   return exactMatch?.personnelId ?? response.rows?.[0]?.personnelId;
 }
 
-function buildCustomerPayload(data, mode, handlerPersonnelId) {
+function buildCustomerPayload(data, mode, handlerPersonnelId, isUpdate) {
   const lines = Array.isArray(data.details) ? data.details : [];
   const basePayload = {
     bizDate: data.bizDate,
@@ -193,7 +208,7 @@ function buildCustomerPayload(data, mode, handlerPersonnelId) {
   if (mode === "salesReturn") {
     return {
       ...basePayload,
-      ...(data.orderId ? { documentNo: data.documentNo } : {}),
+      ...(isUpdate ? {} : { documentNo: data.documentNo }),
       sourceOutboundOrderId: data.sourceOutboundOrderId,
       lines: lines.map((line) => ({
         materialId: line.materialId,
@@ -207,7 +222,7 @@ function buildCustomerPayload(data, mode, handlerPersonnelId) {
 
   return {
     ...basePayload,
-    ...(data.orderId ? { documentNo: data.documentNo } : {}),
+    ...(isUpdate ? {} : { documentNo: data.documentNo }),
     lines: lines.map((line) => ({
       ...(line.detailId ? { id: line.detailId } : {}),
       materialId: line.materialId,
@@ -215,8 +230,8 @@ function buildCustomerPayload(data, mode, handlerPersonnelId) {
       selectedUnitCost: toDecimalString(line.selectedUnitCost),
       unitPrice: toDecimalString(line.unitPrice),
       salesProjectId: line.salesProjectId,
-      startNumber: line.startNumber,
-      endNumber: line.endNumber,
+      startNumber: toOptionalString(line.factoryNumber ?? line.startNumber),
+      endNumber: line.factoryNumber ? undefined : toOptionalString(line.endNumber),
       remark: line.remark,
     })),
   };
@@ -272,8 +287,13 @@ export async function submitSalesOrder(data, mode = "order") {
   const handlerPersonnelId = await resolveHandlerPersonnelId(
     data.handlerPersonnelId ?? data.handlerName,
   ).catch(() => undefined);
-  const payload = buildCustomerPayload(data, mode, handlerPersonnelId);
   const orderId = data[config.idKey];
+  const payload = buildCustomerPayload(
+    data,
+    mode,
+    handlerPersonnelId,
+    Boolean(orderId),
+  );
 
   return request({
     url: orderId ? `${config.itemUrl}/${orderId}` : config.itemUrl,

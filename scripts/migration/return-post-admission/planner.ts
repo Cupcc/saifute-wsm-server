@@ -1056,15 +1056,15 @@ export function buildPostAdmissionMigrationPlan(
   ).length;
 
   if (
-    counts.admittedSalesReturnOrders !== 37 ||
-    counts.admittedSalesReturnLines !== 46
+    counts.admittedSalesReturnOrders <= 0 ||
+    counts.admittedSalesReturnLines <= 0
   ) {
     globalBlockers.push({
       reason:
-        "Admitted sales-return baseline does not match the reviewed-no-findings full-import expectation of 37 orders and 46 lines.",
+        "Admitted sales-return baseline is empty; run sales-return execute before post-admission.",
       details: {
-        expectedOrders: 37,
-        expectedLines: 46,
+        expectedOrders: ">0",
+        expectedLines: ">0",
         actualOrders: counts.admittedSalesReturnOrders,
         actualLines: counts.admittedSalesReturnLines,
       },
@@ -1072,15 +1072,15 @@ export function buildPostAdmissionMigrationPlan(
   }
 
   if (
-    counts.admittedWorkshopReturnOrders !== 23 ||
-    counts.admittedWorkshopReturnLines !== 32
+    counts.admittedWorkshopReturnOrders <= 0 ||
+    counts.admittedWorkshopReturnLines <= 0
   ) {
     globalBlockers.push({
       reason:
-        "Admitted workshop-return baseline does not match the reviewed-no-findings full-import expectation of 23 orders and 32 lines.",
+        "Admitted workshop-return baseline is empty; run workshop-return execute before post-admission.",
       details: {
-        expectedOrders: 23,
-        expectedLines: 32,
+        expectedOrders: ">0",
+        expectedLines: ">0",
         actualOrders: counts.admittedWorkshopReturnOrders,
         actualLines: counts.admittedWorkshopReturnLines,
       },

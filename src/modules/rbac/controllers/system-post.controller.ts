@@ -30,8 +30,8 @@ export class SystemPostController {
   @Post("export")
   @Permissions("system:post:export")
   @ApiFileResponse({ description: "导出岗位文件" })
-  exportPosts(@Body() query: Record<string, string | undefined>) {
-    const exportResult = this.systemManagementService.exportPosts(query);
+  async exportPosts(@Body() query: Record<string, string | undefined>) {
+    const exportResult = await this.systemManagementService.exportPosts(query);
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {
       disposition: `attachment; filename="${exportResult.fileName}"`,
       type: exportResult.contentType,

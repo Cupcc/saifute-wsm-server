@@ -147,7 +147,8 @@ export class InboundProductionReceiptUpdateService {
           );
           const inventoryNeedsRepost =
             currentLine.materialId !== lineData.materialId ||
-            !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity);
+            !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity) ||
+            !new Prisma.Decimal(currentLine.unitPrice).eq(lineData.unitPrice);
           if (inventoryNeedsRepost) {
             const currentLog = logByLineId.get(currentLine.id);
             if (!currentLog) {

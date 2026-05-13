@@ -1,5 +1,5 @@
 {
-  "archivedPayloadCount": 452,
+  "archivedPayloadCount": 453,
   "context": {
     "activeMissingMaterialUnitCount": 0,
     "missingMaterialUnitCount": 0
@@ -8,8 +8,8 @@
     "customer": {
       "archivedPayloads": 2,
       "blocked": 0,
-      "planned": 388,
-      "source": 388
+      "planned": 392,
+      "source": 392
     },
     "material": {
       "archivedPayloads": 337,
@@ -24,10 +24,10 @@
       "source": 14
     },
     "personnel": {
-      "archivedPayloads": 76,
+      "archivedPayloads": 77,
       "blocked": 0,
-      "planned": 76,
-      "source": 76
+      "planned": 77,
+      "source": 77
     },
     "supplier": {
       "archivedPayloads": 3,
@@ -42,14 +42,14 @@
       "source": 21
     }
   },
-  "expectedArchivedPayloadCount": 452,
+  "expectedArchivedPayloadCount": 453,
   "migrationBatch": "batch1-master-data",
   "mode": "validate",
   "sourceRowCounts": {
-    "customers": 388,
+    "customers": 392,
     "materialCategories": 14,
     "materials": 1092,
-    "personnel": 76,
+    "personnel": 77,
     "suppliers": 259,
     "workshops": 20
   },
@@ -57,11 +57,11 @@
   "targetSummary": {
     "customer": {
       "duplicateCodes": [],
-      "expectedMigratedRows": 388,
-      "expectedTargetRows": 388,
-      "mapRows": 388,
+      "expectedMigratedRows": 392,
+      "expectedTargetRows": 392,
+      "mapRows": 392,
       "missingMappedTargets": 0,
-      "targetRows": 388
+      "targetRows": 392
     },
     "material": {
       "duplicateCodes": [],
@@ -81,11 +81,11 @@
     },
     "personnel": {
       "duplicateCodes": [],
-      "expectedMigratedRows": 76,
-      "expectedTargetRows": 76,
-      "mapRows": 76,
+      "expectedMigratedRows": 77,
+      "expectedTargetRows": 77,
+      "mapRows": 77,
       "missingMappedTargets": 0,
-      "targetRows": 152
+      "targetRows": 77
     },
     "supplier": {
       "duplicateCodes": [],
@@ -104,13 +104,5 @@
       "targetRows": 18
     }
   },
-  "validationIssues": [
-    {
-      "actualTargetRows": 152,
-      "entity": "personnel",
-      "expectedTargetRows": 76,
-      "reason": "Target table contains more rows than this migration slice expects.",
-      "severity": "warning"
-    }
-  ]
+  "validationIssues": []
 }

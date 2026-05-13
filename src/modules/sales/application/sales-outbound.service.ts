@@ -21,6 +21,7 @@ import { FIFO_SOURCE_OPERATION_TYPES } from "../../inventory-core/application/in
 import type { CreateOutboundOrderDto } from "../dto/create-outbound-order.dto";
 import type { QueryOutboundOrderDto } from "../dto/query-outbound-order.dto";
 import { SalesRepository } from "../infrastructure/sales.repository";
+import { resolveFactoryNumberRangesOrThrow } from "./factory-number-ranges";
 import { SalesSharedService } from "./sales-shared.service";
 import { type OutboundLineWriteData } from "./sales-snapshots.service";
 import { SalesTraceabilityService } from "./sales-traceability.service";
@@ -206,7 +207,7 @@ export class SalesOutboundService {
             tx,
           );
 
-          if (line.startNumber && line.endNumber) {
+          for (const range of resolveFactoryNumberRangesOrThrow(line)) {
             await this.shared.inventoryService.reserveFactoryNumber(
               {
                 materialId: line.materialId,
@@ -214,8 +215,8 @@ export class SalesOutboundService {
                 businessDocumentType: DOCUMENT_TYPE,
                 businessDocumentId: order.id,
                 businessDocumentLineId: line.id,
-                startNumber: line.startNumber,
-                endNumber: line.endNumber,
+                startNumber: range.startNumber,
+                endNumber: range.endNumber,
                 operatorId: createdBy,
               },
               tx,

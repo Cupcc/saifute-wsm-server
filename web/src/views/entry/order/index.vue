@@ -731,6 +731,76 @@ function compareInboundDateRows(left, right) {
   return Number(left?.inboundId ?? 0) - Number(right?.inboundId ?? 0);
 }
 
+function mergeSupplierOption(option) {
+  if (!option?.supplierId) {
+    return;
+  }
+
+  const exists = supplierOptionsForForm.value.some(
+    (item) => String(item.supplierId) === String(option.supplierId),
+  );
+  if (!exists) {
+    supplierOptionsForForm.value = [option, ...supplierOptionsForForm.value];
+  }
+}
+
+function replaceSupplierOptionsForForm(rows = []) {
+  const selectedSupplierId = form.value?.supplierId;
+  const selectedSupplier = selectedSupplierId
+    ? supplierOptionsForForm.value.find(
+        (item) => String(item.supplierId) === String(selectedSupplierId),
+      )
+    : null;
+
+  supplierOptionsForForm.value = rows;
+  mergeSupplierOption(selectedSupplier);
+}
+
+function mergeWorkshopOption(option) {
+  if (!option?.workshopId) {
+    return;
+  }
+
+  const exists = workshopOptionsForForm.value.some(
+    (item) => String(item.workshopId) === String(option.workshopId),
+  );
+  if (!exists) {
+    workshopOptionsForForm.value = [option, ...workshopOptionsForForm.value];
+  }
+}
+
+function replaceWorkshopOptionsForForm(rows = []) {
+  const selectedWorkshopId = form.value?.workshopId;
+  const selectedWorkshop = selectedWorkshopId
+    ? workshopOptionsForForm.value.find(
+        (item) => String(item.workshopId) === String(selectedWorkshopId),
+      )
+    : null;
+
+  workshopOptionsForForm.value = rows;
+  mergeWorkshopOption(selectedWorkshop);
+}
+
+function rememberOrderSupplier(orderData) {
+  mergeSupplierOption({
+    supplierId: orderData.supplierId,
+    supplierCode: orderData.supplierCode || "",
+    supplierName: orderData.supplierName || String(orderData.supplierId),
+  });
+}
+
+function rememberOrderWorkshop(orderData) {
+  mergeWorkshopOption({
+    workshopId: orderData.workshopId,
+    workshopName: orderData.workshopName || String(orderData.workshopId),
+  });
+}
+
+function isPositiveIntegerValue(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0;
+}
+
 /** 查询验收单列表 */
 function getList() {
   loading.value = true;
@@ -766,7 +836,7 @@ function searchSupplierForForm(query) {
   supplierLoadingForForm.value = true;
   listSupplierByKeyword(query)
     .then((response) => {
-      supplierOptionsForForm.value = response.rows;
+      replaceSupplierOptionsForForm(response.rows || []);
       supplierLoadingForForm.value = false;
     })
     .catch(() => {
@@ -792,7 +862,7 @@ function searchWorkshopForForm(query) {
   workshopLoadingForForm.value = true;
   listByNameOrContact({ workshopName: query })
     .then((response) => {
-      workshopOptionsForForm.value = response.rows;
+      replaceWorkshopOptionsForForm(response.rows || []);
       workshopLoadingForForm.value = false;
     })
     .catch(() => {
@@ -868,6 +938,7 @@ function reset() {
     inboundNo: null,
     inboundDate: null,
     supplierId: null,
+    supplierName: null,
     workshopId: null,
     attn: null,
     totalAmount: null,
@@ -1039,11 +1110,14 @@ function handleUpdate(row) {
         inboundNo: orderData.inboundNo,
         inboundDate: orderData.inboundDate,
         supplierId: orderData.supplierId,
+        supplierName: orderData.supplierName,
         workshopId: orderData.workshopId,
         attn: orderData.attn,
         totalAmount: orderData.totalAmount,
         remark: orderData.remark,
       };
+      rememberOrderSupplier(orderData);
+      rememberOrderWorkshop(orderData);
       if (orderData.details && orderData.details.length > 0) {
         materialOptions.value = mergeMaterialOptions(
           materialOptions.value,
@@ -1171,8 +1245,19 @@ function submitForm() {
       const selectedSupplier = supplierOptionsForForm.value.find(
         (item) => String(item.supplierId) === String(form.value.supplierId),
       );
+      if (selectedSupplier) {
+        form.value.supplierId = selectedSupplier.supplierId;
+        form.value.supplierName = selectedSupplier.supplierName;
+      } else if (isPositiveIntegerValue(form.value.supplierId)) {
+        form.value.supplierId = Number(form.value.supplierId);
+        form.value.supplierName = null;
+      }
       // 如果不存在于现有选项中，且value不为空
-      if (!selectedSupplier) {
+      if (
+        !selectedSupplier &&
+        typeof form.value.supplierId === "string" &&
+        !isPositiveIntegerValue(form.value.supplierId)
+      ) {
         // 将value值赋给supplierName
         form.value.supplierName = form.value.supplierId;
         // 将supplierId置空

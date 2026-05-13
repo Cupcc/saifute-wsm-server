@@ -30,8 +30,9 @@ export class SystemConfigController {
   @Post("export")
   @Permissions("system:config:export")
   @ApiFileResponse({ description: "导出参数配置文件" })
-  exportConfigs(@Body() query: Record<string, string | undefined>) {
-    const exportResult = this.systemManagementService.exportConfigs(query);
+  async exportConfigs(@Body() query: Record<string, string | undefined>) {
+    const exportResult =
+      await this.systemManagementService.exportConfigs(query);
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {
       disposition: `attachment; filename="${exportResult.fileName}"`,
       type: exportResult.contentType,

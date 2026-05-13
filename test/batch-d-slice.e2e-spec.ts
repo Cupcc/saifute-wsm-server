@@ -170,6 +170,68 @@ describe("Batch D slice acceptance (e2e)", () => {
     expect(response.body.data.accessToken).toBeTruthy();
   });
 
+  it("should allow admins to unlock a temporarily locked user login", async () => {
+    appContext = await bootstrapApp({
+      PASSWORD_MAX_RETRIES: "2",
+      PASSWORD_LOCK_MINUTES: "15",
+    });
+    const server = appContext.app.getHttpServer();
+
+    await login(server, "operator", "wrong-password", 401);
+    await login(server, "operator", "wrong-password", 401);
+    const lockedLogin = await login(server, "operator", "operator123", 401);
+    expect(lockedLogin.body.message).toBe("账号已被临时锁定，请稍后再试");
+
+    const adminLogin = await login(server, "admin", "admin123");
+    const adminToken = adminLogin.body.data.accessToken as string;
+    const lockedStatusResponse = await request(server)
+      .get("/api/auth/users/login-lock-status")
+      .query({ userIds: "2" })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+    expect(lockedStatusResponse.body.data).toEqual([
+      expect.objectContaining({
+        userId: 2,
+        username: "operator",
+        locked: true,
+        status: "locked",
+        statusLabel: "已锁定",
+        failureCount: 2,
+      }),
+    ]);
+
+    const unlockResponse = await request(server)
+      .put("/api/auth/users/2/unlock-login")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(unlockResponse.body.data).toMatchObject({
+      userId: 2,
+      username: "operator",
+      wasLocked: true,
+      failureCount: 2,
+    });
+
+    const unlockedStatusResponse = await request(server)
+      .get("/api/auth/users/login-lock-status")
+      .query({ userIds: "2" })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+    expect(unlockedStatusResponse.body.data).toEqual([
+      expect.objectContaining({
+        userId: 2,
+        username: "operator",
+        locked: false,
+        status: "normal",
+        statusLabel: "正常",
+        failureCount: 0,
+      }),
+    ]);
+
+    const operatorLogin = await login(server, "operator", "operator123");
+    expect(operatorLogin.body.data.user.username).toBe("operator");
+  });
+
   it("should only persist operation logs for annotated endpoints and redact secrets", async () => {
     appContext = await bootstrapApp();
     const server = appContext.app.getHttpServer();

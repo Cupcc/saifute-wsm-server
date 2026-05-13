@@ -30,8 +30,8 @@ export class SystemRoleController {
   @Post("export")
   @Permissions("system:role:export")
   @ApiFileResponse({ description: "导出系统角色文件" })
-  exportRoles(@Body() query: Record<string, string | undefined>) {
-    const exportResult = this.systemManagementService.exportRoles(query);
+  async exportRoles(@Body() query: Record<string, string | undefined>) {
+    const exportResult = await this.systemManagementService.exportRoles(query);
     return new StreamableFile(Buffer.from(exportResult.content, "utf8"), {
       disposition: `attachment; filename="${exportResult.fileName}"`,
       type: exportResult.contentType,

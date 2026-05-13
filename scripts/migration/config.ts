@@ -4,7 +4,7 @@ import { join } from "node:path";
 export const MIGRATION_STAGING_SCHEMA = "migration_staging";
 export const MATERIAL_CATEGORY_DICT_TYPE = "saifute_material_category";
 export const EXPECTED_LEGACY_DATABASE_NAME = "saifute";
-export const EXPECTED_TARGET_DATABASE_NAME = "saifute-wms";
+export const EXPECTED_TARGET_DATABASE_NAME = "DATABASE_URL";
 export const ENV_EXAMPLE_TARGET_DATABASE_NAME = "saifute_wms";
 
 export interface MigrationEnvironment {
@@ -130,16 +130,31 @@ export function parseHostAndPort(connectionString: string | null): {
   }
 }
 
+export function resolveConfiguredTargetDatabaseName(
+  targetConnectionString: string | null = process.env.DATABASE_URL?.trim() ??
+    null,
+): string | null {
+  return parseDatabaseName(targetConnectionString);
+}
+
 export function assertExpectedDatabaseName(
   connectionString: string | null,
   expectedDatabaseName: string,
   label: string,
 ): string {
   const actualDatabaseName = parseDatabaseName(connectionString);
+  const resolvedExpectedDatabaseName =
+    expectedDatabaseName === EXPECTED_TARGET_DATABASE_NAME
+      ? resolveConfiguredTargetDatabaseName()
+      : expectedDatabaseName;
 
-  if (actualDatabaseName !== expectedDatabaseName) {
+  if (!resolvedExpectedDatabaseName) {
+    throw new Error(`${label} DATABASE_URL must include a database name.`);
+  }
+
+  if (actualDatabaseName !== resolvedExpectedDatabaseName) {
     throw new Error(
-      `${label} database must be ${expectedDatabaseName}, received ${actualDatabaseName ?? "unknown"}.`,
+      `${label} database must match ${expectedDatabaseName} database ${resolvedExpectedDatabaseName}, received ${actualDatabaseName ?? "unknown"}.`,
     );
   }
 

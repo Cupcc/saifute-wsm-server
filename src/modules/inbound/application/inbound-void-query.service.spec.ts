@@ -11,6 +11,7 @@ import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { ApprovalService } from "../../approval/application/approval.service";
 import { InventoryService } from "../../inventory-core/application/inventory.service";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import { SupplierService } from "../../master-data/application/supplier.service";
 import { reverseAcceptanceStatusesForOrder } from "../../rd-subwarehouse/application/rd-material-status.helper";
 import { RdProcurementRequestService } from "../../rd-subwarehouse/application/rd-procurement-request.service";
 import { InboundRepository } from "../infrastructure/inbound.repository";
@@ -211,6 +212,12 @@ describe("InboundService", () => {
             }),
             getSupplierById: jest.fn(),
             getPersonnelById: jest.fn(),
+          },
+        },
+        {
+          provide: SupplierService,
+          useValue: {
+            ensure: jest.fn(),
           },
         },
         {

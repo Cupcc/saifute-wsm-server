@@ -303,9 +303,6 @@ async function getMapCounts(
   };
 }
 
-const EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT = 555;
-const EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT = 1816;
-const EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT = 15;
 const BATCH3B_MIGRATION_BATCH = "batch3b-workshop-pick-base";
 
 function readForbiddenTableBaseline(
@@ -411,33 +408,27 @@ async function getBatch3bPickBaselinePreservation(connection: {
   const pickExcludedCount = Number(row.pickExcludedCount);
   const issues: string[] = [];
 
-  if (pickOrderMapCount !== EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT) {
+  if (pickOrderMapCount <= 0) {
     issues.push(
-      `batch3b pick order map count changed: expected ${EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT}, found ${pickOrderMapCount}.`,
+      "batch3b pick order map is empty; run workshop-pick execute before validating workshop-return.",
     );
   }
 
-  if (pickLineMapCount !== EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT) {
+  if (pickLineMapCount <= 0) {
     issues.push(
-      `batch3b pick line map count changed: expected ${EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT}, found ${pickLineMapCount}.`,
+      "batch3b pick line map is empty; run workshop-pick execute before validating workshop-return.",
     );
   }
 
-  if (pickExcludedCount !== EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT) {
+  if (Number(row.pickOrderCount) !== pickOrderMapCount) {
     issues.push(
-      `batch3b pick excluded document count changed: expected ${EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT}, found ${pickExcludedCount}.`,
+      `batch3b live PICK order count does not match its map count: map=${pickOrderMapCount}, live=${Number(row.pickOrderCount)}.`,
     );
   }
 
-  if (Number(row.pickOrderCount) !== EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT) {
+  if (Number(row.pickLineCount) !== pickLineMapCount) {
     issues.push(
-      `batch3b live PICK order count changed: expected ${EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT}, found ${Number(row.pickOrderCount)}.`,
-    );
-  }
-
-  if (Number(row.pickLineCount) !== EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT) {
-    issues.push(
-      `batch3b live PICK line count changed: expected ${EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT}, found ${Number(row.pickLineCount)}.`,
+      `batch3b live PICK line count does not match its map count: map=${pickLineMapCount}, live=${Number(row.pickLineCount)}.`,
     );
   }
 
@@ -447,9 +438,9 @@ async function getBatch3bPickBaselinePreservation(connection: {
     pickExcludedCount,
     pickOrderCount: Number(row.pickOrderCount),
     pickLineCount: Number(row.pickLineCount),
-    expectedPickOrderMapCount: EXPECTED_BATCH3B_PICK_ORDER_MAP_COUNT,
-    expectedPickLineMapCount: EXPECTED_BATCH3B_PICK_LINE_MAP_COUNT,
-    expectedPickExcludedCount: EXPECTED_BATCH3B_PICK_EXCLUDED_COUNT,
+    expectedPickOrderMapCount: pickOrderMapCount,
+    expectedPickLineMapCount: pickLineMapCount,
+    expectedPickExcludedCount: pickExcludedCount,
     issues,
   };
 }

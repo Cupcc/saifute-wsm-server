@@ -52,7 +52,7 @@
 | ------------- | ------------------------------------------------------------------- | ---- |
 | static/schema | `pnpm prisma:validate` + `pnpm prisma:generate` + `pnpm typecheck`  | pass |
 | db/schema     | `prisma db push --schema prisma/schema.prisma`                      | pass |
-| unit          | `src/modules/rbac/infrastructure/in-memory-rbac.repository.spec.ts` | pass |
+| unit          | `src/modules/rbac/infrastructure/rbac-runtime.repository.spec.ts` | pass |
 | unit          | `src/modules/rbac/application/rbac.service.spec.ts`                 | pass |
 | unit          | `src/modules/rbac/controllers/system-config.controller.spec.ts`     | pass |
 | e2e           | `test/app.e2e-spec.ts`                                              | pass |
@@ -64,4 +64,3 @@
 ### 残余风险
 
 - procurement 的 AI 子路由未单独点击验证（`/api/auth/routes` 已返回 `AiAssistant`）
-

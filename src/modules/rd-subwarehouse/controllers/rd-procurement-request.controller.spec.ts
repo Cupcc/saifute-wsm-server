@@ -122,7 +122,7 @@ describe("RdProcurementRequestController", () => {
         lineId: 11,
         quantity: "2",
       }),
-      "5",
+      "rd-operator",
     );
   });
 
@@ -166,7 +166,7 @@ describe("RdProcurementRequestController", () => {
         lineId: 11,
         quantity: "1",
       }),
-      "2",
+      "operator",
     );
   });
 });

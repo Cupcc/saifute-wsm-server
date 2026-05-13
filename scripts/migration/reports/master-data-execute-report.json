@@ -9,8 +9,8 @@
     "customer": {
       "archivedPayloads": 2,
       "blocked": 0,
-      "planned": 388,
-      "source": 388
+      "planned": 392,
+      "source": 392
     },
     "material": {
       "archivedPayloads": 337,
@@ -25,10 +25,10 @@
       "source": 14
     },
     "personnel": {
-      "archivedPayloads": 76,
+      "archivedPayloads": 77,
       "blocked": 0,
-      "planned": 76,
-      "source": 76
+      "planned": 77,
+      "source": 77
     },
     "supplier": {
       "archivedPayloads": 3,
@@ -532,12 +532,12 @@
   ],
   "executionRequested": true,
   "executionResult": {
-    "archivedPayloadCount": 452,
+    "archivedPayloadCount": 453,
     "insertedOrUpdatedCounts": {
-      "customer": 388,
+      "customer": 392,
       "material": 1092,
       "materialCategory": 14,
-      "personnel": 76,
+      "personnel": 77,
       "supplier": 259,
       "workshop": 21
     },
@@ -555,28 +555,28 @@
   "stagingReady": true,
   "targetCounts": {
     "customer": {
-      "mapRows": 388,
-      "targetRows": 388
+      "mapRows": 0,
+      "targetRows": 0
     },
     "material": {
-      "mapRows": 1092,
-      "targetRows": 1092
+      "mapRows": 0,
+      "targetRows": 0
     },
     "materialCategory": {
-      "mapRows": 14,
-      "targetRows": 14
+      "mapRows": 0,
+      "targetRows": 0
     },
     "personnel": {
-      "mapRows": 76,
-      "targetRows": 76
+      "mapRows": 0,
+      "targetRows": 0
     },
     "supplier": {
-      "mapRows": 259,
-      "targetRows": 259
+      "mapRows": 0,
+      "targetRows": 0
     },
     "workshop": {
-      "mapRows": 18,
-      "targetRows": 18
+      "mapRows": 0,
+      "targetRows": 0
     }
   },
   "targetDatabaseName": "saifute-wms",

@@ -109,50 +109,56 @@
         </el-form-item>
       </el-form>
 
-        <el-table :data="rows" stripe v-loading="loading">
-        <el-table-column prop="occurredAt" label="发生时间" min-width="180">
-          <template #default="{ row }">
-            {{ formatDateTime(row.occurredAt) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="bizDate" label="业务日期" min-width="120">
+      <el-table
+        class="stock-log-table"
+        :data="rows"
+        stripe
+        v-loading="loading"
+        table-layout="auto"
+      >
+
+        <el-table-column prop="bizDate" label="业务日期" width="105">
           <template #default="{ row }">
             {{ formatDate(row.bizDate) }}
           </template>
         </el-table-column>
-        <el-table-column label="物料" min-width="240">
+        <el-table-column label="物料" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">
             <div>{{ row.material?.materialCode }} {{ row.material?.materialName }}</div>
             <div class="subtext">{{ row.material?.specModel || "-" }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="库存范围" min-width="120">
-          <template #default="{ row }">
-            {{ getStockScopeLabel(row.stockScope) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="车间" min-width="140">
+
+        <el-table-column label="车间" min-width="100" show-overflow-tooltip>
           <template #default="{ row }">
             {{ row.workshop?.workshopName || "-" }}
           </template>
         </el-table-column>
-        <el-table-column prop="direction" label="方向" min-width="100">
+        <el-table-column prop="direction" label="方向" width="70">
           <template #default="{ row }">
             <el-tag :type="row.direction === 'IN' ? 'success' : 'danger'">
               {{ row.direction === "IN" ? "入库" : "出库" }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="beforeQty" label="变动前" min-width="120" />
-        <el-table-column prop="changeQty" label="变动数量" min-width="120">
+        <el-table-column prop="beforeQty" label="变动前"/>
+        <el-table-column prop="changeQty" label="变动数量">
           <template #default="{ row }">
             <span :class="row.direction === 'IN' ? 'qty-in' : 'qty-out'">
               {{ formatChangeQty(row) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="afterQty" label="变动后" min-width="120" />
-        <el-table-column label="操作类型" min-width="180">
+        <el-table-column prop="afterQty" label="变动后"/>
+        <el-table-column prop="operatorId" label="操作人" width="80" />
+        <el-table-column label="单据编号" min-width="150" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div>{{ row.businessDocumentNumber || "-" }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="note" label="备注" min-width="140" show-overflow-tooltip />
+
+        <el-table-column label="操作类型" min-width="130" show-overflow-tooltip>
           <template #default="{ row }">
             <div>{{ getOperationTypeLabel(row.operationType) }}</div>
             <div class="subtext">{{ row.operationType || "-" }}</div>
@@ -160,25 +166,30 @@
         </el-table-column>
         <el-table-column
           label="单据类型"
-          min-width="180"
+          min-width="160"
+          show-overflow-tooltip
         >
           <template #default="{ row }">
             <div>{{ getDocumentTypeLabel(row) }}</div>
             <div class="subtext">{{ row.businessDocumentType || "-" }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="单据编号" min-width="200">
-          <template #default="{ row }">
-            <div>{{ row.businessDocumentNumber || "-" }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column label="业务模块" min-width="140">
+
+        <el-table-column label="业务模块" width="100">
           <template #default="{ row }">
             {{ getBusinessModuleLabel(row.businessModule) }}
           </template>
         </el-table-column>
-        <el-table-column prop="operatorId" label="操作人" min-width="140" />
-        <el-table-column prop="note" label="备注" min-width="220" show-overflow-tooltip />
+        <el-table-column label="库存范围" width="80">
+          <template #default="{ row }">
+            {{ getStockScopeLabel(row.stockScope) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="occurredAt" label="发生时间" width="170">
+          <template #default="{ row }">
+            {{ formatDateTime(row.occurredAt) }}
+          </template>
+        </el-table-column>
       </el-table>
 
       <div class="pagination-wrap">
@@ -480,6 +491,13 @@ onMounted(() => {
 .subtext {
   color: var(--el-text-color-secondary);
   font-size: 12px;
+}
+
+:deep(.stock-log-table .cell),
+:deep(.stock-log-table .cell > div) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .qty-in {

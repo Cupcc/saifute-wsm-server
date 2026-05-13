@@ -2,56 +2,56 @@
   "counts": {
     "lines": {
       "excluded": 42,
-      "migrated": 1816,
-      "source": 1858
+      "migrated": 1838,
+      "source": 1880
     },
     "orders": {
       "excluded": 15,
-      "migrated": 555,
-      "source": 570
+      "migrated": 562,
+      "source": 577
     },
     "sourceLineTables": {
-      "saifute_pick_detail": 1858
+      "saifute_pick_detail": 1880
     },
     "sourceOrderTables": {
-      "saifute_pick_order": 570
+      "saifute_pick_order": 577
     }
   },
   "dependencyBaseline": {
     "actualBlockedMaterialCount": 0,
     "actualMapCounts": {
-      "customer": 388,
+      "customer": 392,
       "material": 1092,
       "materialCategory": 14,
-      "personnel": 76,
+      "personnel": 77,
       "supplier": 259,
       "workshop": 21
     },
     "expectedBlockedMaterialCount": 0,
     "expectedMapCounts": {
-      "customer": 388,
+      "customer": 392,
       "material": 1092,
       "materialCategory": 14,
-      "personnel": 76,
+      "personnel": 77,
       "supplier": 259,
       "workshop": 21
     },
     "issues": []
   },
-  "expectedArchivedPayloadCount": 2371,
+  "expectedArchivedPayloadCount": 2400,
   "expectedExcludedDocumentCount": 15,
   "migrationBatch": "batch3b-workshop-pick-base",
   "mode": "validate",
   "sourceCounts": {
     "audits": 0,
-    "lines": 1858,
-    "orders": 570
+    "lines": 1880,
+    "orders": 577
   },
   "targetDatabaseName": "saifute-wms",
   "targetSummary": {
-    "archivedPayloadCount": 2371,
-    "batchOwnedLineRows": 1816,
-    "batchOwnedOrderRows": 555,
+    "archivedPayloadCount": 2400,
+    "batchOwnedLineRows": 1838,
+    "batchOwnedOrderRows": 562,
     "excludedDocumentCount": 15,
     "forbiddenTableCounts": {
       "approval_document": 0,
@@ -62,12 +62,12 @@
       "inventory_log": 0,
       "inventory_source_usage": 0
     },
-    "lineBatchMapRows": 1816,
-    "lineTargetRows": 1816,
+    "lineBatchMapRows": 1838,
+    "lineTargetRows": 1838,
     "missingMappedLines": 0,
     "missingMappedOrders": 0,
-    "orderBatchMapRows": 555,
-    "orderTargetRows": 555
+    "orderBatchMapRows": 562,
+    "orderTargetRows": 562
   },
   "validationIssues": []
 }

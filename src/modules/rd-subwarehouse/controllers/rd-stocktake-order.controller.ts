@@ -100,10 +100,7 @@ export class RdStocktakeOrderController {
       user,
       dto,
     );
-    return this.rdStocktakeOrderService.createOrder(
-      scopedDto,
-      user?.userId?.toString(),
-    );
+    return this.rdStocktakeOrderService.createOrder(scopedDto, user?.username);
   }
 
   @Permissions("rd:stocktake-order:void")
@@ -125,7 +122,7 @@ export class RdStocktakeOrderController {
     return this.rdStocktakeOrderService.voidOrder(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 }

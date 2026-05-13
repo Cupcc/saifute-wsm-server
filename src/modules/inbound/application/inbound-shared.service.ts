@@ -5,6 +5,7 @@ import {
   StockInOrderType,
 } from "../../../../generated/prisma/client";
 import { MasterDataService } from "../../master-data/application/master-data.service";
+import { SupplierService } from "../../master-data/application/supplier.service";
 import { RdProcurementRequestService } from "../../rd-subwarehouse/application/rd-procurement-request.service";
 import type { CreateInboundOrderDto } from "../dto/create-inbound-order.dto";
 import type { UpdateInboundOrderDto } from "../dto/update-inbound-order.dto";
@@ -16,10 +17,19 @@ export class InboundSharedService {
     private readonly masterDataService: MasterDataService,
     private readonly rdProcurementRequestService: RdProcurementRequestService,
     private readonly inboundRepository: InboundRepository,
+    private readonly supplierService: SupplierService,
   ) {}
 
-  async validateMasterData(dto: CreateInboundOrderDto, supplierId?: number) {
-    this.ensureSupplierRequirement(dto.orderType, supplierId);
+  async validateMasterData(
+    dto: CreateInboundOrderDto,
+    supplierId?: number,
+    options?: { hasPendingSupplier?: boolean },
+  ) {
+    this.ensureSupplierRequirement(
+      dto.orderType,
+      supplierId,
+      options?.hasPendingSupplier,
+    );
     this.ensureWorkshopRequirement(dto.orderType, dto.workshopId);
     if (supplierId) {
       await this.masterDataService.getSupplierById(supplierId);
@@ -54,8 +64,13 @@ export class InboundSharedService {
   private ensureSupplierRequirement(
     orderType: StockInOrderType,
     supplierId?: number,
+    hasPendingSupplier = false,
   ) {
-    if (orderType === StockInOrderType.ACCEPTANCE && !supplierId) {
+    if (
+      orderType === StockInOrderType.ACCEPTANCE &&
+      !supplierId &&
+      !hasPendingSupplier
+    ) {
       throw new BadRequestException("验收单必须选择供应商");
     }
   }
@@ -81,6 +96,19 @@ export class InboundSharedService {
       supplierCodeSnapshot: s.supplierCode,
       supplierNameSnapshot: s.supplierName,
     };
+  }
+
+  async ensureSupplier(
+    params: {
+      supplierCode: string;
+      supplierName: string;
+      sourceDocumentType?: string;
+      sourceDocumentId?: number;
+    },
+    createdBy?: string,
+    db?: Prisma.TransactionClient,
+  ) {
+    return this.supplierService.ensure(params, createdBy, db);
   }
 
   async resolveHandlerSnapshot(

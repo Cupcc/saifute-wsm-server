@@ -73,12 +73,21 @@
                   ></el-switch>
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" align="center" prop="createdAt" v-if="columns[6].visible" width="160">
+              <el-table-column label="登录锁定" align="center" key="loginLockStatus" v-if="columns[6].visible" width="120">
+                <template #default="scope">
+                  <el-tooltip :content="getLoginLockTooltip(scope.row)" placement="top">
+                    <el-tag :type="getLoginLockTagType(scope.row)" effect="plain">
+                      {{ getLoginLockLabel(scope.row) }}
+                    </el-tag>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column label="创建时间" align="center" prop="createdAt" v-if="columns[7].visible" width="160">
                 <template #default="scope">
                   <span>{{ parseTime(scope.row.createdAt) }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width">
+              <el-table-column label="操作" align="center" width="190" class-name="small-padding fixed-width">
                 <template #default="scope">
                   <el-tooltip content="修改" placement="top" v-if="scope.row.userId !== 1">
                     <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['system:user:edit']"></el-button>
@@ -88,6 +97,9 @@
                   </el-tooltip>
                   <el-tooltip content="重置密码" placement="top" v-if="scope.row.userId !== 1">
                     <el-button link type="primary" icon="Key" @click="handleResetPwd(scope.row)" v-hasPermi="['system:user:resetPwd']"></el-button>
+                  </el-tooltip>
+                  <el-tooltip content="解锁登录" placement="top" v-if="scope.row.userId !== 1">
+                    <el-button link type="primary" icon="Unlock" @click="handleUnlockLogin(scope.row)" v-hasPermi="['system:user:resetPwd']"></el-button>
                   </el-tooltip>
                   <el-tooltip content="分配角色" placement="top" v-if="scope.row.userId !== 1">
                     <el-button link type="primary" icon="CircleCheck" @click="handleAuthRole(scope.row)" v-hasPermi="['system:user:edit']"></el-button>
@@ -221,8 +233,10 @@ import {
   delUser,
   deptTreeSelect,
   getUser,
+  listUserLoginLockStatus,
   listUser,
   resetUserPwd,
+  unlockUserLogin,
   updateUser,
 } from "@/api/system/user";
 import auth from "@/plugins/auth";
@@ -281,7 +295,8 @@ const columns = ref([
   { key: 3, label: `部门`, visible: true },
   { key: 4, label: `手机号码`, visible: true },
   { key: 5, label: `状态`, visible: true },
-  { key: 6, label: `创建时间`, visible: true },
+  { key: 6, label: `登录锁定`, visible: true },
+  { key: 7, label: `创建时间`, visible: true },
 ]);
 
 const data = reactive({
@@ -352,16 +367,79 @@ watch(deptName, (val) => {
   proxy.$refs.deptTreeRef.filter(val);
 });
 
-/** 查询用户列表 */
-function getList() {
-  loading.value = true;
-  listUser(proxy.addDateRange(queryParams.value, dateRange.value)).then(
-    (res) => {
-      loading.value = false;
-      userList.value = res.rows;
-      total.value = res.total;
-    },
+function createDefaultLoginLockStatus(row) {
+  return {
+    userId: row.userId,
+    username: row.userName,
+    locked: false,
+    status: "normal",
+    statusLabel: "正常",
+    lockedUntil: null,
+    failureCount: 0,
+  };
+}
+
+async function appendLoginLockStatuses(rows) {
+  if (!rows.length) {
+    return rows;
+  }
+
+  const response = await listUserLoginLockStatus(
+    rows.map((row) => row.userId).filter(Boolean),
   );
+  const statuses = new Map(
+    (response.data || []).map((status) => [status.userId, status]),
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    loginLockStatus:
+      statuses.get(row.userId) || createDefaultLoginLockStatus(row),
+  }));
+}
+
+/** 查询用户列表 */
+async function getList() {
+  loading.value = true;
+  try {
+    const res = await listUser(
+      proxy.addDateRange(queryParams.value, dateRange.value),
+    );
+    userList.value = await appendLoginLockStatuses(res.rows || []);
+    total.value = res.total;
+  } finally {
+    loading.value = false;
+  }
+}
+
+function getLoginLockLabel(row) {
+  return row.loginLockStatus?.statusLabel || "正常";
+}
+
+function getLoginLockTagType(row) {
+  if (row.loginLockStatus?.locked) {
+    return "danger";
+  }
+
+  if ((row.loginLockStatus?.failureCount || 0) > 0) {
+    return "warning";
+  }
+
+  return "success";
+}
+
+function getLoginLockTooltip(row) {
+  const status = row.loginLockStatus;
+  if (!status?.locked) {
+    const failureCount = status?.failureCount || 0;
+    return failureCount > 0
+      ? `已有 ${failureCount} 次失败，还未锁定`
+      : "当前没有登录失败锁定";
+  }
+
+  return status.lockedUntil
+    ? `锁定到 ${proxy.parseTime(status.lockedUntil)}`
+    : "账号已被临时锁定";
 }
 
 /** 查询部门下拉树结构 */
@@ -496,6 +574,18 @@ function handleResetPwd(row) {
       resetUserPwd(row.userId, value).then((_response) => {
         proxy.$modal.msgSuccess(`修改成功，新密码是：${value}`);
       });
+    })
+    .catch(() => {});
+}
+
+/** 解锁登录按钮操作 */
+function handleUnlockLogin(row) {
+  proxy.$modal
+    .confirm(`确认要解除"${row.userName}"的登录锁定吗?`)
+    .then(() => unlockUserLogin(row.userId))
+    .then(() => {
+      row.loginLockStatus = createDefaultLoginLockStatus(row);
+      proxy.$modal.msgSuccess("解锁成功");
     })
     .catch(() => {});
 }

@@ -60,8 +60,8 @@ export class ApprovalController {
       documentType: dto.documentType,
       documentId: dto.documentId,
       documentNumber: dto.documentNumber,
-      submittedBy: dto.submittedBy ?? user?.userId?.toString(),
-      createdBy: user?.userId?.toString(),
+      submittedBy: dto.submittedBy ?? user?.username,
+      createdBy: user?.username,
     });
   }
 
@@ -71,7 +71,7 @@ export class ApprovalController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.approvalService.approve(id, user?.userId?.toString());
+    return this.approvalService.approve(id, user?.username);
   }
 
   @Permissions("approval:document:reject")
@@ -81,11 +81,7 @@ export class ApprovalController {
     @Body() dto: RejectApprovalDto,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.approvalService.reject(
-      id,
-      dto.rejectReason,
-      user?.userId?.toString(),
-    );
+    return this.approvalService.reject(id, dto.rejectReason, user?.username);
   }
 
   @Permissions("approval:document:reset")
@@ -94,6 +90,6 @@ export class ApprovalController {
     @Param("id", ParseIntPipe) id: number,
     @CurrentUser() user?: SessionUserSnapshot,
   ) {
-    return this.approvalService.reset(id, user?.userId?.toString());
+    return this.approvalService.reset(id, user?.username);
   }
 }

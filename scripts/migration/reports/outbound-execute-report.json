@@ -3,19 +3,19 @@
     "batch1Baseline": {
       "actualBlockedMaterialCount": 0,
       "actualMapCounts": {
-        "customer": 388,
+        "customer": 392,
         "material": 1092,
         "materialCategory": 14,
-        "personnel": 76,
+        "personnel": 77,
         "supplier": 259,
         "workshop": 21
       },
       "expectedBlockedMaterialCount": 0,
       "expectedMapCounts": {
-        "customer": 388,
+        "customer": 392,
         "material": 1092,
         "materialCategory": 14,
-        "personnel": 76,
+        "personnel": 77,
         "supplier": 259,
         "workshop": 21
       },
@@ -28,37 +28,37 @@
   "counts": {
     "lines": {
       "excluded": 0,
-      "migrated": 638,
-      "source": 638
+      "migrated": 641,
+      "source": 641
     },
     "orders": {
       "excluded": 0,
-      "migrated": 497,
-      "source": 497
+      "migrated": 500,
+      "source": 500
     },
     "sourceLineTables": {
-      "saifute_outbound_detail": 638
+      "saifute_outbound_detail": 641
     },
     "sourceOrderTables": {
-      "saifute_outbound_order": 497
+      "saifute_outbound_order": 500
     }
   },
   "dependencyBaseline": {
     "actualBlockedMaterialCount": 0,
     "actualMapCounts": {
-      "customer": 388,
+      "customer": 392,
       "material": 1092,
       "materialCategory": 14,
-      "personnel": 76,
+      "personnel": 77,
       "supplier": 259,
       "workshop": 21
     },
     "expectedBlockedMaterialCount": 0,
     "expectedMapCounts": {
-      "customer": 388,
+      "customer": 392,
       "material": 1092,
       "materialCategory": 14,
-      "personnel": 76,
+      "personnel": 77,
       "supplier": 259,
       "workshop": 21
     },
@@ -165,10 +165,10 @@
   "excludedDocuments": [],
   "executionRequested": true,
   "executionResult": {
-    "archivedPayloadCount": 852,
+    "archivedPayloadCount": 858,
     "excludedDocumentCount": 0,
-    "insertedOrUpdatedLines": 638,
-    "insertedOrUpdatedOrders": 497
+    "insertedOrUpdatedLines": 641,
+    "insertedOrUpdatedOrders": 500
   },
   "globalBlockers": [],
   "migratedDocuments": [
@@ -6135,14 +6135,50 @@
       "lineCount": 1,
       "orderType": "OUTBOUND",
       "sourceDocumentNo": "CK20260503003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 390,
+      "documentNo": "CK20260506003",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 643,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260506003"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 391,
+      "documentNo": "CK20260504001",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 644,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260504001"
+    },
+    {
+      "auditStatusSnapshot": "PENDING",
+      "customerId": 392,
+      "documentNo": "CK20260504002",
+      "inventoryEffectStatus": "POSTED",
+      "legacyId": 645,
+      "legacyTable": "saifute_outbound_order",
+      "lifecycleStatus": "EFFECTIVE",
+      "lineCount": 1,
+      "orderType": "OUTBOUND",
+      "sourceDocumentNo": "CK20260504002"
     }
   ],
   "migrationBatch": "batch2c-outbound-base",
   "mode": "execute",
   "sourceCounts": {
     "audits": 2,
-    "lines": 638,
-    "orders": 497
+    "lines": 641,
+    "orders": 500
   },
   "stagingReady": true,
   "targetDatabaseName": "saifute-wms",

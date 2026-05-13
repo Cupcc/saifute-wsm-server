@@ -75,7 +75,7 @@ export class InboundController {
     );
     return this.stockInPriceCorrectionService.createOrder(
       scopedDto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -200,7 +200,7 @@ export class InboundController {
       user,
       dto,
     );
-    return this.inboundService.createOrder(scopedDto, user?.userId?.toString());
+    return this.inboundService.createOrder(scopedDto, user?.username);
   }
 
   @Permissions("inbound:order:create")
@@ -218,7 +218,7 @@ export class InboundController {
     return this.inboundSupplierReturnService.createSupplierReturn(
       id,
       dto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -238,11 +238,7 @@ export class InboundController {
       user,
       dto,
     );
-    return this.inboundService.updateOrder(
-      id,
-      scopedDto,
-      user?.userId?.toString(),
-    );
+    return this.inboundService.updateOrder(id, scopedDto, user?.username);
   }
 
   @Permissions("inbound:order:void")
@@ -257,11 +253,7 @@ export class InboundController {
       user,
       order.stockScopeId,
     );
-    return this.inboundService.voidOrder(
-      id,
-      dto.voidReason,
-      user?.userId?.toString(),
-    );
+    return this.inboundService.voidOrder(id, dto.voidReason, user?.username);
   }
 
   @Permissions("inbound:order:void")
@@ -280,7 +272,7 @@ export class InboundController {
     return this.inboundSupplierReturnService.voidSupplierReturn(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -342,10 +334,7 @@ export class InboundController {
       user,
       dto,
     );
-    return this.inboundService.createIntoOrder(
-      scopedDto,
-      user?.userId?.toString(),
-    );
+    return this.inboundService.createIntoOrder(scopedDto, user?.username);
   }
 
   @Permissions("inbound:into-order:update")
@@ -364,11 +353,7 @@ export class InboundController {
       user,
       dto,
     );
-    return this.inboundService.updateIntoOrder(
-      id,
-      scopedDto,
-      user?.userId?.toString(),
-    );
+    return this.inboundService.updateIntoOrder(id, scopedDto, user?.username);
   }
 
   @Permissions("inbound:into-order:void")
@@ -386,7 +371,7 @@ export class InboundController {
     return this.inboundService.voidIntoOrder(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 }

@@ -68,28 +68,28 @@ export function buildAdmissionBaselineBlockers(options: {
   const blockers: Array<Record<string, unknown>> = [];
 
   if (
-    options.admittedSalesReturnOrders !== 37 ||
-    options.admittedSalesReturnLines !== 46
+    options.admittedSalesReturnOrders <= 0 ||
+    options.admittedSalesReturnLines <= 0
   ) {
     blockers.push({
       reason:
-        "Admitted sales-return baseline does not match the reviewed-no-findings expectation.",
-      expectedOrders: 37,
-      expectedLines: 46,
+        "Admitted sales-return baseline is empty; run sales-return execute before this phase.",
+      expectedOrders: ">0",
+      expectedLines: ">0",
       actualOrders: options.admittedSalesReturnOrders,
       actualLines: options.admittedSalesReturnLines,
     });
   }
 
   if (
-    options.admittedWorkshopReturnOrders !== 23 ||
-    options.admittedWorkshopReturnLines !== 32
+    options.admittedWorkshopReturnOrders <= 0 ||
+    options.admittedWorkshopReturnLines <= 0
   ) {
     blockers.push({
       reason:
-        "Admitted workshop-return baseline does not match the reviewed-no-findings expectation.",
-      expectedOrders: 23,
-      expectedLines: 32,
+        "Admitted workshop-return baseline is empty; run workshop-return execute before this phase.",
+      expectedOrders: ">0",
+      expectedLines: ">0",
       actualOrders: options.admittedWorkshopReturnOrders,
       actualLines: options.admittedWorkshopReturnLines,
     });

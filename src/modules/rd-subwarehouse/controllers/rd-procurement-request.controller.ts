@@ -77,7 +77,7 @@ export class RdProcurementRequestController {
     );
     return this.rdProcurementRequestService.createRequest(
       scopedDto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -100,7 +100,7 @@ export class RdProcurementRequestController {
     return this.rdProcurementRequestService.voidRequest(
       id,
       dto.voidReason,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 
@@ -124,7 +124,7 @@ export class RdProcurementRequestController {
     return this.rdProcurementRequestService.applyStatusAction(
       id,
       dto,
-      user?.userId?.toString(),
+      user?.username,
     );
   }
 

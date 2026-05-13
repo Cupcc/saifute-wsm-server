@@ -1,6 +1,8 @@
 import { Prisma } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
+type DbClient = Prisma.TransactionClient | PrismaService;
+
 const PERSONNEL_WITH_WORKSHOP_INCLUDE = {
   workshop: {
     select: {
@@ -12,6 +14,10 @@ const PERSONNEL_WITH_WORKSHOP_INCLUDE = {
 
 export class MasterDataPartyRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  private db(db?: DbClient) {
+    return db ?? this.prisma;
+  }
 
   async findCustomers(params: {
     keyword?: string;
@@ -126,8 +132,8 @@ export class MasterDataPartyRepository {
     });
   }
 
-  async findSupplierByCode(supplierCode: string) {
-    return this.prisma.supplier.findUnique({
+  async findSupplierByCode(supplierCode: string, db?: DbClient) {
+    return this.db(db).supplier.findUnique({
       where: { supplierCode },
     });
   }
@@ -196,8 +202,9 @@ export class MasterDataPartyRepository {
       | "sourceDocumentId"
     >,
     createdBy?: string,
+    db?: DbClient,
   ) {
-    return this.prisma.supplier.create({
+    return this.db(db).supplier.create({
       data: {
         ...data,
         status: "ACTIVE",

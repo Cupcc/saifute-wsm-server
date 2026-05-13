@@ -161,7 +161,7 @@ describe("RdStocktakeOrderController", () => {
       expect.objectContaining({
         workshopId: 6,
       }),
-      "5",
+      "rd-operator",
     );
   });
 
@@ -175,7 +175,7 @@ describe("RdStocktakeOrderController", () => {
     expect(rdStocktakeOrderService.voidOrder).toHaveBeenCalledWith(
       1,
       "盘点作废",
-      "5",
+      "rd-operator",
     );
   });
 });

@@ -1,41 +1,41 @@
 {
   "counts": {
-    "archivedIntervalCount": 378,
-    "archivedOrderType2Count": 368,
+    "archivedIntervalCount": 384,
+    "archivedOrderType2Count": 374,
     "archivedOrderType4Count": 0,
     "archivedOrderType7Count": 10,
-    "liveOrderType4Count": 426,
-    "liveReservationCount": 426,
+    "liveOrderType4Count": 429,
+    "liveReservationCount": 429,
     "multiIntervalLiveLineCount": 53,
-    "singleIntervalLineBackfillCount": 302,
+    "singleIntervalLineBackfillCount": 305,
     "sourceByOrderType": {
-      "orderType2": 368,
-      "orderType4": 426,
+      "orderType2": 374,
+      "orderType4": 429,
       "orderType7": 10,
       "unexpected": 0
     },
-    "sourceIntervalCount": 804
+    "sourceIntervalCount": 813
   },
   "dependencyBaseline": {
     "actualExcludedDocumentCount": 0,
-    "actualLineMapCount": 638,
-    "actualOrderMapCount": 497,
+    "actualLineMapCount": 641,
+    "actualOrderMapCount": 500,
     "expectedExcludedDocumentCount": 0,
-    "expectedLineMapCount": 638,
-    "expectedOrderMapCount": 497,
+    "expectedLineMapCount": 641,
+    "expectedOrderMapCount": 500,
     "issues": []
   },
-  "expectedArchivedIntervalCount": 378,
+  "expectedArchivedIntervalCount": 384,
   "migrationBatch": "batch3a-outbound-order-type4-reservation",
   "mode": "validate",
   "sourceCounts": {
-    "intervals": 804,
-    "outboundDetailReferences": 638
+    "intervals": 813,
+    "outboundDetailReferences": 641
   },
   "targetDatabaseName": "saifute-wms",
   "targetSummary": {
-    "archivedIntervalCount": 378,
-    "batchOwnedReservationRows": 426,
+    "archivedIntervalCount": 384,
+    "batchOwnedReservationRows": 429,
     "forbiddenBaselineCounts": {
       "approval_document": 0,
       "document_line_relation": 0,
@@ -53,9 +53,9 @@
       "inventory_source_usage": 0
     },
     "missingMappedReservations": 0,
-    "reservationBatchMapRows": 426,
-    "reservationTargetRows": 426,
-    "touchedLineCount": 355
+    "reservationBatchMapRows": 429,
+    "reservationTargetRows": 429,
+    "touchedLineCount": 358
   },
   "validationIssues": []
 }

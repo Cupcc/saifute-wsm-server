@@ -9,7 +9,7 @@
 **当前实现**：
 
 - `src/modules/rbac` 已同时承接 `RbacService` 与 `SystemManagementService`，现有 `/system/user`、`/system/role`、`/system/dept`、`/system/menu`、`/system/post`、`/system/dict`、`/system/config`、`/system/notice` 控制器都共置在该模块内。
-- 部门树、角色数据权限、菜单权限字符串、当前用户路由树和会话用户快照都已由 `rbac` 样例仓储输出。
+- 部门树、角色数据权限、菜单权限字符串、当前用户路由树和会话用户快照都已由 `rbac` 运行态仓储输出；运行态快照存放在 Redis，规范化 MySQL 表仍是持久化真源。
 - 这种共置说明当前实现把 `system-management` 的大部分管理面放在 `rbac` 中，并不意味着 `岗位 / 字典 / 参数 / 通知` 都应成为 RBAC 长期核心真源。
 
 **目标范围**：
@@ -86,7 +86,8 @@
 
 ## Infrastructure 设计
 
-- 用户、角色、部门、菜单基础 CRUD 可用 Prisma
+- 用户、角色、部门、菜单基础 CRUD 持久化使用 Prisma，运行态通过 Redis `rbac:system-management:state` 快照读取
+- Redis 快照包含规范化表版本摘要；检测到 MySQL 源版本变化时，`rbac` 从规范化表重建快照，避免进程内状态滞后
 - 菜单树、权限汇总、角色部门关系、数据权限联查优先 raw SQL
 - `@Permissions()` + `PermissionsGuard` 取代 `@PreAuthorize`
 - `@DataScope()` 只声明策略，真正 where 条件由 `DataScopePolicyService` 生成

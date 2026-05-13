@@ -116,9 +116,11 @@ export class SupplierService {
       sourceDocumentId?: number;
     },
     createdBy?: string,
+    db?: Prisma.TransactionClient,
   ) {
     const existing = await this.repository.findSupplierByCode(
       params.supplierCode,
+      db,
     );
     if (existing) {
       return existing;
@@ -139,6 +141,7 @@ export class SupplierService {
           sourceDocumentId: params.sourceDocumentId,
         },
         createdBy,
+        db,
       );
     } catch (error) {
       this.throwCodeConflict(error, params.supplierCode);

@@ -588,6 +588,39 @@ function getWorkshopDefaultHandlerName(workshop) {
   return workshop?.defaultHandlerPersonnelName || "";
 }
 
+function mergeWorkshopOption(option) {
+  if (!option?.workshopId) {
+    return;
+  }
+
+  const exists = workshopOptions.value.some(
+    (item) => String(item.workshopId) === String(option.workshopId),
+  );
+  if (!exists) {
+    workshopOptions.value = [option, ...workshopOptions.value];
+  }
+}
+
+function replaceWorkshopOptions(rows = []) {
+  const selectedWorkshopId = form.value?.workshopId;
+  const selectedWorkshop = selectedWorkshopId
+    ? workshopOptions.value.find(
+        (item) => String(item.workshopId) === String(selectedWorkshopId),
+      )
+    : null;
+
+  workshopOptions.value = rows;
+  mergeWorkshopOption(selectedWorkshop);
+}
+
+function rememberOrderWorkshop(orderData) {
+  mergeWorkshopOption({
+    workshopId: orderData.workshopId,
+    workshopName: orderData.workshopName || String(orderData.workshopId),
+    defaultHandlerPersonnelName: orderData.attn || "",
+  });
+}
+
 /** 查询入库单列表 */
 function getList() {
   loading.value = true;
@@ -619,7 +652,7 @@ function searchWorkshopForForm(query) {
   workshopLoadingForForm.value = true;
   listByNameOrContact({ workshopName: query })
     .then((response) => {
-      workshopOptions.value = response.rows;
+      replaceWorkshopOptions(response.rows || []);
       workshopLoadingForForm.value = false;
     })
     .catch(() => {
@@ -845,6 +878,7 @@ function handleUpdate(row) {
         totalAmount: orderData.totalAmount,
         remark: orderData.remark,
       };
+      rememberOrderWorkshop(orderData);
       if (orderData.details && orderData.details.length > 0) {
         materialOptions.value = mergeMaterialOptions(
           materialOptions.value,
