@@ -226,5 +226,55 @@ describe("SalesOutboundUpdateService", () => {
       ).rejects.toThrow("同一单据内不允许重复的物料+价格层");
       expect(repository.updateOrder).not.toHaveBeenCalled();
     });
+
+    it("should clear workshop when update payload sends null", async () => {
+      const updatedOrder = {
+        ...mockOutboundOrder,
+        workshopId: null,
+        workshopNameSnapshot: null,
+      };
+      (repository.findOrderById as jest.Mock)
+        .mockResolvedValueOnce(mockOutboundOrder)
+        .mockResolvedValueOnce(mockOutboundOrder)
+        .mockResolvedValueOnce(updatedOrder);
+      (repository.updateOrderLine as jest.Mock).mockResolvedValue(
+        mockOutboundOrder.lines[0],
+      );
+      (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+        {
+          id: 11,
+          businessDocumentLineId: 1,
+        },
+      ]);
+
+      await service.updateOrder(
+        1,
+        {
+          workshopId: null,
+          lines: [
+            {
+              id: 1,
+              materialId: 100,
+              salesProjectId: 300,
+              quantity: "100",
+              selectedUnitCost: "10",
+              unitPrice: "10",
+              startNumber: "001",
+              endNumber: "100",
+            },
+          ],
+        },
+        "1",
+      );
+
+      expect(repository.updateOrder).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          workshopId: null,
+          workshopNameSnapshot: null,
+        }),
+        expect.anything(),
+      );
+    });
   });
 });

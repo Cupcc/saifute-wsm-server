@@ -109,7 +109,10 @@ export class SalesReturnService {
       );
     }
 
-    await this.validateMasterDataForSalesReturn(dto, sourceOutbound);
+    const workshopId = await this.validateMasterDataForSalesReturn(
+      dto,
+      sourceOutbound,
+    );
 
     const bizDate = new Date(dto.bizDate);
     const customerId = dto.customerId ?? sourceOutbound.customerId ?? undefined;
@@ -121,9 +124,9 @@ export class SalesReturnService {
       );
     const stockScopeRecord =
       await this.shared.masterDataService.getStockScopeByCode("MAIN");
-    const workshop = await this.shared.masterDataService.getWorkshopById(
-      dto.workshopId,
-    );
+    const workshop = workshopId
+      ? await this.shared.masterDataService.getWorkshopById(workshopId)
+      : null;
 
     const outboundLinesById = new Map(
       sourceOutbound.lines.map((l) => [l.id, l]),
@@ -136,10 +139,6 @@ export class SalesReturnService {
         { allowVoided: true },
       );
 
-    // Enforce cumulative active return limit per source outbound line.
-    // Aggregate (a) existing non-voided downstream returns from DB and (b) all
-    // incoming lines in this request that point to the same source line, so that
-    // split lines within a single request cannot bypass the cap.
     const incomingBySourceLine = new Map<number, Prisma.Decimal>();
     for (const line of dto.lines) {
       const prev =
@@ -255,11 +254,11 @@ export class SalesReturnService {
             customerId,
             handlerPersonnelId: dto.handlerPersonnelId,
             stockScopeId: stockScopeRecord.id,
-            workshopId: dto.workshopId,
+            workshopId,
             customerCodeSnapshot,
             customerNameSnapshot,
             handlerNameSnapshot,
-            workshopNameSnapshot: workshop.workshopName,
+            workshopNameSnapshot: workshop?.workshopName ?? null,
             totalQty,
             totalAmount,
             remark: dto.remark,
@@ -292,8 +291,6 @@ export class SalesReturnService {
         );
 
         for (const line of order.lines) {
-          // Release original outbound source allocations proportional to return qty,
-          // and derive settled return cost from released allocation cost layers.
           let returnCostUnitPrice: Prisma.Decimal | null = null;
           let returnCostAmount: Prisma.Decimal | null = null;
           if (line.sourceDocumentLineId) {
@@ -329,7 +326,6 @@ export class SalesReturnService {
             tx,
           );
 
-          // Persist settled return cost on the return line.
           if (returnCostUnitPrice !== null) {
             await this.repository.updateOrderLine(
               line.id,
@@ -395,8 +391,6 @@ export class SalesReturnService {
     }
 
     return this.repository.runInTransaction(async (tx) => {
-      // Restore the outbound source allocations that were released when this
-      // return was created (mirrors the release done in createSalesReturn).
       for (const line of order.lines) {
         if (
           line.sourceDocumentLineId != null &&
@@ -468,11 +462,14 @@ export class SalesReturnService {
 
   private async validateMasterDataForSalesReturn(
     dto: CreateSalesReturnDto,
-    sourceOutbound: { workshopId: number; customerId: number | null },
+    sourceOutbound: { workshopId: number | null; customerId: number | null },
   ) {
-    await this.shared.masterDataService.getWorkshopById(dto.workshopId);
-    if (dto.workshopId !== sourceOutbound.workshopId) {
+    const workshopId = dto.workshopId ?? sourceOutbound.workshopId ?? null;
+    if (dto.workshopId && dto.workshopId !== sourceOutbound.workshopId) {
       throw new BadRequestException("销售退货车间必须与来源出库单一致");
+    }
+    if (workshopId) {
+      await this.shared.masterDataService.getWorkshopById(workshopId);
     }
     if (dto.customerId && sourceOutbound.customerId) {
       if (dto.customerId !== sourceOutbound.customerId) {
@@ -490,5 +487,6 @@ export class SalesReturnService {
     for (const line of dto.lines) {
       await this.shared.masterDataService.getMaterialById(line.materialId);
     }
+    return workshopId;
   }
 }

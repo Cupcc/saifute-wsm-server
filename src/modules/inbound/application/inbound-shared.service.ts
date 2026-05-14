@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, Optional } from "@nestjs/common";
 import {
   DocumentLifecycleStatus,
   Prisma,
@@ -7,6 +7,10 @@ import {
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { SupplierService } from "../../master-data/application/supplier.service";
 import { RdProcurementRequestService } from "../../rd-subwarehouse/application/rd-procurement-request.service";
+import {
+  type SalesProjectBindingReference,
+  SalesProjectService,
+} from "../../sales-project/application/sales-project.service";
 import type { CreateInboundOrderDto } from "../dto/create-inbound-order.dto";
 import type { UpdateInboundOrderDto } from "../dto/update-inbound-order.dto";
 import { InboundRepository } from "../infrastructure/inbound.repository";
@@ -18,6 +22,8 @@ export class InboundSharedService {
     private readonly rdProcurementRequestService: RdProcurementRequestService,
     private readonly inboundRepository: InboundRepository,
     private readonly supplierService: SupplierService,
+    @Optional()
+    private readonly salesProjectService?: SalesProjectService,
   ) {}
 
   async validateMasterData(
@@ -31,6 +37,11 @@ export class InboundSharedService {
       options?.hasPendingSupplier,
     );
     this.ensureWorkshopRequirement(dto.orderType, dto.workshopId);
+    await this.resolveSalesProjectReference(
+      dto.orderType,
+      dto.salesProjectId,
+      dto.workshopId ?? null,
+    );
     if (supplierId) {
       await this.masterDataService.getSupplierById(supplierId);
     }
@@ -47,9 +58,15 @@ export class InboundSharedService {
     orderType: StockInOrderType,
     supplierId?: number,
     workshopId?: number | null,
+    salesProjectId?: number | null,
   ) {
     this.ensureSupplierRequirement(orderType, supplierId);
     this.ensureWorkshopRequirement(orderType, workshopId);
+    await this.resolveSalesProjectReference(
+      orderType,
+      salesProjectId ?? null,
+      workshopId ?? null,
+    );
     if (supplierId) {
       await this.masterDataService.getSupplierById(supplierId);
     }
@@ -85,6 +102,45 @@ export class InboundSharedService {
     ) {
       throw new BadRequestException("生产入库单必须选择部门");
     }
+  }
+
+  async resolveSalesProjectReference(
+    orderType: StockInOrderType,
+    salesProjectId?: number | null,
+    workshopId?: number | null,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SalesProjectBindingReference | null> {
+    if (salesProjectId == null) {
+      return null;
+    }
+    if (orderType !== StockInOrderType.ACCEPTANCE) {
+      throw new BadRequestException("只有验收单可以关联销售项目");
+    }
+    if (!this.salesProjectService) {
+      throw new BadRequestException(
+        "销售项目服务不可用，无法校验验收单项目归属",
+      );
+    }
+    const project = await this.salesProjectService.getProjectReferenceById(
+      salesProjectId,
+      undefined,
+      tx,
+    );
+    if (workshopId != null && project.workshopId !== workshopId) {
+      throw new BadRequestException(
+        `销售项目与验收单车间不一致: salesProjectId=${project.id}`,
+      );
+    }
+    return project;
+  }
+
+  toSalesProjectSnapshots(project: SalesProjectBindingReference | null) {
+    return {
+      salesProjectId: project?.id ?? null,
+      salesProjectCodeSnapshot: project?.salesProjectCode ?? null,
+      salesProjectNameSnapshot: project?.salesProjectName ?? null,
+      projectTargetId: project?.projectTargetId ?? null,
+    };
   }
 
   async resolveSupplierSnapshot(supplierId?: number) {
@@ -360,7 +416,7 @@ export class InboundSharedService {
     }
 
     const defaultCategory =
-      await this.inboundRepository.findMaterialCategoryByCode("UNCATEGORIZED");
+      await this.inboundRepository.findMaterialCategoryByCode("15");
     if (!defaultCategory) {
       throw new BadRequestException(
         "物料缺少有效分类，且默认未分类不存在，无法写入分类快照",

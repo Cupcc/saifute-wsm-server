@@ -506,9 +506,7 @@ describe("rd-project migration transformer — three-state model", () => {
     expect(plan.autoCreatedMaterials[0]?.representativeLineLegacyId).toBe(1006);
     expect(plan.autoCreatedMaterials[0]?.target.materialName).toBe("缺料");
     expect(plan.autoCreatedMaterials[0]?.target.unitCode).toBe("件");
-    expect(plan.autoCreatedMaterials[0]?.target.materialCode).toMatch(
-      /^MAT-PROJECT-AUTO-L1006-/u,
-    );
+    expect(plan.autoCreatedMaterials[0]?.target.materialCode).toBe("xmbj1006");
     expect(migrated14?.lines[0]?.target.materialCodeSnapshot).toBe(
       plan.autoCreatedMaterials[0]?.target.materialCode,
     );
@@ -1112,12 +1110,12 @@ describe("rd-project migration transformer — three-state model", () => {
     const deps = buildDependencies();
     deps.autoCreatedMaterialByNormalizedKey.set("缺料||件", {
       targetId: 2701,
-      materialCode: "MAT-PROJECT-AUTO-L1006-EXISTING",
+      materialCode: "xmbj1006",
       materialName: "缺料",
       specModel: null,
       unitCode: "件",
     });
-    deps.existingMaterialCodes.add("MAT-PROJECT-AUTO-L1006-EXISTING");
+    deps.existingMaterialCodes.add("xmbj1006");
 
     const plan = buildRdProjectMigrationPlan(buildSnapshot(), deps);
     const migrated14 = plan.migratedProjects.find(
@@ -1125,13 +1123,9 @@ describe("rd-project migration transformer — three-state model", () => {
     );
 
     expect(plan.autoCreatedMaterials).toHaveLength(1);
-    expect(plan.autoCreatedMaterials[0]?.target.materialCode).toBe(
-      "MAT-PROJECT-AUTO-L1006-EXISTING",
-    );
+    expect(plan.autoCreatedMaterials[0]?.target.materialCode).toBe("xmbj1006");
     expect(migrated14?.lines[0]?.target.materialId).toBe(2701);
-    expect(migrated14?.lines[0]?.target.materialCodeSnapshot).toBe(
-      "MAT-PROJECT-AUTO-L1006-EXISTING",
-    );
+    expect(migrated14?.lines[0]?.target.materialCodeSnapshot).toBe("xmbj1006");
   });
 
   it("should group multiple no-candidate lines with the same normalized key into one auto-created material", () => {

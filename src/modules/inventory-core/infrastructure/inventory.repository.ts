@@ -5,6 +5,10 @@ import {
   StockDirection,
 } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
+import {
+  type FindInventoryBalancesParams,
+  InventoryBalanceQueryRepository,
+} from "./inventory-balance-query.repository";
 
 type InventoryDbClient = Prisma.TransactionClient | PrismaService;
 
@@ -31,7 +35,11 @@ function historicalReplayReturnSourceWhere(): Prisma.InventoryLogWhereInput {
 
 @Injectable()
 export class InventoryRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly balanceQueries: InventoryBalanceQueryRepository;
+
+  constructor(private readonly prisma: PrismaService) {
+    this.balanceQueries = new InventoryBalanceQueryRepository(prisma);
+  }
 
   runInTransaction<T>(
     tx: Prisma.TransactionClient | undefined,
@@ -70,64 +78,8 @@ export class InventoryRepository {
     }
   }
 
-  async findBalances(params: {
-    materialId?: number;
-    stockScopeIds?: number[];
-    keyword?: string;
-    categoryIds?: number[];
-    limit: number;
-    offset: number;
-  }) {
-    const where: Prisma.InventoryBalanceWhereInput = {};
-    if (params.materialId) where.materialId = params.materialId;
-    if (params.stockScopeIds?.length === 1) {
-      where.stockScopeId = params.stockScopeIds[0];
-    } else if (params.stockScopeIds?.length) {
-      where.stockScopeId = { in: params.stockScopeIds };
-    }
-    const materialWhere = this.buildInventoryBalanceMaterialWhere(params);
-    if (materialWhere) {
-      where.material = materialWhere;
-    }
-
-    const [items, total] = await Promise.all([
-      this.prisma.inventoryBalance.findMany({
-        where,
-        take: params.limit,
-        skip: params.offset,
-        orderBy: [
-          { material: { materialCode: "asc" } },
-          { stockScopeId: "asc" },
-          { id: "asc" },
-        ],
-        include: { material: true, stockScope: true },
-      }),
-      this.prisma.inventoryBalance.count({ where }),
-    ]);
-
-    return { items, total };
-  }
-
-  private buildInventoryBalanceMaterialWhere(params: {
-    keyword?: string;
-    categoryIds?: number[];
-  }): Prisma.MaterialWhereInput | undefined {
-    const materialWhere: Prisma.MaterialWhereInput = {};
-    const keyword = params.keyword?.trim();
-    if (keyword) {
-      materialWhere.OR = [
-        { materialCode: { contains: keyword } },
-        { materialName: { contains: keyword } },
-        { specModel: { contains: keyword } },
-      ];
-    }
-    if (params.categoryIds?.length === 1) {
-      materialWhere.categoryId = params.categoryIds[0];
-    } else if (params.categoryIds?.length) {
-      materialWhere.categoryId = { in: params.categoryIds };
-    }
-
-    return Object.keys(materialWhere).length > 0 ? materialWhere : undefined;
+  async findBalances(params: FindInventoryBalancesParams) {
+    return this.balanceQueries.findBalances(params);
   }
 
   async findBalanceByMaterialAndStockScope(

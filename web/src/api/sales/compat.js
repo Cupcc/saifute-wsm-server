@@ -201,7 +201,7 @@ function buildCustomerPayload(data, mode, handlerPersonnelId, isUpdate) {
     bizDate: data.bizDate,
     customerId: data.customerId,
     handlerPersonnelId,
-    workshopId: data.workshopId,
+    workshopId: data.workshopId ?? null,
     remark: data.remark,
   };
 

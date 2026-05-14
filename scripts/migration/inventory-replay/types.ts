@@ -69,6 +69,7 @@ export interface InventoryEvent {
   materialId: number;
   stockScopeId: number;
   workshopId: number | null;
+  projectTargetId: number | null;
   changeQty: string;
   unitCost: string | null;
   costAmount: string | null;
@@ -97,6 +98,7 @@ export interface PlannedLogInsert {
   materialId: number;
   stockScopeId: number;
   workshopId: number | null;
+  projectTargetId: number | null;
   direction: StockDirection;
   operationType: InventoryOperationType;
   businessModule: string;

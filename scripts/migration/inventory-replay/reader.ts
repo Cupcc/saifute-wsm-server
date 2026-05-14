@@ -19,6 +19,7 @@ interface DocumentLineRow {
   stockScopeId: number | null;
   workshopId: number | null;
   workshopName: string | null;
+  projectTargetId: number | null;
   lineId: number;
   materialId: number;
   quantity: string;
@@ -144,10 +145,33 @@ async function readStockScopeIds(
   return { MAIN: main, RD_SUB: rdSub };
 }
 
+async function hasColumn(
+  connection: MigrationConnectionLike,
+  tableName: string,
+  columnName: string,
+): Promise<boolean> {
+  const rows = await connection.query<Array<{ total: number }>>(
+    `
+      SELECT COUNT(*) AS total
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = ?
+        AND COLUMN_NAME = ?
+    `,
+    [tableName, columnName],
+  );
+  return Number(rows[0]?.total ?? 0) > 0;
+}
+
 async function readStockInEvents(
   connection: MigrationConnectionLike,
   stockScopeIds: StockScopeIds,
 ): Promise<InventoryEvent[]> {
+  const stockInHasSalesProjectId = await hasColumn(
+    connection,
+    "stock_in_order",
+    "sales_project_id",
+  );
   const rows = await connection.query<DocumentLineRow[]>(`
     SELECT
       o.id AS orderId,
@@ -157,6 +181,9 @@ async function readStockInEvents(
       o.stock_scope_id AS stockScopeId,
       NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
+      ${
+        stockInHasSalesProjectId ? "sales_project.project_target_id" : "NULL"
+      } AS projectTargetId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
@@ -171,6 +198,11 @@ async function readStockInEvents(
     FROM stock_in_order o
     JOIN stock_in_order_line l ON l.order_id = o.id
     LEFT JOIN workshop w ON w.id = NULLIF(o.workshop_id, 0)
+    ${
+      stockInHasSalesProjectId
+        ? "LEFT JOIN sales_project ON sales_project.id = o.sales_project_id"
+        : ""
+    }
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
     ORDER BY o.biz_date ASC, o.id ASC, l.id ASC
@@ -202,6 +234,7 @@ async function readStockInEvents(
       materialId: row.materialId,
       stockScopeId: resolveStockScopeId(row, stockScopeIds),
       workshopId: row.workshopId,
+      projectTargetId: row.projectTargetId ?? null,
       changeQty: toPositiveDecimalString(row.quantity),
       unitCost: toNullableString(row.unitCost),
       costAmount: toNullableString(row.costAmount),
@@ -236,6 +269,7 @@ async function readCustomerEvents(
       o.stock_scope_id AS stockScopeId,
       NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
+      sales_project.project_target_id AS projectTargetId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
@@ -255,6 +289,7 @@ async function readCustomerEvents(
     FROM sales_stock_order o
     JOIN sales_stock_order_line l ON l.order_id = o.id
     LEFT JOIN workshop w ON w.id = NULLIF(o.workshop_id, 0)
+    LEFT JOIN sales_project ON sales_project.id = l.sales_project_id
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
     ORDER BY o.biz_date ASC, o.id ASC, l.id ASC
@@ -276,6 +311,7 @@ async function readCustomerEvents(
       materialId: row.materialId,
       stockScopeId: resolveStockScopeId(row, stockScopeIds),
       workshopId: row.workshopId,
+      projectTargetId: row.projectTargetId ?? null,
       changeQty: String(row.quantity),
       unitCost: toNullableString(row.unitCost),
       costAmount: toNullableString(row.costAmount),
@@ -311,6 +347,7 @@ async function readWorkshopEvents(
       o.stock_scope_id AS stockScopeId,
       NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
+      NULL AS projectTargetId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
@@ -353,6 +390,7 @@ async function readWorkshopEvents(
       materialId: row.materialId,
       stockScopeId: resolveStockScopeId(row, stockScopeIds),
       workshopId: row.workshopId,
+      projectTargetId: null,
       changeQty: String(row.quantity),
       unitCost: toNullableString(row.unitCost),
       costAmount: toNullableString(row.costAmount),
@@ -384,6 +422,7 @@ async function readProjectEvents(
       p.stock_scope_id AS stockScopeId,
       NULLIF(p.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
+      p.project_target_id AS projectTargetId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
@@ -415,6 +454,7 @@ async function readProjectEvents(
     materialId: row.materialId,
     stockScopeId: resolveStockScopeId(row, stockScopeIds),
     workshopId: row.workshopId,
+    projectTargetId: row.projectTargetId ?? null,
     changeQty: String(row.quantity),
     unitCost: toNullableString(row.unitCost),
     costAmount: toNullableString(row.costAmount),
@@ -444,6 +484,7 @@ async function readProjectActionEvents(
       a.stock_scope_id AS stockScopeId,
       NULLIF(a.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
+      project_row.project_target_id AS projectTargetId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
@@ -457,6 +498,7 @@ async function readProjectActionEvents(
       a.created_at AS createdAt
     FROM rd_project_material_action a
     JOIN rd_project_material_action_line l ON l.action_id = a.id
+    JOIN rd_project project_row ON project_row.id = a.project_id
     LEFT JOIN workshop w ON w.id = NULLIF(a.workshop_id, 0)
     WHERE a.lifecycle_status = 'EFFECTIVE'
       AND a.inventory_effect_status = 'POSTED'
@@ -484,6 +526,7 @@ async function readProjectActionEvents(
       materialId: row.materialId,
       stockScopeId: resolveStockScopeId(row, stockScopeIds),
       workshopId: row.workshopId,
+      projectTargetId: row.projectTargetId ?? null,
       changeQty: String(row.quantity),
       unitCost: toNullableString(row.unitCost),
       costAmount: toNullableString(row.costAmount),
@@ -523,6 +566,7 @@ async function readRdHandoffEvents(
       source_workshop.workshop_name AS workshopName,
       o.target_stock_scope_id AS transferInStockScopeId,
       NULLIF(o.target_workshop_id, 0) AS transferInWorkshopId,
+      project_row.project_target_id AS projectTargetId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.quantity,
@@ -536,6 +580,7 @@ async function readRdHandoffEvents(
       o.created_at AS createdAt
     FROM rd_handoff_order o
     JOIN rd_handoff_order_line l ON l.order_id = o.id
+    LEFT JOIN rd_project project_row ON project_row.id = l.rd_project_id
     LEFT JOIN workshop source_workshop ON source_workshop.id = NULLIF(o.source_workshop_id, 0)
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
@@ -554,6 +599,7 @@ async function readRdHandoffEvents(
     materialId: row.materialId,
     stockScopeId: resolveStockScopeId(row, stockScopeIds),
     workshopId: row.workshopId,
+    projectTargetId: row.projectTargetId ?? null,
     changeQty: String(row.quantity),
     unitCost: toNullableString(row.unitCost),
     costAmount: toNullableString(row.costAmount),
@@ -583,6 +629,7 @@ async function readRdStocktakeEvents(
       o.stock_scope_id AS stockScopeId,
       NULLIF(o.workshop_id, 0) AS workshopId,
       w.workshop_name AS workshopName,
+      project_row.project_target_id AS projectTargetId,
       l.id AS lineId,
       l.material_id AS materialId,
       l.adjustment_qty AS quantity,
@@ -596,6 +643,7 @@ async function readRdStocktakeEvents(
       o.created_at AS createdAt
     FROM rd_stocktake_order o
     JOIN rd_stocktake_order_line l ON l.order_id = o.id
+    LEFT JOIN rd_project project_row ON project_row.id = l.rd_project_id
     LEFT JOIN workshop w ON w.id = NULLIF(o.workshop_id, 0)
     WHERE o.lifecycle_status = 'EFFECTIVE'
       AND o.inventory_effect_status = 'POSTED'
@@ -622,6 +670,7 @@ async function readRdStocktakeEvents(
       materialId: row.materialId,
       stockScopeId: resolveStockScopeId(row, stockScopeIds),
       workshopId: row.workshopId,
+      projectTargetId: row.projectTargetId ?? null,
       changeQty: toPositiveDecimalString(row.quantity),
       unitCost: null,
       costAmount: null,

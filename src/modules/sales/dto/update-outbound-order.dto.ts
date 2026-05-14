@@ -30,7 +30,7 @@ export class UpdateOutboundOrderDto {
   @IsInt()
   @IsOptional()
   @Min(1)
-  workshopId?: number;
+  workshopId?: number | null;
 
   @IsString()
   @IsOptional()

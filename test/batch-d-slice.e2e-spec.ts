@@ -527,6 +527,36 @@ describe("Batch D slice acceptance (e2e)", () => {
         documentNo: "CK-BASE-001",
       },
     ]);
+    prisma.$queryRaw = jest.fn().mockResolvedValue([
+      {
+        materialId: 501,
+        materialCode: "M-RAW-001",
+        materialName: "原料 A",
+        materialSpec: "25kg",
+        unitCode: "KG",
+        categoryId: 11,
+        categoryCode: "CHEM",
+        categoryName: "化工",
+        openingQuantity: new Prisma.Decimal("12"),
+        openingAmount: new Prisma.Decimal("120"),
+        closingQuantity: new Prisma.Decimal("15"),
+        closingAmount: new Prisma.Decimal("150"),
+      },
+      {
+        materialId: 601,
+        materialCode: "M-RAW-002",
+        materialName: "原料 B",
+        materialSpec: "10kg",
+        unitCode: "KG",
+        categoryId: 11,
+        categoryCode: "CHEM",
+        categoryName: "化工",
+        openingQuantity: new Prisma.Decimal("2"),
+        openingAmount: new Prisma.Decimal("20"),
+        closingQuantity: new Prisma.Decimal("3"),
+        closingAmount: new Prisma.Decimal("26"),
+      },
+    ]);
     const adminLogin = await login(server, "admin", "admin123");
     const token = adminLogin.body.data.accessToken as string;
 
@@ -545,6 +575,8 @@ describe("Batch D slice acceptance (e2e)", () => {
       summary: {
         categoryCount: 1,
         lineCount: 2,
+        openingAmount: "140.00",
+        closingAmount: "176.00",
         acceptanceInboundAmount: "30.00",
         salesReturnAmount: "8.00",
         netAmount: "38.00",
@@ -556,8 +588,39 @@ describe("Batch D slice acceptance (e2e)", () => {
         categoryId: 11,
         categoryCode: "CHEM",
         categoryName: "化工",
+        openingAmount: "140.00",
+        closingAmount: "176.00",
         acceptanceInboundAmount: "30.00",
         salesReturnAmount: "8.00",
+      }),
+    ]);
+    expect(summaryResponse.body.data.materials).toEqual([
+      expect.objectContaining({
+        categoryNodeKey: "11:CHEM:化工",
+        categoryCode: "CHEM",
+        categoryName: "化工",
+        materialCode: "M-RAW-001",
+        materialName: "原料 A",
+        openingQuantity: "12.00",
+        openingAmount: "120.00",
+        inQuantity: "3.00",
+        netQuantity: "3.00",
+        closingQuantity: "15.00",
+        closingAmount: "150.00",
+        acceptanceInboundAmount: "30.00",
+      }),
+      expect.objectContaining({
+        categoryNodeKey: "11:CHEM:化工",
+        materialCode: "M-RAW-002",
+        materialName: "原料 B",
+        openingQuantity: "2.00",
+        openingAmount: "20.00",
+        inQuantity: "1.00",
+        netQuantity: "1.00",
+        closingQuantity: "3.00",
+        closingAmount: "26.00",
+        salesReturnAmount: "8.00",
+        totalCost: "6.00",
       }),
     ]);
 
@@ -600,7 +663,10 @@ describe("Batch D slice acceptance (e2e)", () => {
       "application/vnd.ms-excel",
     );
     expect(exportResponse.text).toContain('<Worksheet ss:Name="分类汇总">');
+    expect(exportResponse.text).toContain('<Worksheet ss:Name="物料汇总">');
     expect(exportResponse.text).toContain('<Worksheet ss:Name="单据行明细">');
+    expect(exportResponse.text).toContain("月初库存金额");
+    expect(exportResponse.text).toContain("月末金额");
     expect(exportResponse.text).toContain("化工");
     expect(exportResponse.text).not.toContain("分类路径");
     expect(exportResponse.text).not.toContain("层级");

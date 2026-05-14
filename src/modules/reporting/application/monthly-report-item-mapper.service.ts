@@ -10,6 +10,7 @@ import {
 import {
   formatDecimal,
   formatMoney,
+  formatQuantity,
   formatYearMonth,
   getMonthlyReportingDomainMeta,
   getMonthlyReportingTopicMeta,
@@ -177,7 +178,7 @@ export class MonthlyReportItemMapperService {
       categoryName: entry.categoryName,
       salesProjectCode: entry.salesProjectCode,
       salesProjectName: entry.salesProjectName,
-      quantity: formatDecimal(entry.quantity),
+      quantity: formatQuantity(entry.quantity),
       amount: formatMoney(entry.amount),
       cost: formatMoney(entry.cost),
       abnormalFlags: entry.abnormalFlags,

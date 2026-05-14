@@ -456,6 +456,9 @@ export class PrismaE2eStub {
 
   async $connect(): Promise<void> {}
   async $disconnect(): Promise<void> {}
+  async $queryRaw(): Promise<unknown[]> {
+    return [];
+  }
   async $transaction<R>(handler: (tx: unknown) => Promise<R>): Promise<R> {
     return handler(this);
   }

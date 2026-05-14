@@ -94,7 +94,7 @@ describe("MaterialCategoryService", () => {
     const { repository, service } = createService();
     repository.findMaterialCategoryById.mockResolvedValue({
       id: 99,
-      categoryCode: "UNCATEGORIZED",
+      categoryCode: "15",
       categoryName: "未分类",
       status: "ACTIVE",
     });
@@ -109,7 +109,7 @@ describe("MaterialCategoryService", () => {
     const { repository, service } = createService();
     repository.findMaterialCategoryById.mockResolvedValue({
       id: 99,
-      categoryCode: "UNCATEGORIZED",
+      categoryCode: "15",
       categoryName: "未分类",
       status: "ACTIVE",
     });

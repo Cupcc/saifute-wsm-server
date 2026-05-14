@@ -100,7 +100,7 @@
 			    <el-button link type="primary" @click="handleView(scope.row)">{{ scope.row.customerName }}</el-button>
 		    </template>
 	    </el-table-column>
-      <el-table-column sortable show-overflow-tooltip label="客户编码" align="center" prop="customerCode" v-if="columns[0].visible">
+      <el-table-column sortable :sort-method="compareCustomerCodeRows" show-overflow-tooltip label="客户编码" align="center" prop="customerCode" v-if="columns[0].visible">
 	      <template #default="scope">
 		      <el-button link type="primary" @click="handleView(scope.row)">{{ scope.row.customerCode }}</el-button>
 	      </template>
@@ -196,6 +196,7 @@ import {
   updateCustomer,
 } from "@/api/base/customer";
 import { clearSuggestionsCache } from "@/api/base/suggestions";
+import { compareNaturalCode } from "@/utils/naturalSort";
 
 const { proxy } = getCurrentInstance();
 const { saifute_customer_type } = proxy.useDict("saifute_customer_type");
@@ -251,6 +252,10 @@ const columns = ref([
   { key: 5, label: `联系方式`, visible: true },
   { key: 6, label: `客户地址`, visible: true },
 ]);
+
+function compareCustomerCodeRows(left, right) {
+  return compareNaturalCode(left?.customerCode, right?.customerCode);
+}
 
 /** 查询客户列表 */
 function getList() {

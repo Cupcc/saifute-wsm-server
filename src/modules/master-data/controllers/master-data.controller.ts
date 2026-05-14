@@ -21,7 +21,10 @@ import { CreatePersonnelDto } from "../dto/create-personnel.dto";
 import { CreateStockScopeDto } from "../dto/create-stock-scope.dto";
 import { CreateSupplierDto } from "../dto/create-supplier.dto";
 import { CreateWorkshopDto } from "../dto/create-workshop.dto";
-import { QueryMasterDataDto } from "../dto/query-master-data.dto";
+import {
+  QueryMasterDataDto,
+  QueryMaterialDto,
+} from "../dto/query-master-data.dto";
 import { UpdateCustomerDto } from "../dto/update-customer.dto";
 import { UpdateMaterialDto } from "../dto/update-material.dto";
 import { UpdateMaterialCategoryDto } from "../dto/update-material-category.dto";
@@ -116,7 +119,7 @@ export class MasterDataController {
 
   @Permissions("master:material:list")
   @Get("materials")
-  async listMaterials(@Query() query: QueryMasterDataDto) {
+  async listMaterials(@Query() query: QueryMaterialDto) {
     return this.masterDataService.listMaterials(query);
   }
 

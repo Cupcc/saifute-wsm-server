@@ -23,6 +23,7 @@
 
 | Task 文档 | 状态 | 说明 |
 | --- | --- | --- |
+| `task-20260513-1605-sales-project-live-forward-repair.md` | `planned` | 正式库在线前向修复任务：把 2026-05-11 误写入 `rd_project` 的 `21` 条 legacy 销售项目迁正到 `sales_project`，保留上线后新增的 `stock_in_order` / `sales_stock_order` 真源，先做 shadow rehearsal，再在维护窗口内只重建 `inventory_balance` / `inventory_log` / `inventory_source_usage`；禁止 full reset 或旧库覆盖 live target DB。 |
 | `task-20260509-full-legacy-import-reset-and-replay.md` | `replay-executed-validated` | 2026-05-11 已按当前 `.env.dev` 重新执行 `LEGACY_DATABASE_URL` -> `DATABASE_URL` 全量导入到目标库 snake_case schema：已 seed `stock_scope`、初始化 staging、导入主数据与业务单据、补齐月报物料分类快照，并完成 `inventory-replay:dry-run -> return-source-links:execute -> dry-run -> execute -> validate`；目标库名以 `DATABASE_URL` 为准；已补充并执行 4 个仓库管理员系统账号迁移入口；当前 replay blocker 为 0，validate 仅剩 `420` 个最终负库存盘点 warning。 |
 | `task-20260508-inbound-supplier-return.md` | `implemented` | 入库管理新增“退给厂家 / 供应商退货”切片：复用 `stock_in_order` 家族承载退货单，新增来源绑定的 `SUPPLIER_RETURN_OUT` 库存扣减与作废释放回滚；验收单页保留退厂发起和可退来源预览，入库管理二级页面新增 `退货单` / `退货单明细` 用于列表、明细和作废；报表已按入库域 OUT 纳入；自动化验证已通过，目标库 enum SQL 已应用，受控 live API / DB trace 已通过，待补新页面 browser acceptance。 |
 | `task-20260417-1702-material-category-single-level-system-unification.md` | `accepted` | 在 `monthly-reporting F9` 单层分类基线上，把全系统 `material-category` 真源统一为单层分类；`MaterialCategory.parentId` 已从 Prisma schema 与相关合同删除，`master-data` 文档/API/UI、inbound/sales 写侧快照与 focused validation 已完成并收口通过。 |

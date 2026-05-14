@@ -57,7 +57,7 @@
 
     <adaptive-table border stripe v-loading="loading" :data="materialList">
       <el-table-column type="index" width="50" align="center" />
-      <el-table-column sortable show-overflow-tooltip label="物料编码" align="center" prop="materialCode" v-if="columns[0].visible" />
+      <el-table-column sortable :sort-method="compareMaterialCodeRows" show-overflow-tooltip label="物料编码" align="center" prop="materialCode" v-if="columns[0].visible" />
       <el-table-column sortable show-overflow-tooltip label="物料名称" align="center" prop="materialName" v-if="columns[1].visible" />
       <el-table-column sortable show-overflow-tooltip label="规格型号" align="center" prop="specification" v-if="columns[2].visible" />
       <el-table-column sortable show-overflow-tooltip label="分类" align="center" prop="category" v-if="columns[3].visible">
@@ -201,6 +201,7 @@ import {
 } from "@/api/base/material";
 import { listMaterialCategory } from "@/api/base/material-category";
 import { clearSuggestionsCache } from "@/api/base/suggestions";
+import { compareNaturalCode } from "@/utils/naturalSort";
 
 const { proxy } = getCurrentInstance();
 const saifute_material_category = ref([]);
@@ -271,6 +272,10 @@ const columns = ref([
   { key: 4, label: `单位`, visible: true },
   { key: 5, label: `安全库存`, visible: true },
 ]);
+
+function compareMaterialCodeRows(left, right) {
+  return compareNaturalCode(left?.materialCode, right?.materialCode);
+}
 
 /** 查询物料列表 */
 function getList() {

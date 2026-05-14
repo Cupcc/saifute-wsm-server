@@ -4,8 +4,12 @@ import { PrismaService } from "../../../shared/prisma/prisma.service";
 const SYSTEM_BOOTSTRAP_ACTOR = "system-bootstrap";
 const LEGACY_BOOTSTRAP_WORKSHOP_NAMES = ["主仓", "研发小仓"] as const;
 
-export const DEFAULT_MATERIAL_CATEGORY_CODE = "UNCATEGORIZED";
+export const DEFAULT_MATERIAL_CATEGORY_CODE = "15";
 export const DEFAULT_MATERIAL_CATEGORY_NAME = "未分类";
+const LEGACY_DEFAULT_MATERIAL_CATEGORY_CODES = [
+  "UNCATEGORIZED",
+  "WFL",
+] as const;
 
 const CANONICAL_WORKSHOPS = [
   {
@@ -97,17 +101,54 @@ export class MasterDataBootstrapRepository {
   }
 
   async ensureDefaultMaterialCategory() {
-    return this.prisma.materialCategory.upsert({
-      where: {
-        categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE,
-      },
-      update: {
-        categoryName: DEFAULT_MATERIAL_CATEGORY_NAME,
-        sortOrder: DEFAULT_MATERIAL_CATEGORY.sortOrder,
-        status: "ACTIVE",
-        updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
-      },
-      create: DEFAULT_MATERIAL_CATEGORY,
+    return this.prisma.$transaction(async (tx) => {
+      const currentDefault = await tx.materialCategory.findUnique({
+        where: {
+          categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE,
+        },
+      });
+
+      if (currentDefault) {
+        return tx.materialCategory.update({
+          where: {
+            id: currentDefault.id,
+          },
+          data: {
+            categoryName: DEFAULT_MATERIAL_CATEGORY_NAME,
+            sortOrder: DEFAULT_MATERIAL_CATEGORY.sortOrder,
+            status: "ACTIVE",
+            updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
+          },
+        });
+      }
+
+      const legacyDefault = await tx.materialCategory.findFirst({
+        where: {
+          categoryCode: { in: [...LEGACY_DEFAULT_MATERIAL_CATEGORY_CODES] },
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
+
+      if (legacyDefault) {
+        return tx.materialCategory.update({
+          where: {
+            id: legacyDefault.id,
+          },
+          data: {
+            categoryCode: DEFAULT_MATERIAL_CATEGORY_CODE,
+            categoryName: DEFAULT_MATERIAL_CATEGORY_NAME,
+            sortOrder: DEFAULT_MATERIAL_CATEGORY.sortOrder,
+            status: "ACTIVE",
+            updatedBy: SYSTEM_BOOTSTRAP_ACTOR,
+          },
+        });
+      }
+
+      return tx.materialCategory.create({
+        data: DEFAULT_MATERIAL_CATEGORY,
+      });
     });
   }
 

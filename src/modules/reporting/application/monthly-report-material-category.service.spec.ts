@@ -2,6 +2,7 @@ import { Test } from "@nestjs/testing";
 import { Prisma } from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import { MonthlyMaterialCategoryRepository } from "../infrastructure/monthly-material-category.repository";
+import { MonthlyMaterialCategoryBalanceRepository } from "../infrastructure/monthly-material-category-balance.repository";
 import { MonthlyReportRepository } from "../infrastructure/monthly-report.repository";
 import { MonthlyReportCatalogService } from "./monthly-report-catalog.service";
 import { MonthlyReportItemMapperService } from "./monthly-report-item-mapper.service";
@@ -9,6 +10,7 @@ import { MonthlyReportMaterialCategoryService } from "./monthly-report-material-
 import { MonthlyReportSourceService } from "./monthly-report-source.service";
 import {
   type MaterialCategorySnapshotNode,
+  type MonthlyMaterialCategoryBalanceSnapshot,
   type MonthlyMaterialCategoryEntry,
   MonthlyReportingAbnormalFlag,
   MonthlyReportingDirection,
@@ -19,6 +21,7 @@ import {
 describe("MonthlyReportMaterialCategoryService", () => {
   let service: MonthlyReportMaterialCategoryService;
   let materialCategoryRepository: jest.Mocked<MonthlyMaterialCategoryRepository>;
+  let materialCategoryBalanceRepository: jest.Mocked<MonthlyMaterialCategoryBalanceRepository>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -41,6 +44,12 @@ describe("MonthlyReportMaterialCategoryService", () => {
           },
         },
         {
+          provide: MonthlyMaterialCategoryBalanceRepository,
+          useValue: {
+            findMonthlyMaterialCategoryBalanceSnapshots: jest.fn(),
+          },
+        },
+        {
           provide: AppConfigService,
           useValue: {
             businessTimezone: "Asia/Shanghai",
@@ -52,6 +61,12 @@ describe("MonthlyReportMaterialCategoryService", () => {
     service = moduleRef.get(MonthlyReportMaterialCategoryService);
     materialCategoryRepository = moduleRef.get(
       MonthlyMaterialCategoryRepository,
+    );
+    materialCategoryBalanceRepository = moduleRef.get(
+      MonthlyMaterialCategoryBalanceRepository,
+    );
+    materialCategoryBalanceRepository.findMonthlyMaterialCategoryBalanceSnapshots.mockResolvedValue(
+      [],
     );
   });
 
@@ -118,6 +133,26 @@ describe("MonthlyReportMaterialCategoryService", () => {
     };
   }
 
+  function createBalanceSnapshot(
+    overrides: Partial<MonthlyMaterialCategoryBalanceSnapshot> = {},
+  ): MonthlyMaterialCategoryBalanceSnapshot {
+    return {
+      materialId: 501,
+      materialCode: "M-RAW-001",
+      materialName: "原料 A",
+      materialSpec: "25kg",
+      unitCode: "KG",
+      categoryId: 11,
+      categoryCode: "CHEM",
+      categoryName: "化工",
+      openingQuantity: new Prisma.Decimal("10"),
+      openingAmount: new Prisma.Decimal("100"),
+      closingQuantity: new Prisma.Decimal("16"),
+      closingAmount: new Prisma.Decimal("180"),
+      ...overrides,
+    };
+  }
+
   it("should summarize material-category view from line facts into leaf-only buckets", async () => {
     materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue(
       [
@@ -171,6 +206,21 @@ describe("MonthlyReportMaterialCategoryService", () => {
         }),
       ],
     );
+    materialCategoryBalanceRepository.findMonthlyMaterialCategoryBalanceSnapshots.mockResolvedValue(
+      [
+        createBalanceSnapshot(),
+        createBalanceSnapshot({
+          materialId: 601,
+          materialCode: "M-RAW-002",
+          materialName: "原料 B",
+          materialSpec: "10kg",
+          openingQuantity: new Prisma.Decimal("7"),
+          openingAmount: new Prisma.Decimal("70"),
+          closingQuantity: new Prisma.Decimal("7"),
+          closingAmount: new Prisma.Decimal("36"),
+        }),
+      ],
+    );
 
     const result = await service.getMaterialCategorySummary({
       yearMonth: "2026-03",
@@ -186,10 +236,19 @@ describe("MonthlyReportMaterialCategoryService", () => {
       stockScope: undefined,
       workshopId: undefined,
     });
+    expect(
+      materialCategoryBalanceRepository.findMonthlyMaterialCategoryBalanceSnapshots,
+    ).toHaveBeenCalledWith({
+      start: new Date("2026-02-28T16:00:00.000Z"),
+      end: new Date("2026-03-31T15:59:59.999Z"),
+      stockScope: undefined,
+    });
     expect(result.viewMode).toBe("MATERIAL_CATEGORY");
     expect(result.summary).toMatchObject({
       categoryCount: 1,
       lineCount: 4,
+      openingAmount: "170.00",
+      closingAmount: "216.00",
       acceptanceInboundAmount: "30.00",
       productionReceiptAmount: "50.00",
       salesOutboundAmount: "40.00",
@@ -207,6 +266,51 @@ describe("MonthlyReportMaterialCategoryService", () => {
         salesOutboundAmount: "40.00",
         salesReturnAmount: "8.00",
         netAmount: "48.00",
+        openingAmount: "170.00",
+        closingAmount: "216.00",
+      }),
+    ]);
+    expect(result.materials).toEqual([
+      expect.objectContaining({
+        categoryNodeKey: "11:CHEM:化工",
+        categoryCode: "CHEM",
+        categoryName: "化工",
+        materialCode: "M-RAW-001",
+        materialName: "原料 A",
+        materialSpec: "25kg",
+        unitCode: "KG",
+        lineCount: 2,
+        documentCount: 2,
+        openingQuantity: "10.00",
+        openingAmount: "100.00",
+        closingQuantity: "16.00",
+        closingAmount: "180.00",
+        inQuantity: "6.00",
+        outQuantity: "0.00",
+        netQuantity: "6.00",
+        acceptanceInboundAmount: "30.00",
+        productionReceiptAmount: "50.00",
+        netAmount: "80.00",
+        totalCost: "80.00",
+      }),
+      expect.objectContaining({
+        categoryNodeKey: "11:CHEM:化工",
+        materialCode: "M-RAW-002",
+        materialName: "原料 B",
+        lineCount: 2,
+        documentCount: 2,
+        abnormalDocumentCount: 1,
+        openingQuantity: "7.00",
+        openingAmount: "70.00",
+        closingQuantity: "7.00",
+        closingAmount: "36.00",
+        inQuantity: "3.00",
+        outQuantity: "3.00",
+        netQuantity: "0.00",
+        salesOutboundAmount: "40.00",
+        salesReturnAmount: "8.00",
+        netAmount: "-32.00",
+        totalCost: "34.00",
       }),
     ]);
   });
@@ -301,6 +405,7 @@ describe("MonthlyReportMaterialCategoryService", () => {
       categoryName: "化工",
       salesProjectCode: "SP-701",
       abnormalLabels: ["跨月修正"],
+      quantity: "3.00",
       sourceBizMonth: "2026-02",
       sourceDocumentNo: "CK-0009",
     });

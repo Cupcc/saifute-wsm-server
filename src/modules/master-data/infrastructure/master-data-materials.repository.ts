@@ -1,5 +1,23 @@
 import { Prisma } from "../../../../generated/prisma/client";
+import {
+  buildSqlWhere,
+  naturalCodeOrderBySql,
+  orderByIds,
+} from "../../../shared/prisma/natural-code-ordering";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
+
+type FindMaterialsParams = {
+  keyword?: string;
+  materialCode?: string;
+  materialName?: string;
+  specModel?: string;
+  categoryId?: number;
+  unitCode?: string;
+  warningMinQty?: string;
+  limit: number;
+  offset: number;
+  status?: Prisma.MaterialWhereInput["status"];
+};
 
 export class MasterDataMaterialsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -80,12 +98,7 @@ export class MasterDataMaterialsRepository {
     });
   }
 
-  async findMaterials(params: {
-    keyword?: string;
-    limit: number;
-    offset: number;
-    status?: Prisma.MaterialWhereInput["status"];
-  }) {
+  async findMaterials(params: FindMaterialsParams) {
     const where: Prisma.MaterialWhereInput = {};
     if (params.status) {
       where.status = params.status;
@@ -97,19 +110,90 @@ export class MasterDataMaterialsRepository {
         { specModel: { contains: params.keyword } },
       ];
     }
+    if (params.materialCode) {
+      where.materialCode = { contains: params.materialCode };
+    }
+    if (params.materialName) {
+      where.materialName = { contains: params.materialName };
+    }
+    if (params.specModel) {
+      where.specModel = { contains: params.specModel };
+    }
+    if (typeof params.categoryId === "number") {
+      where.categoryId = params.categoryId;
+    }
+    if (params.unitCode) {
+      where.unitCode = { contains: params.unitCode };
+    }
+    if (params.warningMinQty) {
+      where.warningMinQty = new Prisma.Decimal(params.warningMinQty);
+    }
 
-    const [items, total] = await Promise.all([
-      this.prisma.material.findMany({
-        where,
-        take: params.limit,
-        skip: params.offset,
-        orderBy: { materialCode: "asc" },
-        include: { category: true },
-      }),
+    const [sortedIdRows, total] = await Promise.all([
+      this.findMaterialIdsByNaturalCode(params),
       this.prisma.material.count({ where }),
     ]);
+    const sortedIds = sortedIdRows.map((row) => Number(row.id));
+    if (sortedIds.length === 0) {
+      return { items: [], total };
+    }
 
-    return { items, total };
+    const items = await this.prisma.material.findMany({
+      where: { id: { in: sortedIds } },
+      include: { category: true },
+    });
+
+    return { items: orderByIds(items, sortedIds), total };
+  }
+
+  private findMaterialIdsByNaturalCode(params: FindMaterialsParams) {
+    return this.prisma.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+      SELECT id
+      FROM material
+      ${this.buildMaterialListWhereSql(params)}
+      ORDER BY ${naturalCodeOrderBySql(Prisma.sql`material_code`)}
+      LIMIT ${params.limit}
+      OFFSET ${params.offset}
+    `);
+  }
+
+  private buildMaterialListWhereSql(params: FindMaterialsParams): Prisma.Sql {
+    const conditions: Prisma.Sql[] = [];
+    if (params.status) {
+      conditions.push(Prisma.sql`status = ${params.status}`);
+    }
+    if (params.keyword) {
+      const keyword = `%${params.keyword}%`;
+      conditions.push(Prisma.sql`(
+        material_code LIKE ${keyword}
+        OR material_name LIKE ${keyword}
+        OR spec_model LIKE ${keyword}
+      )`);
+    }
+    if (params.materialCode) {
+      conditions.push(
+        Prisma.sql`material_code LIKE ${`%${params.materialCode}%`}`,
+      );
+    }
+    if (params.materialName) {
+      conditions.push(
+        Prisma.sql`material_name LIKE ${`%${params.materialName}%`}`,
+      );
+    }
+    if (params.specModel) {
+      conditions.push(Prisma.sql`spec_model LIKE ${`%${params.specModel}%`}`);
+    }
+    if (typeof params.categoryId === "number") {
+      conditions.push(Prisma.sql`category_id = ${params.categoryId}`);
+    }
+    if (params.unitCode) {
+      conditions.push(Prisma.sql`unit_code LIKE ${`%${params.unitCode}%`}`);
+    }
+    if (params.warningMinQty) {
+      conditions.push(Prisma.sql`warning_min_qty = ${params.warningMinQty}`);
+    }
+
+    return buildSqlWhere(conditions);
   }
 
   async findMaterialById(id: number) {

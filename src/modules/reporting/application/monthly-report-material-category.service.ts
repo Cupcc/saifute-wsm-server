@@ -9,16 +9,27 @@ import {
   type MonthlyReportMaterialCategoryDetailItem,
 } from "./monthly-report-item-mapper.service";
 import {
+  buildBalanceMaterialKey,
+  buildMonthlyMaterialCategoryBalanceTotals,
+  buildMonthlyMaterialCategoryBalanceTotalsByKey,
+  collectMonthlyMaterialCategoryGroups,
+  collectMonthlyMaterialGroups,
+  compareMaterialCategoryItems,
+  compareMaterialItems,
+  createEmptyMonthlyMaterialCategoryBalanceTotals,
+  filterMonthlyMaterialCategoryBalanceSnapshots,
+  resolveBalanceCategoryNodeKey,
+} from "./monthly-report-material-category-balance.helper";
+import {
   type MonthlyReportQuery,
   MonthlyReportSourceService,
 } from "./monthly-report-source.service";
 import {
-  buildMonthlyMaterialCategoryNodeKey,
-  resolveMonthlyMaterialCategoryLeaf,
-} from "./monthly-reporting.formatters";
-import {
   formatMoney,
+  formatQuantity,
+  type MonthlyMaterialCategoryBalanceSnapshot,
   type MonthlyMaterialCategoryEntry,
+  MonthlyReportingDirection,
   MonthlyReportingViewMode,
   sumDecimals,
 } from "./monthly-reporting.shared";
@@ -35,6 +46,10 @@ export interface MonthlyReportMaterialCategorySummaryTotals {
   salesReturnAmount: string;
   netAmount: string;
   totalCost: string;
+  openingQuantity: string;
+  openingAmount: string;
+  closingQuantity: string;
+  closingAmount: string;
 }
 
 export interface MonthlyReportMaterialCategorySummaryItem {
@@ -52,6 +67,10 @@ export interface MonthlyReportMaterialCategorySummaryItem {
   salesReturnAmount: string;
   netAmount: string;
   totalCost: string;
+  openingQuantity: string;
+  openingAmount: string;
+  closingQuantity: string;
+  closingAmount: string;
 }
 
 export type MonthlyReportMaterialCategoryCatalogItem = Pick<
@@ -59,9 +78,34 @@ export type MonthlyReportMaterialCategoryCatalogItem = Pick<
   "nodeKey" | "categoryId" | "categoryCode" | "categoryName"
 >;
 
-interface MonthlyReportMaterialCategoryGroup
-  extends MonthlyReportMaterialCategoryCatalogItem {
-  entries: MonthlyMaterialCategoryEntry[];
+export interface MonthlyReportMaterialSummaryItem {
+  materialKey: string;
+  categoryNodeKey: string;
+  categoryId: number | null;
+  categoryCode: string | null;
+  categoryName: string;
+  materialId: number;
+  materialCode: string;
+  materialName: string;
+  materialSpec: string | null;
+  unitCode: string;
+  lineCount: number;
+  documentCount: number;
+  abnormalDocumentCount: number;
+  inQuantity: string;
+  outQuantity: string;
+  netQuantity: string;
+  openingQuantity: string;
+  openingAmount: string;
+  closingQuantity: string;
+  closingAmount: string;
+  acceptanceInboundAmount: string;
+  productionReceiptAmount: string;
+  supplierReturnAmount: string;
+  salesOutboundAmount: string;
+  salesReturnAmount: string;
+  netAmount: string;
+  totalCost: string;
 }
 
 export interface MonthlyReportMaterialCategoryFilters {
@@ -82,6 +126,7 @@ export interface MonthlyReportMaterialCategorySummaryResult {
   documentTypeCatalog: MonthlyReportDocumentTypeCatalogItem[];
   categoryCatalog: MonthlyReportMaterialCategoryCatalogItem[];
   categories: MonthlyReportMaterialCategorySummaryItem[];
+  materials: MonthlyReportMaterialSummaryItem[];
   summary: MonthlyReportMaterialCategorySummaryTotals;
 }
 
@@ -104,13 +149,24 @@ export class MonthlyReportMaterialCategoryService {
   async getMaterialCategorySummary(
     query: MonthlyReportQuery,
   ): Promise<MonthlyReportMaterialCategorySummaryResult> {
-    const entries =
-      await this.sourceService.loadMaterialCategorySourceData(query);
+    const [entries, balanceSnapshots] = await Promise.all([
+      this.sourceService.loadMaterialCategorySourceData(query),
+      this.sourceService.loadMaterialCategoryBalanceSnapshots(query),
+    ]);
     const filteredEntries = this.sourceService.filterMaterialCategoryEntries(
       entries,
       query,
     );
-    const categoryItems = this.buildMaterialCategoryItems(filteredEntries);
+    const filteredBalanceSnapshots =
+      filterMonthlyMaterialCategoryBalanceSnapshots(balanceSnapshots, query);
+    const categoryItems = this.buildMaterialCategoryItems(
+      filteredEntries,
+      filteredBalanceSnapshots,
+    );
+    const materialItems = this.buildMaterialItems(
+      filteredEntries,
+      filteredBalanceSnapshots,
+    );
 
     return {
       yearMonth: query.yearMonth,
@@ -127,11 +183,18 @@ export class MonthlyReportMaterialCategoryService {
       },
       documentTypeCatalog:
         this.catalogService.buildMaterialCategoryDocumentTypeCatalog(entries),
-      categoryCatalog: this.buildMaterialCategoryCatalog(entries),
+      categoryCatalog: this.buildMaterialCategoryCatalog(
+        entries,
+        balanceSnapshots,
+      ),
       categories: categoryItems,
+      materials: materialItems,
       summary: {
         categoryCount: categoryItems.length,
-        ...this.buildMaterialCategoryTotals(filteredEntries),
+        ...this.buildMaterialCategoryTotals(
+          filteredEntries,
+          filteredBalanceSnapshots,
+        ),
       },
     };
   }
@@ -163,88 +226,98 @@ export class MonthlyReportMaterialCategoryService {
 
   buildMaterialCategoryCatalog(
     entries: MonthlyMaterialCategoryEntry[],
+    balanceSnapshots: MonthlyMaterialCategoryBalanceSnapshot[] = [],
   ): MonthlyReportMaterialCategoryCatalogItem[] {
-    return this.collectMaterialCategoryGroups(entries)
+    return collectMonthlyMaterialCategoryGroups(entries, balanceSnapshots)
       .map(({ entries: _entries, ...category }) => category)
-      .sort((left, right) => this.compareMaterialCategoryItems(left, right));
+      .sort(compareMaterialCategoryItems);
+  }
+
+  buildMaterialItems(
+    entries: MonthlyMaterialCategoryEntry[],
+    balanceSnapshots: MonthlyMaterialCategoryBalanceSnapshot[] = [],
+  ): MonthlyReportMaterialSummaryItem[] {
+    const balanceTotalsByMaterial =
+      buildMonthlyMaterialCategoryBalanceTotalsByKey(
+        balanceSnapshots,
+        buildBalanceMaterialKey,
+      );
+
+    return collectMonthlyMaterialGroups(entries, balanceSnapshots)
+      .map((item) => {
+        const commonTotals = this.buildCommonMaterialCategoryTotals(
+          item.entries,
+        );
+        const inQuantity = sumDecimals(
+          item.entries
+            .filter((entry) => entry.direction === MonthlyReportingDirection.IN)
+            .map((entry) => entry.quantity),
+        );
+        const outQuantity = sumDecimals(
+          item.entries
+            .filter(
+              (entry) => entry.direction === MonthlyReportingDirection.OUT,
+            )
+            .map((entry) => entry.quantity),
+        );
+
+        return {
+          materialKey: item.materialKey,
+          categoryNodeKey: item.categoryNodeKey,
+          categoryId: item.categoryId,
+          categoryCode: item.categoryCode,
+          categoryName: item.categoryName,
+          materialId: item.materialId,
+          materialCode: item.materialCode,
+          materialName: item.materialName,
+          materialSpec: item.materialSpec,
+          unitCode: item.unitCode,
+          ...commonTotals,
+          ...(balanceTotalsByMaterial.get(item.materialKey) ??
+            createEmptyMonthlyMaterialCategoryBalanceTotals()),
+          inQuantity: formatQuantity(inQuantity),
+          outQuantity: formatQuantity(outQuantity),
+          netQuantity: formatQuantity(inQuantity.sub(outQuantity)),
+        };
+      })
+      .sort(compareMaterialItems);
   }
 
   buildMaterialCategoryItems(
     entries: MonthlyMaterialCategoryEntry[],
+    balanceSnapshots: MonthlyMaterialCategoryBalanceSnapshot[] = [],
   ): MonthlyReportMaterialCategorySummaryItem[] {
-    return this.collectMaterialCategoryGroups(entries)
-      .map((item) => {
-        const acceptanceRows = item.entries.filter(
-          (entry) => entry.topicKey === "ACCEPTANCE_INBOUND",
-        );
-        const productionRows = item.entries.filter(
-          (entry) => entry.topicKey === "PRODUCTION_RECEIPT",
-        );
-        const supplierReturnRows = item.entries.filter(
-          (entry) => entry.topicKey === "SUPPLIER_RETURN",
-        );
-        const outboundRows = item.entries.filter(
-          (entry) => entry.topicKey === "SALES_OUTBOUND",
-        );
-        const returnRows = item.entries.filter(
-          (entry) => entry.topicKey === "SALES_RETURN",
-        );
-        const documentKeys = new Set(
-          item.entries.map(
-            (entry) => `${entry.documentType}:${entry.documentId}`,
-          ),
-        );
-        const abnormalDocumentKeys = new Set(
-          item.entries
-            .filter((entry) => entry.abnormalFlags.length > 0)
-            .map((entry) => `${entry.documentType}:${entry.documentId}`),
-        );
-        const acceptanceInboundAmount = sumDecimals(
-          acceptanceRows.map((entry) => entry.amount),
-        );
-        const productionReceiptAmount = sumDecimals(
-          productionRows.map((entry) => entry.amount),
-        );
-        const supplierReturnAmount = sumDecimals(
-          supplierReturnRows.map((entry) => entry.amount),
-        );
-        const salesOutboundAmount = sumDecimals(
-          outboundRows.map((entry) => entry.amount),
-        );
-        const salesReturnAmount = sumDecimals(
-          returnRows.map((entry) => entry.amount),
-        );
+    const balanceTotalsByCategory =
+      buildMonthlyMaterialCategoryBalanceTotalsByKey(
+        balanceSnapshots,
+        resolveBalanceCategoryNodeKey,
+      );
 
+    return collectMonthlyMaterialCategoryGroups(entries, balanceSnapshots)
+      .map((item) => {
         return {
           nodeKey: item.nodeKey,
           categoryId: item.categoryId,
           categoryCode: item.categoryCode,
           categoryName: item.categoryName,
-          lineCount: item.entries.length,
-          documentCount: documentKeys.size,
-          abnormalDocumentCount: abnormalDocumentKeys.size,
-          acceptanceInboundAmount: formatMoney(acceptanceInboundAmount),
-          productionReceiptAmount: formatMoney(productionReceiptAmount),
-          supplierReturnAmount: formatMoney(supplierReturnAmount),
-          salesOutboundAmount: formatMoney(salesOutboundAmount),
-          salesReturnAmount: formatMoney(salesReturnAmount),
-          netAmount: formatMoney(
-            acceptanceInboundAmount
-              .add(productionReceiptAmount)
-              .add(salesReturnAmount)
-              .sub(supplierReturnAmount)
-              .sub(salesOutboundAmount),
-          ),
-          totalCost: formatMoney(
-            sumDecimals(item.entries.map((entry) => entry.cost)),
-          ),
+          ...this.buildCommonMaterialCategoryTotals(item.entries),
+          ...(balanceTotalsByCategory.get(item.nodeKey) ??
+            createEmptyMonthlyMaterialCategoryBalanceTotals()),
         };
       })
-      .sort((left, right) => this.compareMaterialCategoryItems(left, right));
+      .sort(compareMaterialCategoryItems);
   }
 
   buildMaterialCategoryTotals(
     entries: MonthlyMaterialCategoryEntry[],
+    balanceSnapshots: MonthlyMaterialCategoryBalanceSnapshot[] = [],
+  ): Omit<MonthlyReportMaterialCategorySummaryTotals, "categoryCount"> {
+    return this.buildCommonMaterialCategoryTotals(entries, balanceSnapshots);
+  }
+
+  private buildCommonMaterialCategoryTotals(
+    entries: MonthlyMaterialCategoryEntry[],
+    balanceSnapshots: MonthlyMaterialCategoryBalanceSnapshot[] = [],
   ): Omit<MonthlyReportMaterialCategorySummaryTotals, "categoryCount"> {
     const documentKeys = new Set(
       entries.map((entry) => `${entry.documentType}:${entry.documentId}`),
@@ -297,46 +370,7 @@ export class MonthlyReportMaterialCategoryService {
           .sub(salesOutboundAmount),
       ),
       totalCost: formatMoney(sumDecimals(entries.map((entry) => entry.cost))),
+      ...buildMonthlyMaterialCategoryBalanceTotals(balanceSnapshots),
     };
-  }
-
-  private collectMaterialCategoryGroups(
-    entries: MonthlyMaterialCategoryEntry[],
-  ): MonthlyReportMaterialCategoryGroup[] {
-    const grouped = new Map<string, MonthlyReportMaterialCategoryGroup>();
-
-    for (const entry of entries) {
-      const leafCategory = resolveMonthlyMaterialCategoryLeaf(entry);
-      const nodeKey = buildMonthlyMaterialCategoryNodeKey(leafCategory);
-      const current = grouped.get(nodeKey) ?? {
-        nodeKey,
-        categoryId: leafCategory.id,
-        categoryCode: leafCategory.categoryCode,
-        categoryName: leafCategory.categoryName,
-        entries: [],
-      };
-      current.entries.push(entry);
-      grouped.set(nodeKey, current);
-    }
-
-    return [...grouped.values()];
-  }
-
-  private compareMaterialCategoryItems(
-    left: MonthlyReportMaterialCategoryCatalogItem,
-    right: MonthlyReportMaterialCategoryCatalogItem,
-  ): number {
-    if (left.categoryName !== right.categoryName) {
-      return left.categoryName.localeCompare(right.categoryName, "zh-Hans-CN");
-    }
-
-    if ((left.categoryCode ?? "") !== (right.categoryCode ?? "")) {
-      return (left.categoryCode ?? "").localeCompare(
-        right.categoryCode ?? "",
-        "zh-Hans-CN",
-      );
-    }
-
-    return left.nodeKey.localeCompare(right.nodeKey, "zh-Hans-CN");
   }
 }

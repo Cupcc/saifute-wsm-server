@@ -36,7 +36,7 @@ interface SnapshotPayload {
   usedFallback: boolean;
 }
 
-const DEFAULT_CATEGORY_CODE = "UNCATEGORIZED";
+const DEFAULT_CATEGORY_CODE = "15";
 const DEFAULT_BACKFILL_BATCH_SIZE = 500;
 
 const STOCK_IN_TABLE = "stock_in_order_line";

@@ -1,11 +1,14 @@
+import { Prisma } from "../../../../generated/prisma/client";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 import { MasterDataRepository } from "./master-data.repository";
 
 describe("MasterDataPartyRepository", () => {
   it("finds customers with keyword and ACTIVE status filters", async () => {
-    const findMany = jest.fn().mockResolvedValue([]);
-    const count = jest.fn().mockResolvedValue(0);
+    const $queryRaw = jest.fn().mockResolvedValue([{ id: 11 }, { id: 109 }]);
+    const findMany = jest.fn().mockResolvedValue([{ id: 109 }, { id: 11 }]);
+    const count = jest.fn().mockResolvedValue(2);
     const repository = new MasterDataRepository({
+      $queryRaw,
       customer: {
         findMany,
         count,
@@ -29,13 +32,38 @@ describe("MasterDataPartyRepository", () => {
         { address: { contains: "赛福特" } },
       ],
     };
+    const [query] = $queryRaw.mock.calls[0] as [Prisma.Sql];
+    expect(query.sql).toContain("REGEXP_REPLACE(customer_code");
+    expect(query.sql).toContain("REGEXP_SUBSTR(customer_code");
+    expect(query.sql).toContain("ORDER BY");
     expect(findMany).toHaveBeenCalledWith({
-      where: expectedWhere,
-      take: 20,
-      skip: 5,
-      orderBy: { customerCode: "asc" },
+      where: { id: { in: [11, 109] } },
     });
     expect(count).toHaveBeenCalledWith({ where: expectedWhere });
+  });
+
+  it("keeps the natural customer-code order returned by the database", async () => {
+    const repository = new MasterDataRepository({
+      $queryRaw: jest.fn().mockResolvedValue([{ id: 11 }, { id: 109 }]),
+      customer: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 109, customerCode: "109" },
+          { id: 11, customerCode: "11" },
+        ]),
+        count: jest.fn().mockResolvedValue(2),
+      },
+    } as unknown as PrismaService);
+
+    const result = await repository.findCustomers({
+      limit: 20,
+      offset: 0,
+      status: "ACTIVE",
+    });
+
+    expect(result.items.map((item) => item.customerCode)).toEqual([
+      "11",
+      "109",
+    ]);
   });
 
   it("creates customers with contact fields and explicit runtime defaults", async () => {

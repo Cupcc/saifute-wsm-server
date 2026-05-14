@@ -98,7 +98,7 @@ describe("InboundService", () => {
   };
   const _mockUncategorizedCategory = {
     id: 1,
-    categoryCode: "UNCATEGORIZED",
+    categoryCode: "15",
     categoryName: "未分类",
     parentId: null,
   };

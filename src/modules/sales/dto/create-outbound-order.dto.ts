@@ -4,7 +4,6 @@ import {
   IsArray,
   IsDateString,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
@@ -33,8 +32,9 @@ export class CreateOutboundOrderDto {
   handlerPersonnelId?: number;
 
   @IsInt()
+  @IsOptional()
   @Min(1)
-  workshopId!: number;
+  workshopId?: number | null;
 
   @IsString()
   @IsOptional()

@@ -56,9 +56,21 @@ export class InboundAcceptanceUpdateService {
     const finalWorkshopId = Object.hasOwn(dto, "workshopId")
       ? (dto.workshopId ?? null)
       : existing.workshopId;
+    const finalSalesProjectId = Object.hasOwn(dto, "salesProjectId")
+      ? (dto.salesProjectId ?? null)
+      : existing.salesProjectId;
     const workshop = finalWorkshopId
       ? await this.masterDataService.getWorkshopById(finalWorkshopId)
       : null;
+    const salesProjectReference =
+      await this.shared.resolveSalesProjectReference(
+        StockInOrderType.ACCEPTANCE,
+        finalSalesProjectId,
+        finalWorkshopId,
+      );
+    const salesProjectSnapshots = this.shared.toSalesProjectSnapshots(
+      salesProjectReference,
+    );
     const rdProcurementLink = existing.rdProcurementRequestId
       ? await this.shared.resolveRdProcurementLink(
           StockInOrderType.ACCEPTANCE,
@@ -76,6 +88,7 @@ export class InboundAcceptanceUpdateService {
       StockInOrderType.ACCEPTANCE,
       rdProcurementLink.supplierId,
       finalWorkshopId,
+      finalSalesProjectId,
     );
     const finalSupplierId = rdProcurementLink.supplierId;
     const supplierSnapshot = finalSupplierId
@@ -192,6 +205,8 @@ export class InboundAcceptanceUpdateService {
             },
           );
           const inventoryNeedsRepost =
+            currentOrder.salesProjectId !==
+              salesProjectSnapshots.salesProjectId ||
             currentLine.materialId !== lineData.materialId ||
             !new Prisma.Decimal(currentLine.quantity).eq(lineData.quantity) ||
             !new Prisma.Decimal(currentLine.unitPrice).eq(lineData.unitPrice);
@@ -258,6 +273,8 @@ export class InboundAcceptanceUpdateService {
                 businessDocumentId: id,
                 businessDocumentNumber: existing.documentNo,
                 businessDocumentLineId: updatedLine.id,
+                projectTargetId:
+                  salesProjectSnapshots.projectTargetId ?? undefined,
                 operatorId: updatedBy,
                 idempotencyKey: `StockInOrder:${id}:rev:${nextRevision}:line:${updatedLine.id}`,
                 unitCost: new Prisma.Decimal(updatedLine.unitPrice),
@@ -312,6 +329,7 @@ export class InboundAcceptanceUpdateService {
             businessDocumentId: id,
             businessDocumentNumber: existing.documentNo,
             businessDocumentLineId: createdLine.id,
+            projectTargetId: salesProjectSnapshots.projectTargetId ?? undefined,
             operatorId: updatedBy,
             idempotencyKey: `StockInOrder:${id}:rev:${nextRevision}:line:${createdLine.id}`,
             unitCost: new Prisma.Decimal(createdLine.unitPrice),
@@ -344,6 +362,7 @@ export class InboundAcceptanceUpdateService {
         id,
         {
           bizDate,
+          salesProjectId: salesProjectSnapshots.salesProjectId,
           supplierId: finalSupplierId,
           handlerPersonnelId: hasHandlerOverride
             ? (dto.handlerPersonnelId ?? null)
@@ -352,6 +371,10 @@ export class InboundAcceptanceUpdateService {
           workshopId,
           rdProcurementRequestId:
             rdProcurementLink.request?.id ?? existing.rdProcurementRequestId,
+          salesProjectCodeSnapshot:
+            salesProjectSnapshots.salesProjectCodeSnapshot,
+          salesProjectNameSnapshot:
+            salesProjectSnapshots.salesProjectNameSnapshot,
           supplierCodeSnapshot: supplierSnapshot.supplierCodeSnapshot,
           supplierNameSnapshot: supplierSnapshot.supplierNameSnapshot,
           handlerNameSnapshot: handlerSnapshot.handlerNameSnapshot,

@@ -4,6 +4,7 @@ import { InventoryCoreModule } from "../inventory-core/inventory-core.module";
 import { MasterDataModule } from "../master-data/master-data.module";
 import { RbacModule } from "../rbac/rbac.module";
 import { RdSubwarehouseModule } from "../rd-subwarehouse/rd-subwarehouse.module";
+import { SalesProjectModule } from "../sales-project/sales-project.module";
 import { InboundService } from "./application/inbound.service";
 import { InboundAcceptanceCreationService } from "./application/inbound-acceptance-creation.service";
 import { InboundAcceptanceUpdateService } from "./application/inbound-acceptance-update.service";
@@ -23,6 +24,7 @@ import { StockInPriceCorrectionRepository } from "./infrastructure/stock-in-pric
     ApprovalModule,
     RbacModule,
     RdSubwarehouseModule,
+    SalesProjectModule,
   ],
   controllers: [InboundController],
   providers: [

@@ -45,6 +45,7 @@ export type {
   MonthlyReportMaterialCategorySummaryItem,
   MonthlyReportMaterialCategorySummaryResult,
   MonthlyReportMaterialCategorySummaryTotals,
+  MonthlyReportMaterialSummaryItem,
 } from "./monthly-report-material-category.service";
 export type { MonthlyReportQuery } from "./monthly-report-source.service";
 

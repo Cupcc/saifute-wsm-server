@@ -99,6 +99,12 @@ interface HistoricalUnfundedDeficit {
   costAmountScaled: bigint;
 }
 
+interface RecoverableLinkedReturnDeficit {
+  sourceEvent: InventoryEvent;
+  plannedLog: PlannedLogInsert;
+  remainingQty: bigint;
+}
+
 function balanceKey(materialId: number, stockScopeId: number): string {
   return `${materialId}::${stockScopeId}`;
 }
@@ -787,9 +793,8 @@ function buildLinkedReturnCoverageBySourceLine(
   return coverageBySourceLine;
 }
 
-function findExactLinkedReturnOffset(params: {
+function findMatchingLinkedReturnCoverage(params: {
   sourceEvent: InventoryEvent;
-  sourceQty: bigint;
   coverageBySourceLine: ReadonlyMap<string, LinkedReturnCoverage>;
 }): LinkedReturnCoverage | null {
   const sourceKey = sourceLinkKey({
@@ -823,12 +828,50 @@ function findExactLinkedReturnOffset(params: {
     0n,
   );
 
-  if (matchingReturnQty !== params.sourceQty) return null;
-
   return {
     quantityScaled: matchingReturnQty,
     returnEvents: matchingReturnEvents,
   };
+}
+
+function findExactLinkedReturnOffset(params: {
+  sourceEvent: InventoryEvent;
+  sourceQty: bigint;
+  coverageBySourceLine: ReadonlyMap<string, LinkedReturnCoverage>;
+}): LinkedReturnCoverage | null {
+  const matchingCoverage = findMatchingLinkedReturnCoverage({
+    sourceEvent: params.sourceEvent,
+    coverageBySourceLine: params.coverageBySourceLine,
+  });
+  if (!matchingCoverage) return null;
+  return matchingCoverage.quantityScaled === params.sourceQty
+    ? matchingCoverage
+    : null;
+}
+
+function findRecoverableLinkedReturnDeficitQty(params: {
+  sourceEvent: InventoryEvent;
+  currentBalance: bigint;
+  changeQty: bigint;
+  coverageBySourceLine: ReadonlyMap<string, LinkedReturnCoverage>;
+}): bigint {
+  const matchingCoverage = findMatchingLinkedReturnCoverage({
+    sourceEvent: params.sourceEvent,
+    coverageBySourceLine: params.coverageBySourceLine,
+  });
+  if (!matchingCoverage) return 0n;
+
+  const recoverableNegativeQty =
+    params.currentBalance < 0n
+      ? params.changeQty
+      : params.changeQty > params.currentBalance
+        ? params.changeQty - params.currentBalance
+        : 0n;
+  if (recoverableNegativeQty <= 0n) return 0n;
+
+  return matchingCoverage.quantityScaled >= recoverableNegativeQty
+    ? recoverableNegativeQty
+    : 0n;
 }
 
 export function buildInventoryReplayPlan(
@@ -867,6 +910,10 @@ export function buildInventoryReplayPlan(
     ),
   );
   const acceptedStandaloneReturnKeys = new Set<string>();
+  const recoverableLinkedReturnDeficits = new Map<
+    string,
+    RecoverableLinkedReturnDeficit
+  >();
 
   for (const coverageGap of options.coverageGaps ?? []) {
     addBlocker(blockers, "historical-document-family-not-covered", {
@@ -934,6 +981,7 @@ export function buildInventoryReplayPlan(
       materialId: params.event.materialId,
       stockScopeId: params.stockScopeId,
       workshopId: params.workshopId,
+      projectTargetId: params.event.projectTargetId ?? null,
       direction: params.direction,
       operationType: params.operationType,
       businessModule: params.event.businessModule,
@@ -1107,6 +1155,46 @@ export function buildInventoryReplayPlan(
     }
 
     return totalOffsetQty;
+  }
+
+  function settleRecoverableLinkedReturnDeficitsFromBalanceRecovery(params: {
+    event: InventoryEvent;
+    maxQty: bigint;
+  }): bigint {
+    if (params.maxQty <= 0n) return 0n;
+
+    let remainingRecoveryQty = params.maxQty;
+    let totalRecoveredQty = 0n;
+
+    for (const [sourceKey, deficit] of recoverableLinkedReturnDeficits) {
+      if (remainingRecoveryQty <= 0n) break;
+      if (
+        deficit.remainingQty <= 0n ||
+        deficit.sourceEvent.materialId !== params.event.materialId ||
+        deficit.sourceEvent.stockScopeId !== params.event.stockScopeId
+      ) {
+        continue;
+      }
+
+      const recoveredQty =
+        deficit.remainingQty < remainingRecoveryQty
+          ? deficit.remainingQty
+          : remainingRecoveryQty;
+      if (recoveredQty <= 0n) continue;
+
+      deficit.remainingQty -= recoveredQty;
+      remainingRecoveryQty -= recoveredQty;
+      totalRecoveredQty += recoveredQty;
+      appendLogNote(
+        deficit.plannedLog,
+        `Later inbound ${params.event.businessDocumentNumber} recovered ${formatQty(recoveredQty)} of this temporary negative balance before any linked return restored source availability.`,
+      );
+      if (deficit.remainingQty <= 0n) {
+        recoverableLinkedReturnDeficits.delete(sourceKey);
+      }
+    }
+
+    return totalRecoveredQty;
   }
 
   function getOrCreateFutureSourceEntry(params: {
@@ -1312,7 +1400,11 @@ export function buildInventoryReplayPlan(
     event: InventoryEvent,
     quantityScaled: bigint,
     options: { deferInsufficientReleaseBlocker?: boolean } = {},
-  ): { releasedQty: bigint; costAmountScaled: bigint } {
+  ): {
+    releasedQty: bigint;
+    costAmountScaled: bigint;
+    deficitOffsetQty: bigint;
+  } {
     const sourceLinks = normalizeEventSourceLinks(event, quantityScaled);
     if (sourceLinks.length === 0) {
       addBlocker(blockers, "return-source-link-missing", {
@@ -1322,7 +1414,7 @@ export function buildInventoryReplayPlan(
         lineId: event.businessDocumentLineId,
         materialId: event.materialId,
       });
-      return { releasedQty: 0n, costAmountScaled: 0n };
+      return { releasedQty: 0n, costAmountScaled: 0n, deficitOffsetQty: 0n };
     }
 
     if (sourceLinks.some((link) => link.quantityScaled <= 0n)) {
@@ -1334,7 +1426,7 @@ export function buildInventoryReplayPlan(
         materialId: event.materialId,
         linkedQty: sourceLinks.map((link) => link.linkedQty).join(","),
       });
-      return { releasedQty: 0n, costAmountScaled: 0n };
+      return { releasedQty: 0n, costAmountScaled: 0n, deficitOffsetQty: 0n };
     }
 
     const linkedQty = sourceLinks.reduce(
@@ -1351,13 +1443,20 @@ export function buildInventoryReplayPlan(
         returnQty: formatQty(quantityScaled),
         linkedQty: formatQty(linkedQty),
       });
-      return { releasedQty: 0n, costAmountScaled: 0n };
+      return { releasedQty: 0n, costAmountScaled: 0n, deficitOffsetQty: 0n };
     }
 
     let releasedQty = 0n;
     let costAmountScaled = 0n;
+    let deficitOffsetQty = 0n;
 
     for (const sourceLink of sourceLinks) {
+      const recoverableDeficitKey = sourceLinkKey({
+        documentType: sourceLink.sourceDocumentType,
+        documentId: sourceLink.sourceDocumentId,
+        lineId: sourceLink.sourceDocumentLineId,
+        materialId: event.materialId,
+      });
       const matchingUsages = [...plannedSourceUsageByKey.values()]
         .filter(
           (usage) =>
@@ -1393,7 +1492,30 @@ export function buildInventoryReplayPlan(
         usage.releasedQty = formatQty(releasedAfter);
         usage.status = toSourceUsageStatus(allocatedQty, releasedAfter);
 
-        source.availableQty += toRelease;
+        let qtyReturnedToPool = toRelease;
+        const recoverableDeficit = recoverableLinkedReturnDeficits.get(
+          recoverableDeficitKey,
+        );
+        if (recoverableDeficit && recoverableDeficit.remainingQty > 0n) {
+          const offsetQty =
+            recoverableDeficit.remainingQty < qtyReturnedToPool
+              ? recoverableDeficit.remainingQty
+              : qtyReturnedToPool;
+          if (offsetQty > 0n) {
+            recoverableDeficit.remainingQty -= offsetQty;
+            qtyReturnedToPool -= offsetQty;
+            deficitOffsetQty += offsetQty;
+            appendLogNote(
+              recoverableDeficit.plannedLog,
+              `Linked return later neutralized ${formatQty(offsetQty)} of this temporary negative balance.`,
+            );
+            if (recoverableDeficit.remainingQty <= 0n) {
+              recoverableLinkedReturnDeficits.delete(recoverableDeficitKey);
+            }
+          }
+        }
+
+        source.availableQty += qtyReturnedToPool;
         remaining -= toRelease;
         releasedQty += toRelease;
         releasedFromLink += toRelease;
@@ -1420,7 +1542,7 @@ export function buildInventoryReplayPlan(
       }
     }
 
-    return { releasedQty, costAmountScaled };
+    return { releasedQty, costAmountScaled, deficitOffsetQty };
   }
 
   function allocateSupplierReturnSources(
@@ -1897,6 +2019,24 @@ export function buildInventoryReplayPlan(
       const hasHistoricalUnfundedQty =
         allocation.hasInsufficientSourceBlocker &&
         allowHistoricalUnfundedConsumer;
+      const currentBalance =
+        balances.get(balanceKey(event.materialId, event.stockScopeId)) ?? 0n;
+      const recoverableLinkedReturnDeficitQty = canOffsetWithLinkedReturn
+        ? findRecoverableLinkedReturnDeficitQty({
+            sourceEvent: event,
+            currentBalance,
+            changeQty,
+            coverageBySourceLine: linkedReturnCoverageBySourceLine,
+          })
+        : 0n;
+      const recoverableLinkedReturnSourceDeficitQty =
+        allocation.missingQty > 0n && recoverableLinkedReturnDeficitQty > 0n
+          ? recoverableLinkedReturnDeficitQty < allocation.missingQty
+            ? recoverableLinkedReturnDeficitQty
+            : allocation.missingQty
+          : 0n;
+      const hasRecoverableLinkedReturnDeficit =
+        recoverableLinkedReturnDeficitQty > 0n;
       if (hasHistoricalUnfundedQty) {
         warnings.push(
           `UNFUNDED_HISTORICAL_OUT ${event.businessDocumentNumber} (${event.businessDocumentType}:${event.businessDocumentId}:line:${event.businessDocumentLineId}) accepted ${formatQty(allocation.missingQty)} of ${formatQty(changeQty)} without source usage for material=${event.materialId}, stockScope=${event.stockScopeId}; historical data allows negative or source-less stock movement.`,
@@ -1918,16 +2058,40 @@ export function buildInventoryReplayPlan(
         allowTemporaryNegativeBalance:
           (allocation.futureAllocatedQty > 0n &&
             allocation.missingQty === 0n) ||
-          hasHistoricalUnfundedQty,
+          hasHistoricalUnfundedQty ||
+          hasRecoverableLinkedReturnDeficit,
         temporaryNegativeBalanceReason: hasHistoricalUnfundedQty
           ? " due to accepted historical source-less stock movement"
-          : undefined,
+          : hasRecoverableLinkedReturnDeficit
+            ? " before linked return restores the temporary deficit"
+            : undefined,
         note: hasHistoricalUnfundedQty
           ? `Historical source-less stock movement accepted for ${formatQty(allocation.missingQty)} without inventory_source_usage.`
           : allocation.futureAllocatedSourceRefs.length > 0
             ? `Historical unordered stock movement matched future stock-in source(s): ${allocation.futureAllocatedSourceRefs.join(", ")}.`
             : null,
       });
+      if (hasRecoverableLinkedReturnDeficit) {
+        if (recoverableLinkedReturnSourceDeficitQty > 0n) {
+          recoverableLinkedReturnDeficits.set(
+            sourceLinkKey({
+              documentType: event.businessDocumentType,
+              documentId: event.businessDocumentId,
+              lineId: event.businessDocumentLineId,
+              materialId: event.materialId,
+            }),
+            {
+              sourceEvent: event,
+              plannedLog,
+              remainingQty: recoverableLinkedReturnSourceDeficitQty,
+            },
+          );
+        }
+        appendLogNote(
+          plannedLog,
+          `Linked return coverage can offset up to ${formatQty(recoverableLinkedReturnDeficitQty)} of this temporary negative balance.`,
+        );
+      }
       if (hasHistoricalUnfundedQty) {
         recordHistoricalUnfundedDeficit({
           event,
@@ -1965,6 +2129,10 @@ export function buildInventoryReplayPlan(
           log: plannedLog,
           unitCostScaled: standaloneReturnSource.unitCostScaled,
           quantityScaled: changeQty,
+        });
+        settleRecoverableLinkedReturnDeficitsFromBalanceRecovery({
+          event,
+          maxQty: changeQty,
         });
         settleHistoricalUnfundedDeficitsFromAvailableSources({
           event,
@@ -2022,6 +2190,15 @@ export function buildInventoryReplayPlan(
         idempotencyKey: event.idempotencyKey,
         note: recoverySource?.note,
       });
+      if (releaseResult.deficitOffsetQty > 0n) {
+        appendLogNote(
+          plannedLog,
+          `Linked return first neutralized ${formatQty(releaseResult.deficitOffsetQty)} of temporary negative on-hand before restoring any price-layer availability.`,
+        );
+        warnings.push(
+          `LINKED_RETURN_NEGATIVE_BALANCE_OFFSET ${event.businessDocumentNumber} (${event.businessDocumentType}:${event.businessDocumentId}:line:${event.businessDocumentLineId}) neutralized ${formatQty(releaseResult.deficitOffsetQty)} of temporary negative on-hand before restoring price-layer availability for material=${event.materialId}, stockScope=${event.stockScopeId}.`,
+        );
+      }
       if (recoverySource) {
         addSourcePoolEntry({
           sourcePools,
@@ -2103,6 +2280,10 @@ export function buildInventoryReplayPlan(
         log: plannedLog,
         unitCostScaled,
         quantityScaled: changeQty,
+      });
+      settleRecoverableLinkedReturnDeficitsFromBalanceRecovery({
+        event,
+        maxQty: changeQty,
       });
     } else if (event.direction === "IN") {
       addBlocker(blockers, "inbound-event-not-source-eligible", {

@@ -6,7 +6,10 @@ import type { CreatePersonnelDto } from "../dto/create-personnel.dto";
 import type { CreateStockScopeDto } from "../dto/create-stock-scope.dto";
 import type { CreateSupplierDto } from "../dto/create-supplier.dto";
 import type { CreateWorkshopDto } from "../dto/create-workshop.dto";
-import type { QueryMasterDataDto } from "../dto/query-master-data.dto";
+import type {
+  QueryMasterDataDto,
+  QueryMaterialDto,
+} from "../dto/query-master-data.dto";
 import type { UpdateCustomerDto } from "../dto/update-customer.dto";
 import type { UpdateMaterialDto } from "../dto/update-material.dto";
 import type { UpdateMaterialCategoryDto } from "../dto/update-material-category.dto";
@@ -83,7 +86,7 @@ export class MasterDataService implements OnModuleInit {
     return this.materialCategoryService.deactivate(id, updatedBy);
   }
 
-  async listMaterials(query: QueryMasterDataDto) {
+  async listMaterials(query: QueryMaterialDto) {
     return this.materialService.list(query);
   }
 

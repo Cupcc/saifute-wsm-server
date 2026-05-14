@@ -522,18 +522,6 @@ function buildStructuredLine(
   };
 }
 
-function createStableHexHash(value: string): string {
-  let hash = 2166136261;
-
-  for (const char of value) {
-    const codePoint = char.codePointAt(0) ?? 0;
-    hash ^= codePoint;
-    hash = Math.imul(hash, 16777619) >>> 0;
-  }
-
-  return hash.toString(16).toUpperCase().padStart(8, "0");
-}
-
 function normalizeMaterialCodeKey(code: string): string {
   return (normalizeOptionalText(code) ?? "").toLocaleLowerCase("en-US");
 }
@@ -575,9 +563,8 @@ function allocateRdProjectAutoCreatedMaterialCode(
 
 function buildRdProjectAutoCreatedMaterialCodeSeed(
   representativeLine: LegacyRdProjectLineRow,
-  normalizedKey: string,
 ): string {
-  return `MAT-PROJECT-AUTO-L${representativeLine.legacyId}-${createStableHexHash(normalizedKey)}`;
+  return `xmbj${representativeLine.legacyId}`;
 }
 
 function buildRdProjectAutoCreatedMaterialArchivedPayload(
@@ -709,10 +696,7 @@ function buildRdProjectAutoCreatedMaterialPlans(
     const targetCode =
       existingAutoCreatedMaterial?.materialCode ??
       allocateRdProjectAutoCreatedMaterialCode(
-        buildRdProjectAutoCreatedMaterialCodeSeed(
-          representativeLine,
-          group.normalizedKey,
-        ),
+        buildRdProjectAutoCreatedMaterialCodeSeed(representativeLine),
         reservedKeys,
         assignedKeys,
       );

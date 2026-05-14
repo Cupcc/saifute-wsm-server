@@ -443,7 +443,6 @@ const documentLabel = computed(() =>
 );
 const formRules = computed(() => ({
   bizDate: [{ required: true, message: "业务日期不能为空", trigger: "change" }],
-  workshopId: [{ required: true, message: "车间不能为空", trigger: "change" }],
   ...(isSalesReturnMode.value
     ? {
         sourceOutboundOrderId: [
@@ -1171,7 +1170,7 @@ function buildSubmitPayload() {
     bizDate: form.bizDate,
     customerId: form.customerId,
     handlerPersonnelId: form.handlerPersonnelId,
-    workshopId: form.workshopId,
+    workshopId: form.workshopId ?? null,
     sourceOutboundOrderId: form.sourceOutboundOrderId,
     remark: form.remark,
     details: form.details.map((line) => ({

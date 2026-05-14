@@ -18,6 +18,7 @@ function event(overrides: Partial<InventoryEvent>): InventoryEvent {
     materialId: 100,
     stockScopeId: 1,
     workshopId: null,
+    projectTargetId: null,
     changeQty: "1.000000",
     unitCost: "10.00",
     costAmount: null,
@@ -1020,6 +1021,286 @@ describe("inventory replay planner", () => {
         stockScopeId: 1,
         unitCost: "10.00",
         availableQty: "50.000000",
+        sourceLogCount: 1,
+      },
+    ]);
+  });
+
+  it("does not restore price-layer availability when linked returns only neutralize temporary negative on-hand", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "LL-NEG-1",
+        businessDocumentLineId: 10,
+        workshopId: 7,
+        changeQty: "1.000000",
+        unitCost: "10.00",
+        idempotencyKey: "WorkshopMaterialOrder:1:line:10",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        businessDocumentId: 2,
+        businessDocumentNumber: "RK-001",
+        businessDocumentLineId: 20,
+        changeQty: "6.000000",
+        unitCost: "10.00",
+        idempotencyKey: "StockInOrder:2:line:20",
+      }),
+      event({
+        bizDate: "2026-01-03",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 3,
+        businessDocumentNumber: "LL-OVER",
+        businessDocumentLineId: 30,
+        workshopId: 7,
+        changeQty: "6.000000",
+        unitCost: null,
+        idempotencyKey: "WorkshopMaterialOrder:3:line:30",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-04",
+        direction: "IN",
+        operationType: "RETURN_IN",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 4,
+        businessDocumentNumber: "TL-OVER",
+        businessDocumentLineId: 40,
+        workshopId: 7,
+        changeQty: "1.000000",
+        unitCost: null,
+        sourceDocumentType: "WorkshopMaterialOrder",
+        sourceDocumentId: 3,
+        sourceDocumentLineId: 30,
+        idempotencyKey: "WorkshopMaterialOrder:4:line:40",
+      }),
+    ]);
+
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "negative-balance-during-replay",
+      ),
+    ).toBe(false);
+    expect(
+      plan.blockers.some(
+        (blocker) => blocker.reason === "price-layer-balance-mismatch",
+      ),
+    ).toBe(false);
+    expect(plan.plannedBalances).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        quantityOnHand: "0.000000",
+      },
+    ]);
+    expect(plan.plannedSourceUsages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          consumerDocumentId: 3,
+          consumerLineId: 30,
+          allocatedQty: "5.000000",
+          releasedQty: "1.000000",
+          status: "PARTIALLY_RELEASED",
+        }),
+      ]),
+    );
+    expect(plan.plannedPriceLayers).toEqual([]);
+    expect(plan.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "LINKED_RETURN_NEGATIVE_BALANCE_OFFSET TL-OVER",
+        ),
+      ]),
+    );
+  });
+
+  it("restores linked return availability when the returned outbound was source-funded", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "OUTBOUND_OUT",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 1,
+        businessDocumentNumber: "CK-EARLY",
+        businessDocumentLineId: 10,
+        changeQty: "1.000000",
+        unitCost: null,
+        idempotencyKey: "SalesStockOrder:1:line:10",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        direction: "IN",
+        operationType: "SALES_RETURN_IN",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "TH-STANDALONE",
+        businessDocumentLineId: 20,
+        changeQty: "6.000000",
+        unitCost: "10.00",
+        idempotencyKey: "SalesStockOrder:2:line:20",
+      }),
+      event({
+        bizDate: "2026-01-03",
+        direction: "OUT",
+        operationType: "PICK_OUT",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 3,
+        businessDocumentNumber: "LL-FUNDED",
+        businessDocumentLineId: 30,
+        changeQty: "6.000000",
+        unitCost: null,
+        idempotencyKey: "WorkshopMaterialOrder:3:line:30",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-04",
+        direction: "IN",
+        operationType: "RETURN_IN",
+        businessModule: "workshop-material",
+        businessDocumentType: "WorkshopMaterialOrder",
+        businessDocumentId: 4,
+        businessDocumentNumber: "TL-FUNDED",
+        businessDocumentLineId: 40,
+        changeQty: "1.000000",
+        unitCost: null,
+        sourceDocumentType: "WorkshopMaterialOrder",
+        sourceDocumentId: 3,
+        sourceDocumentLineId: 30,
+        idempotencyKey: "WorkshopMaterialOrder:4:line:40",
+      }),
+      event({
+        bizDate: "2026-01-05",
+        businessDocumentId: 5,
+        businessDocumentNumber: "RK-LATE",
+        businessDocumentLineId: 50,
+        changeQty: "5.000000",
+        unitCost: "10.00",
+        idempotencyKey: "StockInOrder:5:line:50",
+      }),
+    ]);
+
+    expect(plan.blockers).toHaveLength(0);
+    expect(plan.plannedBalances).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        quantityOnHand: "5.000000",
+      },
+    ]);
+    expect(plan.plannedSourceUsages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceLogIdempotencyKey: "SalesStockOrder:2:line:20",
+          consumerDocumentId: 3,
+          consumerLineId: 30,
+          allocatedQty: "6.000000",
+          releasedQty: "1.000000",
+          status: "PARTIALLY_RELEASED",
+        }),
+        expect.objectContaining({
+          sourceLogIdempotencyKey: "StockInOrder:5:line:50",
+          consumerDocumentId: 1,
+          consumerLineId: 10,
+          allocatedQty: "1.000000",
+          releasedQty: "0.000000",
+          status: "ALLOCATED",
+        }),
+      ]),
+    );
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        unitCost: "10.00",
+        availableQty: "5.000000",
+        sourceLogCount: 2,
+      },
+    ]);
+  });
+
+  it("restores linked return price-layer availability after a later inbound already cleared the temporary negative", () => {
+    const plan = buildInventoryReplayPlan([
+      event({
+        bizDate: "2026-01-01",
+        direction: "OUT",
+        operationType: "OUTBOUND_OUT",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 2,
+        businessDocumentNumber: "CK-NEG-1",
+        businessDocumentLineId: 20,
+        workshopId: 1,
+        changeQty: "1.000000",
+        unitCost: null,
+        idempotencyKey: "SalesStockOrder:2:line:20",
+        sortPriority: 1,
+      }),
+      event({
+        bizDate: "2026-01-02",
+        businessDocumentId: 1,
+        businessDocumentNumber: "RK-RECOVER-1",
+        businessDocumentLineId: 10,
+        changeQty: "1.000000",
+        unitCost: "10.00",
+        idempotencyKey: "StockInOrder:1:line:10",
+      }),
+      event({
+        bizDate: "2026-01-03",
+        direction: "IN",
+        operationType: "SALES_RETURN_IN",
+        businessModule: "sales",
+        businessDocumentType: "SalesStockOrder",
+        businessDocumentId: 3,
+        businessDocumentNumber: "TH-RECOVER-1",
+        businessDocumentLineId: 30,
+        workshopId: 1,
+        changeQty: "1.000000",
+        unitCost: null,
+        sourceDocumentType: "SalesStockOrder",
+        sourceDocumentId: 2,
+        sourceDocumentLineId: 20,
+        idempotencyKey: "SalesStockOrder:3:line:30",
+      }),
+    ]);
+
+    expect(plan.blockers).toHaveLength(0);
+    expect(plan.plannedBalances).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        quantityOnHand: "1.000000",
+      },
+    ]);
+    expect(plan.plannedSourceUsages).toEqual([
+      expect.objectContaining({
+        consumerDocumentId: 2,
+        consumerLineId: 20,
+        allocatedQty: "1.000000",
+        releasedQty: "1.000000",
+        status: "RELEASED",
+      }),
+    ]);
+    expect(plan.plannedPriceLayers).toEqual([
+      {
+        materialId: 100,
+        stockScopeId: 1,
+        unitCost: "10.00",
+        availableQty: "1.000000",
         sourceLogCount: 1,
       },
     ]);

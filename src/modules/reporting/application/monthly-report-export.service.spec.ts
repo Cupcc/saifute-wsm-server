@@ -2,6 +2,7 @@ import { Test } from "@nestjs/testing";
 import { Prisma } from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import { MonthlyMaterialCategoryRepository } from "../infrastructure/monthly-material-category.repository";
+import { MonthlyMaterialCategoryBalanceRepository } from "../infrastructure/monthly-material-category-balance.repository";
 import { MonthlyReportRepository } from "../infrastructure/monthly-report.repository";
 import { MonthlyReportCatalogService } from "./monthly-report-catalog.service";
 import { MonthlyReportDomainAggregatorService } from "./monthly-report-domain-aggregator.service";
@@ -12,6 +13,7 @@ import { MonthlyReportMaterialCategoryService } from "./monthly-report-material-
 import { MonthlyReportSourceService } from "./monthly-report-source.service";
 import {
   type MaterialCategorySnapshotNode,
+  type MonthlyMaterialCategoryBalanceSnapshot,
   type MonthlyMaterialCategoryEntry,
   type MonthlyReportEntry,
   MonthlyReportingAbnormalFlag,
@@ -24,6 +26,7 @@ describe("MonthlyReportExportService", () => {
   let service: MonthlyReportExportService;
   let repository: jest.Mocked<MonthlyReportRepository>;
   let materialCategoryRepository: jest.Mocked<MonthlyMaterialCategoryRepository>;
+  let materialCategoryBalanceRepository: jest.Mocked<MonthlyMaterialCategoryBalanceRepository>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -49,6 +52,12 @@ describe("MonthlyReportExportService", () => {
           },
         },
         {
+          provide: MonthlyMaterialCategoryBalanceRepository,
+          useValue: {
+            findMonthlyMaterialCategoryBalanceSnapshots: jest.fn(),
+          },
+        },
+        {
           provide: AppConfigService,
           useValue: {
             businessTimezone: "Asia/Shanghai",
@@ -61,6 +70,12 @@ describe("MonthlyReportExportService", () => {
     repository = moduleRef.get(MonthlyReportRepository);
     materialCategoryRepository = moduleRef.get(
       MonthlyMaterialCategoryRepository,
+    );
+    materialCategoryBalanceRepository = moduleRef.get(
+      MonthlyMaterialCategoryBalanceRepository,
+    );
+    materialCategoryBalanceRepository.findMonthlyMaterialCategoryBalanceSnapshots.mockResolvedValue(
+      [],
     );
   });
 
@@ -163,6 +178,26 @@ describe("MonthlyReportExportService", () => {
     };
   }
 
+  function createBalanceSnapshot(
+    overrides: Partial<MonthlyMaterialCategoryBalanceSnapshot> = {},
+  ): MonthlyMaterialCategoryBalanceSnapshot {
+    return {
+      materialId: 501,
+      materialCode: "M-RAW-001",
+      materialName: "原料 A",
+      materialSpec: "25kg",
+      unitCode: "KG",
+      categoryId: 11,
+      categoryCode: "CHEM",
+      categoryName: "化工",
+      openingQuantity: new Prisma.Decimal("10"),
+      openingAmount: new Prisma.Decimal("100"),
+      closingQuantity: new Prisma.Decimal("13"),
+      closingAmount: new Prisma.Decimal("108"),
+      ...overrides,
+    };
+  }
+
   it("should export the material-category workbook", async () => {
     materialCategoryRepository.findMonthlyMaterialCategoryEntries.mockResolvedValue(
       [
@@ -185,6 +220,9 @@ describe("MonthlyReportExportService", () => {
         }),
       ],
     );
+    materialCategoryBalanceRepository.findMonthlyMaterialCategoryBalanceSnapshots.mockResolvedValue(
+      [createBalanceSnapshot()],
+    );
 
     const exportResult = await service.exportMonthlyReport({
       yearMonth: "2026-03",
@@ -195,8 +233,17 @@ describe("MonthlyReportExportService", () => {
       "monthly-reporting-material-category-2026-03.xls",
     );
     expect(exportResult.content).toContain('<Worksheet ss:Name="分类汇总">');
+    expect(exportResult.content).toContain('<Worksheet ss:Name="物料汇总">');
     expect(exportResult.content).toContain('<Worksheet ss:Name="单据行明细">');
     expect(exportResult.content).toContain("化工");
+    expect(exportResult.content).toContain("原料 A");
+    expect(exportResult.content).toContain("月初库存金额");
+    expect(exportResult.content).toContain("月末金额");
+    expect(exportResult.content).toContain("净发生数量");
+    expect(exportResult.content).toContain("100.00");
+    expect(exportResult.content).toContain("108.00");
+    expect(exportResult.content).toContain("3.00");
+    expect(exportResult.content).not.toContain("3.000000");
     expect(exportResult.content).not.toContain("分类路径");
     expect(exportResult.content).not.toContain("层级");
     expect(exportResult.content).not.toContain("来源月份");
