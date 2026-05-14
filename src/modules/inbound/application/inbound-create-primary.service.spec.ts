@@ -13,6 +13,7 @@ import { InventoryService } from "../../inventory-core/application/inventory.ser
 import { MasterDataService } from "../../master-data/application/master-data.service";
 import { SupplierService } from "../../master-data/application/supplier.service";
 import { RdProcurementRequestService } from "../../rd-subwarehouse/application/rd-procurement-request.service";
+import { SalesProjectService } from "../../sales-project/application/sales-project.service";
 import { InboundRepository } from "../infrastructure/inbound.repository";
 import { InboundService } from "./inbound.service";
 import { InboundAcceptanceCreationService } from "./inbound-acceptance-creation.service";
@@ -91,7 +92,7 @@ describe("InboundService", () => {
   };
   const mockUncategorizedCategory = {
     id: 1,
-    categoryCode: "UNCATEGORIZED",
+    categoryCode: "15",
     categoryName: "未分类",
     parentId: null,
   };
@@ -130,6 +131,15 @@ describe("InboundService", () => {
         quantity: new Prisma.Decimal(100),
       },
     ],
+  };
+  const mockSalesProjectReference = {
+    id: 300,
+    salesProjectCode: "SP-300",
+    salesProjectName: "销售项目 A",
+    customerId: 200,
+    workshopId: 1,
+    projectTargetId: 7001,
+    lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
   };
 
   let service: InboundService;
@@ -235,6 +245,14 @@ describe("InboundService", () => {
             getRequestById: jest
               .fn()
               .mockResolvedValue(mockRdProcurementRequest),
+          },
+        },
+        {
+          provide: SalesProjectService,
+          useValue: {
+            getProjectReferenceById: jest
+              .fn()
+              .mockResolvedValue(mockSalesProjectReference),
           },
         },
       ],
@@ -401,6 +419,45 @@ describe("InboundService", () => {
     );
   });
 
+  it("should create acceptance order with sales project snapshots and projectTargetId", async () => {
+    (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+    (repository.createOrder as jest.Mock).mockResolvedValue({
+      ...mockOrder,
+      salesProjectId: 300,
+      salesProjectCodeSnapshot: "SP-300",
+      salesProjectNameSnapshot: "销售项目 A",
+    });
+
+    await service.createOrder(
+      {
+        documentNo: "SI-SP-001",
+        orderType: StockInOrderType.ACCEPTANCE,
+        bizDate: "2025-03-14",
+        supplierId: 10,
+        workshopId: 1,
+        salesProjectId: 300,
+        lines: [{ materialId: 100, quantity: "100", unitPrice: "10" }],
+      },
+      "1",
+    );
+
+    expect(repository.createOrder).toHaveBeenCalledWith(
+      expect.objectContaining({
+        salesProjectId: 300,
+        salesProjectCodeSnapshot: "SP-300",
+        salesProjectNameSnapshot: "销售项目 A",
+      }),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(inventoryService.increaseStock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectTargetId: 7001,
+      }),
+      expect.anything(),
+    );
+  });
+
   it("should fall back to uncategorized snapshot when material category is missing", async () => {
     (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
     (repository.createOrder as jest.Mock).mockResolvedValue(mockOrder);
@@ -424,20 +481,18 @@ describe("InboundService", () => {
       "1",
     );
 
-    expect(repository.findMaterialCategoryByCode).toHaveBeenCalledWith(
-      "UNCATEGORIZED",
-    );
+    expect(repository.findMaterialCategoryByCode).toHaveBeenCalledWith("15");
     expect(repository.createOrder).toHaveBeenCalledWith(
       expect.anything(),
       expect.arrayContaining([
         expect.objectContaining({
           materialCategoryIdSnapshot: 1,
-          materialCategoryCodeSnapshot: "UNCATEGORIZED",
+          materialCategoryCodeSnapshot: "15",
           materialCategoryNameSnapshot: "未分类",
           materialCategoryPathSnapshot: [
             {
               id: 1,
-              categoryCode: "UNCATEGORIZED",
+              categoryCode: "15",
               categoryName: "未分类",
             },
           ],

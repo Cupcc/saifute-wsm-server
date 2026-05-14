@@ -4,7 +4,6 @@ import {
   IsArray,
   IsDateString,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
@@ -37,8 +36,9 @@ export class CreateSalesReturnDto {
   handlerPersonnelId?: number;
 
   @IsInt()
+  @IsOptional()
   @Min(1)
-  workshopId!: number;
+  workshopId?: number | null;
 
   @IsString()
   @IsOptional()

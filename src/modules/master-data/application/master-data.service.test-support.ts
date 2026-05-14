@@ -15,7 +15,7 @@ export function createRepositoryMock() {
     ensureCanonicalStockScopes: jest.fn().mockResolvedValue(undefined),
     ensureDefaultMaterialCategory: jest.fn().mockResolvedValue({
       id: 99,
-      categoryCode: "UNCATEGORIZED",
+      categoryCode: "15",
       categoryName: "未分类",
       status: "ACTIVE",
     }),

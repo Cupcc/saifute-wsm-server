@@ -76,16 +76,17 @@ async function insertLogRow(
   const result = await connection.query<QueryResultWithInsertId>(
     `
       INSERT INTO inventory_log (
-        balance_id, material_id, stock_scope_id, workshop_id, biz_date,
+        balance_id, material_id, stock_scope_id, workshop_id, project_target_id, biz_date,
         direction, operation_type, business_module, business_document_type,
         business_document_id, business_document_number,
         business_document_line_id, change_qty, before_qty, after_qty,
         unit_cost, cost_amount, operator_id, occurred_at, idempotency_key, note
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         id = LAST_INSERT_ID(id),
         balance_id = VALUES(balance_id),
         stock_scope_id = VALUES(stock_scope_id),
+        project_target_id = VALUES(project_target_id),
         unit_cost = VALUES(unit_cost),
         cost_amount = VALUES(cost_amount),
         note = VALUES(note)
@@ -95,6 +96,7 @@ async function insertLogRow(
       log.materialId,
       log.stockScopeId,
       log.workshopId,
+      log.projectTargetId,
       log.bizDate,
       log.direction,
       log.operationType,

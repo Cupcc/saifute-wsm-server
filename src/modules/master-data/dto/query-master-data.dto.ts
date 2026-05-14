@@ -4,11 +4,30 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   Min,
 } from "class-validator";
 
+function trimOptionalString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function parseOptionalNumber(value: unknown): number | undefined {
+  if (value === "" || value === null || typeof value === "undefined") {
+    return undefined;
+  }
+
+  return Number(value);
+}
+
 export class QueryMasterDataDto {
+  @Transform(({ value }) => trimOptionalString(value))
   @IsString()
   @IsOptional()
   @MaxLength(64)
@@ -36,4 +55,47 @@ export class QueryMasterDataDto {
   @IsInt()
   @Min(1)
   workshopId?: number;
+}
+
+export class QueryMaterialDto extends QueryMasterDataDto {
+  @Transform(({ value }) => trimOptionalString(value))
+  @IsString()
+  @IsOptional()
+  @MaxLength(64)
+  materialCode?: string;
+
+  @Transform(({ value }) => trimOptionalString(value))
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  materialName?: string;
+
+  @Transform(({ value }) => trimOptionalString(value))
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  specModel?: string;
+
+  @Transform(({ value }) => trimOptionalString(value))
+  @IsString()
+  @IsOptional()
+  @MaxLength(128)
+  specification?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => parseOptionalNumber(value))
+  @IsInt()
+  @Min(1)
+  categoryId?: number;
+
+  @Transform(({ value }) => trimOptionalString(value))
+  @IsString()
+  @IsOptional()
+  @MaxLength(32)
+  unitCode?: string;
+
+  @Transform(({ value }) => trimOptionalString(value))
+  @Matches(/^\d+(\.\d{1,6})?$/)
+  @IsOptional()
+  warningMinQty?: string;
 }

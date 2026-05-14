@@ -81,7 +81,7 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button
-            v-if="scope.row.categoryCode !== 'UNCATEGORIZED'"
+            v-if="scope.row.categoryCode !== '15'"
             link
             type="primary"
             icon="Edit"
@@ -91,7 +91,7 @@
             修改
           </el-button>
           <el-button
-            v-if="scope.row.categoryCode !== 'UNCATEGORIZED'"
+            v-if="scope.row.categoryCode !== '15'"
             link
             type="primary"
             icon="Delete"

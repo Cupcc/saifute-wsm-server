@@ -24,6 +24,34 @@ describe("MaterialService", () => {
     );
   });
 
+  it("forwards structured material filters to the repository", async () => {
+    const { repository, service } = createService();
+    repository.findMaterials.mockResolvedValue({ items: [], total: 0 });
+
+    await service.list({
+      materialCode: "MAT",
+      materialName: "轴承",
+      specModel: "6205",
+      categoryId: 3,
+      unitCode: "PCS",
+      warningMinQty: "5",
+      limit: 20,
+      offset: 0,
+    });
+
+    expect(repository.findMaterials).toHaveBeenCalledWith(
+      expect.objectContaining({
+        materialCode: "MAT",
+        materialName: "轴承",
+        specModel: "6205",
+        categoryId: 3,
+        unitCode: "PCS",
+        warningMinQty: "5",
+        status: "ACTIVE",
+      }),
+    );
+  });
+
   it("blocks material deactivation when any positive balance row exists", async () => {
     const { repository, service } = createService();
     repository.findMaterialById.mockResolvedValue({

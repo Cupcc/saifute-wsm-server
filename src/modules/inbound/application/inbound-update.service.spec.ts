@@ -16,6 +16,7 @@ import {
   reverseAcceptanceStatusesForOrder,
 } from "../../rd-subwarehouse/application/rd-material-status.helper";
 import { RdProcurementRequestService } from "../../rd-subwarehouse/application/rd-procurement-request.service";
+import { SalesProjectService } from "../../sales-project/application/sales-project.service";
 import { InboundRepository } from "../infrastructure/inbound.repository";
 import { InboundService } from "./inbound.service";
 import { InboundAcceptanceCreationService } from "./inbound-acceptance-creation.service";
@@ -94,7 +95,7 @@ describe("InboundService", () => {
   };
   const _mockUncategorizedCategory = {
     id: 1,
-    categoryCode: "UNCATEGORIZED",
+    categoryCode: "15",
     categoryName: "未分类",
     parentId: null,
   };
@@ -133,6 +134,15 @@ describe("InboundService", () => {
         quantity: new Prisma.Decimal(100),
       },
     ],
+  };
+  const mockSalesProjectReference = {
+    id: 300,
+    salesProjectCode: "SP-300",
+    salesProjectName: "销售项目 A",
+    customerId: 200,
+    workshopId: 1,
+    projectTargetId: 7001,
+    lifecycleStatus: DocumentLifecycleStatus.EFFECTIVE,
   };
 
   let service: InboundService;
@@ -240,6 +250,14 @@ describe("InboundService", () => {
               .mockResolvedValue(mockRdProcurementRequest),
           },
         },
+        {
+          provide: SalesProjectService,
+          useValue: {
+            getProjectReferenceById: jest
+              .fn()
+              .mockResolvedValue(mockSalesProjectReference),
+          },
+        },
       ],
     }).compile();
 
@@ -344,6 +362,63 @@ describe("InboundService", () => {
       expect.objectContaining({
         workshopId: null,
         workshopNameSnapshot: null,
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("should repost acceptance inventory logs when only sales project changes", async () => {
+    const orderWithProject = {
+      ...mockOrder,
+      salesProjectId: null,
+      salesProjectCodeSnapshot: null,
+      salesProjectNameSnapshot: null,
+    };
+    (repository.findOrderById as jest.Mock)
+      .mockResolvedValueOnce(orderWithProject)
+      .mockResolvedValueOnce(orderWithProject)
+      .mockResolvedValueOnce(orderWithProject);
+    (inventoryService.getLogsForDocument as jest.Mock).mockResolvedValue([
+      { id: 1, businessDocumentLineId: 1 },
+    ]);
+    (repository.updateOrderLine as jest.Mock).mockResolvedValue(
+      orderWithProject.lines[0],
+    );
+    (repository.updateOrder as jest.Mock).mockResolvedValue({
+      ...orderWithProject,
+      salesProjectCodeSnapshot: "SP-300",
+      salesProjectNameSnapshot: "销售项目 A",
+    });
+
+    await service.updateOrder(
+      1,
+      {
+        salesProjectId: 300,
+        lines: [
+          {
+            id: 1,
+            materialId: 100,
+            quantity: "100",
+            unitPrice: "10",
+          },
+        ],
+      },
+      "1",
+    );
+
+    expect(inventoryService.reverseStock).toHaveBeenCalled();
+    expect(inventoryService.increaseStock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectTargetId: 7001,
+      }),
+      expect.anything(),
+    );
+    expect(repository.updateOrder).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        salesProjectId: 300,
+        salesProjectCodeSnapshot: "SP-300",
+        salesProjectNameSnapshot: "销售项目 A",
       }),
       expect.anything(),
     );

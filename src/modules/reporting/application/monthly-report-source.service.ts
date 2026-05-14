@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import type { StockScopeCode } from "../../session/domain/user-session";
 import { MonthlyMaterialCategoryRepository } from "../infrastructure/monthly-material-category.repository";
+import { MonthlyMaterialCategoryBalanceRepository } from "../infrastructure/monthly-material-category-balance.repository";
 import {
   MonthlyReportRepository,
   type MonthlySalesProjectEntry,
@@ -19,6 +20,7 @@ import {
   getMonthlyReportingTopicMeta,
   MONTHLY_REPORTING_ABNORMAL_LABELS,
   MONTHLY_REPORTING_MATERIAL_CATEGORY_TOPIC_OPTIONS,
+  type MonthlyMaterialCategoryBalanceSnapshot,
   type MonthlyMaterialCategoryEntry,
   type MonthlyReportEntry,
   type MonthlyReportingDomainKey,
@@ -52,6 +54,7 @@ export class MonthlyReportSourceService {
   constructor(
     private readonly repository: MonthlyReportRepository,
     private readonly materialCategoryRepository: MonthlyMaterialCategoryRepository,
+    private readonly materialCategoryBalanceRepository: MonthlyMaterialCategoryBalanceRepository,
     private readonly appConfigService: AppConfigService,
   ) {}
 
@@ -96,6 +99,23 @@ export class MonthlyReportSourceService {
       stockScope: query.stockScope,
       workshopId: query.workshopId,
     });
+  }
+
+  async loadMaterialCategoryBalanceSnapshots(
+    query: MonthlyReportQuery,
+  ): Promise<MonthlyMaterialCategoryBalanceSnapshot[]> {
+    const { start, end } = resolveMonthlyReportMonthRange(
+      query.yearMonth,
+      this.appConfigService.businessTimezone,
+    );
+
+    return this.materialCategoryBalanceRepository.findMonthlyMaterialCategoryBalanceSnapshots(
+      {
+        start,
+        end,
+        stockScope: query.stockScope,
+      },
+    );
   }
 
   filterRows(

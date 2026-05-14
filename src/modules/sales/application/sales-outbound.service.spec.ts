@@ -149,6 +149,53 @@ describe("SalesOutboundService", () => {
       expect(repository.createOrder).not.toHaveBeenCalled();
     });
 
+    it("should create outbound order without workshop", async () => {
+      const orderWithoutWorkshop = {
+        ...mockOutboundOrder,
+        workshopId: null,
+        workshopNameSnapshot: null,
+      };
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.createOrder as jest.Mock).mockResolvedValue(
+        orderWithoutWorkshop,
+      );
+      (repository.findOrderById as jest.Mock).mockResolvedValue(
+        orderWithoutWorkshop,
+      );
+
+      const result = await service.createOrder(
+        {
+          documentNo: "OB-NO-WORKSHOP",
+          bizDate: "2025-03-14",
+          customerId: 10,
+          lines: [
+            {
+              materialId: 100,
+              salesProjectId: 300,
+              quantity: "5",
+              selectedUnitCost: "10",
+              unitPrice: "10",
+            },
+          ],
+        },
+        "1",
+      );
+
+      expect(result).toMatchObject(orderWithoutWorkshop);
+      expect(masterDataService.getWorkshopById).not.toHaveBeenCalled();
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          workshopId: null,
+          workshopNameSnapshot: null,
+        }),
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(inventoryService.listPriceLayerAvailability).toHaveBeenCalledWith(
+        expect.objectContaining({ workshopId: undefined }),
+      );
+    });
+
     it("should fall back to uncategorized snapshot when material category is missing", async () => {
       (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
       (repository.createOrder as jest.Mock).mockResolvedValue(
@@ -180,20 +227,18 @@ describe("SalesOutboundService", () => {
         "1",
       );
 
-      expect(repository.findMaterialCategoryByCode).toHaveBeenCalledWith(
-        "UNCATEGORIZED",
-      );
+      expect(repository.findMaterialCategoryByCode).toHaveBeenCalledWith("15");
       expect(repository.createOrder).toHaveBeenCalledWith(
         expect.anything(),
         expect.arrayContaining([
           expect.objectContaining({
             materialCategoryIdSnapshot: 1,
-            materialCategoryCodeSnapshot: "UNCATEGORIZED",
+            materialCategoryCodeSnapshot: "15",
             materialCategoryNameSnapshot: "未分类",
             materialCategoryPathSnapshot: [
               {
                 id: 1,
-                categoryCode: "UNCATEGORIZED",
+                categoryCode: "15",
                 categoryName: "未分类",
               },
             ],

@@ -8,18 +8,38 @@ import {
   pickKeyword,
 } from "./compat";
 
+function optionalString(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function optionalValue(value) {
+  return value === "" || value === null || typeof value === "undefined"
+    ? undefined
+    : value;
+}
+
+function buildMaterialFilterParams(query, limit, offset) {
+  return {
+    keyword: optionalString(query.keyword),
+    materialCode: optionalString(query.materialCode),
+    materialName: optionalString(query.materialName),
+    specModel: optionalString(query.specModel ?? query.specification),
+    categoryId: optionalValue(query.categoryId ?? query.category),
+    unitCode: optionalString(query.unitCode ?? query.unit),
+    warningMinQty: optionalValue(query.warningMinQty ?? query.stockMin),
+    includeDisabled: query.includeDisabled || undefined,
+    limit,
+    offset,
+  };
+}
+
 // 查询物料列表
 export function listMaterial(query = {}) {
   const { limit, offset } = buildPageQuery(query);
   return request({
     url: "/api/master-data/materials",
     method: "get",
-    params: {
-      keyword: pickKeyword(query, ["materialCode", "materialName"]),
-      includeDisabled: query.includeDisabled || undefined,
-      limit,
-      offset,
-    },
+    params: buildMaterialFilterParams(query, limit, offset),
   }).then((response) => buildRowsResponse(response.data, mapMaterial));
 }
 

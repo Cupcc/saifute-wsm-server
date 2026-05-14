@@ -12,7 +12,7 @@ import {
 import { SalesRepository } from "../infrastructure/sales.repository";
 import { formatFactoryNumberExpression } from "./factory-number-ranges";
 
-const DEFAULT_MATERIAL_CATEGORY_CODE = "UNCATEGORIZED";
+const DEFAULT_MATERIAL_CATEGORY_CODE = "15";
 
 export type OutboundLineWriteData = {
   lineNo: number;
@@ -92,10 +92,13 @@ export class SalesSnapshotsService {
     project: SalesProjectBindingReference,
     context: {
       customerId?: number;
-      workshopId: number;
+      workshopId?: number | null;
     },
   ) {
-    if (project.workshopId !== context.workshopId) {
+    if (
+      context.workshopId != null &&
+      project.workshopId !== context.workshopId
+    ) {
       throw new BadRequestException(
         `销售项目与出库车间不一致: salesProjectId=${project.id}`,
       );
@@ -127,7 +130,7 @@ export class SalesSnapshotsService {
     salesProjectById: Map<number, SalesProjectBindingReference>,
     context: {
       customerId?: number;
-      workshopId: number;
+      workshopId?: number | null;
     },
   ): Promise<OutboundLineWriteData> {
     const material = await this.masterDataService.getMaterialById(

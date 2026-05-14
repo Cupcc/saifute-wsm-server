@@ -14,6 +14,7 @@ import { ReportingController } from "./controllers/reporting.controller";
 import { HomeMetricsRepository } from "./infrastructure/home-metrics.repository";
 import { InventoryReportingRepository } from "./infrastructure/inventory-reporting.repository";
 import { MonthlyMaterialCategoryRepository } from "./infrastructure/monthly-material-category.repository";
+import { MonthlyMaterialCategoryBalanceRepository } from "./infrastructure/monthly-material-category-balance.repository";
 import { MonthlyReportRepository } from "./infrastructure/monthly-report.repository";
 
 @Module({
@@ -25,6 +26,7 @@ import { MonthlyReportRepository } from "./infrastructure/monthly-report.reposit
     InventoryReportingRepository,
     MonthlyReportRepository,
     MonthlyMaterialCategoryRepository,
+    MonthlyMaterialCategoryBalanceRepository,
     MonthlyReportCatalogService,
     MonthlyReportSourceService,
     MonthlyReportItemMapperService,

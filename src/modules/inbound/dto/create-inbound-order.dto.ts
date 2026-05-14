@@ -31,6 +31,11 @@ export class CreateInboundOrderDto {
   @Min(1)
   supplierId?: number;
 
+  @IsInt()
+  @IsOptional()
+  @Min(1)
+  salesProjectId?: number;
+
   @IsString()
   @IsOptional()
   @MaxLength(64)

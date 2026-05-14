@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import type { CreateMaterialDto } from "../dto/create-material.dto";
-import type { QueryMasterDataDto } from "../dto/query-master-data.dto";
+import type { QueryMaterialDto } from "../dto/query-master-data.dto";
 import type { UpdateMaterialDto } from "../dto/update-material.dto";
 import { MasterDataRepository } from "../infrastructure/master-data.repository";
 
@@ -13,11 +13,17 @@ import { MasterDataRepository } from "../infrastructure/master-data.repository";
 export class MaterialService {
   constructor(private readonly repository: MasterDataRepository) {}
 
-  async list(query: QueryMasterDataDto) {
+  async list(query: QueryMaterialDto) {
     const limit = Math.min(query.limit ?? 50, 100);
     const offset = query.offset ?? 0;
     return this.repository.findMaterials({
       keyword: query.keyword,
+      materialCode: query.materialCode,
+      materialName: query.materialName,
+      specModel: query.specModel ?? query.specification,
+      categoryId: query.categoryId,
+      unitCode: query.unitCode,
+      warningMinQty: query.warningMinQty,
       limit,
       offset,
       status: query.includeDisabled ? undefined : "ACTIVE",

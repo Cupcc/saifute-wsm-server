@@ -107,6 +107,15 @@ export class InboundAcceptanceCreationService {
     const workshop = dto.workshopId
       ? await this.masterDataService.getWorkshopById(dto.workshopId)
       : null;
+    const salesProjectReference =
+      await this.shared.resolveSalesProjectReference(
+        StockInOrderType.ACCEPTANCE,
+        dto.salesProjectId,
+        workshop?.id ?? null,
+      );
+    const salesProjectSnapshots = this.shared.toSalesProjectSnapshots(
+      salesProjectReference,
+    );
     const pendingSupplier = this.resolvePendingSupplierInput(dto);
     await this.shared.validateMasterData(dto, dto.supplierId, {
       hasPendingSupplier: Boolean(pendingSupplier),
@@ -161,11 +170,16 @@ export class InboundAcceptanceCreationService {
             documentNo,
             orderType: StockInOrderType.ACCEPTANCE,
             bizDate,
+            salesProjectId: salesProjectSnapshots.salesProjectId,
             supplierId: dto.supplierId ?? null,
             handlerPersonnelId: dto.handlerPersonnelId ?? null,
             stockScopeId: stockScopeRecord.id,
             workshopId: workshop?.id ?? null,
             rdProcurementRequestId: null,
+            salesProjectCodeSnapshot:
+              salesProjectSnapshots.salesProjectCodeSnapshot,
+            salesProjectNameSnapshot:
+              salesProjectSnapshots.salesProjectNameSnapshot,
             supplierCodeSnapshot,
             supplierNameSnapshot,
             handlerNameSnapshot,
@@ -226,6 +240,8 @@ export class InboundAcceptanceCreationService {
               businessDocumentId: order.id,
               businessDocumentNumber: order.documentNo,
               businessDocumentLineId: line.id,
+              projectTargetId:
+                salesProjectSnapshots.projectTargetId ?? undefined,
               operatorId: createdBy,
               idempotencyKey: `StockInOrder:${order.id}:line:${line.id}`,
               unitCost: new Prisma.Decimal(line.unitPrice),

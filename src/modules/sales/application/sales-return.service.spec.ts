@@ -121,6 +121,61 @@ describe("SalesReturnService", () => {
       );
     });
 
+    it("should create sales return from source outbound without workshop", async () => {
+      const sourceOutbound = {
+        ...mockOutboundOrder,
+        workshopId: null,
+        workshopNameSnapshot: null,
+      };
+      const returnOrder = {
+        ...mockSalesReturnOrder,
+        workshopId: null,
+        workshopNameSnapshot: null,
+      };
+      (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
+      (repository.findOrderById as jest.Mock).mockResolvedValue(sourceOutbound);
+      (repository.createOrder as jest.Mock).mockResolvedValue(returnOrder);
+      (
+        inventoryService.listSourceUsagesForConsumerLine as jest.Mock
+      ).mockResolvedValue([
+        {
+          sourceLogId: 10,
+          consumerLineId: 1,
+          allocatedQty: new Prisma.Decimal(50),
+          releasedQty: new Prisma.Decimal(0),
+          sourceLog: { unitCost: new Prisma.Decimal(8) },
+        },
+      ]);
+
+      await service.createSalesReturn(
+        {
+          documentNo: "SR-NO-WORKSHOP",
+          bizDate: "2025-03-14",
+          sourceOutboundOrderId: 1,
+          customerId: 10,
+          handlerPersonnelId: 20,
+          lines: [
+            {
+              materialId: 100,
+              quantity: "50",
+              sourceOutboundLineId: 1,
+              unitPrice: "10",
+            },
+          ],
+        },
+        "1",
+      );
+
+      expect(repository.createOrder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          workshopId: null,
+          workshopNameSnapshot: null,
+        }),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
     it("should reject when split lines in the same request cumulatively exceed source outbound line quantity", async () => {
       (repository.findOrderByDocumentNo as jest.Mock).mockResolvedValue(null);
       (repository.findOrderById as jest.Mock).mockResolvedValue(

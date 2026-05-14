@@ -267,6 +267,21 @@ export interface MonthlyMaterialCategoryEntry {
   sourceDocumentNo: string | null;
 }
 
+export interface MonthlyMaterialCategoryBalanceSnapshot {
+  materialId: number;
+  materialCode: string;
+  materialName: string;
+  materialSpec: string | null;
+  unitCode: string;
+  categoryId: number | null;
+  categoryCode: string | null;
+  categoryName: string;
+  openingQuantity: Prisma.Decimal;
+  openingAmount: Prisma.Decimal;
+  closingQuantity: Prisma.Decimal;
+  closingAmount: Prisma.Decimal;
+}
+
 export function getMonthlyReportingDomainMeta(
   domainKey: MonthlyReportingDomainKey,
 ): MonthlyReportingDomainMeta {
@@ -309,6 +324,10 @@ export function isSameYearMonth(left: Date, right: Date, timeZone = "UTC") {
 
 export function formatDecimal(value: Prisma.Decimal | string | number) {
   return new Prisma.Decimal(value).toFixed(6);
+}
+
+export function formatQuantity(value: Prisma.Decimal | string | number) {
+  return new Prisma.Decimal(value).toFixed(2);
 }
 
 export function formatMoney(value: Prisma.Decimal | string | number) {

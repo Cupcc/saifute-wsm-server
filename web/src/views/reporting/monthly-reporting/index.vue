@@ -205,6 +205,18 @@
           </div>
         </el-col>
         <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
+            <div class="stat-label">月初库存金额</div>
+            <div class="stat-value">{{ summary.openingAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
+          <div class="stat-box">
+            <div class="stat-label">月末库存金额</div>
+            <div class="stat-value">{{ summary.closingAmount }}</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="4">
           <div class="stat-box danger-box">
             <div class="stat-label">单据行数</div>
             <div class="stat-value">{{ summary.lineCount }}</div>
@@ -234,7 +246,7 @@
         </div>
         <el-table :data="domainRows" stripe v-loading="summaryLoading">
           <el-table-column prop="domainLabel" label="领域" min-width="140" />
-          <el-table-column prop="documentCount" label="单据数" min-width="100" />
+          <el-table-column prop="documentCount" label="单据数" min-width="80" />
           <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
           <el-table-column prop="totalInAmount" label="总入金额" min-width="140" />
           <el-table-column prop="totalOutAmount" label="总出金额" min-width="140" />
@@ -270,7 +282,7 @@
         >
           <el-table-column prop="domainLabel" label="领域" min-width="120" />
           <el-table-column prop="documentTypeLabel" label="单据类型" min-width="180" />
-          <el-table-column prop="documentCount" label="单据数" min-width="100" />
+          <el-table-column prop="documentCount" label="单据数" min-width="80" />
           <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
           <el-table-column prop="totalInAmount" label="总入金额" min-width="140" />
           <el-table-column prop="totalOutAmount" label="总出金额" min-width="140" />
@@ -298,7 +310,7 @@
           >
             <el-table :data="workshopRows" stripe v-loading="summaryLoading">
               <el-table-column prop="workshopName" label="车间" min-width="160" />
-              <el-table-column prop="documentCount" label="单据数" min-width="100" />
+              <el-table-column prop="documentCount" label="单据数" min-width="80" />
               <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
               <el-table-column prop="pickAmount" label="领料金额" min-width="140" />
               <el-table-column prop="returnAmount" label="退料金额" min-width="140" />
@@ -315,7 +327,7 @@
             <el-table :data="salesProjectRows" stripe v-loading="summaryLoading">
               <el-table-column prop="salesProjectCode" label="销售项目编码" min-width="160" />
               <el-table-column prop="salesProjectName" label="销售项目名称" min-width="180" />
-              <el-table-column prop="documentCount" label="单据数" min-width="100" />
+              <el-table-column prop="documentCount" label="单据数" min-width="80" />
               <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
               <el-table-column prop="salesOutboundAmount" label="销售出库金额" min-width="140" />
               <el-table-column prop="salesReturnAmount" label="销售退货金额" min-width="140" />
@@ -331,7 +343,7 @@
             <el-table :data="rdProjectRows" stripe v-loading="summaryLoading">
               <el-table-column prop="rdProjectCode" label="研发项目编码" min-width="160" />
               <el-table-column prop="rdProjectName" label="研发项目名称" min-width="180" />
-              <el-table-column prop="documentCount" label="单据数" min-width="100" />
+              <el-table-column prop="documentCount" label="单据数" min-width="80" />
               <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
               <el-table-column prop="handoffInAmount" label="项目交接入金额" min-width="140" />
               <el-table-column prop="pickAmount" label="项目领用金额" min-width="140" />
@@ -369,10 +381,10 @@
           :row-class-name="resolveCategoryRowClassName"
           @row-click="handleCategoryRowClick"
         >
-          <el-table-column prop="categoryCode" label="分类编码" min-width="140" />
-          <el-table-column prop="categoryName" label="分类名称" min-width="160" />
-          <el-table-column prop="lineCount" label="单据行数" min-width="100" />
-          <el-table-column prop="documentCount" label="单据数" min-width="100" />
+          <el-table-column prop="categoryCode" label="分类编码" min-width="80" />
+          <el-table-column prop="categoryName" label="分类名称" min-width="100" />
+          <el-table-column prop="lineCount" label="单据行数" min-width="80" />
+          <el-table-column prop="documentCount" label="单据数" min-width="80" />
           <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
           <el-table-column prop="acceptanceInboundAmount" label="验收入库金额" min-width="140" />
           <el-table-column prop="productionReceiptAmount" label="生产入库金额" min-width="140" />
@@ -381,7 +393,60 @@
           <el-table-column prop="salesReturnAmount" label="销售退货金额" min-width="140" />
           <el-table-column prop="netAmount" label="净发生金额" min-width="140" />
           <el-table-column prop="totalCost" label="总成本" min-width="140" />
+          <el-table-column prop="openingAmount" label="月初库存金额" min-width="140" />
+          <el-table-column prop="closingAmount" label="月末库存金额" min-width="140" />
         </el-table>
+      </el-card>
+
+      <el-card v-if="isMaterialCategoryView" shadow="never" class="section-card">
+        <template #header>
+          <div class="section-header">
+            <span>物料汇总</span>
+            <span class="section-tip">{{ materialSectionTip }}</span>
+          </div>
+        </template>
+        <el-table
+          :data="pagedMaterialRows"
+          stripe
+          row-key="materialKey"
+          v-loading="summaryLoading"
+        >
+          <el-table-column prop="categoryCode" label="分类编码" min-width="80" />
+          <el-table-column prop="categoryName" label="分类名称" min-width="100" show-overflow-tooltip />
+          <el-table-column prop="materialCode" label="物料编码" min-width="100" />
+          <el-table-column prop="materialName" label="物料名称" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="materialSpec" label="规格型号" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="unitCode" label="单位" min-width="60" />
+          <el-table-column prop="lineCount" label="单据行数" min-width="80" />
+          <el-table-column prop="documentCount" label="单据数" min-width="80" />
+          <el-table-column prop="abnormalDocumentCount" label="异常单据数" min-width="120" />
+          <el-table-column prop="openingQuantity" label="月初数量" min-width="120" />
+          <el-table-column prop="openingAmount" label="月初金额" min-width="120" />
+          <el-table-column prop="inQuantity" label="入库数量" min-width="120" />
+          <el-table-column prop="outQuantity" label="出库数量" min-width="120" />
+          <el-table-column prop="netQuantity" label="净发生数量" min-width="120" />
+          <el-table-column prop="closingQuantity" label="月末数量" min-width="120" />
+          <el-table-column prop="closingAmount" label="月末金额" min-width="120" />
+          <el-table-column prop="acceptanceInboundAmount" label="验收入库金额" min-width="140" />
+          <el-table-column prop="productionReceiptAmount" label="生产入库金额" min-width="140" />
+          <el-table-column prop="supplierReturnAmount" label="退给厂家金额" min-width="140" />
+          <el-table-column prop="salesOutboundAmount" label="销售出库金额" min-width="140" />
+          <el-table-column prop="salesReturnAmount" label="销售退货金额" min-width="140" />
+          <el-table-column prop="netAmount" label="净发生金额" min-width="140" />
+          <el-table-column prop="totalCost" label="总成本" min-width="140" />
+        </el-table>
+        <div class="pagination-wrap">
+          <el-pagination
+            background
+            layout="total, sizes, prev, pager, next"
+            :current-page="materialPageNum"
+            :page-size="materialPageSize"
+            :page-sizes="[50, 100, 200]"
+            :total="filteredMaterialTotal"
+            @current-change="handleMaterialPageChange"
+            @size-change="handleMaterialSizeChange"
+          />
+        </div>
       </el-card>
 
       <el-card shadow="never" class="section-card">
@@ -430,18 +495,18 @@
         </el-table>
 
         <el-table v-else :data="detailRows" stripe v-loading="detailLoading">
-          <el-table-column prop="categoryCode" label="分类编码" min-width="140" />
-          <el-table-column prop="categoryName" label="分类名称" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="categoryCode" label="分类编码" min-width="80" />
+          <el-table-column prop="categoryName" label="分类名称" min-width="100" show-overflow-tooltip />
           <el-table-column prop="documentTypeLabel" label="单据类型" min-width="140" />
           <el-table-column prop="documentNo" label="单据编号" min-width="180" />
           <el-table-column prop="lineNo" label="行号" min-width="90" />
           <el-table-column prop="bizDate" label="业务日期" min-width="120" />
           <el-table-column prop="stockScopeName" label="仓别" min-width="140" />
           <el-table-column prop="workshopName" label="车间" min-width="140" />
-          <el-table-column prop="materialCode" label="物料编码" min-width="160" />
+          <el-table-column prop="materialCode" label="物料编码" min-width="100" />
           <el-table-column prop="materialName" label="物料名称" min-width="180" show-overflow-tooltip />
           <el-table-column prop="materialSpec" label="规格型号" min-width="160" show-overflow-tooltip />
-          <el-table-column prop="unitCode" label="单位" min-width="100" />
+          <el-table-column prop="unitCode" label="单位" min-width="60" />
           <el-table-column prop="salesProjectCode" label="销售项目编码" min-width="160" />
           <el-table-column prop="salesProjectName" label="销售项目名称" min-width="180" show-overflow-tooltip />
           <el-table-column prop="quantity" label="数量" min-width="120" />
@@ -509,6 +574,8 @@ const detailLoading = ref(false);
 const exporting = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(10);
+const materialPageNum = ref(1);
+const materialPageSize = ref(50);
 const selectedCategoryNodeKey = ref(undefined);
 const workshopOptions = ref([]);
 const domainCatalog = ref([]);
@@ -520,6 +587,7 @@ const workshopRows = ref([]);
 const salesProjectRows = ref([]);
 const rdProjectRows = ref([]);
 const categoryRows = ref([]);
+const materialRows = ref([]);
 const detailRows = ref([]);
 const detailTotal = ref(0);
 const summary = ref(createEmptySummary(DOMAIN_VIEW));
@@ -608,9 +676,28 @@ const categoryOptions = computed(() => {
       left.categoryLabel.localeCompare(right.categoryLabel, "zh-Hans-CN"),
   );
 });
+const filteredMaterialRows = computed(() => {
+  if (!selectedCategoryNodeKey.value) {
+    return materialRows.value;
+  }
+
+  return materialRows.value.filter(
+    (row) => row.categoryNodeKey === selectedCategoryNodeKey.value,
+  );
+});
+const filteredMaterialTotal = computed(
+  () => filteredMaterialRows.value.length,
+);
+const pagedMaterialRows = computed(() => {
+  const start = (materialPageNum.value - 1) * materialPageSize.value;
+  return filteredMaterialRows.value.slice(
+    start,
+    start + materialPageSize.value,
+  );
+});
 const reportingSubtitle = computed(() => {
   if (isMaterialCategoryView.value) {
-    return "物料分类视角按单据行事实统计验收入库、生产入库、销售出库和销售退货金额，分类归属使用业务发生时快照并按单层最终分类聚合。";
+    return "物料分类视角按单据行事实统计本月发生，并补充按库存流水回算的月初与月末库存。分类归属使用业务发生时快照并按单层最终分类聚合。";
   }
 
   if (filters.value.stockScope === "MAIN") {
@@ -678,6 +765,19 @@ const categoryActionText = computed(() =>
 const detailSectionTitle = computed(() =>
   isMaterialCategoryView.value ? "单据行明细" : "单据头明细",
 );
+const materialSectionTip = computed(() => {
+  if (!selectedCategoryNodeKey.value) {
+    return "当前显示筛选范围内每个物料的月初、发生、月末数量金额和成本。";
+  }
+
+  const current = categoryOptions.value.find(
+    (item) => item.nodeKey === selectedCategoryNodeKey.value,
+  );
+
+  return current
+    ? `当前显示 ${current.categoryLabel} 下的物料汇总`
+    : "当前显示选中分类下的物料汇总";
+});
 const detailSectionTip = computed(() =>
   isMaterialCategoryView.value
     ? "当前为物料分类视角，明细按单据行展示分类、物料、销售项目与来源追溯信息。"
@@ -748,6 +848,10 @@ function createEmptyMaterialCategorySummary() {
     salesReturnAmount: "0.00",
     netAmount: "0.00",
     totalCost: "0.00",
+    openingQuantity: "0.00",
+    openingAmount: "0.00",
+    closingQuantity: "0.00",
+    closingAmount: "0.00",
   };
 }
 
@@ -868,6 +972,7 @@ async function loadSummary() {
       rdProjectRows.value = [];
       categoryCatalog.value = data.categoryCatalog || data.categories || [];
       categoryRows.value = data.categories || [];
+      materialRows.value = data.materials || [];
       activeBusinessSummaryTab.value = "";
       return;
     }
@@ -875,6 +980,7 @@ async function loadSummary() {
     domainCatalog.value = data.domainCatalog || [];
     categoryCatalog.value = [];
     categoryRows.value = [];
+    materialRows.value = [];
     domainRows.value = data.domains || [];
     documentTypeRows.value = data.documentTypes || [];
     workshopRows.value = data.workshopItems || [];
@@ -908,6 +1014,7 @@ async function loadPage() {
 function handleSearch() {
   selectedCategoryNodeKey.value = undefined;
   pageNum.value = 1;
+  resetMaterialPagination();
   loadPage();
 }
 
@@ -915,6 +1022,7 @@ function handleReset() {
   filters.value = createDefaultFilters(resolveRouteViewMode());
   selectedCategoryNodeKey.value = undefined;
   pageNum.value = 1;
+  resetMaterialPagination();
   loadPage();
 }
 
@@ -927,6 +1035,19 @@ function handleSizeChange(value) {
   pageSize.value = value;
   pageNum.value = 1;
   loadDetails();
+}
+
+function handleMaterialPageChange(value) {
+  materialPageNum.value = value;
+}
+
+function handleMaterialSizeChange(value) {
+  materialPageSize.value = value;
+  resetMaterialPagination();
+}
+
+function resetMaterialPagination() {
+  materialPageNum.value = 1;
 }
 
 function handleDocumentTypeRowClick(row) {
@@ -947,6 +1068,7 @@ function handleCategoryRowClick(row) {
   selectedCategoryNodeKey.value =
     selectedCategoryNodeKey.value === row.nodeKey ? undefined : row.nodeKey;
   pageNum.value = 1;
+  resetMaterialPagination();
   loadDetails();
 }
 
@@ -976,12 +1098,14 @@ function clearDocumentTypeFilter() {
 function clearCategorySelection() {
   selectedCategoryNodeKey.value = undefined;
   pageNum.value = 1;
+  resetMaterialPagination();
   loadDetails();
 }
 
 function clearCategoryFilter() {
   filters.value.categoryNodeKey = undefined;
   pageNum.value = 1;
+  resetMaterialPagination();
   loadPage();
 }
 
@@ -1060,7 +1184,15 @@ function resetFiltersForCurrentRoute() {
   filters.value = createDefaultFilters(resolveRouteViewMode());
   selectedCategoryNodeKey.value = undefined;
   pageNum.value = 1;
+  resetMaterialPagination();
 }
+
+watch(filteredMaterialTotal, (total) => {
+  const maxPage = Math.max(1, Math.ceil(total / materialPageSize.value));
+  if (materialPageNum.value > maxPage) {
+    materialPageNum.value = maxPage;
+  }
+});
 
 function handleNavigateToSiblingView() {
   router.push({ name: siblingViewRouteName.value });

@@ -2,9 +2,10 @@ import { Test } from "@nestjs/testing";
 import { Prisma } from "../../../../generated/prisma/client";
 import { AppConfigService } from "../../../shared/config/app-config.service";
 import { MonthlyMaterialCategoryRepository } from "../infrastructure/monthly-material-category.repository";
+import { MonthlyMaterialCategoryBalanceRepository } from "../infrastructure/monthly-material-category-balance.repository";
 import {
-  type MonthlySalesProjectEntry,
   MonthlyReportRepository,
+  type MonthlySalesProjectEntry,
 } from "../infrastructure/monthly-report.repository";
 import { MonthlyReportCatalogService } from "./monthly-report-catalog.service";
 import { MonthlyReportDomainAggregatorService } from "./monthly-report-domain-aggregator.service";
@@ -41,6 +42,12 @@ describe("MonthlyReportDomainSummaryService", () => {
           provide: MonthlyMaterialCategoryRepository,
           useValue: {
             findMonthlyMaterialCategoryEntries: jest.fn(),
+          },
+        },
+        {
+          provide: MonthlyMaterialCategoryBalanceRepository,
+          useValue: {
+            findMonthlyMaterialCategoryBalanceSnapshots: jest.fn(),
           },
         },
         {

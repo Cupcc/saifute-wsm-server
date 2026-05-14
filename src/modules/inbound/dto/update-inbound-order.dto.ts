@@ -22,6 +22,11 @@ export class UpdateInboundOrderDto {
   @Min(1)
   supplierId?: number;
 
+  @IsInt()
+  @IsOptional()
+  @Min(1)
+  salesProjectId?: number | null;
+
   @IsString()
   @IsOptional()
   @MaxLength(64)

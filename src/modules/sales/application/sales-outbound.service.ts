@@ -22,6 +22,7 @@ import type { CreateOutboundOrderDto } from "../dto/create-outbound-order.dto";
 import type { QueryOutboundOrderDto } from "../dto/query-outbound-order.dto";
 import { SalesRepository } from "../infrastructure/sales.repository";
 import { resolveFactoryNumberRangesOrThrow } from "./factory-number-ranges";
+import { assertNoDuplicateOutboundPriceLayers } from "./sales-price-layer-rules";
 import { SalesSharedService } from "./sales-shared.service";
 import { type OutboundLineWriteData } from "./sales-snapshots.service";
 import { SalesTraceabilityService } from "./sales-traceability.service";
@@ -104,9 +105,9 @@ export class SalesOutboundService {
       );
     const stockScopeRecord =
       await this.shared.masterDataService.getStockScopeByCode("MAIN");
-    const workshop = await this.shared.masterDataService.getWorkshopById(
-      dto.workshopId,
-    );
+    const workshop = dto.workshopId
+      ? await this.shared.masterDataService.getWorkshopById(dto.workshopId)
+      : null;
     const salesProjectById =
       await this.shared.snapshots.resolveSalesProjectReferencesForLines(
         dto.lines,
@@ -120,7 +121,7 @@ export class SalesOutboundService {
           salesProjectById,
           {
             customerId: dto.customerId,
-            workshopId: dto.workshopId,
+            workshopId: dto.workshopId ?? null,
           },
         ),
       ),
@@ -128,7 +129,7 @@ export class SalesOutboundService {
     const projectTargetByLineNo = new Map(
       linesWithSnapshots.map((line) => [line.lineNo, line.projectTargetId]),
     );
-    this.assertNoDuplicateOutboundPriceLayers(linesWithSnapshots);
+    assertNoDuplicateOutboundPriceLayers(linesWithSnapshots);
     await this.assertOutboundPriceLayerAvailability(
       linesWithSnapshots,
       dto.workshopId,
@@ -154,11 +155,11 @@ export class SalesOutboundService {
             customerId: dto.customerId,
             handlerPersonnelId: dto.handlerPersonnelId,
             stockScopeId: stockScopeRecord.id,
-            workshopId: dto.workshopId,
+            workshopId: dto.workshopId ?? null,
             customerCodeSnapshot,
             customerNameSnapshot,
             handlerNameSnapshot,
-            workshopNameSnapshot: workshop.workshopName,
+            workshopNameSnapshot: workshop?.workshopName ?? null,
             totalQty,
             totalAmount,
             remark: dto.remark,
@@ -342,7 +343,9 @@ export class SalesOutboundService {
   }
 
   private async validateMasterDataForOutbound(dto: CreateOutboundOrderDto) {
-    await this.shared.masterDataService.getWorkshopById(dto.workshopId);
+    if (dto.workshopId) {
+      await this.shared.masterDataService.getWorkshopById(dto.workshopId);
+    }
     if (dto.customerId) {
       await this.shared.masterDataService.getCustomerById(dto.customerId);
     }
@@ -356,22 +359,9 @@ export class SalesOutboundService {
     }
   }
 
-  private assertNoDuplicateOutboundPriceLayers(lines: OutboundLineWriteData[]) {
-    const keys = new Set<string>();
-    for (const line of lines) {
-      const key = `${line.materialId}:${line.selectedUnitCost.toString()}`;
-      if (keys.has(key)) {
-        throw new BadRequestException(
-          `同一单据内不允许重复的物料+价格层: materialId=${line.materialId}, selectedUnitCost=${line.selectedUnitCost.toString()}`,
-        );
-      }
-      keys.add(key);
-    }
-  }
-
   private async assertOutboundPriceLayerAvailability(
     lines: OutboundLineWriteData[],
-    workshopId: number,
+    workshopId?: number | null,
   ) {
     const materialIds = [...new Set(lines.map((line) => line.materialId))];
     const availabilityByMaterial = new Map<
@@ -384,7 +374,7 @@ export class SalesOutboundService {
         await this.shared.inventoryService.listPriceLayerAvailability({
           materialId,
           stockScope: "MAIN",
-          workshopId,
+          workshopId: workshopId ?? undefined,
           sourceOperationTypes: OUTBOUND_SOURCE_OPERATION_TYPES,
         });
       availabilityByMaterial.set(

@@ -561,6 +561,7 @@ model StockInOrder {
   documentNo                       String                            @unique @map("document_no") @db.VarChar(64)
   orderType                        StockInOrderType                  @map("order_type")
   bizDate                          DateTime                          @map("biz_date") @db.Date
+  salesProjectId                   Int?                              @map("sales_project_id")
   supplierId                       Int?                              @map("supplier_id")
   handlerPersonnelId               Int?                              @map("handler_personnel_id")
   stockScopeId                     Int?                              @map("stock_scope_id")
@@ -570,6 +571,8 @@ model StockInOrder {
   auditStatusSnapshot              AuditStatusSnapshot               @default(PENDING) @map("audit_status_snapshot")
   inventoryEffectStatus            InventoryEffectStatus             @default(POSTED) @map("inventory_effect_status")
   revisionNo                       Int                               @default(1) @map("revision_no")
+  salesProjectCodeSnapshot         String?                           @map("sales_project_code_snapshot") @db.VarChar(64)
+  salesProjectNameSnapshot         String?                           @map("sales_project_name_snapshot") @db.VarChar(128)
   supplierCodeSnapshot             String?                           @map("supplier_code_snapshot") @db.VarChar(64)
   supplierNameSnapshot             String?                           @map("supplier_name_snapshot") @db.VarChar(128)
   handlerNameSnapshot              String?                           @map("handler_name_snapshot") @db.VarChar(128)
@@ -587,6 +590,7 @@ model StockInOrder {
   createdAt                        DateTime                          @default(now()) @map("created_at")
   updatedBy                        String?                           @map("updated_by") @db.VarChar(64)
   updatedAt                        DateTime                          @updatedAt @map("updated_at")
+  salesProject                     SalesProject?                     @relation(fields: [salesProjectId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   supplier                         Supplier?                         @relation(fields: [supplierId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   handlerPersonnel                 Personnel?                        @relation("StockInOrderHandler", fields: [handlerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   stockScope                       StockScope?                       @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -596,6 +600,7 @@ model StockInOrder {
   priceCorrectionLines             StockInPriceCorrectionOrderLine[] @relation("PriceCorrectionSourceStockInOrder")
 
   @@index([bizDate, orderType])
+  @@index([salesProjectId])
   @@index([supplierId])
   @@index([stockScopeId])
   @@index([workshopId])
@@ -644,7 +649,7 @@ model SalesStockOrder {
   customerId            Int?                    @map("customer_id")
   handlerPersonnelId    Int?                    @map("handler_personnel_id")
   stockScopeId          Int?                    @map("stock_scope_id")
-  workshopId            Int                     @map("workshop_id")
+  workshopId            Int?                    @map("workshop_id")
   lifecycleStatus       DocumentLifecycleStatus @default(EFFECTIVE) @map("lifecycle_status")
   auditStatusSnapshot   AuditStatusSnapshot     @default(PENDING) @map("audit_status_snapshot")
   inventoryEffectStatus InventoryEffectStatus   @default(POSTED) @map("inventory_effect_status")
@@ -652,7 +657,7 @@ model SalesStockOrder {
   customerCodeSnapshot  String?                 @map("customer_code_snapshot") @db.VarChar(64)
   customerNameSnapshot  String?                 @map("customer_name_snapshot") @db.VarChar(128)
   handlerNameSnapshot   String?                 @map("handler_name_snapshot") @db.VarChar(128)
-  workshopNameSnapshot  String                  @map("workshop_name_snapshot") @db.VarChar(128)
+  workshopNameSnapshot  String?                 @map("workshop_name_snapshot") @db.VarChar(128)
   totalQty              Decimal                 @default(0) @map("total_qty") @db.Decimal(18, 6)
   totalAmount           Decimal                 @default(0) @map("total_amount") @db.Decimal(18, 2)
   remark                String?                 @db.VarChar(500)
@@ -666,7 +671,7 @@ model SalesStockOrder {
   customer              Customer?               @relation(fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   handlerPersonnel      Personnel?              @relation("SalesStockOrderHandler", fields: [handlerPersonnelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   stockScope            StockScope?             @relation(fields: [stockScopeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  workshop              Workshop                @relation(fields: [workshopId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  workshop              Workshop?               @relation(fields: [workshopId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   lines                 SalesStockOrderLine[]
 
   @@index([bizDate, orderType])
@@ -754,6 +759,7 @@ model SalesProject {
   projectTarget         ProjectTarget?             @relation(fields: [projectTargetId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   materialLines         SalesProjectMaterialLine[]
   salesOrderLines       SalesStockOrderLine[]
+  acceptanceOrders      StockInOrder[]
 
   @@index([bizDate])
   @@index([customerId])

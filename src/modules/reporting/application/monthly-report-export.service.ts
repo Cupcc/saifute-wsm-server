@@ -16,7 +16,9 @@ import {
   MonthlyReportMaterialCategoryService,
   type MonthlyReportMaterialCategorySummaryItem,
   type MonthlyReportMaterialCategorySummaryTotals,
+  type MonthlyReportMaterialSummaryItem,
 } from "./monthly-report-material-category.service";
+import { filterMonthlyMaterialCategoryBalanceSnapshots } from "./monthly-report-material-category-balance.helper";
 import {
   type MonthlyReportQuery,
   MonthlyReportSourceService,
@@ -89,16 +91,29 @@ export class MonthlyReportExportService {
   private async exportMaterialCategoryMonthlyReport(
     query: MonthlyReportQuery,
   ): Promise<MonthlyReportExportResult> {
-    const entries =
-      await this.sourceService.loadMaterialCategorySourceData(query);
+    const [entries, balanceSnapshots] = await Promise.all([
+      this.sourceService.loadMaterialCategorySourceData(query),
+      this.sourceService.loadMaterialCategoryBalanceSnapshots(query),
+    ]);
     const filteredEntries = this.sourceService.filterMaterialCategoryEntries(
       entries,
       query,
     );
+    const filteredBalanceSnapshots =
+      filterMonthlyMaterialCategoryBalanceSnapshots(balanceSnapshots, query);
     const categoryItems =
-      this.materialCategoryService.buildMaterialCategoryItems(filteredEntries);
-    const totals =
-      this.materialCategoryService.buildMaterialCategoryTotals(filteredEntries);
+      this.materialCategoryService.buildMaterialCategoryItems(
+        filteredEntries,
+        filteredBalanceSnapshots,
+      );
+    const materialItems = this.materialCategoryService.buildMaterialItems(
+      filteredEntries,
+      filteredBalanceSnapshots,
+    );
+    const totals = this.materialCategoryService.buildMaterialCategoryTotals(
+      filteredEntries,
+      filteredBalanceSnapshots,
+    );
 
     return {
       fileName: `monthly-reporting-material-category-${query.yearMonth}.xls`,
@@ -106,6 +121,7 @@ export class MonthlyReportExportService {
         this.buildMaterialCategorySheets(
           totals,
           categoryItems,
+          materialItems,
           filteredEntries,
         ),
       ),
@@ -309,6 +325,7 @@ export class MonthlyReportExportService {
   private buildMaterialCategorySheets(
     totals: Omit<MonthlyReportMaterialCategorySummaryTotals, "categoryCount">,
     categoryItems: MonthlyReportMaterialCategorySummaryItem[],
+    materialItems: MonthlyReportMaterialSummaryItem[],
     filteredEntries: MonthlyMaterialCategoryEntry[],
   ) {
     return [
@@ -322,6 +339,8 @@ export class MonthlyReportExportService {
           ["销售出库金额", totals.salesOutboundAmount],
           ["销售退货金额", totals.salesReturnAmount],
           ["净发生金额", totals.netAmount],
+          ["月初库存金额", totals.openingAmount],
+          ["月末库存金额", totals.closingAmount],
           ["单据行数", totals.lineCount],
           ["单据数", totals.documentCount],
           ["异常单据数", totals.abnormalDocumentCount],
@@ -343,6 +362,8 @@ export class MonthlyReportExportService {
           "销售退货金额",
           "净发生金额",
           "总成本",
+          "月初库存金额",
+          "月末库存金额",
         ],
         rows: categoryItems.map((item) => [
           item.categoryCode ?? "",
@@ -350,6 +371,61 @@ export class MonthlyReportExportService {
           item.lineCount,
           item.documentCount,
           item.abnormalDocumentCount,
+          item.acceptanceInboundAmount,
+          item.productionReceiptAmount,
+          item.supplierReturnAmount,
+          item.salesOutboundAmount,
+          item.salesReturnAmount,
+          item.netAmount,
+          item.totalCost,
+          item.openingAmount,
+          item.closingAmount,
+        ]) as Array<Array<string | number>>,
+      },
+      {
+        name: "物料汇总",
+        columns: [
+          "分类编码",
+          "分类名称",
+          "物料编码",
+          "物料名称",
+          "规格型号",
+          "单位",
+          "单据行数",
+          "单据数",
+          "异常单据数",
+          "月初数量",
+          "月初金额",
+          "入库数量",
+          "出库数量",
+          "净发生数量",
+          "月末数量",
+          "月末金额",
+          "验收入库金额",
+          "生产入库金额",
+          "退给厂家金额",
+          "销售出库金额",
+          "销售退货金额",
+          "净发生金额",
+          "总成本",
+        ],
+        rows: materialItems.map((item) => [
+          item.categoryCode ?? "",
+          item.categoryName,
+          item.materialCode,
+          item.materialName,
+          item.materialSpec ?? "",
+          item.unitCode,
+          item.lineCount,
+          item.documentCount,
+          item.abnormalDocumentCount,
+          item.openingQuantity,
+          item.openingAmount,
+          item.inQuantity,
+          item.outQuantity,
+          item.netQuantity,
+          item.closingQuantity,
+          item.closingAmount,
           item.acceptanceInboundAmount,
           item.productionReceiptAmount,
           item.supplierReturnAmount,

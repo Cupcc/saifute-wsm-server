@@ -1,4 +1,9 @@
 import { Prisma } from "../../../../generated/prisma/client";
+import {
+  buildSqlWhere,
+  naturalCodeOrderBySql,
+  orderByIds,
+} from "../../../shared/prisma/natural-code-ordering";
 import { PrismaService } from "../../../shared/prisma/prisma.service";
 
 type DbClient = Prisma.TransactionClient | PrismaService;
@@ -12,6 +17,13 @@ const PERSONNEL_WITH_WORKSHOP_INCLUDE = {
   },
 } as const satisfies Prisma.PersonnelInclude;
 
+type FindCustomersParams = {
+  keyword?: string;
+  limit: number;
+  offset: number;
+  status?: Prisma.CustomerWhereInput["status"];
+};
+
 export class MasterDataPartyRepository {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -19,12 +31,7 @@ export class MasterDataPartyRepository {
     return db ?? this.prisma;
   }
 
-  async findCustomers(params: {
-    keyword?: string;
-    limit: number;
-    offset: number;
-    status?: Prisma.CustomerWhereInput["status"];
-  }) {
+  async findCustomers(params: FindCustomersParams) {
     const where: Prisma.CustomerWhereInput = {};
     if (params.status) {
       where.status = params.status;
@@ -39,17 +46,50 @@ export class MasterDataPartyRepository {
       ];
     }
 
-    const [items, total] = await Promise.all([
-      this.prisma.customer.findMany({
-        where,
-        take: params.limit,
-        skip: params.offset,
-        orderBy: { customerCode: "asc" },
-      }),
+    const [sortedIdRows, total] = await Promise.all([
+      this.findCustomerIdsByNaturalCode(params),
       this.prisma.customer.count({ where }),
     ]);
+    const sortedIds = sortedIdRows.map((row) => Number(row.id));
+    if (sortedIds.length === 0) {
+      return { items: [], total };
+    }
 
-    return { items, total };
+    const items = await this.prisma.customer.findMany({
+      where: { id: { in: sortedIds } },
+    });
+
+    return { items: orderByIds(items, sortedIds), total };
+  }
+
+  private findCustomerIdsByNaturalCode(params: FindCustomersParams) {
+    return this.prisma.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+      SELECT id
+      FROM customer
+      ${this.buildCustomerListWhereSql(params)}
+      ORDER BY ${naturalCodeOrderBySql(Prisma.sql`customer_code`)}
+      LIMIT ${params.limit}
+      OFFSET ${params.offset}
+    `);
+  }
+
+  private buildCustomerListWhereSql(params: FindCustomersParams): Prisma.Sql {
+    const conditions: Prisma.Sql[] = [];
+    if (params.status) {
+      conditions.push(Prisma.sql`status = ${params.status}`);
+    }
+    if (params.keyword) {
+      const keyword = `%${params.keyword}%`;
+      conditions.push(Prisma.sql`(
+        customer_code LIKE ${keyword}
+        OR customer_name LIKE ${keyword}
+        OR contact_person LIKE ${keyword}
+        OR contact_phone LIKE ${keyword}
+        OR address LIKE ${keyword}
+      )`);
+    }
+
+    return buildSqlWhere(conditions);
   }
 
   async findCustomerById(id: number) {
